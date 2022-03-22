@@ -1,0 +1,22 @@
+snippet _skel "skeleton"
+- hosts: localhost
+
+  vars:
+    somekey: ""
+  pre_tasks:
+    - name: some task
+      become: yes
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+        state: present
+  roles:
+    - role: my_role
+      tags:
+        - test
+
+  tasks:
+    - import_tasks: tasks/some.yml
+      tags:
+
+endsnippet

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+sudo -u $SUDO_USER git clone --depth=1 https://github.com/petewarden/catdoc "$PROGRAMS/catdoc"
+cd "$PROGRAMS/catdoc"
+sudo -u $SUDO_USER ./configure --prefix="$PREFIX_DIR/catdoc"
+make
+make install
+

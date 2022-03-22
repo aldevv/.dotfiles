@@ -1,0 +1,33 @@
+snippet _proj_java "Description" b
+{
+	"src/main/java/*.java": {
+		"alternate": "src/test/java/{}.java",
+			"type": "source"
+	},
+		"src/test/java/*.java": {
+			"alternate": "src/main/java/{}.java",
+			"type": "test"
+		},
+		"*.java": {
+			"dispatch": "javac -classpath \".:sqlite-jdbc-3.32.3.2.jar\" *.java && java -classpath \".:sqlite-jdbc-3.32.3.2.jar\" {}"
+		},
+		"*": { "make": "mvn" }
+}
+endsnippet
+
+snippet _skel "Description" b
+{
+	"src/*.py": {
+		"alternate": "src/test/{}.py",
+		"type": "source"
+	},
+		"src/test/*.py": {
+			"alternate": "src/main/java/{}.java",
+			"type": "test"
+		},
+		"*.py": {
+			"dispatch": "javac -classpath \".:sqlite-jdbc-3.32.3.2.jar\" *.java && java -classpath \".:sqlite-jdbc-3.32.3.2.jar\" {}"
+		},
+		"*": { "make": "mvn" }
+}
+endsnippet

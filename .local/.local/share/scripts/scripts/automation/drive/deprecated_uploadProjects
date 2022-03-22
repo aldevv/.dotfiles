@@ -1,0 +1,5 @@
+#!/bin/bash
+zip -r $PROJECTS/projects.zip $PROJECTS -x "**/node_modules/*" -x "**/\.gd/*" &&\
+drive push -quiet --hidden -destination PC/Projects $PROJECTS/projects.zip;
+rm -f $PROJECTS/projects.zip
+

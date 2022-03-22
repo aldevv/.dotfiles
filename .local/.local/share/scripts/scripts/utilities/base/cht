@@ -1,0 +1,13 @@
+#!/bin/bash
+# cheat sheet
+
+style=""
+# style="vim"
+IFS='+'
+action="${*:2}"
+if [ -z "$2" ]; then
+    curl cht.sh/"$1?style=$style"
+else
+    # example: cht.sh/go/string+split+something+else
+    curl cht.sh/"$1/$action?style=$style"
+fi

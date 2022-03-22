@@ -1,0 +1,41 @@
+#!/bin/bash
+#change to dash
+updateCheck() {
+    packages="$(sudo pacman -Qu | wc -l)更新"
+    if [[ $packages == "0更新" ]]; then
+        # packages=""
+        printf ""
+    else
+        printf "| %s" "$packages"
+    fi
+}
+declare -A days
+days[Mon]="月"
+days[Tue]="火"
+days[Wed]="水"
+days[Thu]="木"
+days[Fri]="金"
+days[Sat]="土"
+days[Sun]="日"
+
+while true; do
+    time=$(date +'%H:%M')
+    day=$(LC_TIME="en_US.UTF-8" date +'%a')
+    date=$(date +"%d日%m月%y年 (${days[${day}]})")
+
+    battery="$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | awk '/percentage/{print $2}' | tr -d '%\n')$(if [[ $charging == 'charging' ]]; then echo '充電'; else echo '放電'; fi)"
+    charging=$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep state | cut -d: -f2 | tr -d " ")
+    if [[ $battery =~ ^[0-9]電 ]] && [[ $charging != "charging" ]]; then dunstify "Low Battery"; fi
+
+
+    volume="$(amixer sget Master | awk -F"[][]" '/\[[0-9]/{ print $2 }' | sed 1q | tr -d "%")音"
+
+    [[ -z "$packages" ]] && packages=$(updateCheck) || packages=""
+
+    wifi_stat=$([ $(timeout 1 nm-online | cut -d\[ -f2 | cut -d\] -f1) == "online" ]\
+        && echo '上'\
+        || echo '下')
+
+	xsetroot -name "${packages}| ${volume} | ${battery} | ${wifi_stat} | ${time} | ${date}"
+	sleep 1m
+done

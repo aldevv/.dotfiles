@@ -1,0 +1,33 @@
+#!/bin/zsh
+# Config locations
+folders="$XDG_CONFIG_HOME/shortcuts/sf"
+dotfiles="$XDG_CONFIG_HOME/shortcuts/sd"
+
+# Output locations
+shellrc="$ZDOTDIR/.zshrc"
+shell_shortcuts="$ZDOTDIR/.auto_aliases"
+ranger_shortcuts="$XDG_CONFIG_HOME/ranger/shortcuts.conf"
+
+# Remove
+rm -f "$shell_shortcuts" "$ranger_shortcuts"
+
+#source them if not sourced
+(grep "\. \$ZDOTDIR/.auto_aliases"  $shellrc)>/dev/null \
+    || echo '. $ZDOTDIR/.auto_aliases' >> $shellrc
+
+(grep "source $ranger_shortcuts" $XDG_CONFIG_HOME/ranger/rc.conf)>/dev/null \
+    || echo "source $ranger_shortcuts" >> $XDG_CONFIG_HOME/ranger/rc.conf
+
+# directory shortcuts
+sed "/^#/d; /^$/d" $folders | tee \
+    >(awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "alias "$1"='\''cd "shortcut" && ls -a'\''"}' >> $shell_shortcuts) \
+    >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut" "$i; else shortcut=$i}; {print "map <backspace>"$1" cd "shortcut"\nmap t"$1" tab_new "shortcut"\nmap m"$1" shell mv -v %s "shortcut"\nmap Y"$1" shell cp -rv %s "shortcut}' >> $ranger_shortcuts) >/dev/null
+
+# tmux
+sed "/^#/d; /^$/d" $folders | tee >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut" "$i; else shortcut=$i}; {print "map <backspace2>"$1" cd "shortcut"\nmap t"$1" tab_new "shortcut"\nmap m"$1" shell mv -v %s "shortcut"\nmap Y"$1" shell cp -rv %s "shortcut}' >> $ranger_shortcuts) >/dev/null
+# envsubst changes $HOME -> /home/myuser
+
+# dotfile shortcuts
+sed "/^#/d; /^$/d" $dotfiles |tee \
+    >(awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "alias "$1"=\"$EDITOR "shortcut"\""}' >> $shell_shortcuts) \
+    >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "map <backspace>"$1" shell $EDITOR "shortcut}' >> $ranger_shortcuts) >/dev/null

@@ -1,0 +1,82 @@
+# for this snippet file to work, you add this line to init.vim
+# au BufRead,BufNewFile .vimspector.json		set filetype=vimspector.json
+snippet node "Description" b
+{
+  "configurations": {
+    "run": {
+      "adapter": "vscode-node",
+      "configuration": {
+        "request": "launch",
+        "protocol": "auto",
+        "stopOnEntry": true,
+        "console": "integratedTerminal",
+        "program": "${workspaceRoot}/${1:myapp1.js}",
+        "cwd": "${workspaceRoot}"
+      }
+    },
+    "foobar": {}
+  }
+}
+endsnippet
+
+snippet java "Description" b
+{
+  "configurations": {
+    "Java Attach": {
+      "adapter": "vscode-java",
+      "configuration": {
+        "request": "attach",
+        "hostName": "${host}",
+        "port": "${port}",
+        "projectName": "${projectName}",
+        "sourcePaths": [
+          "${workspaceRoot}/src/main/java",
+          "${workspaceRoot}/src/test/java"
+        ]
+      }
+    }
+  }
+}
+endsnippet
+
+snippet cpp "Description" b
+{
+  "configurations": {
+    "launch": {
+      "adapter": "CodeLLDB",
+      "configuration": {
+        "request": "launch",
+        "program": "${workspaceRoot}/${1:myapp1.cpp}"
+      }
+    }
+  }
+}
+endsnippet
+
+snippet c "Description" b
+{
+  "configurations": {
+    "launch": {
+      "adapter": "CodeLLDB",
+      "configuration": {
+        "request": "launch",
+        "program": "${workspaceRoot}/${1:myapp1.c}"
+      }
+    }
+  }
+}
+endsnippet
+
+snippet rust "Description" b
+{
+  "configurations": {
+    "launch": {
+      "adapter": "CodeLLDB",
+      "configuration": {
+        "request": "launch",
+        "program": "${workspaceRoot}/src/${1:myapp1.rs}"
+      }
+    }
+  }
+}
+endsnippet

@@ -1,0 +1,3 @@
+#!/bin/sh
+# latex
+eopkg install -y texlive texlive-fonts-extra

@@ -1,0 +1,4 @@
+#!/bin/sh
+# pydoc modules | sed '/^$/d' | head -n -2 | awk '{print $1}{print $2}{print $3}{print $4}' | dmenu -l 30
+name=$(dmenu -p "search for docs:" < /dev/null)
+pydoc "$name"

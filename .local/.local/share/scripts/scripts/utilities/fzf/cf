@@ -1,0 +1,13 @@
+#!/bin/bash
+
+FZF_DEFAULT_COMMAND="fd --type d --follow -uuu --ignore-file $FD_IGNORE_FILE"
+if [ -z $1 ]; then
+	name=$(fzf)
+	[ ! -z "$name" ] && cd "$name"
+else
+	if [ -d $1 ]; then
+		FZF_DEFAULT_COMMAND="fd --type d --search-path $1 --follow -uuu --ignore-file $FD_IGNORE_FILE"
+		name=$(fzf -d / --with-nth -5,-4,-3,-2,-1)
+		[ ! -z "$name" ] && cd "$name"
+	fi
+fi

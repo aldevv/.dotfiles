@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# drive list -shared | grep -i "$1"
+# i: id
+# m: mime type
+# s: size
+# t: time modified
+# p: path to file
+
+fullInfo=$(rclone lsf  --format "imstp" --drive-shared-with-me "ugd:" | column -t -s ";" | sort -k4,5 | tac)
+selections=$(echo "$fullInfo" | awk ' $2 == "video/mp4" {for(i=6;i<=NF;i++){printf "%s ", $i}; printf "\n"}' | dmenu -i -l 5 | sed 's/\s*$//g')
+if [ -z "$selections" ]; then
+    exit
+fi
+line_count=$(($(printf "%s\n" "$selections" | wc -l) - 1))
+i=0
+while [ $i -le $line_count ]; do
+
+    selection=$(printf "%s" "$selections" | awk -v pos="$i" '{if (NR == pos +1) print $0}')
+    selection=$(echo "${fullInfo}" | grep -i "${selection}" | grep -i "video/mp4")
+    id=$(echo "${selection}" | sort -r -k3 | awk '{print $1}' | head -n 1)
+    firefox --new-tab "https://drive.google.com/file/d/${id}/view"
+    i=$(( i + 1 ))
+done
+

@@ -1,0 +1,105 @@
+#!/bin/sh
+
+# install bash_completion:  sudo apt-get install bash-completion (for git )
+
+if [ -f /etc/bash_completion ]; then
+  . /etc/bash_completion
+fi
+
+# show git branch
+export PS1="${PS1::-3}\$(__git_ps1)\\\$ "
+dev() {
+	alias sudo='sudo '
+	alias c="cd $HOME/Projects/covidalert"
+	alias p="cd $HOME/Projects"
+
+	alias re="cd /etc"
+	alias lo="cd ~/.local"
+	alias rv="cd /var"
+	alias rb="cd /bin"
+	alias rr="cd /root"
+	alias ro="cd /opt"
+	alias rU="cd /usr"
+	alias rus="cd /usr/share"
+	alias rub="cd /usr/bin"
+	alias rui="cd /usr/include"
+	alias rulo="cd /usr/local"
+	alias rulob="cd /usr/local/bin"
+	alias rulos="cd /usr/local/share"
+	alias rmn="cd /mnt"
+	alias n="cd /etc/nginx/sites-enabled"
+	alias s="cd /etc/systemd/system"
+
+
+	priv="sudo"
+	alias _="sudo"
+	alias v="vim"
+	alias cfb="v $HOME/.bashrc"
+	alias srcb=". $HOME/.bashrc"
+
+	alias dk="$priv docker"
+	alias dkI="$priv docker image"
+	alias dkC="$priv docker container"
+	alias dkls="$priv docker ps"
+	alias dkr="$priv docker run"
+	alias dke="$priv docker exec"
+	alias dk.="$priv docker exec"
+
+	alias dkc.="cat docker-compose.yml"
+	alias dkc="$priv docker-compose "
+	alias dkcc="$priv docker-compose config "
+	alias dkcb="$priv docker-compose build "
+	alias dkcB="$priv docker-compose build --no-cache "
+	alias dkcd="$priv docker-compose down "
+	alias dkcD="$priv docker-compose down --volumes "
+	alias dkce="$priv docker-compose exec -e COLUMNS=`tput cols` -e LINES=`tput lines` "
+	alias dkck="$priv docker-compose kill "
+	alias dkclg="$priv docker-compose logs --follow "
+	alias dkclG="$priv docker-compose logs -f "
+	alias dkcls="$priv docker-compose ps "
+	alias dkcz="$priv docker-compose pause "
+	alias dkcZ="$priv docker-compose unpause "
+	alias dkcP="$priv docker-compose pull "
+	alias dkcp="$priv docker-compose push "
+	alias dkcps="$priv docker-compose ps "
+	alias dkcr="$priv docker-compose run -e COLUMNS=`tput cols` -e LINES=`tput lines` "
+	alias dkcR="$priv docker-compose run -e COLUMNS=`tput cols` -e LINES=`tput lines` --rm "
+	alias dkcrm="$priv docker-compose rm "
+	alias dkcs="$priv docker-compose start "
+	alias dkcsc="$priv docker-compose scale "
+	alias dkcx="$priv docker-compose restart "
+	alias dkcu="$priv docker-compose up "
+	alias dkcU="$priv docker-compose up -d "
+	alias dkcv="$priv nvim docker-compose.yml "
+	alias dkcS="$priv docker-compose stop "
+
+	alias dkcz="$priv docker-compose down && $priv docker compose up -d "
+	alias dkcR="$priv docker-compose build && $priv docker compose down && $priv docker compose up -d "
+
+
+	dkcue() {
+		    $priv docker-compose --env-file=$1 up ${@:2}
+	    }
+
+    	dkcee() {
+	       $priv docker-compose --env-file=$1 exec -e COLUMNS=`tput cols` -e LINES=`tput lines` ${@:2}
+	}
+
+	dkcUe() {
+	    $priv docker-compose --env-file=$1 up  ${@:2} -d
+    	}
+
+	dkceb() {
+	    $priv docker-compose exec -e COLUMNS=`tput cols` -e LINES=`tput lines` "$0" bash
+    	}
+
+	alias g="git"
+	alias glg="git --decorate"
+	alias gst="git status"
+	alias gaa="git add"
+	alias ggc="git commit"
+}
+
+alias cftd="v /etc/transmission-daemon/settings.json"
+alias cftr="v /etc/transmission-rss.conf"
+

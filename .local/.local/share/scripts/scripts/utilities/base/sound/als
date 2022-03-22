@@ -1,0 +1,14 @@
+#!/bin/sh
+# $1 ingrese el numero del sink input
+# $2 ingrese el volumen deseado
+if [ -z "$1" ]; then
+    chosen=$(pactl list sink-inputs | awk  '/(Sink Input|application\.name)/{if ($3 ~ /#[0-9]+/) printf "%s ",$3; else printf "%s\n",$3;}' | tr -d '"' | dmenu -p "choose program" -i)
+    chosen=$(echo "$chosen" | awk '{print $1}' | tr -d "#")
+    volume=$(printf "0\n10\n20\n30\n40\n50\n60\n70\n80\n90\n100" | dmenu -p "choose volume" -i)
+    if [ -z "$chosen" ] || [ -z "$volume" ]; then
+        exit
+    fi
+    pactl set-sink-input-volume "$chosen" "$volume%"
+else
+    pactl set-sink-input-volume "$1" "$2%"
+fi

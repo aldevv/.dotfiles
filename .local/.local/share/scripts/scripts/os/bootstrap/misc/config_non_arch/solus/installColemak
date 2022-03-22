@@ -1,0 +1,57 @@
+#!/bin/sh
+if [ ! -z "$BACKUPS/evdev.lst" ]; then
+	# if already backed up, program already ran once, no need to run again
+	exit
+fi
+cd "$PROGRAMS"
+git clone https://github.com/nhermosilla14/latam-colemak
+cd latam-colemak
+
+cp /usr/share/X11/xkb/rules/evdev.lst "$BACKUPS/evdev.lst"
+
+cp /usr/share/X11/xkb/rules/evdev.xml "$BACKUPS/evdev.xml"
+
+cp /usr/share/X11/xkb/symbols/latam "$BACKUPS/latam"
+
+rm /usr/share/X11/xkb/symbols/latam
+
+cp latam  /usr/share/X11/xkb/symbols/latam
+
+sed -i "/! variant/a \ \ colemak-gaming   latam: Spanish (Latin American, Colemak for gaming)" /usr/share/X11/xkb/rules/evdev.lst
+sed -i "/! variant/a \ \ colemak          latam: Spanish (Latin American, Colemak)" /usr/share/X11/xkb/rules/evdev.lst
+
+awk -v text="\
+<variant>
+          <configItem>
+            <name>colemak</name>
+            <description>Spanish (Latin American, Colemak)</description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>colemak-gaming</name>
+            <description>Spanish (Latin American, Colemak for gaming)</description>
+          </configItem>
+        </variant>" \
+'/Latin American, Dvorak/{getline;getline; printf"%s\n        %s",$0,text }; {print $0}' /usr/share/X11/xkb/rules/evdev.xml > /usr/share/X11/xkb/rules/evdev.xml
+
+mkdir /usr/share/kbd/keymaps/i386/colemak
+# make it work in tty
+cp *.map.gz /usr/share/kbd/keymaps/i386/colemak/
+#sudo not working
+localectl set-x11-keymap latam pc104 colemak
+echo "KEYMAP=colemak-la" > /etc/vconsole.conf
+cd "$PROGRAMS"
+rm -rf "latam-colemak"
+#<variant>
+#          <configItem>
+#            <name>colemak</name>
+#            <description>Spanish (Latin American, Colemak)</description>
+#          </configItem>
+#        </variant>
+#        <variant>
+#          <configItem>
+#          <name>colemak-gaming</name>
+#        <description>Spanish (Latin American, Colemak for gaming)</description>
+#       </configItem>
+#</variant>

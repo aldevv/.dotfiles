@@ -1,0 +1,15 @@
+#!/bin/bash
+
+files=$(fd '.' $WIKI -t f -e org)
+chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | dmenu -n)
+
+if [[  $chosen_file == "create" ]]; then
+    nvim $WIKI/notes/
+    exit 0
+fi
+
+chosen_filepath=$(echo "$files" | grep $chosen_file)
+
+if [[  -n $chosen_filepath ]]; then
+    nvim $chosen_filepath
+fi

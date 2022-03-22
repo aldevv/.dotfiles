@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# el $1 debe ser el path
+
+st vimgdb-server
+# sleep 2
+# st vimgdb "$1"

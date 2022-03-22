@@ -1,0 +1,7 @@
+#!/bin/sh
+
+network=$(dmenu -p "enter mask" < /dev/null)
+if [ ! -z "$network" ]; then
+    name="$network"
+    sed -i "2s/.*/$name/g" "$UTILITIES/classes/network/data"
+fi

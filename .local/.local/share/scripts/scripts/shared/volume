@@ -1,0 +1,57 @@
+#!/bin/bash
+#https://www.reddit.com/r/unixporn/comments/6p40ic/volume_notifications_with_dunst/
+#https://gist.github.com/sebastiencs/5d7227f388d93374cebdf72e783fbd6a
+
+# You can call this script like this:
+# $./volume.sh up
+# $./volume.sh down
+# $./volume.sh mute
+
+function get_volume {
+    amixer get Master | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
+}
+
+function is_mute {
+    amixer get Master | grep '%' | grep -oE '[^ ]+$' | grep off > /dev/null
+}
+
+function send_notification {
+    volume=`get_volume`
+    # Make the bar with the special character ─ (it's not dash -)
+    # https://en.wikipedia.org/wiki/Box-drawing_character
+    bar=$(seq -s "─" $(($volume / 5)) | sed 's/[0-9]//g')
+    # Send the notification
+    dunstify -i audio-volume-muted-blocking -t 700 -r 2593 -u normal "    $bar"
+}
+
+cur_vol=$(pactl get-sink-volume @DEFAULT_SINK@ | awk 'NR==1{print $5}' | tr -d '%')
+case $1 in
+    up)
+		# Set the volume on (if it was muted)
+		pactl set-sink-mute @DEFAULT_SINK@ 0
+		[ $cur_vol -lt 100 ] && pactl set-sink-volume @DEFAULT_SINK@ +5%
+		send_notification
+	;;
+    down)
+		pactl set-sink-mute @DEFAULT_SINK@ 0
+
+		[ $cur_vol -gt 0 ] && pactl set-sink-volume @DEFAULT_SINK@ -5%
+		send_notification
+	;;
+    mute)
+		pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+	if is_mute ; then
+	    dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "Mute"
+	else
+	    send_notification
+	fi
+	;;
+esac
+
+# OLD WAY
+	# amixer -D pulse set Master on > /dev/null
+	# amixer -D pulse sset Master 5%+ > /dev/null
+	# amixer -D pulse set Master on > /dev/null
+	# amixer -D pulse sset Master 5%- > /dev/null
+	# amixer -D pulse set Master 1+ toggle > /dev/null

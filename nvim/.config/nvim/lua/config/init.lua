@@ -1,0 +1,5 @@
+require('config.settings')
+require('config.appearance')
+require('config.keybindings')
+require('config.commands')
+require('config.automation')

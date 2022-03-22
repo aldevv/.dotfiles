@@ -1,0 +1,12 @@
+[
+  {
+    "directory": "/home/kanon/.local/share/myScripts/apps/qmk/backup/keymap.c",
+    "file": "keymap.c",
+    "arguments": [
+      "/usr/bin/clang-10",
+      "-stdlib=libstdc++",
+      "keymap.c",
+      "--target=x86_64-solus-linux"
+    ]
+  }
+]

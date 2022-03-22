@@ -1,0 +1,10 @@
+#!/bin/sh
+#install oh-my-zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+cd "$PROGRAMS"
+# install completions
+git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
+# install highlight
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
+
+rm -f ~/.zcompdump; compinit

@@ -1,0 +1,36 @@
+{
+  "src/*": {
+    "src/containers/*.js": {
+      "type": "container",
+      "template": [
+        "import React, {open} Component {close} from 'react';\n",
+        "export default class {capitalize} extends Component {",
+        "  render () {",
+        "    return (",
+        "    );",
+        "  };",
+        "}",
+        "",
+        "export default connect(",
+        "  state => ({open}state: state{close}),",
+        "  dispatch => ({open}actions: bindActionCreators(actions, dispatch){close})",
+        ")({capitalize});"
+      ]
+    },
+    "src/components/*.js": {
+      "type": "component",
+      "template": [
+        "import React, {open} Component {close} from 'react';\n",
+        "export default class {} extends Component {",
+        "  render () {",
+        "    return (",
+        "    );",
+        "  };",
+        "}"
+      ]
+    },
+    "src/reducers/*.js": {
+      "type": "reducer"
+    }
+  }
+}

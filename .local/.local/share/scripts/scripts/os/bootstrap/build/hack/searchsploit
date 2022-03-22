@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# use opt for programs that need no installation
+git clone --depth=1 https://github.com/offensive-security/exploitdb.git /opt/exploitdb
+ln -sf /opt/exploitdb/searchsploit /usr/local/bin/searchsploit
+
+[ -n "$PROGRAMS" ] \
+    && ln -sf /opt/exploitdb "$PROGRAMS/searchsploit"

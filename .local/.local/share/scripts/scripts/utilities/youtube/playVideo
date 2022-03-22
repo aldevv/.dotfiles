@@ -1,0 +1,5 @@
+#!/bin/sh
+
+link=$(xsel -b -o)
+format=$(./showFormats $link | cut -d" " -f1)
+mpv $(youtube-dl -f${format} -g  $link)

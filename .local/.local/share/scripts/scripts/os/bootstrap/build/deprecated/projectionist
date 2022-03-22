@@ -1,0 +1,10 @@
+#!/bin/zsh
+#NOT WORKING
+cd "$PROGRAMS" || exit
+folder="projectionist"
+sudo -u $SUDO_USER mkdir "$folder" && cd "$folder"
+sudo -u $SUDO_USER curl -OL https://github.com/glittershark/projectionist/raw/master/completion.bash
+# instructions: https://github.com/glittershark/projectionist/issues/18
+autoload bashcompinit
+bashcompinit
+source "$PROGRAMS/$folder/completion.bash"

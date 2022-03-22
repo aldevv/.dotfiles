@@ -1,0 +1,29 @@
+#!/bin/bash
+# set -xe
+# path="$WIKI/cheatsheets"
+# folder=$(ls $path  | dmenu -i -p "choose")
+# path="${path}/${folder}/${folder} cheatsheet.pdf"
+# zathura "$path"
+
+path="$WIKI/cheatsheets"
+folder=$(ls $path  | dmenu -i -p "Cheatsheet:" -fn $DEFAULT_DMENU_FONT)
+if [[ -z $folder ]]; then
+    exit
+fi
+files=$(ls "${path}/${folder}/")
+echo "$files" | wc -l
+if [[ $(echo "$files" | wc -l ) == 1 ]]; then
+    filePath="${path}/${folder}/$files"
+    echo  "$filePath"
+    echo  "$filePath" | $AUTOMATION/open_with
+    exit
+fi
+
+file=$(echo "$files" | dmenu -i -l 10 -p "Cheatsheet:" -fn $DEFAULT_DMENU_FONT)
+filePath="${path}/${folder}/$file"
+if [[ -z $file ]]; then
+    exit
+fi
+
+echo  "$filePath" | $AUTOMATION/open_with
+

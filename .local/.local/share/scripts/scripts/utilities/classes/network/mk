@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# sleep 0.5 && xdotool type '255.255.255.'
+name=$(sed -n '2p' "$UTILITIES/classes/network/data")
+mask="$1"
+if [ ! -z "$mask" ]; then
+    name="$mask"
+    sed -i "2s/.*/$name/g" "$UTILITIES/classes/network/data"
+    return
+fi
+sleep 0.5 && xdotool type "$name"
+
+
+

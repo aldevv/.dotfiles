@@ -1,0 +1,8 @@
+#!/bin/sh
+# $2  is 'a' then is audio only
+
+if [ -z "$2" ]; then
+    youtube-dl -F "$1" | awk 'NR>3' | dmenu -l 10
+else
+    youtube-dl -F "$1" | awk 'NR>3 && /audio only/' | dmenu -l 10
+fi

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# make it so it works with a list
+video=$(select_anime)
+mv "$video" "/mnt"
+notify-send "copied to usb!"

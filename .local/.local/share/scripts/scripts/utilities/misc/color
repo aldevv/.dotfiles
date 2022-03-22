@@ -1,0 +1,13 @@
+#!/bin/bash
+# colors stderr and stdin
+# example usage: color yourCommand
+#
+# alternatives: https://stackoverflow.com/questions/6841143/how-to-set-font-color-for-stdout-and-stderr/21320645#21320645
+
+echo -en "\033[36m"  ## blue
+eval $* | while read line; do
+    echo -en "\033[31m"  ## red
+    echo $line
+    echo -en "\033[36m"  ## blue
+done
+echo -en "\033[0m"  ## reset color

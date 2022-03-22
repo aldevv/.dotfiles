@@ -1,0 +1,17 @@
+#!/bin/sh
+
+cd /opt || exit
+latest=$($UTILITIES/programming/github/latest "https://github.com/digininja/CeWL")
+wget -O "cewl.tar.gz" $latest
+tar kvvxf "cewl.tar.gz"
+rm "cewl.tar.gz"
+name="$(ls | grep -i 'cewl')"
+# mv "$name" "cewl"
+mv "$name" "cewl"
+cd "cewl" || exit
+gem install spider nokogiri zip
+
+chmod +x cewl.rb
+ln -sf "/opt/cewl/cewl.rb" "/usr/local/bin/cewl"
+[ -n "$PROGRAMS" ] \
+    && ln -sf "/opt/cewl" "$PROGRAMS/hacking/cewl"

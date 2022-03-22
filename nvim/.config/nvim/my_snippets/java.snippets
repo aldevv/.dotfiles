@@ -1,0 +1,89 @@
+snippet _skel "init java file" b
+public class `!p snip.rv = snip.basename` {
+
+	public static void main(String[] args) {
+		$1
+	}
+}
+endsnippet
+
+# this is used over _skel
+snippet _class "init java file" b
+public class `!p snip.rv = snip.basename` {
+
+	public static void main(String[] args) {
+		$1
+	}
+}
+endsnippet
+
+snippet ffn "define a function" Ab
+public static $1 ${VISUAL}${2}($3) {
+	${4:body}
+}
+endsnippet
+
+
+#print("${1:${VISUAL}}")
+snippet ppr "enclose with print" Ab
+System.out.println("${VISUAL}${1}");
+endsnippet
+
+snippet iin "testing snippets" Ab
+Scanner input$1 = new Scanner();
+endsnippet
+
+snippet itt "testing snippets" iA
+Integer ${1}
+endsnippet
+
+snippet stt "testing snippets" iA
+String ${1}
+endsnippet
+
+snippet dbb "testing snippets" iA
+Double ${1}
+endsnippet
+
+snippet ftt "testing snippets" iA
+Float ${1}
+endsnippet
+
+snippet mpp "testing snippets" Ab
+Map <${1},${2}> ${3} = new Map();
+endsnippet
+
+snippet lnn "testing snippets" iA
+length
+endsnippet
+
+snippet sz "testing snippets" iA
+size()
+endsnippet
+
+snippet ffr "for normal" iA
+for(int i=0; i<$1; ${2:i++}) {
+	$3
+}
+endsnippet
+
+snippet ffi "for normal" iA
+for(${1:type} ${2:item} : ${3:items}) {
+	$3
+}
+endsnippet
+
+snippet prr "testing snippets" iA
+private ${1}
+endsnippet
+
+snippet pbb "testing snippets" iA
+public ${1}
+endsnippet
+
+snippet ptt "testing snippets" iA
+protected ${1}
+endsnippet
+# snippet << "testing snippets" iA
+# <$1>
+# endsnippet

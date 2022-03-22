@@ -1,0 +1,1689 @@
+#!/bin/bash
+work="$HOME/galileo"
+[[ -d "$work" ]] && source "$work/.aliases"
+
+alias csvviewer="visidata"
+
+# projectionist
+alias prje="prj edit"
+alias prj.="bat .projections.json"
+
+keys() {
+    xev | awk -F'[ )]+' '/^KeyPress/ { a[NR+2] } NR in a { printf "%-3s %s\n", $5, $8 }'
+}
+
+# arcolinux fix gpg
+#/usr/local/bin/arcolinux-fix-pacman-gpg-conf
+#
+#fix 2 for gpg
+#https://forum.manjaro.org/t/maintainer-pgp-keys-expired/76545/43
+#sudo rm -r /etc/pacman.d/gnupg
+#sudo pacman-key --init
+#sudo pacman-key --populate arcolinux
+#sudo pacman-key --populate archlinux --didn't try with this one
+#sudo pacman -Syvv arcolinux-keyring
+#
+alias forthelols="while [ 1 ]; do echo 'apt list | wc -l' | lolcat; done"
+
+activateVerified() {
+	git config --global user.signingkey $1
+	git config --global commit.gpgsign true
+}
+##==============
+# WORK
+#==============
+# alias mongodumpwork='ssh HORUS_BACKEND "mongodump -d VT  --archive" >'
+# alias mongodumpwork='ssh HORUS_TESTING "mongodump -u mongo-root --archive" >'
+alias mongodumpwork='ssh HORUS_DEPLOY "mongodump -u mongo-root --archive" >'
+alias mongorestorework='docker exec -i api-mongo-1 mongorestore -d VT --archive <'
+mongoupdatedb() {
+	# password is $2
+	echo $2 | mongodumpwork $1 && mongorestorework $1
+}
+# alias mongorestorework='docker-compose exec mongo mongorestore -d VT --archive < .misc/backups/mongo_dump_11_29.2021.dump'
+
+##==============
+# MISC
+#==============
+
+temp_fix() {
+	sudo modprobe -rf rtw88_8822be
+	sudo modprobe rtw88_8822be
+}
+
+getpid() {
+	pidof $1 | cut -d' ' -f1
+}
+
+vw() {
+	nvim "$(which $1)"
+}
+
+.e() {
+	# load .env file or any other file
+	file=$1
+	[ -z $file ] && file=".env"
+	[ -f $file ] && zsh -c "set -o allexport; source $file; echo 'loaded'; set +o allexport; zsh -i"
+}
+
+.ec() {
+	bat .env
+}
+
+vman() {
+	nvim -c "Man $1" -c "silent only"
+}
+
+
+
+alias openports="sudo netstat -putln | grep LISTEN"
+alias .a="pipenv shell"
+alias gv="neovide"
+alias gV="NOCOC=true neovide"
+alias V="NOCOC='' nvim"
+alias f='file=$(fzf); [[ -n $file ]] && nvim $file'
+alias uuid='uui=$(python -c "import uuid; print(uuid.uuid4())"); echo $uui | xsel -b; echo $uui '
+alias wireshark="sudo wireshark"
+alias vid="neovide"
+alias _v="sudo nvim"
+alias cfh="_v /etc/hosts"
+alias NF="awk -F',' '{print NF;exit}'"
+alias srcp=". $ZDOTDIR/.zprofile"
+alias srcz=". $ZDOTDIR/.zshrc"
+alias pe="pipenv"
+alias sshconfig="man ssh_config"
+alias picomr="DISPLAY=':0' picom -b --experimental-backend"
+alias robo="$PROGRAMS/robo3t-1.4.4-linux-x86_64-e6ac9ec/bin/robo3t"
+alias installNvm="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | zsh"
+alias pitr="nvim scp://pi//etc/transmission-rss.conf"
+alias addTr="ssh pi transmission-cli $(xsel -b)"
+alias serve="rclone serve dlna --addr=:9092 --name=HaganeMedia $1"
+alias cpP="pwd | xsel -b"
+
+
+
+# TMUX
+
+function tms() (
+	if [ -n "$1" ]; then
+		tmux switch -t $1
+	else
+		echo "no session name"
+	fi
+)
+alias tmS="tma \$(tmux list-sessions | sed -E 's/:.*$//' | fzf --no-preview)"
+
+alias tm="tmux"       # attach
+alias tmls="tmux ls"  # list sessions
+alias tmA="tmux a -t" # attach
+alias tmn="tmux new -s"
+alias tma="tmux new -A -s" # attach or create new one
+alias tmk="tmux kill-server"
+alias tmK="tmux list-keys"
+# for remote connections
+alias fixtmux="echo 'set -g default-terminal \"screen-256color\"  | xsel -b"
+cpF() {
+	cat $1 | xsel -b
+}
+
+vcmd() {
+	v $(which $1)
+}
+
+quick() {
+	a="$@"
+	alias | grep "$a"
+}
+
+getpdffont() {
+	strings $1 | grep Font
+}
+
+if [[ -n $RG_IGNORE_FILE ]]; then
+	args="$@"
+	alias rg="rg  --ignore-file=$RG_IGNORE_FILE $args" \
+		else
+	args="$@"
+	alias rg="rg $args"
+fi
+
+#==============
+# SETUP DOTREPO
+#==============
+#it clone --bare https://github.com/akuseru1/dotfiles
+# or
+#git init --bare $HOME/<repo_name>
+#dotrepo config --local status.showUntrackedFiles no
+
+alias g.='bat .gitignore'
+alias dotrepo="git --git-dir=$HOME/.local/share/dotfiles --work-tree=$HOME"
+alias \
+    dfiles="dotrepo ls-tree --full-tree -r HEAD --name-only" \
+	dst='dotrepo status' \
+	daa='dotrepo add' \
+	dau='dotrepo add -u' \
+	drm='dotrepo rm' \
+	drmc='dotrepo rm --cached' \
+	dgc='dotrepo commit -v' \
+	dgca='dgc -a' \
+	dgcA='dgc -v --amend' \
+	dgcAn='dgc -v --amend --no-edit' \
+	drgo='dotrepo remote get-url origin' \
+	drao='dotrepo remote add origin' \
+	dgd='dotrepo diff' \
+	dlg='dotrepo log --oneline' \
+	dlG='dotrepo log --graph ' \
+	dgpo='dotrepo push origin HEAD' \
+	dSr='dotrepo secret reveal' \
+	dSh='dotrepo secret hide' \
+	dSls='dotrepo secret list' \
+	dSrm='dotrepo secret remove' \
+	dSaa='dotrepo secret add' \
+	dp='dotpass' \
+	dpf='dotpassfile'
+
+dgcm() {
+	if [[ -n "$1" ]]; then
+		dgc -m "$1"
+	else
+		echo "message:"
+		read message
+		dgc -m "$message"
+	fi
+}
+dgcam() {
+	if [[ -n "$1" ]]; then
+		dgc -am "$1"
+	else
+		echo "message:"
+		read message
+		dgc -am "$message"
+	fi
+}
+
+dgap() {
+	if [[ -n "$1" ]]; then
+		dotrepo commit -am "$1" && dgpo
+	else
+		echo "message:"
+		read message
+		dotrepo commit -am "$message" && dgpo
+	fi
+}
+
+high() {
+	[ -z "$2" ] &&
+		grep --color -E "$1|$" ||
+		grep --color -E "$1|$" "$2"
+}
+
+#==============
+# MIGRATING
+#==============
+# do backups
+#mkdir -p .backups/bare ;dotrepo checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .backups/bare/{}
+# then do (when everything backed up)
+#dotrepo checkout
+#force it if you have to
+
+# normally _ is $0 (your interactive shell)
+unalias -m '_'
+# if the last character of the alias is a space, the following
+# commands are checked as aliases
+alias man='man '
+alias sudo='sudo '
+alias _p='sudo !! '
+alias _='sudo '
+alias __='sudo -E '
+alias ___='sudo -E env "PATH=$PATH" '
+
+# yta="$UTILITIES/youtube/downloadAudio.sh"\
+# ytv="$UTILITIES/youtube/downloadVideo.sh"\
+alias \
+	pkg="sudo $PKG" \
+	m="mkdir" \
+	pkgro="sudo eopkg rmo" \
+	dockerclean="docker system prune --volumes -all" \
+	station="~/.local/bin/Station-1.65.0-x86_64.AppImage" \
+	xc="xclip -selection clipboard" \
+	j="joplin" \
+	xmonad="$HOME/.cabal/bin/xmonad" \
+	rz="mpv 'http://www.youtube.com/watch?v=w-RUTZBbGwM'" \
+	yz="mpv 'https://www.youtube.com/watch?v=mRwcGr8yTws'" \
+	cu="curl" \
+	wg="wget" \
+	rick="curl -s -L http://bit.ly/10hA8iC | bash" \
+	conv="$UTILITIES/video/MkvToMp4.sh" \
+	par="curl parrot.live" \
+	ssr="simplescreenrecorder" \
+	yt="youtube-viewer -q" \
+	r="ranger" \
+	retro="$PROGRAMS/retro-terminal/Cool-Retro-Term-1.1.1-x86_64.AppImage" \
+	R="retro --profile 'Futuristic' --workdir . &>/dev/null" \
+	todoist="cd $PROGRAMS/todoist-linux && make up" \
+	xi='sudo vim /etc/X11/xinit/xinitrc' \
+	tord="$HOME/.local/share/torbrowser/tbb/x86_64/tor-browser_en-US/Browser/Downloads" \
+	pgp='uploadProjects' \
+	rtx='sudo systemctl restart display-manager' \
+	wclass='xprop WM_CLASS' \
+	wname='xprop WM_NAME' \
+	wrole='xprop WM_ROLE' \
+	spot='flatpak --installation=extra run com.spotify.Client' \
+	zealu='zeal-user-contrib' \
+	ph='python_help' \
+	trc='transmission-remote-cli' \
+	py='python' \
+	py3='python3' \
+	audio="pavucontrol" \
+	plz="sudo" \
+	jp="tagainijisho" \
+	df='df -h' \
+	free='free -m' \
+	..='cd ..' \
+	...='cd ../..' \
+	.3='cd ../../..' \
+	.4='cd ../../..' \
+	.5='cd ../../../..' \
+	.6='cd ../../../../..' \
+	yta-aac="youtube-dl --extract-audio --audio-format aac " \
+	ytab="youtube-dl --extract-audio --audio-format best" \
+	yta="youtube-dl --extract-audio --audio-format mp3" \
+	yta-flac="youtube-dl --extract-audio --audio-format flac " \
+	yta-m4a="youtube-dl --extract-audio --audio-format m4a " \
+	yta-opus="youtube-dl --extract-audio --audio-format opus " \
+	yta-vorbis="youtube-dl --extract-audio --audio-format vorbis " \
+	yta-wav="youtube-dl --extract-audio --audio-format wav " \
+	ytv="youtube-dl -f bestvideo+bestaudio " \
+	du="du -hd 1" \
+	team="$PROGRAMS/teamviewer/teamviewer" \
+	zm="$HOME/.local/Programs/zoom/ZoomLauncher" \
+	nm1="nmcli d wifi connect HYPERION " \
+	nm2="nmcli d wifi connect Hyperion_R " \
+	nmone='nmcli d wifi connect "One plus" ' \
+	nmc="nmcli d wifi connect" \
+	nm="nmcli d wifi" \
+	nvmls="nvm ls-remote" \
+	nvmch=". $SCRIPTS/useful/node/nvmch" \
+	mydot="git clone --depth=1 https://www.github.com/akuseru1/dotfiles && cd dotfiles" \
+	lights="sudo lightdm-settings" \
+	sddms="sudo sddm-config-editor" \
+	pkgfix="sudo usysconf run -f ssl-certs" \
+	pkgsave="sudo usysconf run -f ssl-certs" \
+	gdbfront="gdbfrontend" \
+	xa='xargs -I{}' \
+	blue='blueman-manager' \
+	vl='vimpager' \
+	shm='mount -t tmpfs tmpfs /mnt/tmp' \
+	mpva='mpv --no-video' \
+	mpvas='mpv --no-video --shuffle' \
+	mpvs='mpv --shuffle' \
+	aniplay='mpv --no-video --shuffle https://www.youtube.com/playlist\?list\=PLjNlQ2vXx1xbt30X8TcUfNzw_akVISXEu' \
+	lofiplay="mpv --no-video --shuffle 'https://www.youtube.com/watch?v=0te6noMKffA'" \
+	aniplayv='mpv --shuffle https://www.youtube.com/playlist\?list\=PLjNlQ2vXx1xbt30X8TcUfNzw_akVISXEu' \
+	apropos='apropos -e' \
+	bat='bat' \
+	b='bat' \
+	bb='bat --paging=always' \
+	bp='batpipe' \
+	bgrep='batgrep' \
+	bwatch='batwatch' \
+	bpretty='prettybat' \
+	bdiff='batdiff' \
+	bman='batman --paging=always' \
+	ri='source .env/bin/activate && python3 -m pip install --upgrade pip && pip3 install -r requirements.txt ' \
+	pipr='pip install -r requirements.txt' \
+	brave='brave-browser' \
+	pyv='python3 -m venv .venv' \
+	c='cat' \
+	fla='qmk flash' \
+	stn='setsid st >/dev/null 2>&1 & disown' \
+	.c='sudo ./configure' \
+	mk='make' \
+	mkc='make clean' \
+	mk='make' \
+	mkc='make clean' \
+	mki='make install' \
+	smk='sudo make' \
+	smkc='sudo make clean' \
+	smk='sudo make' \
+	smkc='sudo make clean' \
+	smki='sudo make install' \
+	ec='echo' \
+	et='entr' \
+	mime='xdg-mime query filetype' \
+	chx='sudo chmod +x' \
+	xmod='xmodmap "$HOME/.config/.Xmodmap"' \
+	lds='sudo lightdm-settings' \
+	au="autorandr --change && wal -R" \
+	searchCode="firefox https://docs.github.com/en/github/searching-for-information-on-github/searching-code" \
+	convpdf2="convert -density 600" \
+	pdfgrep="pdfgrep -n" \
+	Z="zathura" \
+	Z="setsid st zathura &>/dev/null" \
+	gpgpub="gpg --armor --export jbernal@unal.edu.co" \
+	gpgpubbinary="gpg --output kanon.gpg --export jbernal@unal.edu.co" \
+	gpgimp="gpg --import" \
+	gpgls="gpg --list-keys" \
+	rp="gpgconf --kill all" \
+	I="curl -s ifconfig.me | cut -d'%' -f 1" \
+	air="aircrack-ng" \
+	qr="qrencode" \
+	qrc='qrencode -o "/tmp/pass" "$(xsel -b -o 2>/dev/null)" && sxiv /tmp/pass; rm /tmp/pass' \
+	nmap_scripts="bb /usr/share/nmap/scripts/script.db"
+# flat='flatpak'\
+# flatrm='flatpak uninstall $($APPS/flatpak/flatlistinstalled)'\
+# flatr='flatpak run $($APPS/flatpak/flatlistinstalled)'\
+# flatrmo='flatpak uninstall --unused'\
+
+i() {
+	ip route get 1.2.3.4 | awk '{print \$7; exit}'
+}
+i6() {
+	ip -6 addr | awk '{print \$2}' | grep -P 'fe80' | cut -d '/' -f 1
+}
+
+# bb() {
+#     bat --paging=never "$1" | less -R
+# }
+Il() {
+	curl -s https://freegeoip.app/xml/$(I) | sed -n '4p' | cut -d '>' -f2 | cut -d '<' -f1
+}
+convpdf() {
+	# first arguments are the other files
+	# last arg is the file name
+	out="${@:$#}"
+	out2="${@:1:${#}-1}"
+	gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile="$out" "$out2" 2>/dev/null
+}
+nmapb() {
+	sudo nmap -sC -sV -Pn -O "$1" |
+		tee -a scan
+}
+
+gob() {
+	dir-list >mywordlist &&
+		gobuster dir -w mywordlist -u http://$1 &&
+		rm mywordlist
+}
+alias enum="enum4linux"
+
+# ====
+# NET
+# ====
+alias bsb="busybox"
+[[ ! -x $(command -v arp) ]] &&
+	alias arp='ip neighbor'
+
+[[ ! -x $(command -v netstat) ]] &&
+	alias netstat='bsb netstat'
+
+[[ ! -x $(command -v nc) ]] &&
+	alias ncl='bsb nc -lvp' &&
+	alias nc='bsb nc' &&
+	alias netcat='bsb nc'
+
+# ===============================
+if [[ $(whoami) != "root" ]] && [[ -x $(command -v exa) ]]; then
+
+	alias ls='exa --color=automatic --group-directories-first' \
+		l='exa -l --color=automatic --group-directories-first' \
+		la='exa -a --color=automatic --group-directories-first' \
+		ll='exa -l --color=automatic --group-directories-first' \
+		lt='exa -aT --color=automatic --group-directories-first' \
+		l.='exa -a | egrep "^\."' \
+		lg='exa -a | grep '
+fi
+
+# rgp="ruby grep_pptx.rb"\
+alias su="su -" # the - lets you have env variables in root
+# sudo="sudo -E"\
+
+# colab="echo \"!wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip
+# !unzip ijava-1.3.0.zip
+# !python install.py --sys-prefix\" | xclip -sel clipboard"\
+
+# lol git systemd vscode npm
+#
+ex() {
+	if [ -f $1 ]; then
+		case $1 in
+		*.tar.bz2) tar xjf $1 ;;
+		*.tar.gz) tar xzf $1 ;;
+		*.bz2) bunzip2 $1 ;;
+		*.rar) unrar x $1 ;;
+		*.gz) gunzip $1 ;;
+		*.tar) tar xf $1 ;;
+		*.tbz2) tar xjf $1 ;;
+		*.tgz) tar xzf $1 ;;
+		*.zip) unzip $1 ;;
+		*.Z) uncompress $1 ;;
+		*.7z) 7z x $1 ;;
+		*.deb) ar x $1 ;;
+		*.tar.xz) tar xf $1 ;;
+		*.tar.zst) unzstd $1 ;;
+		*) echo "'$1' cannot be extracted via ex()" ;;
+		esac
+	else
+		echo "'$1' is not a valid file"
+	fi
+}
+
+cripto() {
+	[[ -n $1 ]] &&
+		curl rate.sx/$1@4w ||
+		curl rate.sx
+}
+
+alias hig="history | grep -i" hi="history"
+# LOL!!1
+# Source: https://aur.archlinux.org/packages/lolbash/lolbash/lolbash.sh
+
+alias wtf='dmesg'
+alias onoz='cat /var/log/errors.log'
+alias :3='echo'
+alias alwayz='tail -f'
+
+alias icanhas='mkdir'
+alias gimmeh='touch'
+alias gtfo='rm'
+alias nowai='chmod'
+
+alias hai='cd'
+alias iz='ls'
+alias ihasbucket='df -h'
+
+alias inur='locate'
+alias iminurbase='finger'
+
+alias btw='nice'
+alias obtw='nohup'
+
+alias dare='ps aux'
+alias nomnom='killall'
+
+alias byes='exit'
+alias cya='reboot'
+alias kthxbai='halt'
+
+alias pwned='ssh'
+alias boosto='chmod +x'
+
+#=====================================================
+#           git
+#=====================================================
+
+grmsecret() {
+    # check https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
+    # must be path from repo ex: ./core/etc.py
+    git filter-repo --invert-paths --path "$1"
+}
+ggrep() {
+    #look for strings in all commits
+    git rev-list --all | GIT_PAGER=cat xargs git grep "$1"
+}
+
+tobare() {
+    # commit the initial structure!
+    folder="$(basename $(pwd))"
+    bare_name="$folder.tmp"
+    mv .git "../$bare_name"
+	cd ..
+	rm -fr "$folder"
+    mv "$bare_name" "$folder"
+	cd "$folder"
+	git config --bool core.bare true
+    git worktree add main # requires at least 1 commit!
+    cd main
+}
+alias gw="git worktree"
+alias gwa="git worktree add"
+alias gwl="git worktree list"
+
+gww() {
+    prj_root=$(git worktree list | sed 1q | awk '{print $1}')
+    branches=$(git worktree list | sed 1d | awk '{print $1}')
+    branch_names=$(echo -n $branches | xargs -n 1 basename)
+    chosen_branch=$(echo -n $branch_names | fzf --preview="[ -f FETCH_HEAD ] && exa -1 {} ||
+        exa -1 $(git worktree list | sed 1q | awk '{print $1}' )/{}")
+    if [ -z $chosen_branch ]; then
+        return
+    fi
+
+    chosen_branch_path=$(echo $branches | grep "${chosen_branch}$")
+    cd $chosen_branch_path || return
+}
+
+fzfgd() {
+	preview="git diff $@ --color=always -- {-1}"
+	args="$@"
+	git diff $args --name-only | fzf -m --ansi --preview $preview
+}
+alias hackzor='git init'
+alias readyperfectoni='git commit -am'
+yolo() {
+	git commit -m "$(curl -s http://whatthecommit.com/index.txt)"
+}
+
+# Functions
+#
+
+# The name of the current branch
+# Back-compatibility wrapper for when this function was defined here in
+# the plugin, before being pulled in to core lib/git.zsh as git_current_branch()
+# to fix the core -> git plugin dependency.
+function current_branch() {
+	git_current_branch
+}
+
+# Pretty log messages
+function _git_log_prettily() {
+	if ! [ -z $1 ]; then
+		git log --pretty=$1
+	fi
+}
+compdef _git _git_log_prettily=git-log
+
+# Warn if the current branch is a WIP
+function work_in_progress() {
+	if $(git log -n 1 2>/dev/null | grep -q -c "\-\-wip\-\-"); then
+		echo "WIP!!"
+	fi
+}
+
+# Check if main exists and use instead of master
+function git_main_branch() {
+	if [[ -n "$(git branch --list main)" ]]; then
+		echo main
+	else
+		echo master
+	fi
+}
+
+#
+# Aliases
+# (sorted alphabetically)
+
+alias gF='git flow'
+alias gFf='git flow feature'
+alias gFfs='git flow feature start'
+alias gFfp='git flow feature publish'
+alias gFfP='git flow feature pull'
+alias gFft='git flow feature track'
+alias gFff='git flow feature finish'
+
+alias gFr='git flow release'
+alias gFrs='git flow release start'
+alias gFrp='git flow release publish'
+alias gFrt='git flow release track'
+alias gFrf='git flow release finish'
+
+alias gFh='git flow hotfix'
+alias gFh='git flow hotfix start'
+alias gFh='git flow hotfix finish'
+
+alias gFss='git flow support start'
+alias gFsf='git flow support finish'
+
+alias gFbs='git flow bugfix start'
+alias gFbf='git flow bugfix finish'
+
+alias g='git'
+
+alias groot='cd "$(git rev-parse --show-toplevel)"'
+alias gaa='git add'
+alias ga='git add'
+alias gA='git add --all'
+alias gapa='git add --patch'
+# add modified
+alias gau='git add --update'
+# add untracked
+alias gaU='git add $(git ls-files -o --exclude-standard $(git rev-parse --show-toplevel))'
+alias gav='git add --verbose'
+alias gap='git apply'
+alias gapt='git apply --3way'
+
+alias gb='git branch'
+alias gba='git branch -a'
+alias gbd='git branch -d'
+alias gbda='git branch --no-color --merged | command grep -vE "^(\+|\*|\s*($(git_main_branch)|development|develop|devel|dev)\s*$)" | command xargs -n 1 git branch -d'
+alias gbD='git branch -D'
+alias gbl='git blame -b -w'
+alias gbnm='git branch --no-merged'
+alias gbr='git branch --remote'
+alias gbs='git bisect'
+alias gbsb='git bisect bad'
+alias gbsg='git bisect good'
+alias gbsr='git bisect reset'
+alias gbss='git bisect start'
+
+alias ggc='git commit -v'
+alias ggcm='ggc -m'
+alias ggca='ggc -a'
+alias ggcA='git commit -v --amend'
+alias ggcAn='git commit -v --amend --no-edit'
+# alias gcn='git commit -v --no-edit --amend'
+alias ggcall='git commit -v -a'
+# alias gca!='git commit -v -a --amend'
+# alias gcan!='git commit -v -a --no-edit --amend'
+# alias gcans!='git commit -v -a -s --no-edit --amend'
+# alias gcam='git commit -a -m'
+# alias gcsm='git commit -s -m'
+alias gcb='git checkout -b'
+alias gcfl='git config --global --list'
+alias gcf='git config --global'
+alias gauthor='git commit --amend --author="Juan Alejandro Bernal <jbernal@unal.edu.co>" --no-edit'
+# alias gcl='git clone --recurse-submodules'
+alias gcld='git clone --depth=1'
+alias gcl='git clone'
+gclb() {
+	git clone --bare $1 ${$(basename $1)%.*}
+}
+
+# clean force and untracked folders
+alias gcL='git clean -fd'
+# clean except pattern
+alias gcLe='git clean -fde'
+# see what WOULD be deleted
+alias gcLn='git clean -fdn'
+
+alias gclean='git clean -id'
+alias gpristine='git reset --hard && git clean -dffx'
+alias gcm='git checkout $(git_main_branch)'
+alias gcd='git checkout develop'
+alias gcmsg='git commit -m'
+alias gc='git checkout'
+alias gshort='git shortlog'
+alias gcount='git shortlog -sn'
+alias gcp='git cherry-pick'
+alias gcpa='git cherry-pick --abort'
+alias gcpc='git cherry-pick --continue'
+alias ggcs='git commit -S'
+
+
+alias gd='git diff'
+alias gdca='git diff --cached'
+alias gdcw='git diff --cached --word-diff'
+alias gdct='git describe --tags $(git rev-list --tags --max-count=1)'
+alias gds='git diff --staged'
+alias gdt='git diff-tree --no-commit-id --name-only -r'
+alias gdw='git diff --word-diff'
+
+function gdnolock() {
+	git diff "$@" ":(exclude)package-lock.json" ":(exclude)*.lock"
+}
+compdef _git gdnolock=git-diff
+
+function gdv() {
+	git diff -w "$@" | view -
+}
+compdef _git gdv=git-diff
+
+alias gf='git fetch'
+alias gfa='git fetch --all --prune'
+alias gfo='git fetch origin'
+
+alias gfg='git ls-files | grep'
+
+alias gg='git gui citool'
+alias gga='git gui citool --amend'
+
+function ggf() {
+	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
+	git push --force origin "${b:=$1}"
+}
+compdef _git ggf=git-checkout
+function ggfl() {
+	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
+	git push --force-with-lease origin "${b:=$1}"
+}
+compdef _git ggfl=git-checkout
+
+function ggP() {
+	if [[ "$#" != 0 ]] && [[ "$#" != 1 ]]; then
+		git pull origin "${*}"
+	else
+		[[ "$#" == 0 ]] && local b="$(git_current_branch)"
+		git pull origin "${b:=$1}"
+	fi
+}
+compdef _git ggP=git-checkout
+
+function ggp() {
+	if [[ "$#" != 0 ]] && [[ "$#" != 1 ]]; then
+		git push origin "${*}"
+	else
+		[[ "$#" == 0 ]] && local b="$(git_current_branch)"
+		git push origin "${b:=$1}"
+	fi
+}
+compdef _git ggp=git-checkout
+
+# pull and push
+function ggpp() {
+	if [[ "$#" == 0 ]]; then
+		ggP && ggp
+	else
+		ggP "${*}" && ggp "${*}"
+	fi
+}
+compdef _git ggpp=git-checkout
+
+function ggPr() {
+	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
+	git pull --rebase origin "${b:=$1}"
+}
+compdef _git ggPr=git-checkout
+
+# alias ggpur='ggPr'
+# alias ggPu='git pull origin "$(git_current_branch)"'
+#
+alias ggpush='git push origin "$(git_current_branch)"'
+
+alias gbsup='git branch --set-upstream-to=origin/$(git_current_branch)'
+alias gpsup='git push --set-upstream origin $(git_current_branch)'
+
+alias ghh='git help'
+
+alias gignore='git update-index --assume-unchanged'     # and your file <file>
+alias gnignore='git update-index --no-assume-unchanged' # and your file <file>
+alias gignored='git ls-files -v | grep "^[[:lower:]]"'
+alias gignored2='git ls-files -v | grep "^h" | cut -c3-'
+alias git-svn-dcommit-push='git svn dcommit && git push github $(git_main_branch):svntrunk'
+
+alias gk='\gitk --all --branches'
+alias gke='\gitk --all $(git log -g --pretty=%h)'
+
+# alias gl='git pull'
+alias grf="git reflog"
+
+alias glp="_git_log_prettily"
+
+alias glgm="git log --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr)' --max-count=10"
+alias glG='git log --graph'
+alias glGo='git log --oneline --decorate --graph'
+alias glGoa='git log --oneline --decorate --graph --all'
+alias glGm='git log --graph --max-count=10'
+alias glGom='git log --oneline --decorate --graph --max-count=10'
+alias glGoam='git log --oneline --decorate --graph --all --max-count=10'
+alias glgsm='git log --stat --max-count=10'
+alias glgpm='git log --stat -p --max-count=10'
+alias glgam='git log --decorate --all --max-count=10'
+alias glGam='git log --graph --decorate --all --max-count=10'
+
+alias glg="git log --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr)'"
+alias glgs='git log --stat'
+alias glgp='git log --stat -p'
+alias glga='git log --decorate --all'
+alias glGa='git log --graph --decorate --all'
+# alias glgo='git log --oneline --decorate'
+
+alias glGol="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"
+alias glGols="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --stat"
+alias glGod="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset'"
+alias glGods="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset' --date=short"
+alias glGola="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --all"
+
+alias gm='git merge'
+alias gmom='git merge origin/$(git_main_branch)'
+alias gmt='git mergetool --no-prompt'
+alias gmtvim='git mergetool --no-prompt --tool=vimdiff'
+alias gmum='git merge upstream/$(git_main_branch)'
+alias gma='git merge --abort'
+
+alias gp='git push'
+alias gpd='git push --dry-run'
+alias gpf='git push --force-with-lease'
+alias gpf='git push --force'
+alias gpoat='git push origin --all && git push origin --tags'
+# alias gpu='git push upstream'
+alias gpv='git push -v'
+
+alias gr='git remote'
+alias gra='git remote add'
+alias grao='git remote add origin'
+alias grro='git remote remove origin'
+alias grg='git remote get-url'
+alias grgo='git remote get-url origin'
+alias grb='git rebase'
+alias grba='git rebase --abort'
+alias grbc='git rebase --continue'
+alias grbd='git rebase develop'
+alias grbi='git rebase -i'
+alias grbm='git rebase $(git_main_branch)'
+alias grbs='git rebase --skip'
+alias grev='git revert'
+alias gR='git reset'
+gRh() {
+	if [[ -n "$1" ]]; then
+		git reset --hard $1
+	else
+		git reset --hard HEAD
+	fi
+}
+alias gRoh='git reset origin/$(git_current_branch) --hard'
+alias grm='git rm'
+alias grmc='git rm --cached'
+alias grmv='git remote rename'
+alias grrm='git remote remove'
+alias grs='git restore'
+alias grset='git remote set-url'
+alias grss='git restore --staged'
+alias grso='git restore --source'
+alias grt='cd "$(git rev-parse --show-toplevel || echo .)"'
+alias gru='git reset --'
+alias grup='git remote update'
+alias grv='git remote -v'
+
+alias gsb='git status -sb'
+# alias gsd='git svn dcommit'
+alias gsh='git show'
+alias gsi='git submodule init'
+alias gshp='git show --pretty=short --show-signature'
+alias gsr='git svn rebase'
+alias gsT='git status -s'
+alias gst='git status'
+alias gt='git tag'
+
+# use the default stash push on git 2.13 and newer
+autoload -Uz is-at-least
+is-at-least 2.13 "$(git --version 2>/dev/null | awk '{print $3}')" &&
+	alias gsp='git stash push' ||
+	alias gsp='git stash save'
+
+alias gS='git stash'
+alias gSa='git stash apply'
+alias gSc='git stash clear'
+alias gSd='git stash drop'
+alias gSt='git stash list'
+alias gSP='git stash pop'
+alias gSs='git stash show --text'
+alias gSpu='git stash push --include-untracked'
+alias gStall='git stash --all'
+
+alias gsw='git switch'
+alias gswc='git switch -c'
+
+alias gts='git tag -s'
+alias gtv='git tag | sort -V'
+gtl() {
+	noglob
+	git tag --sort=-v:refname -n -l "${1}*"
+}
+
+alias gunignore='git update-index --no-assume-unchanged'
+alias gunwip='git log -n 1 | grep -q -c "\-\-wip\-\-" && git reset HEAD~1'
+alias gP='git pull'
+alias gPr='git pull --rebase'
+alias gPrv='git pull --rebase -v'
+alias gPra='git pull --rebase --autostash'
+alias gPrav='git pull --rebase --autostash -v'
+alias gPum='git pull upstream $(git_main_branch)'
+
+alias gwch='git whatchanged -p --abbrev-commit --pretty=medium'
+alias gwip='git add -A; git rm $(git ls-files --deleted) 2> /dev/null; git commit --no-verify --no-gpg-sign -m "--wip-- [skip ci]"'
+
+alias gam='git am'
+alias gamc='git am --continue'
+alias gams='git am --skip'
+alias gama='git am --abort'
+alias gamscp='git am --show-current-patch'
+
+function gbR() {
+	if [[ -z "$1" || -z "$2" ]]; then
+		echo "Usage: $0 old_branch new_branch"
+		return 1
+	fi
+
+	# Rename branch locally
+	git branch -m "$1" "$2"
+	# Rename branch in origin remote
+	if git push origin :"$1"; then
+		git push --set-upstream origin "$2"
+	fi
+}
+
+alias gse='git secret' \
+	gser='git secrets reveal' \
+	gseh='git secrets hide' \
+	gsels='git secrets list' \
+	gserm='git secrets remove' \
+	gsea='git secrets add'
+
+ggcam() {
+	if [[ -n "$1" ]]; then
+		ggc -am "$1"
+	else
+		echo "message:"
+		read message
+		ggc -am "$message"
+	fi
+}
+
+ggap() {
+	if [[ -n "$1" ]]; then
+		git commit -am "$1" && ggp
+	else
+		echo "message:"
+		read message
+		git commit -am "$message" && ggp
+	fi
+}
+
+#=====================================================
+#           Systemd
+#=====================================================
+user_commands=(
+	cat
+	get-default
+	help
+	is-active
+	is-enabled
+	is-failed
+	is-system-running
+	list-dependencies
+	list-jobs
+	list-sockets
+	list-timers
+	list-unit-files
+	list-units
+	show
+	show-environment
+	status)
+
+sudo_commands=(
+	add-requires
+	add-wants
+	cancel
+	daemon-reexec
+	daemon-reload
+	default
+	disable
+	edit
+	emergency
+	enable
+	halt
+	hibernate
+	hybrid-sleep
+	import-environment
+	isolate
+	kexec
+	kill
+	link
+	list-machines
+	load
+	mask
+	poweroff
+	preset
+	preset-all
+	reboot
+	reenable
+	reload
+	reload-or-restart
+	reset-failed
+	rescue
+	restart
+	revert
+	set-default
+	set-environment
+	set-property
+	start
+	stop
+	suspend
+	switch-root
+	try-reload-or-restart
+	try-restart
+	unmask
+	unset-environment)
+
+for c in $user_commands; do alias sc-$c="systemctl $c"; done
+for c in $sudo_commands; do alias sc-$c="sudo systemctl $c"; done
+for c in $user_commands; do alias scu-$c="systemctl --user $c"; done
+for c in $sudo_commands; do alias scu-$c="systemctl --user $c"; done
+
+alias sct="sc-status"
+alias sca="sc-start"
+alias sco="sc-stop"
+alias sc-enable-now="sc-enable --now"
+alias sc-disable-now="sc-disable --now"
+alias sc-mask-now="sc-mask --now"
+
+alias scu-enable-now="scu-enable --now"
+alias scu-disable-now="scu-disable --now"
+alias scu-mask-now="scu-mask --now"
+
+#=====================================================
+#           vscode
+#=====================================================
+
+# VS Code (stable / insiders) / VSCodium zsh plugin
+# Authors:
+#   https://github.com/MarsiBarsi (original author)
+#   https://github.com/babakks
+#   https://github.com/SteelShot
+
+# Verify if any manual user choice of VS Code exists first.
+# if [[ -n "$VSCODE" ]] && ! which $VSCODE &>/dev/null; then
+#   echo "'$VSCODE' flavour of VS Code not detected."
+#   unset VSCODE
+# fi
+
+# # Otherwise, try to detect a flavour of VS Code.
+# if [[ -z "$VSCODE" ]]; then
+#   if which code &>/dev/null; then
+#     VSCODE=code
+#   elif which code-insiders &>/dev/null; then
+#     VSCODE=code-insiders
+#   elif which codium &>/dev/null; then
+#     VSCODE=codium
+#   else
+#     return
+#   fi
+# fi
+
+# alias vsc="$VSCODE ."
+# alias vsca="$VSCODE --add"
+# alias vscd="$VSCODE --diff"
+# alias vscg="$VSCODE --goto"
+# alias vscn="$VSCODE --new-window"
+# alias vscr="$VSCODE --reuse-window"
+# alias vscw="$VSCODE --wait"
+# alias vscu="$VSCODE --user-data-dir"
+
+# alias vsced="$VSCODE --extensions-dir"
+# alias vscie="$VSCODE --install-extension"
+# alias vscue="$VSCODE --uninstall-extension"
+
+# alias vscv="$VSCODE --verbose"
+# alias vscl="$VSCODE --log"
+# alias vscde="$VSCODE --disable-extensions"
+
+#=====================================================
+#           npm
+#=====================================================
+
+_npm_completion() {
+	local si=$IFS
+	compadd -- $(COMP_CWORD=$((CURRENT - 1)) \
+		COMP_LINE=$BUFFER \
+		COMP_POINT=0 \
+		npm completion -- "${words[@]}" \
+		2>/dev/null)
+	IFS=$si
+}
+compdef _npm_completion npm
+
+# Install dependencies globally
+alias npmg="npm i -g "
+
+# npm package names are lowercase
+# Thus, we've used camelCase for the following aliases:
+
+# Install and save to dependencies in your package.json
+# npms is used by https://www.npmjs.com/package/npms
+alias npmS="npm i -S "
+
+# Install and save to dev-dependencies in your package.json
+# npmd is used by https://github.com/dominictarr/npmd
+alias npmD="npm i -D "
+
+# Execute command from node_modules folder based on current directory
+# i.e npmE gulp
+alias npmE='PATH="$(npm bin)":"$PATH"'
+
+# Check which npm modules are outdated
+alias npmO="npm outdated"
+
+# Check package versions
+alias npmV="npm -v"
+
+# List packages
+alias npmL="npm list"
+
+# List top-level installed packages
+alias npmL0="npm ls --depth=0"
+
+# Run npm start
+alias npmst="npm start"
+
+# Run npm test
+alias npmt="npm test"
+
+# Run npm scripts
+alias npmR="npm run"
+
+# Run npm publish
+alias npmP="npm publish"
+
+# Run npm init
+alias npmI="npm init"
+
+#============
+#DOCKER
+#============
+alias webgoat='docker run -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 -e TZ=America/Bogota webgoat/goatandwolf'
+#https://github.com/akarzim/zsh-docker-aliases
+#
+
+# Set Docker Machine environment
+function dkme {
+	if ((!$ + commands[docker - machine])); then
+		return 1
+	fi
+
+	eval $(docker-machine env $1)
+}
+
+# Set Docker Machine default machine
+function dkmd {
+	if ((!$ + commands[docker - machine])); then
+		return 1
+	fi
+
+	pushd ~/.docker/machine/machines
+
+	if [[ ! -d $1 ]]; then
+		echo "Docker machine '$1' does not exists. Abort."
+		popd
+		return 1
+	fi
+
+	if [[ -L default ]]; then
+		eval $(rm -f default)
+	elif [[ -d default ]]; then
+		echo "A default manchine already exists. Abort."
+		popd
+		return 1
+	elif [[ -e default ]]; then
+		echo "A file named 'default' already exists. Abort."
+		popd
+		return 1
+	fi
+
+	eval $(ln -s $1 default)
+	popd
+}
+
+#
+# Defines Docker aliases.
+#
+# Author:
+#   François Vantomme <akarzim@gmail.com>
+#
+
+#
+# Aliases
+#
+
+# Docker
+alias dk='docker '
+alias dk.='bat Dockerfile'
+alias dka='docker attach '
+alias dkb='docker build '
+alias dkd='docker diff '
+alias dkdf='docker system df '
+alias dke='docker exec '
+alias dkE='docker exec -e COLUMNS=`tput cols` -e LINES=`tput lines` -i -t '
+alias dkh='docker history '
+alias dki='docker images '
+alias dkin='docker inspect '
+alias dkinfo='docker info '
+alias dkim='docker import '
+alias dkk='docker kill '
+alias dkkh='docker kill -s HUP '
+alias dklg='docker logs '
+alias dklG='docker logs -f '
+alias dkli='docker login '
+alias dklo='docker logout '
+alias dkls='docker ps '
+alias dkpa='docker pause '
+alias dkpA='docker unpause '
+alias dkP='docker pull '
+alias dkp='docker push '
+alias dkps='docker ps '
+alias dkpsa='docker ps -a '
+alias dkr='docker run '
+alias dkri='docker run -i -t '
+alias dkR='docker run -e COLUMNS=`tput cols` -e LINES=`tput lines` -i -t --rm '
+alias dkRb='docker run -e COLUMNS=`tput cols` -e LINES=`tput lines` -i -t --rm --entrypoint /bin/bash '
+alias dkRM='docker system prune '
+alias dkrm='docker rm '
+alias dkrmi='docker rmi '
+alias dkrn='docker rename '
+alias dks='docker start '
+alias dkx='docker restart '
+alias dkst='docker stats '
+alias dksv='docker save '
+alias dkt='docker tag '
+alias dktop='docker top '
+alias dkup='docker update '
+alias dkV='docker volume '
+alias dkv='nvim Dockerfile'
+alias dkw='docker wait '
+alias dkS='docker stop '
+alias dkSa='docker stop $(docker ps -a -q) '
+alias dkkali='dkr -it kalilinux/kali-rolling bash '
+
+## Container (C)
+alias dkC='docker container '
+alias dkCa='docker container attach '
+alias dkCcp='docker container cp '
+alias dkCd='docker container diff '
+alias dkCe='docker container exec '
+alias dkCE='docker container exec -e COLUMNS=`tput cols` -e LINES=`tput lines` -i -t '
+alias dkCin='docker container inspect '
+alias dkCk='docker container kill '
+alias dkCl='docker container logs '
+alias dkCL='docker container logs -f '
+alias dkCls='docker container ls '
+alias dkCp='docker container pause '
+alias dkCpr='docker container prune '
+alias dkCrn='docker container rename '
+alias dkCS='docker container restart '
+alias dkCrm='docker container rm '
+alias dkCr='docker container run '
+alias dkCR='docker container run -e COLUMNS=`tput cols` -e LINES=`tput lines` -i -t --rm '
+alias dkCRb='docker container run -e COLUMNS=`tput cols` -e LINES=`tput lines` -i -t --rm --entrypoint /bin/bash '
+alias dkCs='docker container start '
+alias dkCst='docker container stats '
+alias dkCS='docker container stop '
+alias dkCtop='docker container top '
+alias dkCP='docker container unpause '
+alias dkCup='docker container update '
+alias dkCw='docker container wait '
+
+## Image (I)
+alias dkI='docker image '
+alias dkIb='docker image build '
+alias dkIh='docker image history '
+alias dkIim='docker image import '
+alias dkIin='docker image inspect '
+alias dkIls='docker image ls '
+alias dkIpr='docker image prune '
+alias dkIpl='docker image pull '
+alias dkIph='docker image push '
+alias dkIrm='docker image rm '
+alias dkIsv='docker image save '
+alias dkIt='docker image tag '
+
+## Volume (V)
+alias dkV='docker volume '
+alias dkVin='docker volume inspect '
+alias dkVls='docker volume ls '
+alias dkVpr='docker volume prune '
+alias dkVrm='docker volume rm '
+
+## Network (N)
+alias dkNg='docker inspect -f "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}"' #name_containe r
+alias dkN='docker network '
+alias dkNc='docker network create '
+alias dkNco='docker network connect '
+alias dkNx='docker network disconnect '
+alias dkNin='docker network inspect '
+alias dkNls='docker network ls '
+alias dkNpr='docker network prune '
+alias dkNrm='docker network rm '
+
+## System (Y)
+alias dkY='docker system '
+alias dkYdf='docker system df '
+alias dkYpr='docker system prune '
+
+## Stack (K)
+alias dkK='docker stack '
+alias dkKls='docker stack ls '
+alias dkKps='docker stack ps '
+alias dkKrm='docker stack rm '
+
+## Swarm (W)
+alias dkW='docker swarm '
+
+## CleanUp (rm)
+# Clean up exited containers (docker < 1.13)
+alias dkrmC='docker rm $(docker ps -qaf status=exited)'
+
+# Clean up dangling images (docker < 1.13)
+alias dkrmI='docker rmi $(docker images -qf dangling=true)'
+
+# Pull all tagged images
+alias dkplI='docker images --format "{{ .Repository }}" | grep -v "^<none>$" | xargs -L1 docker pull'
+
+# Clean up dangling volumes (docker < 1.13)
+alias dkrmV='docker volume rm $(docker volume ls -qf dangling=true)'
+
+# Docker Machine (m)
+alias dkm='docker-machine '
+alias dkma='docker-machine active '
+alias dkmcp='docker-machine scp '
+alias dkmin='docker-machine inspect '
+alias dkmip='docker-machine ip '
+alias dkmk='docker-machine kill '
+alias dkmls='docker-machine ls '
+alias dkmpr='docker-machine provision '
+alias dkmps='docker-machine ps '
+alias dkmrg='docker-machine regenerate-certs '
+alias dkmrm='docker-machine rm '
+alias dkms='docker-machine start '
+alias dkmsh='docker-machine ssh '
+alias dkmst='docker-machine status '
+alias dkmx='docker-machine restart '
+alias dkmu='docker-machine url '
+alias dkmup='docker-machine upgrade '
+alias dkmv='docker-machine version '
+alias dkmS='docker-machine stop '
+
+# Docker Compose (c)
+alias dkc.l='bat docker-compose.local.yml'
+alias dkc.='bat docker-compose.yml'
+alias dkc='docker-compose '
+alias dkcC='docker-compose config '
+alias dkcb='docker-compose build '
+alias dkcB='docker-compose build --no-cache '
+alias dkcd='docker-compose down '
+alias dkcD='docker-compose down --volumes '
+alias dkce='docker-compose exec -e COLUMNS=`tput cols` -e LINES=`tput lines` '
+alias dkck='docker-compose kill '
+alias dkclg='docker-compose logs --follow '
+alias dkclG='docker-compose logs -f '
+alias dkcls='docker-compose ps '
+alias dkcz='docker-compose pause '
+alias dkcZ='docker-compose unpause '
+alias dkcP='docker-compose pull '
+alias dkcp='docker-compose push '
+alias dkcps='docker-compose ps '
+alias dkcr='docker-compose run -e COLUMNS=`tput cols` -e LINES=`tput lines` '
+alias dkcR='docker-compose run -e COLUMNS=`tput cols` -e LINES=`tput lines` --rm '
+alias dkcrm='docker-compose rm '
+alias dkcs='docker-compose start '
+alias dkcsc='docker-compose scale '
+alias dkcx='docker-compose restart '
+alias dkcu='docker-compose up '
+alias dkcU='docker-compose up -d '
+alias dkcv='nvim docker-compose.yml '
+alias dkcS='docker-compose stop '
+
+alias dkcz='docker-compose down && docker compose up -d '
+alias dkcR='docker-compose build && docker compose down && docker compose up -d '
+
+alias dkclgl='docker-compose -f docker-compose.local.yml logs --follow'
+alias dkcul='docker-compose -f docker-compose.local.yml up'
+alias dkcUl='docker-compose -f docker-compose.local.yml up -d'
+alias dkcDl='docker-compose -f docker-compose.local.yml down -v'
+alias dkcul='docker-compose -f docker-compose.local.yml down'
+alias dkcel='docker-compose -f docker-compose.local.yml exec'
+
+dkcue() {
+	args="${@:2}"
+	docker-compose --env-file=$1 up $args
+}
+
+dkcee() {
+	args="${@:2}"
+	docker-compose --env-file=$1 exec -e COLUMNS=$(tput cols) -e LINES=$(tput lines) $args
+}
+
+dkcUe() {
+	args="${@:2}"
+	docker-compose --env-file=$1 up "$args" -d
+}
+
+dkceb() {
+	docker-compose exec -e COLUMNS=$(tput cols) -e LINES=$(tput lines) "$1" bash
+}
+
+#=======
+# OPENVPN
+#=======
+alias ovpn='_ openvpn'
+alias ovpnj='_ openvpn --config /etc/openvpn/ProtonVPN_server_configs/jp-free-01.protonvpn.com.udp.ovpn --auth-user-pass /etc/openvpn/protonvpn --daemon'
+alias ovpnu='_ openvpn --config /etc/openvpn/ProtonVPN_server_configs/us-free-02.protonvpn.com.udp.ovpn --auth-user-pass /etc/openvpn/protonvpn --daemon'
+alias ovpnd='_ killall openvpn'
+alias openconn="_ cat $WORK/vpn/pass | _ openconnect --config=$WORK/vpn/config --passwd-on-stdin -b vpn.unal.edu.co > $WORK/vpn/vpn-output.log 2>&1"
+alias ofv='_ openfortivpn'
+alias ofvc='ofv -c $WORK/local/covidalert-back/.vpn/config > $WORK/local/covidalert-back/.vpn/vpn.log 2>&1 &'
+
+#============
+# OPENCONNECT
+#============
+# for saml connections
+vpnw(){
+# $1 --> url
+# $2 --> email
+    openconnect-sso --server $1  --user $2
+}
+
+#=======
+# GITHUB
+#=======
+alias ghrc='gh repo create'
+alias ghrf='gh repo fork'
+alias ghpc='gh pr create'
+alias ghil='gh issue list'
+alias ghiv='gh issue view --comments $(gh issue list | fzf --no-preview | cut -f1)'
+
+#=======
+# PYTHON
+#=======
+alias bpy='[ -f Pipfile ] && b Pipfile || b requirements.txt'
+
+#=======
+# FLASK
+#=======
+alias fr="export FLASK_APP=app.py && flask run"
+
+#=======
+# DJANGO
+#=======
+
+alias dj='python manage.py'
+alias djd='python manage.py dumpdata'
+alias djc='django-admin startproject'
+alias djca='python manage.py startapp'
+alias djcs='python manage.py createsuperuser'
+alias djtp= 'python manage.py test --parallel'
+alias djt='python manage.py test'
+alias djr='python manage.py runserver'
+alias djM='python manage.py makemigrations'
+alias djm='python manage.py migrate'
+alias djl='python manage.py loaddata'
+alias djL='python manage.py loadfixtures'
+alias djs='python manage.py shell'
+
+djsr() {
+	file=".misc/scripts/$1"
+	djs -c "exec(open(\"$file\").read())"
+}
+
+djp() {
+	project_name=$(basename $(gitRoot))
+	if [[ -n "$1" ]]; then
+		nvim "$(gitRoot)/${project_name}/$1"
+	else
+		cd "$(gitRoot)/${project_name}"
+	fi
+}
+djps() {
+	project_name=$(basename $(gitRoot))
+	nvim "$(gitRoot)/${project_name}/settings.py"
+}
+
+djR() {
+	dkcD && sleep 0.1
+	dkcU && sleep 0.1
+	djm $1
+}
+djRl() {
+	djR $1 && dj loadfixtures
+}
+
+djS() {
+	djRl && djs
+}
+
+#=======
+# REACT
+#=======
+# any arguments is the name of the app
+alias react='npx create-react-app'
+
+alias vb='VirtualBox'
+#============
+# VAGRANT
+#============
+alias vg='vagrant '
+alias vgi='vagrant init '
+alias vgssh='vagrant ssh '
+alias vga='vagrant box add '
+alias vgr='vagrant reload '
+alias vgrm='vagrant box remove '
+alias vgRM='vagrant box list | cut -f 1 -d ' ' | xargs -L 1 vagrant box remove -f '
+alias vgls='vagrant box list '
+alias vgst='vagrant status '
+# same as start
+alias vgu='vagrant up '
+# same as stop
+alias vgh='vagrant halt '
+# same as down
+alias vgd='vagrant destroy '
+alias vgB='vagrant box '
+alias vgBls='vagrant box list '
+alias vgBa='vagrant box add '
+alias vgBrm='vagrant box remove '
+alias vgkali='vagrant init kalilinux/rolling && vagrant up '
+alias vgwin='vagrant init gusztavvargadr/windows-10 && vagrant up '
+
+#============
+# RCLONE
+#============
+
+alias rc='rclone'
+alias rcls='rclone ls'
+alias rclsd='rclone lsd'
+alias rccp='rclone copy'
+alias rcmv='rclone move'
+# deletes files only
+# to grep you do: rcrm gd:/dir/ --include '*.{jpg,png,etc}'
+alias rcrm='rclone delete'
+# deletes files and directories
+alias rcrmd='rclone purge'
+alias rcmu='rclone mount --daemon'
+alias rcmg='rclone mount --daemon gd: $REMOTES/gd'
+
+#============
+# DUPLICITY
+#============
+# example ->
+#duplicity test_folder rclone://gd:Test_duplicity
+#duplicity restore rclone://gd:Test_duplicity test_folder
+alias dup='duplicity --encrypt-key=D3501299'
+alias dupr='duplicity restore'
+
+#============
+# KUBERNETES
+#============
+
+alias k='kubectl'
+
+#===========
+# RSYNC
+#===========
+
+# alias rplz='rsync --partial --progress --update --rsh="ssh -p 22"'
+# could be -e instead of --rsh
+# --update or -u only uploads files that have changed
+# -v verbose
+# -r recursive (folders)
+alias rplz='rsync -Puvr'
+alias rs="rsync -rlptzv "
+# same as --partial --progress, --rsh is ssh by default
+
+# DO ALL THESE FROM THE ROOT OF THE DOWNLOAD (where you did sshP)
+rsclone() {
+	#https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-client
+	rsync -rlptzv --progress --delete --exclude=.git $1 $2
+}
+
+rsupload() {
+	#https://code.visualstudio.com/docs/remote/troubleshooting#_installing-a-supported-ssh-client
+	rsync -rlptzv --progress --delete --exclude=.git $1 $2
+}
+
+sshp() {
+	if [[ -n $1 ]]; then
+		echo $1 >.remote
+	fi
+
+	if [[ -f .remote ]]; then
+		folder="$(basename $(cat .remote))"
+		rsync -rlptzv --backup-dir=$PLAYGROUND/SSH_BACKUPS --backup --progress --exclude=.git --exclude=env --exclude=.venv --exclude=.remote * "$(cat .remote)"
+		exit
+	fi
+	echo "argument or .remote file found"
+}
+
+sshP() {
+
+	if [[ -n $1 ]]; then
+		echo $1 >.remote
+	fi
+
+	if [[ -f .remote ]]; then
+		folder="$(basename $(cat .remote))"
+		rsync -rlptzv --backup-dir=$PLAYGROUND/SSH_BACKUPS --backup --progress --exclude=.git --exclude=env --exclude=.venv --exclude=.remote "$(cat .remote)/*" .
+		exit
+	fi
+	echo ".remote not found, add argument to create one"
+}
+
+sshcl() {
+	if [[ -n $1 ]]; then
+		folder="$(basename $1)"
+		rsync -rlptzv --backup-dir=$PLAYGROUND/SSH_BACKUPS --backup --progress --exclude=.git --exclude=env --exclude=.venv --exclude=.remote "$1" .
+		echo $1 >$folder/.remote
+	fi
+	echo "$1 not found, change argument"
+}
+
+vimr() {
+	vim rsync://$1:$2
+}
+vimR() {
+	# in case rsync is not installed in remote machine
+	vim scp://$1/$2
+}
+
+#==================
+# EXPRESS
+#==================
+
+alias initexpress="npx express-generator"
+
+#==================
+# CHEZMOI
+#==================
+
+alias chf="chezmoi cd"
+alias chd="chezmoi data"
+alias ch="chezmoi"
+alias cha="chezmoi add"
+alias che="chezmoi edit"
+alias chE="chezmoi execute-template"
+alias chat="chezmoi add --template"
+alias chaat="chezmoi add --autotemplate"
+# add the template attribute to a dotfile
+alias chch="chezmoi chattr +template"
+alias chA="chezmoi -v apply"
+alias chst="chezmoi status"
+alias chfr="chezmoi forget" # remove from repo
+alias chrm="chezmoi remove" # remove from repo and filesystem
+
+alias ans="ansible"
+alias ansi="ansible -i" # for inventory, can be an ip
+ansp() {
+    # a ping command
+    ansible $1 -m ping
+}
+
+anss() {
+    # a shell command
+    ansible $1 -m shell -a $2
+}

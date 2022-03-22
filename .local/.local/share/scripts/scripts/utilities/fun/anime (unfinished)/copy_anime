@@ -1,0 +1,5 @@
+#!/bin/sh
+
+video=$(select_anime)
+cp "$video" "/mnt"
+notify-send "copied to usb!"

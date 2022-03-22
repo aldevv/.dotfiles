@@ -1,0 +1,8 @@
+#!/bin/sh
+# dependencies sxiv
+apt-get -y install libimlib2-dev libexif-dev libgif-dev
+
+cd "$PROGRAMS/sxiv"
+git clone https://github.com/muennich/sxiv
+make 
+make install

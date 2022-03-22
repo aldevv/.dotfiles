@@ -1,0 +1,16 @@
+#!/bin/sh
+# MMDDhhmmYYYY
+# sudo date 031923002021
+
+echo "month: MM"
+read $month
+echo "day: DD"
+read $day
+echo "hour: hh"
+read $hour
+echo "minutes: mm"
+read $minutes
+echo "year: YYYY"
+read $year
+
+sudo date ${month}${day}${hour}${minutes}${year}

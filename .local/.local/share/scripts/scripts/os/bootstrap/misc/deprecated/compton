@@ -1,0 +1,9 @@
+#!/bin/sh
+sudo eopkg -y install  libxinerama-devel libxcomposite-devel libxdamage-devel libxrandr-devel libconfig-devel libglu-devel libdrm-devel xsetroot
+
+cd "$PROGRAMS"
+git clone https://github.com/chjj/compton
+cd compton
+make
+make docs
+make install

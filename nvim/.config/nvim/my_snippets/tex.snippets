@@ -1,0 +1,206 @@
+# https://castel.dev/post/lecture-notes-1/    for more
+snippet _skel "start latex file" b
+\documentclass{article}
+%\documentclass[titlepage]{article}
+\usepackage[spanish]{babel}
+\usepackage[hidelinks]{hyperref}
+% how many levels to show in table of contents
+\setcounter{tocdepth}{1}
+% for dark links
+\usepackage{xcolor}
+\hypersetup{colorlinks, linkcolor={red!50!black}, citecolor={blue!50!black}, urlcolor={blue!80!black}}
+\title{\textbf{${1:title}}}
+\author{Juan Alejandro Bernal}
+\begin{document}
+\maketitle
+
+${2:body}
+
+
+%\bibliographystyle{ieeetr}
+%\bibliography{mybib.bib}
+\end{document}
+
+endsnippet
+
+snippet iit "create item" bA
+\item $1
+endsnippet
+
+snippet sse "create section" bA
+\section{$1}\label{sec:$2}
+endsnippet
+
+snippet ssu "create subsection" bA
+\subsection{$1}\label{subsec:$2}
+endsnippet
+
+snippet bbg "begin{} / end{}" bA
+\begin{$1}
+	$0
+\end{$1}
+endsnippet
+
+snippet today "Date using bash"
+`date +%F`
+endsnippet
+
+snippet box "Box"
+`!p snip.rv = '┌' + '─' * (len(t[1]) + 2) + '┐'`
+│ $1 │
+`!p snip.rv = '└' + '─' * (len(t[1]) + 2) + '┘'`
+$0
+endsnippet
+
+snippet mmm "Math" wA
+$${1}$`!p
+if t[2] and t[2][0] not in [',', '.', '?', '-', ' ']:
+    snip.rv = ' '
+else:
+    snip.rv = ''
+`$2
+endsnippet
+
+# this is the same as $$ but can be in its own line
+snippet mmM "Math" wA
+\[
+$1
+\] $0
+endsnippet
+
+# this aligns equations by the & symbol
+snippet mma "Math" wA
+% import amsmath
+% usepackage{amsmath}
+% the * toggles equation numbering
+\begin{align*}
+	${1:something & something} \\
+	${2:something & something}
+\end{align*}
+endsnippet
+
+# this aligns equations by centering
+snippet mmg "Math" wA
+% import amsmath
+% usepackage{amsmath}
+% the * toggles equation numbering
+\begin{gather*}
+	${1:0} \\
+	${2:1}
+\end{gather*}
+endsnippet
+
+snippet ssm "Math sum" iA
+\sum_{$1}^{$2}
+endsnippet
+
+snippet inn "Math integral" iA
+\int_{$1}^{$2}
+endsnippet
+
+snippet ssq "^2" iA
+^2
+endsnippet
+
+snippet ccb "^3" iA
+^3
+endsnippet
+
+snippet ppw "superscript" iA
+^{$1}$0
+endsnippet
+
+snippet ssb "superscript" iA
+_{$1}$0
+endsnippet
+
+snippet uurl "url bibliography" b
+@article{$1,
+author = {},
+title = {{}},
+url = {$2},
+year = {}
+}
+endsnippet
+
+snippet bbib "biblatex" b
+\usepackage[
+    style=apa,
+    backend=biber,
+    sortcites=true,
+    sorting=nyt,
+%    isbn=false,
+%    url=false,
+%    doi=false,
+%    eprint=false,
+    % hyperref=false,
+    backref=false,
+%    firstinits=false,
+]{biblatex}
+\addbibresource{$1}
+%\printbibliography
+endsnippet
+
+snippet ssa "subject to" iA
+% import amsmath
+% usepackage{amsmath}
+\begin{cases}
+	${1:0}, & ${2:\text{if}\ a=1 \\}
+	${3:1}, & ${3:\text{otherwise}}
+\end{cases}
+endsnippet
+
+snippet /// "Fraction" iA
+\\frac{$1}{$2}$0
+endsnippet
+# for fractions
+snippet '((\d+)|(\d*)(\\)?([A-Za-z]+)((\^|_)(\{\d+\}|\d))*)//' "Fraction" wrA
+\\frac{`!p snip.rv = match.group(1)`}{$1}$0
+endsnippet
+
+snippet ssA "Description" iA
+%\usepackage{empheq}
+\begin{empheq}[left={$1=\empheqlbrace}\]{alignat*=7}
+	$2
+    %example:
+    % - 0,1&X_{1} &- 0,1&X_{2} &- 0,1&X_{3} &+ 0,9&X_{4} &- 0,1&X_{5}& &<= 0 \\
+    % &X_{1} &+ &X_{2} &+ &X_{3} &+ &X_{4} &+ &X_{5}& &<= 2\,000\,000 \\
+\end{empheq}
+
+
+endsnippet
+
+snippet sssu "Description" bA
+\subsubsection{$1}\label{subsec:$2}
+endsnippet
+
+snippet ggR "images in Latex" bA
+\usepackage{graphicx}
+\graphicspath{{./imagenes/}}
+endsnippet
+
+snippet ggr "Description" bA
+\begin{figure}[h]
+	\includegraphics[width=\textwidth]{$1}
+\end{figure}
+
+endsnippet
+
+snippet llt "letter"
+\documentclass{letter}
+\usepackage[spanish]{babel}
+
+\signature{Juan Alejandro Bernal}
+\address{}
+
+\begin{document}
+
+\begin{letter}{recipiente}
+\opening{Señor o señora:}
+body
+\closing{Espero ansiosamente su respuesta}
+
+\end{letter}
+\end{document
+
+endsnippet

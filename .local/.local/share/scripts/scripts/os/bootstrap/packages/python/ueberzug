@@ -1,0 +1,11 @@
+#!/bin/bash
+
+declare -A req=(
+['zypper']="python38-devel"
+)
+
+install_ ${req[$PKG]}
+
+sudo -u $SUDO_USER pip install ueberzug
+
+

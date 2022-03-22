@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# kill $(pstree -lp | grep 'lightdm-wrapper'| sed -r 's/^.*lightdm-wrapper\([0-9]+\)---sleep.([0-9]+)./\1/g')
+kill $(pstree -lp | grep -E "\S+status\S+sleep" | sed -r 's/^.*status\([0-9]+\)---sleep.([0-9]+)./\1/g')

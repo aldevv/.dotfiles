@@ -1,0 +1,9 @@
+#!/bin/bash
+[[ "$(stat -c %y ~/dev/corona/info 2>/dev/null | cut -d ' ' -f 1)" != "$(date '+%Y-%m-%d')" ]] && 
+	curl -s https://corona-stats.online\?source\=2 > ~/dev/corona/info
+
+#the dev null is for when you dont have any file, it doesnt throw error
+#the last sed command is used for the colored output
+grep -m 3 Colombia ~/dev/corona/info | 
+	sed 's/│/;/g; s/ //g; s/║//g ; s/\x1b\[[0-9;]*m//g  ' | 
+	awk -F ';' '{print "Infected:" " ("$3")" " Deaths:" " ("$5") " "Recovered: " "("$7") " "New:" "("$4")"}'

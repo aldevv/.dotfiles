@@ -1,0 +1,11 @@
+#!/bin/sh
+bin=$1
+binpath=$(realpath $1)
+docker run \
+   --rm \
+   -it \
+   --privileged \
+   -v $binpath:/tmp/$bin \
+   jthorpe6/pwndbg \
+   /tmp/$bin
+

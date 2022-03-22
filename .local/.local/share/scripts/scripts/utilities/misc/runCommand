@@ -1,0 +1,5 @@
+#!/bin/bash
+response=$(eval echo "$1")
+echo "$response"
+	 
+

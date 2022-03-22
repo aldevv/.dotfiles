@@ -1,0 +1,7 @@
+#!/bin/sh
+# optional first arg: "migrate"
+
+[ "$1" = "migrate" ] && sed -i 's/^#?python/python/g' bootstrap
+#python manage.py migrate && sed -i 's/\(^python.*migrate\)/#\1/g' bootstrap
+python manage.py loadfixtures
+python manage.py runserver 0.0.0.0:8000

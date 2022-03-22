@@ -1,0 +1,5 @@
+#!/bin/sh
+sudo -u $1 wget -O jopInstall https://raw.githubusercontent.com/laurent22/joplin/master/Joplin_install_and_update.sh  
+chmod +x jopInstall	
+sudo -u $1 ./jopInstall 
+rm jopInstall

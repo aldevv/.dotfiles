@@ -1,0 +1,17 @@
+#!/usr/bin/python3
+
+from pylovepdf.tools.officepdf import OfficeToPdf
+import sys
+
+file_       = sys.argv[1]
+destination = sys.argv[2]
+
+t = OfficeToPdf('project_public_ce6aea7267aef18fbab7ea521a39def4_PmX8rae57166f52485317e5fe3ce5d9c2d8c6', verify_ssl=True, proxies=None)
+t.add_file(file_)
+t.set_output_folder(destination)
+t.debug = False
+t.execute()
+filename=t.download()
+t.delete_current_task()
+import os
+os.rename(destination+'/'+filename, os.path.splitext(os.path.basename(file_))[0]+'.pdf')

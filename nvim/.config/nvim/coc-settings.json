@@ -1,0 +1,111 @@
+{
+  "coc.preferences.formatOnSaveFiletypes": ["python"],
+  /* "pairs.enableCharacters": ["(", "[", "{", "'", "\"", "`"], */
+
+  "python.analysis.useLibraryCodeForTypes": true,
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": false,
+  "python.linting.pylintEnabled": true,
+  "python.linting.pylintPath": "~/.local/bin/pylint",
+  "python.formatting.provider": "black",
+  "python.terminal.activateEnvironment": true,
+  "python.formatting.blackArgs": ["-", "--quiet", "--line-length", "100"],
+  /* "__python.pythonPath": "/usr/bin/python3", */
+  /* "python.jediPath": "/usr/lib64/python3.7/site-packages", */
+  "python.jediEnabled": false,
+
+  "snippets.ultisnips.directories": ["~/.config/nvim/my_snippets", "UltiSnips"],
+  "snippets.userSnippetsDirectory": "~/.config/nvim/my_snippets",
+  "snippets.extends": {
+    "cpp": ["c"],
+    "javascriptreact": ["javascript"],
+    "typescript": ["javascript"]
+  },
+  "snippets.shortcut": "S",
+  "clangd.path": "/home/kanon/.config/coc/extensions/coc-clangd-data/install/11.0.0/clangd_11.0.0/bin/clangd",
+  "clangd.disableDiagnostics": false,
+  "clangd.arguments": ["--fallback-style=mozilla"],
+  "clangd.fallbackFlags": ["-stdlib=libstdc++"],
+  "clangd.compilationDatabasePath": "",
+  "diagnostic-languageserver.filetypes": {
+    "sh": "shellcheck"
+  },
+  "diagnostic.checkCurrentLine": false,
+  "diagnostic.enableMessage": "jump",
+  "diagnostic.virtualTextCurrentLineOnly": false,
+  "diagnostic.virtualText": true,
+  "diagnostic.virtualTextPrefix": ">> ",
+  "diagnostic.virtualTextLineSeparator": " \\ ",
+  "diagnostic.enable": true,
+  "codeLens.enable": false,
+  /* "__diagnostic.errorSign": "✘", */
+  /* "__diagnostic.warningSign": "", */
+  "diagnostic.errorSign": ">>",
+  "diagnostic.warningSign": "∙∙",
+  "diagnostic.infoSign": "",
+  "diagnostic.displayByAle": false,
+  /* "__diagnostic.messageDelay.comment": "default= 200", */
+  "diagnostic.messageDelay": 400,
+
+  /* "__suggest.noselect.comment": "this is for not choosing first item when pressing TAB", */
+  "suggest.noselect": false,
+  /* "__suggest.labelMaxLength.comment": "width of text to the left, like Integer, def 100", */
+  "suggest.labelMaxLength": 70,
+  /* "__suggest.detailMaxLength.comment": "description, right of title,def: 200", */
+  "suggest.detailMaxLength": 15,
+  "suggest.maxPreviewWidth": 200,
+  /* "__suggest.trigger.comment": "edit this 2 for better sugestions", */
+  "suggest.triggerCompletionWait": 100,
+  "signature.triggerSignatureWait": 200,
+  "signature.floatMaxWidth": 200,
+  "java.debug.vimspector.start": {
+    "configurations": {
+      "run": {
+        "adapter": "vscode-java",
+        "configuration": {
+          "request": "launch",
+          "protocol": "auto",
+          "stopOnEntry": true,
+          "console": "integratedTerminal",
+          "program": "${workspaceRoot}/{basename}.java",
+          "cwd": "${workspaceRoot}"
+        }
+      },
+      "foobar": {}
+    }
+  },
+  "coc.preferences.colorSupport": true,
+  "list.normalMappings": {
+    "t": "action:tabe",
+    "v": "action:vsplit",
+    "s": "action:split"
+  },
+  "list.insertMappings": {
+    "<C-t>": "action:tabe",
+    "<C-w>": "command:wincmd k",
+    "<A-n>": "normal:n",
+    "<A-e>": "normal:e"
+  },
+  // this lets you enter the settings of a languageserver that
+  // would normally be used like yaml.schemas, it has to be defined like this
+  // because once the languageserver is defined it didn't read the other variables
+  // settings : {
+  //      yaml:
+  //}
+  "languageserver": {
+    "yaml-language-server": {
+      "command": "~/.config/coc/extensions/node_modules/coc-yaml/node_modules/.bin/yaml-language-server",
+      "args": ["--stdio"],
+      "filetypes": ["yaml", "yml", "docker-compose.yml"],
+      "settings": {
+        "yaml": {
+          "schemas": {
+            "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json": "docker-*.yml"
+          },
+          "schemaStore.enable": true,
+          "trace.server": "verbose"
+        }
+      }
+    }
+  }
+}

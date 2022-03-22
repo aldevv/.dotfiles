@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  qmk:
+    image: qmkfm/qmk_cli
+    command: bash
+    tty: true
+    volumes:
+      - ./qmk_firmware:/qmk_firmware

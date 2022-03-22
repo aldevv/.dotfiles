@@ -1,0 +1,24 @@
+#!/bin/sh
+# $1 is repo link, ex: https://github.com/Gnurou/tagainijisho
+# optional
+# $2 extension
+
+info=$(echo "$1" | cut -d / -f 4,5 )
+author=$(echo "$info" | cut -d / -f 1)
+repo=$(echo "$info" | cut -d / -f 2)
+
+if [ -z "$2" ]; then
+    curl -s "https://api.github.com/repos/$author/$repo/releases/latest" \
+    | grep ".*tarball.*" \
+    | grep "$author" \
+    | grep "$repo" \
+    | cut -d : -f 2,3 \
+    | tr -d \" \
+    | tr -d ','
+else
+    curl -s "https://api.github.com/repos/$author/$repo/releases/latest" \
+    | grep "browser_download_url.*$3" \
+    | cut -d : -f 2,3 \
+    | tr -d \"
+fi
+

@@ -1,0 +1,64 @@
+#!/bin/sh
+
+# task spooler
+tsp -K
+wiki=0
+dotfiles=0
+
+cd "$WIKI" || exit
+status=$(git status | grep -qF 'working tree clean' || echo "DIRTY")
+if [ "$status" = "DIRTY" ]; then
+    wiki=1
+    git status
+    printf "\n\n"
+    echo "enter wiki changes"
+    read -r message
+    if [ ! -z "$message" ]; then
+        printf "\n\n"
+        git add -u
+        git add .
+        printf "\n\n"
+        git commit -m "$message"
+        # git push origin master
+        tsp git push origin master > /dev/null
+    fi
+fi
+
+repoPath="${HOME}/.local/share/dotfiles"
+alias dotrepo="git --git-dir=$repoPath --work-tree=${HOME}"
+cd "$SCRIPTS" || exit
+dotrepo diff --exit-code --quiet
+status=$(dotrepo status | grep -qF 'nothing to commit (use -u to show untracked files)' || echo "DIRTY")
+if [ "$status" = "DIRTY" ]; then
+    dotfiles=1
+    dotrepo status
+    printf "\n"
+    echo "enter script changes"
+    read -r message
+    if [ ! -z "$message" ]; then
+        printf "\n\n"
+        dotrepo add -u
+        printf "\n\n"
+        dotrepo commit -m "$message"
+        # dotrepo push origin master
+        tsp git --git-dir=$repoPath --work-tree=${HOME} push origin master > /dev/null
+    fi
+fi
+
+if [ $wiki = 1 ] && [ $dotfiles = 1 ]; then
+    tsp -t 0
+    tsp -t 1
+    exit
+fi
+
+if [ $wiki = 1 ]; then
+    tsp -t 0
+    exit
+fi
+
+if [ $dotfiles = 1 ]; then
+    tsp -t 0
+    exit
+fi
+
+echo "nothing to commit"

@@ -1,0 +1,20 @@
+{
+  "configurations": {
+    "pythonDebug: Launch": {
+      "adapter": "debugpy",
+      "configuration": {
+        "django": true,
+        "name": "pythonDebug: Launch",
+        "type": "python",
+        "request": "launch",
+        "cwd": "~/Master/Work/covidalert",
+        "python": ".venv/bin/python3",
+        "stopOnEntry": true,
+        "console": "externalTerminal",
+        "debugOptions": [],
+        "program": "manage.py",
+        "args": ["runserver"]
+      }
+    }
+  }
+}

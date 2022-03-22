@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# sudo -u "$SUDO_USER" git clone https://github.com/aldevv/CopyQ-Vi-Colemak-bindings
+# git remote add upstream https://github.com/hluk/CopyQ
+
+cd "$PROGRAMS"
+sudo -u "$SUDO_USER" git clone --depth=1 https://github.com/hluk/CopyQ
+cp $FILES/patches/copyq/colemak_copyq_patch.diff $PROGRAMS/CopyQ/
+cd CopyQ
+sudo -u "$SUDO_USER" git apply colemak_copyq_patch
+
+declare -A reqs=(
+['eopkg']="
+cmake
+qt5-script-devel
+qt5-tools-devel
+qt5-svg-devel
+qt5-x11extras-devel
+libxtst-devel
+"\
+['pacman']="
+cmake
+qt5-script
+qt5-tools
+qt5-svg
+qt5-x11extras
+libxtst
+extra-cmake-modules"\
+)
+
+install_ "${req[$PKG]}"
+
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local .
+make
+make install

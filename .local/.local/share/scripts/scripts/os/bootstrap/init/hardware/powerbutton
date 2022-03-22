@@ -1,0 +1,20 @@
+#!/bin/sh
+
+sed -i -E 's/HandlePowerKey=.+/HandlePowerKey=suspend/g; s/HandleLidSwitch=.+/HandleLidSwitch=suspend/g' /etc/systemd/logind.conf
+
+echo \
+    "[Unit]
+Description=Lock the screen on resume from suspend
+Before=sleep.target suspend.target
+
+[Service]
+User=%i
+Type=forking
+Environment=DISPLAY=:0
+ExecStart=/home/%i/.local/bin/betterlockscreen -l blur -t 'that was sudden'
+
+[Install]
+WantedBy=sleep.target suspend.target" > /etc/systemd/system/betterlockscreen@.service
+
+systemctl enable betterlockscreen@$SUDO_USER
+# systemctl start betterlockscreen@$SUDO_USER

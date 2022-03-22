@@ -1,0 +1,18 @@
+#!/bin/sh
+drivePlusSize=$(lsblk | awk '/sd[b-z][0-9]/{print $1 ,$4}' |tr -d "└─" |  dmenu -p "choose drive to mount:")
+drive=$(echo "$drivePlusSize" | awk '{print$1}')
+
+if [ -z "$drive" ]; then
+    notify-send "failed to mount"
+    exit
+fi
+size=$(echo "$drivePlusSize" | awk '{print$2}')
+mounted=0
+sudo mount "/dev/$drive" /mnt && mounted=1
+
+if [ "$mounted" = 1 ]; then
+memoryAvailiable=$(df -H | awk '/sd[b-z][0-9]/{print $4}' | awk '/[0-9]/{print $1}')
+notify-send "mounted drive: $size" "memory availiable: ${memoryAvailiable}"
+else
+    notify-send "failed to mount drive"
+fi

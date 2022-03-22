@@ -1,0 +1,41 @@
+snippet initc "start programming c++" b
+#include <vector>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+using namespace std;
+
+int
+main(void)",
+{
+	ios_base::sync_with_stdio(false);
+	$1
+}
+endsnippet
+
+snippet _skel "start programming fast" Ab
+#include <bits/stdc++.h>
+using namespace std;
+
+int
+main(void)
+{
+	ios_base::sync_with_stdio(false);
+	$1
+}
+endsnippet
+
+snippet init
+#include <stdio.h>
+
+int main(int argc, char *argv[])
+{
+	$1
+	return 0;
+}
+endsnippet
+
+snippet ppr "print" Ab
+cout << $1;
+endsnippet
+

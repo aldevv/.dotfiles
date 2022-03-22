@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# library (capnproto-devel) not availiable in the solus pkgmanager (can't build from source)
+# rr not availiable in the solus pkgmanager, but it has been accepted for inclusion, so check again later
+
+# rr is more advanced than gdb, it also lets you do reverse-stepping without recording (which has bugs in gdb)

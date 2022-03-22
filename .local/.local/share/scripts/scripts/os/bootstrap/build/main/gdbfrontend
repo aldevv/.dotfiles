@@ -1,0 +1,4 @@
+#!/bin/sh
+
+eopkg install -y tmux
+sudo -u "$SUDO_USER" python3 -m pip install --user gdbfrontend

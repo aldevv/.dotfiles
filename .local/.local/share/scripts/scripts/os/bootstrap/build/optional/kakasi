@@ -1,0 +1,9 @@
+#!/bin/sh
+cd "$PROGRAMS" || exit
+wget http://kakasi.namazu.org/stable/kakasi-2.3.6.tar.gz
+tar kvvxf kakasi-2.3.6.tar.gz
+rm kakasi-2.3.6.tar.gz
+cd kakasi-2.3.6 || exit
+./configure
+make
+make install

@@ -1,0 +1,41 @@
+#!/bin/bash
+#drive doesnt create folders
+
+
+upload() {
+    zipFile="$(basename $1).zip"
+    destination="PC/$(basename $1)"
+    zip -q -r "$1/${zipFile}" $1 -x $2 -x $3 -x $4 -x $5
+    drive push -quiet --hidden -destination $destination "$1/${zipFile}"
+    rm "$1/${zipFile}"
+}
+
+
+options=($BOOKS $PROJECTS $SCRIPTS $APPS)
+excluded=('**/springer/*' '**/\.gd/*' '**/japanese/*' '**/node_modules/*')
+folderNames=""
+for folder in "${options[@]}"; do
+    printf -v folderNames "%s\n" "${folderNames}$(basename ${folder})"
+done
+repoName=$(echo "$folderNames"| dmenu -i -p "Choose Repo:")
+if [[ -z $repoName ]]; then
+    exit
+fi
+repo=$(eval echo "$(echo -e "\$$repoName" | awk '{ print toupper($0) }')")
+echo $repo
+upload "$repo" "${excluded[@]}"
+
+
+
+
+
+# zip -r $BOOKS/books.zip $BOOKS -x "**/springer/*" -x "**/\.gd/*" -x "**/japanese/*" &&\
+# drive push -quiet --hidden -destination PC/Books $BOOKS/books.zip;
+# rm -f $BOOKS/books.zip
+
+
+#!/bin/bash
+# zip -r $PROJECTS/projects.zip $PROJECTS -x "**/node_modules/*" -x "**/\.gd/*" &&\
+# drive push -quiet --hidden -destination PC/Projects $PROJECTS/projects.zip;
+# rm -f $PROJECTS/projects.zip
+

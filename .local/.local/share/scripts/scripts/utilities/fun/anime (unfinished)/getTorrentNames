@@ -1,0 +1,8 @@
+#!/bin/sh
+
+sd="https://subsplease.org/rss/?t&r=sd"
+mid="https://subsplease.org/rss/?t&r=720"
+best="https://subsplease.org/rss/?t&r=1080"
+
+name="$1"
+curl -s $best | pup  'title text{}' | awk 'NR>2'| dmenu -i -l 15

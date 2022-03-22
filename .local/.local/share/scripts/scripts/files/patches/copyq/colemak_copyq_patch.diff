@@ -1,0 +1,21 @@
+diff --git a/src/common/common.cpp b/src/common/common.cpp
+index a0dada17..a09e0112 100644
+--- a/src/common/common.cpp
++++ b/src/common/common.cpp
+@@ -617,13 +633,13 @@ bool handleViKey(QKeyEvent *event, QObject *eventReceiver)
+         key = mods & Qt::ShiftModifier ? Qt::Key_End : Qt::Key_Home;
+         mods = mods & ~Qt::ShiftModifier;
+         break;
+-    case Qt::Key_J:
++    case Qt::Key_N:
+         key = Qt::Key_Down;
+         break;
+-    case Qt::Key_K:
++    case Qt::Key_E:
+         key = Qt::Key_Up;
+         break;
+-    case Qt::Key_L:
++    case Qt::Key_I:
+         key = Qt::Key_Return;
+         break;
+     case Qt::Key_F:

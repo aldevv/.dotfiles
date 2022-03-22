@@ -1,0 +1,11 @@
+#!/bin/sh
+# this is for lightdm
+echo \
+'[Desktop Entry]
+Encoding=UTF-8
+Name=Xmonad
+Comment=Xmonad window manager
+Exec=/home/solus/.cabal/bin/xmonad
+Type=Application' > /usr/share/xsessions/xmonad.desktop
+
+

@@ -1,0 +1,27 @@
+#!/bin/sh
+# man
+xset r rate 300 80
+
+sleep 12
+xmodmap -e "keycode 48 = braceleft bracketleft braceleft bracketleft asciicircum asciicircum asciicircum"
+
+
+
+#=========================
+# GET ESCAPE ON CAPS PRESS
+#=========================
+
+# killall xcape 2>/dev/null
+# xcape -e "Shift_L=bracketleft"
+# xcape -e "Shift_R=bracketright"
+# xcape -e "Shift_L=Shift_L|bracketleft"
+# xcape -e "Shift_R=Shift_L|bracketright"
+
+
+#(it does these already)
+# map the menu button to left hyper
+# xmodmap -e 'keycode 48 = braceleft bracketleft braceleft bracketleft asciicircum braceleft asciicircum'
+# xmodmap -e 'keycode 135 = Hyper_L'
+
+# makes hyper do something different
+# xmodmap -e "remove mod4 = Hyper_L" -e "add mod3 = Hyper_L"

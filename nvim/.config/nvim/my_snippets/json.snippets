@@ -1,0 +1,15 @@
+# i can generate a similar file using clang -MJ output.json <flags> file.cpp
+snippet setupCpp "Description" b
+[
+  {
+    "directory": "`!v expand('%:p')`",
+    "file": "`!v expand('%')`",
+    "arguments": [
+      "/usr/bin/clang-10",
+      "-stdlib=libstdc++",
+      "`!v expand('%')`.cpp",
+      "--target=x86_64-solus-linux"
+    ]
+  }
+]
+endsnippet
