@@ -218,8 +218,9 @@ _fzf_compgen_dir() {
 	fd --type d --hidden --follow . "$1"
 }
 
-. /usr/share/fzf/key-bindings.zsh
-. /usr/share/fzf/completion.zsh
+# plugins
+[ -f /usr/share/fzf/key-bindings.zsh ] && . /usr/share/fzf/key-bindings.zsh
+[ -f /usr/share/fzf/completion.zsh ] && . /usr/share/fzf/completion.zsh
 
 # ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE
 #ZSH_AUTOSUGGEST_STRATEGY
@@ -243,9 +244,9 @@ bindkey "^ " autosuggest-execute
 #TODO find alternative to lesskey (deprecated)
 # lesskey $HOME/.config/colemak-less
 # aliases
-alias src_=". $ZDOTDIR/.zshrc"
-. $ZDOTDIR/.aliases
-. $ZDOTDIR/.auto_aliases
+ [ -f $ZDOTDIR/.aliases ] && . $ZDOTDIR/.aliases
+
+[ -f $ZDOTDIR/.auto_aliases ] && . $ZDOTDIR/.auto_aliases
 
 # fnm
 nvml() {
