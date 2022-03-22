@@ -35,13 +35,13 @@ if !filereadable($HOME . '/.local/bin/black') && executable('pip3') && $USER != 
 endif
 
 if !executable('prettier') && $USER != 'root'
-  if executable('yarn') 
+  if executable('yarn')
     if isdirectory($HOME . '/.config/nvm/')
       :!yarn global add prettier
     else
       :!sudo yarn global add prettier
     endif
-  else 
+  else
     if executable('npm')
       if isdirectory($HOME . '/.config/nvm/')
         :!npm install -g prettier
