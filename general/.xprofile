@@ -1,0 +1,66 @@
+[[ -f $HOME/.config/zsh/.zprofile ]] && . $HOME/.config/zsh/.zprofile
+#add all files in these directories to the PATH
+
+[[ -d "$SHARED" ]] && export PATH="$(find $SHARED -type d | tr '\n' ':')$PATH"
+[[ -d "$APPS" ]] && export PATH="$(find $APPS -type d | tr '\n' ':')$PATH"
+[[ -d "$AUTOMATION" ]] && export PATH="$(find $AUTOMATION -type d | tr '\n' ':')$PATH"
+[[ -d "$UTILITIES" ]] && export PATH="$(find $UTILITIES -type d | tr '\n' ':')$PATH"
+[[ -d "$HOME/.local/bin" ]] && export PATH="$(find $HOME/.local/bin -type d | tr '\n' ':')$PATH"
+
+##to import env variables to dbus
+# dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
+
+## dunst is started by dbus-daemon now
+## the display manager is also taken care of by dbus, in case you want to change to startx, havent tested
+[[ -n $(command -v dunst) ]] \
+    && dunst &
+if [[ -n $(command -v fcitx) ]]; then
+    export GTK_IM_MODULE=fcitx
+    export QT_IM_MODULE=fcitx
+    export SDL_IM_MODULE=fcitx
+    export XMODIFIERS=@im=fcitx
+    export XIM_PROGRAM=fcitx
+    fcitx --replace -d & # for languages
+    # dbus-launch --exit-with-x11
+    # export DBUS_SESSION_BUS_ADDRESS
+    # dbus-launch fcitx-autostart
+fi
+## custom scripts
+ DISPLAY=":0" picom -b --experimental-backend
+# so the user can make connections to the xserver (docker)
+xhost local:root
+[[ $DESKTOP_SESSION = "dwm" ]] && [[ -n $(command -v dwmstatus-pacman) ]] \
+    && dwmstatus-pacman &
+
+xrdb -merge ~/.Xresources
+[[ -n $(command -v copyq) ]] \
+     && setsid copyq &
+
+[[ -n $(command -v clipcatd) ]] \
+     && setsid clipcatd
+
+[[ -n $(command -v autorandr) ]] \
+    && autorandr --change
+[[ -n $(command -v wal) ]] \
+    && wal -R &
+[[ -n $(command -v sxhkd) ]] \
+    && sxhkd &
+
+rclone_mounts() {
+    [ -f ~/.config/remotes ] &&  . ~/.config/remotes
+}
+
+[[ -n $(command -v rclone) ]] \
+    && rclone_mounts &
+
+# 30 minutes, you can do dim or dimblur
+# this
+# xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'betterlockscreen -l blur -t "i feel forgotten"' --timer 20000 'betterlockscreen -s blur -t "i was just taking a nap"' - &
+
+[[ -n $(command -v xidlehook) ]] \
+    && xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'i3lock -F -i $WALL/1559506908863.png' --timer 20000 'systemctl suspend' '' &
+    # the last empty string is the canceller, is any command you define that runs after you come back
+
+
+[[ -n $(command -v startupScripts) ]] \
+    && startupScripts &
