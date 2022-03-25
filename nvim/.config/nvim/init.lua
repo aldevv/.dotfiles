@@ -5,7 +5,7 @@
 vim.opt.shadafile = "NONE" -- optimization
 vim.cmd("set t_Co=256")
 vim.cmd("let IS_MINE=isdirectory($SUCKLESS)")
-
+CONFIG_HOME="~/.config"
 --==================
 -- SETTINGS
 --==================
@@ -17,37 +17,37 @@ if os.getenv("DEBUG_VIM") then
 else
     require("utils.lua.globals")
     require("config.pre-settings")
-    vim.cmd("source $XDG_CONFIG_HOME/nvim/modules/settings.vim")
+    vim.cmd("source ~/.config/nvim/modules/settings.vim")
 
     --==================
     -- KEYBINDINGS
     --==================
-    vim.cmd("source $XDG_CONFIG_HOME/nvim/modules/keybindings.vim")
+    vim.cmd("source ~/.config/nvim/modules/keybindings.vim")
     if os.getenv("USER") == "root" then
-        vim.cmd("source $XDG_CONFIG_HOME/nvim/modules/appearance.vim")
-        vim.cmd("source $XDG_CONFIG_HOME/nvim/modules/automation.vim")
+        vim.cmd("source ~/.config/nvim/modules/appearance.vim")
+        vim.cmd("source ~/.config/nvim/modules/automation.vim")
         return
     end
     --===================
     -- DEPENDENCIES
     --===================
-    vim.cmd("source $XDG_CONFIG_HOME/nvim/modules/dependencies.vim")
+    -- vim.cmd("source ~/.config/nvim/modules/dependencies.vim")
     --==================
     -- PLUGINS
     --==================
     vim.cmd([[
-    source $XDG_CONFIG_HOME/nvim/modules/plugins-settings.vim
+    source ~/.config/nvim/modules/plugins-settings.vim
   ]])
 end
 --==================
 -- APPEARANCE
 --==================
-vim.cmd("source $XDG_CONFIG_HOME/nvim/modules/appearance.vim")
+vim.cmd("source ~/.config/nvim/modules/appearance.vim")
 
 --==================
 -- AUTOMATION
 --==================
-vim.cmd("source $XDG_CONFIG_HOME/nvim/modules/automation.vim")
+vim.cmd("source ~/.config/nvim/modules/automation.vim")
 --====================================================
 -- require("plugins")
 -- require("lsp")
