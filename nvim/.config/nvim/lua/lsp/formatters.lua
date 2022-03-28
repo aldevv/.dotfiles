@@ -51,7 +51,9 @@ null_ls.setup({
         -- formatting.eslint,
         -- diagnostics.eslint,
         -- formatting.prettier,
-        diagnostics.flake8.with({ extra_args = { "--ignore", "E203", "--max-line-length", "88" } }), -- extra args for black
+        -- my flake config
+        -- diagnostics.flake8.with({ extra_args = { "--ignore", "E203", "--max-line-length", "88" } }), -- extra args for black
+        diagnostics.flake8,
         -- completion.spell,
         -- code_actions.gitsigns,
         code_actions.gitsigns,
