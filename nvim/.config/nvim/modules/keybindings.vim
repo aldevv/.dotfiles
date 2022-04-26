@@ -20,6 +20,8 @@ noremap gk gn
 noremap gE gJ
 " ----------------
 
+
+
 " put last searched items into QuickFix window
 nnoremap <leader>- :execute 'vimgrep /'.@/.'/g %'<cr>:copen<cr>
 

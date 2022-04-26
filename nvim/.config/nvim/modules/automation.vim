@@ -1,6 +1,6 @@
 " Remove trailing whitespace on save
 let ext = expand('%:e')
-if ext != "vim"
+if ext == "vim" || ext == "lua"
    autocmd BufWritePre * %s/\s\+$//e
 endif
 " auto compile status bar dwm
@@ -49,3 +49,6 @@ augroup END
 
 autocmd! BufRead,BufNewFile .projections.json  set filetype=projections.json syntax=json
 autocmd! BufRead,BufNewFile .vimspector.json  set filetype=vimspector.json syntax=json
+
+" for tmux
+autocmd BufReadPost,FileReadPost,BufNewFile * call system("tmux rename-window " . expand("%:t:r"))
