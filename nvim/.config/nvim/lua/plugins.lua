@@ -229,6 +229,8 @@ return require("packer").startup({
             config = function()
                 vim.g.indentLine_char = "┆"
                 vim.g.indentLine_enabled = 0
+                -- show double quotes in json
+                -- vim.o.concealLevel = 0
             end,
         })
         use({
