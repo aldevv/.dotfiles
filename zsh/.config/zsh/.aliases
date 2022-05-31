@@ -426,7 +426,7 @@ alias bsb="busybox"
 if [[ $(whoami) != "root" ]] && [[ -x $(command -v exa) ]]; then
 
 	alias ls='exa --color=automatic --group-directories-first' \
-		l='exa -l --color=automatic --group-directories-first' \
+		l='exa -al --color=automatic --group-directories-first' \
 		la='exa -a --color=automatic --group-directories-first' \
 		ll='exa -l --color=automatic --group-directories-first' \
 		lt='exa -aT --color=automatic --group-directories-first' \
@@ -656,13 +656,15 @@ alias gbsg='git bisect good'
 alias gbsr='git bisect reset'
 alias gbss='git bisect start'
 
-alias ggc='git commit -v'
-alias ggcm='ggc -m'
-alias ggca='ggc -a'
-alias ggcA='git commit -v --amend'
-alias ggcAn='git commit -v --amend --no-edit'
+alias gc='git commit -v'
+alias gca='ggc -a'
+alias gcA='git commit -v --amend'
+alias gcAn='git commit -v --amend --no-edit'
+#alias ggc='git commit -v'
+#alias ggcm='ggc -m'
+#alias ggca='ggc -a'
 # alias gcn='git commit -v --no-edit --amend'
-alias ggcall='git commit -v -a'
+#alias ggcall='git commit -v -a'
 # alias gca!='git commit -v -a --amend'
 # alias gcan!='git commit -v -a --no-edit --amend'
 # alias gcans!='git commit -v -a -s --no-edit --amend'
@@ -688,10 +690,10 @@ alias gcLn='git clean -fdn'
 
 alias gclean='git clean -id'
 alias gpristine='git reset --hard && git clean -dffx'
-alias gcm='git checkout $(git_main_branch)'
-alias gcd='git checkout develop'
+#alias gcm='git checkout $(git_main_branch)'
+#alias gcd='git checkout develop'
 alias gcmsg='git commit -m'
-alias gc='git checkout'
+alias gco='git checkout'
 alias gshort='git shortlog'
 alias gcount='git shortlog -sn'
 alias gcp='git cherry-pick'
@@ -1687,3 +1689,4 @@ anss() {
     # a shell command
     ansible $1 -m shell -a $2
 }
+alias fixkeys="/usr/local/bin/arcolinux-fix-pacman-databases-and-keys"

@@ -64,3 +64,11 @@ rclone_mounts() {
 
 [[ -n $(command -v startupScripts) ]] \
     && startupScripts &
+
+if [[ -f /usr/lib/polkit-kde-authentication-agent-1 ]]; then
+    /usr/lib/polkit-kde-authentication-agent-1 &
+else
+    if [[ -f /usr/lib/polkit-gnome-authentication-agent-1 ]]; then
+            /usr/lib/polkit-gnome-authentication-agent-1 &
+    fi
+fi
