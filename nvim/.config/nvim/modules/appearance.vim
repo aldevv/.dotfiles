@@ -79,7 +79,7 @@ command! SyntaxQuery call s:syntax_query()
 if empty(getenv('NOCOC'))
 let custom_highlights = 1
 if custom_highlights == 1
-    autocmd FileType python call MyPythonHighlights()
+    " autocmd FileType python call MyPythonHighlights()
     autocmd FileType javascript call MyJsHighlights()
     autocmd FileType java call MyJavaHighlights()
     autocmd FileType markdown call MyMarkdownHighlights()

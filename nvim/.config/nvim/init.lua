@@ -5,7 +5,7 @@
 vim.opt.shadafile = "NONE" -- optimization
 vim.cmd("set t_Co=256")
 vim.cmd("let IS_MINE=isdirectory($SUCKLESS)")
-
+CONFIG_HOME="~/.config"
 --==================
 -- SETTINGS
 --==================

@@ -22,13 +22,22 @@ local new_maker = function(filepath, bufnr, opts)
         :sync()
 end
 
+local find_command = function()
+    -- if it finds fd use it else let telescope choose
+    if 1 == vim.fn.executable "fd" then
+      return  {
+            find_command = { "fd", "--type", "f", "--strip-cwd-prefix" }
+        }
+    else
+        return {}
+    end
+end
+
 local actions = require("telescope.actions")
 local actions_layout = require("telescope.actions.layout")
 require("telescope").setup({
     pickers = {
-        find_files = {
-            find_command = { "fd", "--type", "f", "--strip-cwd-prefix" },
-        },
+        find_files = find_command(),
         buffers = {
             theme = "cursor", -- ivy, dropdown, cursor
             layout_config = { width = 0.7 },
@@ -87,6 +96,7 @@ require("telescope").setup({
         },
         file_ignore_patterns = { "node_modules", "**~" },
         buffer_previewer_maker = new_maker,
+        -- rg is needed for live_grep to work
         vimgrep_arguments = {
             "rg",
             "--color=never",

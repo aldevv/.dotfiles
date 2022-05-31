@@ -14,7 +14,7 @@ local nor_e = vim.tbl_extend("keep", nor, e)
 local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 
 local map = vim.api.nvim_set_keymap
-local h = "$XDG_CONFIG_HOME/nvim"
+local h = "~/.config/nvim"
 -- backlog
 -- <a-?>
 -- <a-i>
