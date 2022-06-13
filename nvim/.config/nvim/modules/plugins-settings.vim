@@ -1,32 +1,32 @@
-if !empty(glob("$XDG_CONFIG_HOME/nvim/modules/themes.vim")) && empty($NOCOC)
-    source $XDG_CONFIG_HOME/nvim/modules/themes.vim
+if !empty(glob("$HOME/.config/nvim/modules/themes.vim")) && empty($NOCOC)
+    source $HOME/.config/nvim/modules/themes.vim
 endif
 "=====
 "COC
 "=====
-if !empty(glob("$XDG_CONFIG_HOME/nvim/modules/fzf.vim")) && empty($NOCOC)
-    source $XDG_CONFIG_HOME/nvim/modules/fzf.vim
+if !empty(glob("$HOME/.config/nvim/modules/fzf.vim")) && empty($NOCOC)
+    source $HOME/.config/nvim/modules/fzf.vim
 endif
 "
-if !empty(glob("$XDG_CONFIG_HOME/nvim/modules/coc.vim")) && empty($NOCOC)
-    source $XDG_CONFIG_HOME/nvim/modules/coc.vim
+if !empty(glob("$HOME/.config/nvim/modules/coc.vim")) && empty($NOCOC)
+    source $HOME/.config/nvim/modules/coc.vim
 endif
 
 
 "------------------------------------------------------------------------------------
-if !empty(glob("$XDG_CONFIG_HOME/nvim/modules/format.vim")) && empty($NOCOC)
-    source $XDG_CONFIG_HOME/nvim/modules/coc.vim
+if !empty(glob("$HOME/.config/nvim/modules/format.vim")) && empty($NOCOC)
+    source $HOME/.config/nvim/modules/coc.vim
 endif
 
 
 
-if !empty(glob("$XDG_CONFIG_HOME/nvim/modules/vimspector.vim")) && empty($NOCOC)
-    source $XDG_CONFIG_HOME/nvim/modules/vimspector.vim
+if !empty(glob("$HOME/.config/nvim/modules/vimspector.vim")) && empty($NOCOC)
+    source $HOME/.config/nvim/modules/vimspector.vim
 endif
 
 
-if !empty(glob("$XDG_CONFIG_HOME/nvim/modules/neoterm.vim")) && empty($NOCOC)
-    source $XDG_CONFIG_HOME/nvim/modules/neoterm.vim
+if !empty(glob("$HOME/.config/nvim/modules/neoterm.vim")) && empty($NOCOC)
+    source $HOME/.config/nvim/modules/neoterm.vim
 endif
 
 
