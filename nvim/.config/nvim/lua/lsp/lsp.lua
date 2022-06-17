@@ -19,7 +19,7 @@ local servers = {
     "gopls",
     "dockerls",
     "jsonls",
-    "yamlls",
+    -- "yamlls",
     "rust_analyzer",
     "volar", -- vue
     "sqlls",
