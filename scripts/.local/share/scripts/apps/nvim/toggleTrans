@@ -2,7 +2,7 @@
 
 transparency_min="90"
 # transparency_min="85"
-cd "$XDG_CONFIG_HOME/picom" || exit
+cd "$HOME/.config/picom" || exit
 match="$(grep -E "\"[0-9]{2}[0-9]?:class_g .?.?\= 'St'\",$" picom.conf)"
 current_trans=$(echo "$match" | cut -d: -f1 | tr -d '"')
 if [ "$current_trans" = $transparency_min ]; then
