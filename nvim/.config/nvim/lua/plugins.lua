@@ -38,15 +38,19 @@ end
 return require("packer").startup({
     function(use)
         use({ "wbthomason/packer.nvim" })
-
-        use({
-            "folke/tokyonight.nvim",
-            branch = "main",
-            config = req("config.appearance.themes.tokyonight"),
-        })
+        use {
+            "ellisonleao/gruvbox.nvim",
+            config = req("config.appearance.themes.gruvbox")
+        }
+        -- use({
+        --     "folke/tokyonight.nvim",
+            -- branch = "main",
+            -- config = req("config.appearance.themes.tokyonight"),
+        -- })
         use({
             "nvim-lualine/lualine.nvim",
             requires = { "kyazdani42/nvim-web-devicons", opt = true },
+            config = req("config.appearance.lualine"),
         })
 
         use({

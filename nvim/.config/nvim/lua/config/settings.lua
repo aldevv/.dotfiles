@@ -44,3 +44,4 @@ vim.o.autochdir = false -- for netrw
 vim.opt.timeoutlen = 700
 -- vim.g.mapleader = t("<Space>")
 -- vim.g.maplocalleader=t("BS>")
+vim.opt.laststatus = 3
