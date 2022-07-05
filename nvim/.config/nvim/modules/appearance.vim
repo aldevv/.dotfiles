@@ -78,11 +78,13 @@ command! SyntaxQuery call s:syntax_query()
 " use custom highlights (italics)
 if empty(getenv('NOCOC'))
 let custom_highlights = 1
+
 if custom_highlights == 1
+    "commented because there's an error
     " autocmd FileType python call MyPythonHighlights()
-    autocmd FileType javascript call MyJsHighlights()
-    autocmd FileType java call MyJavaHighlights()
-    autocmd FileType markdown call MyMarkdownHighlights()
+    " autocmd FileType javascript call MyJsHighlights()
+    " autocmd FileType java call MyJavaHighlights()
+    " autocmd FileType markdown call MyMarkdownHighlights()
 endif
 endif
 
