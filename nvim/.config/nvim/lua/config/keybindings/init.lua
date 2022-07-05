@@ -266,3 +266,5 @@ map("n", "<leader>,pi", ":PackerInstall<cr>", nor)
 map("n", "<leader>,pC", ":PackerClean<cr>", nor)
 map("n", "<leader>,pu", ":PackerUpdate<cr>", nor)
 map("n", "<leader>,pc", ":PackerCompile<cr>", nor)
+
+require("config.keybindings.refactoring")

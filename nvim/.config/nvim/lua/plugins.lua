@@ -402,9 +402,9 @@ return require("packer").startup({
                 { "nvim-lua/plenary.nvim" },
                 { "nvim-treesitter/nvim-treesitter" },
             },
-            config = req("lsp.refactoring"),
-            module = "refactoring",
+            config = req("core.refactoring")
         })
+
         use({ "rcarriga/nvim-notify", config = req("core.notify"), module = "notify" })
 
         use({ "michaelb/sniprun", run = "bash ./install.sh", config = req("core.sniprun"), cmd = "SnipRun" })
