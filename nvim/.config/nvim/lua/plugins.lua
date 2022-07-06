@@ -44,8 +44,8 @@ return require("packer").startup({
         }
         -- use({
         --     "folke/tokyonight.nvim",
-            -- branch = "main",
-            -- config = req("config.appearance.themes.tokyonight"),
+        -- branch = "main",
+        -- config = req("config.appearance.themes.tokyonight"),
         -- })
         use({
             "nvim-lualine/lualine.nvim",
@@ -58,7 +58,7 @@ return require("packer").startup({
             requires = {
                 "williamboman/nvim-lsp-installer",
             },
-            config = req("lsp"),
+            config = req("lsp.lsp"),
         })
 
         use({
