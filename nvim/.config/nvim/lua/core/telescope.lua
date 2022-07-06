@@ -121,3 +121,6 @@ require("telescope").setup({
 })
 
 require("telescope").load_extension("fzf")
+-- load refactoring Telescope extension
+require("telescope").load_extension("refactoring")
+

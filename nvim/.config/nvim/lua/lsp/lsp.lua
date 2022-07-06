@@ -117,8 +117,8 @@ local on_attach = function(client, buffnr)
     -- this disables the lsp's formatting functions
     -- is so null-ls can take charge of formatting
 
-    client.resolved_capabilities.document_formatting = false
-    client.resolved_capabilities.document_range_formatting = false
+    client.server_capabilities.document_formatting = false
+    client.server_capabilities.document_range_formatting = false
 end
 
 lsp_installer.on_server_ready(function(server)
