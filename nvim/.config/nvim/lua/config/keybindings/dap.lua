@@ -23,8 +23,14 @@ M.load_mappings = function()
 
     -- docs:
     -- h dap.reverse_continue
-    map("n", "<leader>cdmt", ":lua require'dap'.terminate{}<cr>", nor_s) -- terminate
-    map("n", "<leader>cdmr", ":lua require'dap'.restart()<cr>", nor_s)
+    map("n", "<F5>", ":lua require'dap'.continue()<cr>", nor_s)
+    map("n", "<F10>", ":lua require'dap'.step_over()<cr>", nor_s)
+    map("n", "<F11>", ":lua require'dap'.step_into()<cr>", nor_s)
+    map("n", "<F12>", ":lua require'dap'.step_out()<cr>", nor_s)
+
+    map("n", "<leader>cdtt", ":lua require'dap'.terminate{}<cr>", nor_s) -- terminate
+    map("n", "<leader>cdtr", ":lua require'dap'.restart()<cr>", nor_s)
+    map("n", "<leader>cdtl", ":lua require'dap.ext.vscode'.load_launchjs()<cr>", nor_s)
 
     map("n", "<leader>cdu", ":lua require'dap'.up()<cr>", nor_s)
     map("n", "<leader>cdd", ":lua require'dap'.down()<cr>", nor_s)
