@@ -1,0 +1,30 @@
+snippet _skel "launch json config python" b
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Dispute Validator",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/{file}",
+            "args": [],
+            "env": {
+              "PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"
+            }
+        },
+        {
+            "name": "PyTest",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": false,
+            "justMyCode": false,
+            "module": "pytest",
+            "args": [
+                "-x"
+            ],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
+
+endsnippet
