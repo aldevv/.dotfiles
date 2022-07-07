@@ -163,12 +163,12 @@ return require("packer").startup({
         use({
             "mfussenegger/nvim-dap",
             requires = {
-                { "Pocco81/DAPInstall.nvim", module = "dap-install" },
+                -- { "Pocco81/DAPInstall.nvim", module = "dap-install" },
                 { "rcarriga/nvim-dap-ui", module = "dapui" },
                 { "theHamsta/nvim-dap-virtual-text", module = "nvim-dap-virtual-text" },
             },
-            module = "dap",
-            config = req("lsp.dap"),
+            -- module = "dap",
+            config = req("lsp.dap.dap"),
         })
 
         use({

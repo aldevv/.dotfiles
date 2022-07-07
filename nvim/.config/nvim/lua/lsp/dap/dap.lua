@@ -1,13 +1,28 @@
-local dap_install = require("dap-install")
-local dbg_list = require("dap-install.api.debuggers").get_installed_debuggers()
-local configs = require("lsp.dap-configs")
+-- dap NEEDS 2 things
+-- adapter (executable that contains the debugger)
+-- configuration (how you want it to run)
+
+-- install a new adapter
+-- https://github.com/mfussenegger/nvim-dap/wiki/Debug-Adapter-installation
+
+-- install a new configuration (:h dap-configuration)
+-- https://code.visualstudio.com/docs/python/debugging#_set-configuration-options
+
+-- TODO check https://github.com/mfussenegger/nvim-dap-python
+
+
+-- local dap_install = require("dap-install") --> project dropped
+-- local dbg_list = require("dap-install.api.debuggers").get_installed_debuggers()
+local configs = require("lsp.dap.configs")
 -- local level = "ERROR" -- error, debug, info, warn?
 local level = "trace" -- error, debug, info, warn?
 require("dap").set_log_level(level)
+local dap = require("dap")
+dap.set_log_level(level)
 
-dap_install.setup({
-    installation_path = vim.fn.stdpath("data") .. "/dapinstall/",
-})
+-- dap_install.setup({
+--     installation_path = vim.fn.stdpath("data") .. "/dapinstall/",
+-- }) --> project dropped
 
 -- https://github.com/mfussenegger/nvim-dap/wiki/Cookbook
 -- function is_installed(d, d_installed)
@@ -22,6 +37,7 @@ dap_install.setup({
 -- require('osv').run_this(), since the debugger interface is not working
 local debuggers = { "python", "lua" }
 
+-- TODO fix this for loop
 for _, d in ipairs(debuggers) do
     -- TODO not working since it opens new terminal, check later 06/01/22
     -- if not is_installed(d, dbg_list) then
@@ -31,12 +47,16 @@ for _, d in ipairs(debuggers) do
     if configs.configExists(d) then
         opts = vim.tbl_extend("keep", opts, configs.configurate(d))
     end
-    dap_install.config(d, opts)
+    -- dap_install.config(d, opts) --> project dropped
+    -- dap.configurations.python = require('lsp.dap.languages.python')
 end
--- require('dap.ext.vscode').load_launchjs()
+dap.adapters.python = require('lsp.dap.languages.python').adapter()
+dap.configurations.python = require('lsp.dap.languages.python').config()
+
+require('dap.ext.vscode').load_launchjs()
 
 -- open dapui automatically
-local dap, dapui = require("dap"), require("dapui")
+local dapui =  require("dapui")
 dap.listeners.after.event_initialized["dapui_config"] = function()
     dapui.open()
 end
@@ -66,26 +86,26 @@ dapui.setup({
         edit = "l", -- Edit the value of a variable
         repl = "r", -- send variable to repl
     },
-    sidebar = {
-        -- You can change the order of elements in the sidebar
-        elements = {
-            -- Provide as ID strings or tables with "id" and "size" keys
-            {
-                id = "scopes",
-                size = 0.25, -- Can be float or integer > 1
-            },
-            { id = "breakpoints", size = 0.25 },
-            { id = "stacks", size = 0.25 },
-            { id = "watches", size = 00.25 },
+    layouts = {
+        {
+          elements = {
+            'scopes',
+            'breakpoints',
+            'stacks',
+            'watches',
+          },
+          size = 40,
+          position = 'left',
         },
-        size = 40,
-        position = "left", -- Can be "left", "right", "top", "bottom"
-    },
-    tray = {
-        elements = { "repl" },
-        size = 10,
-        position = "bottom", -- Can be "left", "right", "top", "bottom"
-    },
+        {
+          elements = {
+            'repl',
+            'console',
+          },
+          size = 10,
+          position = 'bottom',
+        },
+      },
     floating = {
         max_height = nil, -- These can be integers or a float between 0 and 1.
         max_width = nil, -- Floats will be treated as percentage of your screen.

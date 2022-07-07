@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Dispute Validator",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/galileo/app/disputes_validator/disputes_validator.py",
+            "args": [],
+            "env": {
+              "PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"
+            }
+        },
+        {
+            "name": "PyTest",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": false,
+            "justMyCode": false,
+            "module": "pytest",
+            "args": [
+                "-x"
+            ],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
