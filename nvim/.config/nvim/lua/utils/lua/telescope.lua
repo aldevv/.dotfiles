@@ -92,7 +92,7 @@ M.nvim = function(opts)
     opts = opts or { path = "" }
     t.find_files({
         prompt_title = "<AL's NVIM>",
-        cwd = "$XDG_CONFIG_HOME/nvim/" .. opts.path,
+        cwd = "~/.config/nvim/" .. opts.path,
     })
 end
 

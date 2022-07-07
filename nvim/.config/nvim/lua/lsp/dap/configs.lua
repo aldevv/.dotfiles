@@ -1,6 +1,7 @@
 local M = {}
 
-local dbg_path = require("dap-install.config.settings").options["installation_path"]
+-- dap-install dropped project
+-- local dbg_path = require("dap-install.config.settings").options["installation_path"]
 -- adapters should be general for the language, the configuration should be unique for what you
 -- want, this includes the binary
 
