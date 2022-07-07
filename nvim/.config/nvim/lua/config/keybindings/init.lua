@@ -98,8 +98,8 @@ map("t", "<a-'>", "<c-\\><c-n>", nor_s)
 
 -- folders
 map("n", "<F1>", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
-map("n", "<F5>", "<c-^>", nor_s)
 
+map("n", "<localleader>Vv", ":e .vscode/launch.json<cr>", nor_s)
 map("n", "<localleader>V.", ":e " .. h .. "/init.lua<cr>", nor_s)
 map("n", "<localleader>Vs", ":e " .. h .. "/lua/config/settings.lua<cr>", nor_s)
 map("n", "<localleader>Vp", ":e " .. h .. "/lua/plugins.lua<cr>", nor_s)

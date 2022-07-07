@@ -1,4 +1,5 @@
 local cmd = vim.cmd
+require("config.automation.filetypes")
 cmd([[
   augroup FormatOnSave
     autocmd!
