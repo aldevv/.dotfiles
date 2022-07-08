@@ -4,11 +4,11 @@ local adapter = {
   command = '/home/jubernal/.pyenv/versions/3.6.14/bin/python';
   args = { '-m', 'debugpy.adapter' };
 }
-local config = {{
+local configs = {{
     -- The first three options are required by nvim-dap
     type = 'python'; -- the type here established the link to the adapter definition: `dap.adapters.python`
     request = 'launch';
-    name = "Launch file";
+    name = "My Custom Launch file";
 
     -- Options below are for debugpy, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings for supported options
 
@@ -31,7 +31,7 @@ local config = {{
 
 
 function M.config()
-    return config
+    return configs
 end
 
 function M.adapter()

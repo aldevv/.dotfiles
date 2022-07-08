@@ -10,16 +10,6 @@ local debug_opts = {
     -- if no adapter, it uses default config
     ["python"] = function()
         return {
-            --adapters don't have the ${} syntax
-            -- adapters = {
-            --     type = "executable",
-            --     command = require("dap-install.config.settings").options["installation_path"] .. "python/bin/python",
-            --     args = { "-m", "debugpy.adapter" },
-            --     options = {
-            --         env = {}, -- Set the environment variables for the command
-            --         cwd = vim.fn.getcwd(), -- Set the working directory for the command
-            --     },
-            -- },
             configurations = {
                 {
                     type = "python",

@@ -10,53 +10,22 @@
 
 -- TODO check https://github.com/mfussenegger/nvim-dap-python
 
-
--- local dap_install = require("dap-install") --> project dropped
--- local dbg_list = require("dap-install.api.debuggers").get_installed_debuggers()
-local configs = require("lsp.dap.configs")
--- local level = "ERROR" -- error, debug, info, warn?
 local level = "trace" -- error, debug, info, warn?
-require("dap").set_log_level(level)
 local dap = require("dap")
 dap.set_log_level(level)
+local my_py_adapter = require('lsp.dap.languages.python').adapter()
+local my_py_config = require('lsp.dap.languages.python').config()
 
--- dap_install.setup({
---     installation_path = vim.fn.stdpath("data") .. "/dapinstall/",
--- }) --> project dropped
-
--- https://github.com/mfussenegger/nvim-dap/wiki/Cookbook
--- function is_installed(d, d_installed)
---     for _, installed in ipairs(d_installed) do
---         if d == installed then
---             return true
---         end
---     end
---     return false
--- end
--- for lua you need to run :lua require('osv').launch(), and then use
--- require('osv').run_this(), since the debugger interface is not working
-local debuggers = { "python", "lua" }
-
--- TODO fix this for loop
-for _, d in ipairs(debuggers) do
-    -- TODO not working since it opens new terminal, check later 06/01/22
-    -- if not is_installed(d, dbg_list) then
-    --     vim.cmd(":DII " .. d)
-    -- end
-    local opts = {}
-    if configs.configExists(d) then
-        opts = vim.tbl_extend("keep", opts, configs.configurate(d))
-    end
-    -- dap_install.config(d, opts) --> project dropped
-    -- dap.configurations.python = require('lsp.dap.languages.python')
-end
-dap.adapters.python = require('lsp.dap.languages.python').adapter()
-dap.configurations.python = require('lsp.dap.languages.python').config()
-
+require('dap-python').setup('~/.pyenv/versions/3.6.14/bin/python')
+table.insert(dap.configurations.python, unpack(my_py_config))
+require('dap-python').test_runner = 'pytest'
+require('dap-go').setup()
+require('rust-tools').setup({})
 require('dap.ext.vscode').load_launchjs()
 
+
 -- open dapui automatically
-local dapui =  require("dapui")
+local dapui = require("dapui")
 dap.listeners.after.event_initialized["dapui_config"] = function()
     dapui.open()
 end
@@ -88,24 +57,24 @@ dapui.setup({
     },
     layouts = {
         {
-          elements = {
-            'scopes',
-            'breakpoints',
-            'stacks',
-            'watches',
-          },
-          size = 40,
-          position = 'left',
+            elements = {
+                'scopes',
+                'breakpoints',
+                'stacks',
+                'watches',
+            },
+            size = 40,
+            position = 'left',
         },
         {
-          elements = {
-            'repl',
-            'console',
-          },
-          size = 10,
-          position = 'bottom',
+            elements = {
+                'repl',
+                'console',
+            },
+            size = 10,
+            position = 'bottom',
         },
-      },
+    },
     floating = {
         max_height = nil, -- These can be integers or a float between 0 and 1.
         max_width = nil, -- Floats will be treated as percentage of your screen.
@@ -152,3 +121,5 @@ repl.commands = vim.tbl_extend("force", repl.commands, {
         [".restart"] = dap.restart,
     },
 })
+
+require('telescope').load_extension('dap')
