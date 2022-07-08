@@ -265,5 +265,7 @@ fnml() {
 # install https://github.com/relastle/pmy
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
-eval "$(pmy init)"
+if command -v pmy &>/dev/null; then
+    eval "$(pmy init)"
+fi
 

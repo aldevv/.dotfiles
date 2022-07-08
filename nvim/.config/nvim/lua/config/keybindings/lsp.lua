@@ -20,7 +20,7 @@ M.load_mappings = function() -- use these on_attach
     map("n", "<M-->", ":lua vim.lsp.buf.signature_help()<cr>", nor)
     map("i", "<a-->", "<C-\\><C-O>:lua vim.lsp.buf.signature_help()<cr>", nor)
     map("n", "<c-space>", ":lua vim.lsp.buf.completion()<cr>", nor)
-    map("n", "<leader>s", ":lua vim.lsp.buf.document_symbol()<cr>", nor)
+    map("n", "<leader>ls", ":lua vim.lsp.buf.document_symbol()<cr>", nor)
     map("n", "<leader>ldd", ":lua vim.lsp.buf.declaration()<cr>", nor)
     map("n", "<leader>ldl", ":lua vim.diagnostic.setloclist{ title = 'Buffer diagnostics' }<cr>", nor)
     map("n", "<leader>ldq", ":lua vim.diagnostic.setqflist{ title = 'Workspace diagnostics' }<cr>", nor)

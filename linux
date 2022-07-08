@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/bin/bash
 if [[ -z $STOW_FOLDERS ]]; then
     STOW_FOLDERS=".local,nvim,personal,tmux,zsh"
 fi
