@@ -96,7 +96,6 @@ alias picomr="DISPLAY=':0' picom -b --experimental-backend"
 alias robo="$PROGRAMS/robo3t-1.4.4-linux-x86_64-e6ac9ec/bin/robo3t"
 alias installNvm="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | zsh"
 alias pitr="nvim scp://pi//etc/transmission-rss.conf"
-alias addTr="ssh pi transmission-cli $(xsel -b)"
 alias serve="rclone serve dlna --addr=:9092 --name=HaganeMedia $1"
 alias cpP="pwd | xsel -b"
 
