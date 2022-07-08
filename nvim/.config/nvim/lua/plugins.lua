@@ -42,6 +42,14 @@ return require("packer").startup({
             "ellisonleao/gruvbox.nvim",
             config = req("config.appearance.themes.gruvbox")
         }
+        use({
+            "nvim-telescope/telescope.nvim",
+            requires = {
+                "nvim-lua/plenary.nvim",
+                { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+            },
+            config = req("core.telescope"),
+        })
         -- use({
         --     "folke/tokyonight.nvim",
         --      branch = "main",
@@ -98,14 +106,7 @@ return require("packer").startup({
             config = req("lsp.formatters"),
         })
 
-        use({
-            "nvim-telescope/telescope.nvim",
-            requires = {
-                "nvim-lua/plenary.nvim",
-                { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
-            },
-            config = req("core.telescope"),
-        })
+        
 
         use({
             "nvim-treesitter/nvim-treesitter",
@@ -166,6 +167,12 @@ return require("packer").startup({
                 -- { "Pocco81/DAPInstall.nvim", module = "dap-install" },
                 { "rcarriga/nvim-dap-ui", module = "dapui" },
                 { "theHamsta/nvim-dap-virtual-text", module = "nvim-dap-virtual-text" },
+                {"nvim-telescope/telescope-dap.nvim"},
+                {"rcarriga/cmp-dap"},
+                {"mfussenegger/nvim-dap-python"},
+                {"leoluz/nvim-dap-go"},
+                {'simrat39/rust-tools.nvim'},
+
             },
             -- module = "dap",
             config = req("lsp.dap.dap"),

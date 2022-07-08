@@ -124,6 +124,11 @@ cmp.setup({
             select = false, -- auto select on enter (even if not selected with <a-n>)
         }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
     },
+    -- nvim-cmp by defaults disables autocomplete for prompt buffers
+    enabled = function ()
+      return vim.api.nvim_buf_get_option(0, "buftype") ~= "prompt"
+      or require("cmp_dap").is_dap_buffer()
+    end,
     sources = {
         { name = "nvim_lua" },
         { name = "nvim_lsp" },
@@ -133,6 +138,7 @@ cmp.setup({
         { name = "path", max_item_count = 10 },
         -- { name = 'luasnip' }, TODO change to this!
         { name = "buffer", keyword_length = 5 },
+        { name = "dap"},
         -- { name = 'snippy' }, -- For snippy users.
         -- { name = 'treesitter' },
     },
