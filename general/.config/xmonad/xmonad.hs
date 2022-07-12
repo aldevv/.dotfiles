@@ -1,5 +1,6 @@
 import System.Exit
 import XMonad
+import XMonad.Actions.CycleWS
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageHelpers (isDialog)
@@ -29,24 +30,41 @@ myConfig =
       layoutHook = customLayout,
       manageHook = myManageHook
     }
+    `additionalKeys` myKeysGranular
     `additionalKeysP` myKeys
+    `removeKeysP` removeDefaultKeys
+
+myKeysGranular =
+  [ ((mod5Mask, xK_comma), swapNextScreen)
+  ]
 
 myKeys :: [(String, X ())]
 myKeys =
   [ ("M-w", spawn "firefox"),
     ("M-R", spawn "nautilus"),
     ("M-r", spawn "st -e ranger"),
-    ("M-q", spawn "~/.local/bin/xmonad --recompile; ~/.local/bin/xmonad --restart"),
+    ("M-q", kill),
+    ("M-l", sendMessage NextLayout),
+    ("M-S-t", withFocused $ windows . W.sink), -- retile window
     -- Quit xmonad
-    ("M-s-q", io exitSuccess),
+    ("M-S-q", io exitSuccess),
+    ("M-c", spawn "~/.local/bin/xmonad --recompile; ~/.local/bin/xmonad --restart"),
     -----------
     -- MOVEMENT
     -----------
     ("M-n", windows W.focusDown),
     ("M-e", windows W.focusUp),
     ("M-h", sendMessage Shrink),
-    ("M-i", sendMessage Expand)
+    ("M-i", sendMessage Expand),
+    -- a basic CycleWS setup
+    ("M-ñ", nextScreen), -- need to change promotion bindings
+    ("M-S-ñ", shiftNextScreen)
+    -- ("M-s-.", swapNextScreen) -- change to mode_switch
+
+    -- , ("M-,",    prevWS)
   ]
+
+removeDefaultKeys = ["M-t", "M-<Space>"]
 
 customLayout = tiled ||| Mirror tiled ||| Full ||| threeCol
   where
