@@ -24,9 +24,6 @@
 --     },
 -- }
 
-
-
-
 -- "==========
 -- " AUTO-PAIRS --old one
 -- "==========
@@ -44,15 +41,15 @@
 -- " testing
 vim.g.AutoPairsFlyMode = 0
 vim.g.AutoPairsMultilineClose = 0
-vim.g.AutoPairsMapBS=1
+vim.g.AutoPairsMapBS = 1
 vim.g.AutoPairsMapCh = 0 --use pars mapBS better"
 
 vim.g.AutoPairsSingleQuoteExpandFor = "fbr" --they are not gonna mess much in english for f''
-vim.g.AutoPairsDoubleQuoteExpandFor = 'fbr'
+vim.g.AutoPairsDoubleQuoteExpandFor = "fbr"
 vim.g.AutoPairsSingleQuoteMode = 2
 vim.g.AutoPairsDoubleQuoteMode = 2
-vim.g.AutoPairsShortcutFastWrap = '<a-a>'
-vim.g.AutoPairsShortcutJump = '<a-w>'
-vim.g.AutoPairsShortcutToggle = ''
-vim.g.AutoPairsShortcutBackInsert = '<a-b>' -- only for flymode
-vim.g.autopairs_enable=1
+vim.g.AutoPairsShortcutFastWrap = "<a-a>"
+vim.g.AutoPairsShortcutJump = "<a-w>"
+vim.g.AutoPairsShortcutToggle = ""
+vim.g.AutoPairsShortcutBackInsert = "<a-b>" -- only for flymode
+vim.g.autopairs_enable = 1

@@ -13,4 +13,4 @@ augroup remember_folds
 augroup END
 ]])
 
-  vim.o.foldenable = true
+vim.o.foldenable = true
