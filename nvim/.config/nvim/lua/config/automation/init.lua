@@ -23,7 +23,7 @@ require("config.automation.lsp").diagnostics_in_loclist() --
 
 -- cmd('autocmd Filetype tex let b:AutoPairs = {"(": ")", "[": "]"}')
 cmd(
-    "autocmd VimEnter,WinEnter,BufNewFile,BufRead,BufEnter,TabEnter *.{vim,jsx,json,ts,js,svelte,vue} :IndentLinesToggle"
+	"autocmd VimEnter,WinEnter,BufNewFile,BufRead,BufEnter,TabEnter *.{vim,jsx,json,ts,js,svelte,vue} :IndentLinesToggle"
 )
 
 cmd([[

@@ -1,7 +1,7 @@
 local M = {}
 
 M.diagnostics_in_loclist = function()
-    vim.cmd([[
+	vim.cmd([[
 	    autocmd DiagnosticChanged * lua vim.diagnostic.setloclist({open = false })
     ]])
 end

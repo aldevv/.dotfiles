@@ -56,10 +56,10 @@ map("", "<c-u>", "<c-u>zz", nor)
 
 -- netrw
 map(
-    "n",
-    "<leader>sp",
-    ":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>",
-    nor_s
+	"n",
+	"<leader>sp",
+	":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>",
+	nor_s
 )
 map("n", "<leader>sP", ":Lex<cr>", nor_s)
 map("n", "<leader>ss", ":Ex<cr>", nor_s)

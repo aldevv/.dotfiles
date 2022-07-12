@@ -148,4 +148,3 @@ end)
 -- end
 --
 -- nvim_set_current_dir({dir})                           *nvim_set_current_dir()*
-

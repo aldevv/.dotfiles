@@ -14,7 +14,6 @@ vim.cmd([[
     execute 'hi HopNextKey2 gui=bold guifg=LightGreen'
 ]])
 
-
 vim.cmd([[
 let g:brightest#highlight = {
             \   "group" : "WildMenu"
