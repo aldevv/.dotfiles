@@ -1,0 +1,44 @@
+set selection-clipboard clipboard
+
+map f scroll full-down
+map b scroll full-up
+map F follow
+
+# bookmarks
+map <C-b> focus_inputbar ":bmark \""
+map <C-l> focus_inputbar :blist
+map <C-d> focus_inputbar ":bdelete "
+
+map h scroll left
+map n scroll down
+map e scroll up
+map i scroll right
+map G scroll bottom
+map t recolor
+map u scroll half-up
+map d scroll half-down
+map D toggle_page_mode
+map - feedkeys /
+map + feedkeys ?
+map { zoom out
+map } zoom in
+map <A-o> feedkeys ":exec okular %<Return>"
+map N scroll half-down
+map E scroll half-up
+
+map k search forward
+map K search backward
+
+map j toggle_statusbar
+
+# For TOC navigation
+map [index] o toggle_index
+
+# hjkl →  hnei
+map [index] n navigate_index down
+map [index] e navigate_index up
+map [index] h navigate_index collapse
+map [index] i navigate_index expand
+
+map [index] H navigate_index collapse-all
+map [index] I navigate_index expand-all
