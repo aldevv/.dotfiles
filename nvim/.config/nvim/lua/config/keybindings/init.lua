@@ -13,7 +13,7 @@ local nor_s = vim.tbl_extend("keep", nor, s)
 local nor_e = vim.tbl_extend("keep", nor, e)
 local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 
-local map = vim.api.nvim_set_keymap
+local map = vim.keymap.set
 local h = "~/.config/nvim"
 -- backlog
 -- <a-?>
@@ -118,15 +118,15 @@ local uv = require("utils.vanilla.core")
 uv.quickfix_toggle_definition()
 map("n", "<c-q>q", ":call ToggleQuickFix(0)<cr>", nor_s)
 map("n", "<c-q>Q", ":call ToggleQuickFix(1)<cr>", nor_s)
-map("n", "<c-q>n", ":cnext<cr>zzzv", nor)
-map("n", "<c-q>e", ":cprev<cr>zzzv", nor)
+map("n", "<c-q>k", ":cnext<cr>zzzv", nor)
+map("n", "<c-q>K", ":cprev<cr>zzzv", nor)
 
 -- ql
 uv.location_toggle_definition()
 map("n", "<c-l>l", ":call ToggleLocation(0)<cr>", nor_s)
 map("n", "<c-l>L", ":call ToggleLocation(1)<cr>", nor_s)
-map("n", "<c-l>n", ":lnext<cr>zzzv", nor)
-map("n", "<c-l>e", ":lprev<cr>zzzv", nor)
+map("n", "<c-l>k", ":lnext<cr>zzzv", nor)
+map("n", "<c-l>K", ":lprev<cr>zzzv", nor)
 
 -- folding
 map("", "ze", "zk", nor)

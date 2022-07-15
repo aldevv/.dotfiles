@@ -1,13 +1,6 @@
 "===================
 "for transparent vim
 "===================
-let g:makeTransparent=0
-if g:makeTransparent
-    "soft, medium and hard.
-     hi! Normal ctermbg=none guibg=NONE
-     hi! CursorLineNr gui=bold guifg=#fabd2f guibg=NONE
-     " hi! folded ctermbg=yellow cterm=bold guifg=none guibg=NONE
-endif
 highlight clear SignColumn
 set cursorline
 set cursorcolumn
@@ -32,10 +25,6 @@ function MyPythonHighlights()
 endfunction
 
 function MyMarkdownHighlights()
-  " can be keyword or match
-  " syntax keyword myitalics "myword"
-  " syntax match myitalics "\v_.+_"
-  " hi link myitalics htmlItalic
     execute 'hi! htmlItalic gui=italic ' . HighGet("htmlItalic")
 endfunction
 
@@ -65,8 +54,6 @@ endfunction
 
 
 let g:java_highlight_all = 1
-"let java_highlight_functions = 1
-"
 " to see the type of highlight SyntaxQuery
 function! s:syntax_query() abort
   for id in synstack(line("."), col("."))

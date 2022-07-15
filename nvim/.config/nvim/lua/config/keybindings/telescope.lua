@@ -5,6 +5,7 @@ local nor_s = vim.tbl_extend("keep", nor, s)
 local map = vim.api.nvim_set_keymap
 
 M.load_mappings = function()
+	vim.cmd([[cnoreabbrev t Telescope]])
 	-- telescope essential
 	map("n", "<a-p>", ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h")} )<cr>', nor_s)
 	map("n", "<a-b>", ':lua require("telescope.builtin").buffers()<cr>', nor_s)
@@ -74,7 +75,7 @@ M.load_mappings = function()
 	map("n", "<leader>tli", ':lua require("telescope.builtin").lsp_implementations()<cr>', nor_s)
 	map("n", "<leader>tld", ':lua require("telescope.builtin").lsp_definitions()<cr>', nor_s)
 	map("n", "<leader>tlD", ':lua require("telescope.builtin").diagnostics()<cr>', nor_s)
-	map("n", "<leader>tws", ':lua require("telescope.builtin").lsp_workspace_symbols()<cr>', nor_s)
+	map("n", "<leader>tlws", ':lua require("telescope.builtin").lsp_workspace_symbols()<cr>', nor_s)
 
 	-- telescope git
 	map("n", "<leader>tgc", ':lua require("telescope.builtin").git_commits()<cr>', nor_s)
