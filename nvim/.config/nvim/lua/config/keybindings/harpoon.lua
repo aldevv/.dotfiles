@@ -56,15 +56,14 @@ M.load_mappings = function()
 	-- map("n", "<leader>/", ":lua require('harpoon.term').gotoTerminal(7)<cr>", nor_s)
 	-- map("n", "<leader>(", ":lua require('harpoon.term').gotoTerminal(8)<cr>", nor_s)
 	-- map("n", "<leader>)", ":lua require('harpoon.term').gotoTerminal(9)<cr>", nor_s)
+	map("n", "<a-s>", ":lua require('harpoon.ui').nav_file(1)<cr>", nor_s)
+	map("n", "<a-t>", ":lua require('harpoon.ui').nav_file(2)<cr>", nor_s)
+	map("n", "<a-n>", ":lua require('harpoon.ui').nav_file(3)<cr>", nor_s)
+	map("n", "<a-e>", ":lua require('harpoon.ui').nav_file(4)<cr>", nor_s)
 
-	map("n", "<c-s>", ":lua require('harpoon.ui').nav_file(1)<cr>", nor_s)
-	map("n", "<c-t>", ":lua require('harpoon.ui').nav_file(2)<cr>", nor_s)
-	map("n", "<c-n>", ":lua require('harpoon.ui').nav_file(3)<cr>", nor_s)
-	map("n", "<c-e>", ":lua require('harpoon.ui').nav_file(4)<cr>", nor_s)
-
-	map("n", "<leader><c-s>", ":lua require('harpoon.ui').nav_file(5)<cr>", nor_s)
-	map("n", "<leader><c-t>", ":lua require('harpoon.ui').nav_file(6)<cr>", nor_s)
-	map("n", "<leader><c-n>", ":lua require('harpoon.ui').nav_file(7)<cr>", nor_s)
-	map("n", "<leader><c-e>", ":lua require('harpoon.ui').nav_file(8)<cr>", nor_s)
+	map("n", "<leader><a-s>", ":lua require('harpoon.ui').nav_file(5)<cr>", nor_s)
+	map("n", "<leader><a-t>", ":lua require('harpoon.ui').nav_file(6)<cr>", nor_s)
+	map("n", "<leader><a-n>", ":lua require('harpoon.ui').nav_file(7)<cr>", nor_s)
+	map("n", "<leader><a-e>", ":lua require('harpoon.ui').nav_file(8)<cr>", nor_s)
 end
 return M

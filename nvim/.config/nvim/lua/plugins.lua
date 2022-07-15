@@ -39,7 +39,7 @@ return require("packer").startup({
 	function(use)
 		use({ "wbthomason/packer.nvim" })
 		use({
-			"ellisonleao/gruvbox.nvim",
+			"gruvbox-community/gruvbox",
 			config = req("config.appearance.themes.gruvbox"),
 		})
 		use({
@@ -431,7 +431,7 @@ return require("packer").startup({
 				require("orgmode").setup_ts_grammar()
 			end,
 		})
-
+		use("nanotee/sqls.nvim")
 		-- check arpeggio https://github.com/kana/vim-arpeggio
 		-- check sideways https://github.com/AndrewRadev/sideways.vim
 

@@ -297,7 +297,7 @@ cnoremap <a-i> <Right>
 autocmd FileType python nnoremap <buffer> <s-cr> :silent w<bar>only<bar>vsp<bar>term jupyter console<cr> <c-w>l :JupyterConnect<cr><cr> :JupyterRunFile<cr>
 autocmd FileType java nnoremap <silent><buffer> <s-cr> :silent w<bar>execute "!java ".expand('%:t:r')<cr>
 noremap <silent><leader><cr> :silent call RunnerTerminal()<cr>
-nnoremap <silent><cr> :silent call RunnerEnter()<cr>
+" nnoremap <silent><buffer><cr> :silent call RunnerEnter()<cr>
 
 function! SpecialWindow()
   return &buftype == 'quickfix' || &buftype == 'nofile'
