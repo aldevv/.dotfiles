@@ -363,10 +363,6 @@ endf
 "====================
 " ABBREVIATIONS
 "====================
-autocmd FileType python,java,js,jsx,ts iabbrev <buffer> rrt return
-autocmd FileType python,java,js,jsx,ts iabbrev <buffer> ffa False
-autocmd FileType python,java,js,jsx,ts iabbrev <buffer> ttr True
-autocmd FileType python,java,js,jsx,ts iabbrev <buffer> bbr Break
 
 " use * in visual mode
 function! s:VSetSearch()

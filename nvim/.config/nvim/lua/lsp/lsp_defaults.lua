@@ -3,7 +3,6 @@
 --  - handlers
 --  - on_attach
 local M = {}
-
 -- ===================
 -- LSP FLOATING WINDOW
 -- ===================
@@ -77,6 +76,7 @@ local on_attach = function(client, buffnr)
     -- these are callbacks that run after the server has loaded
     require("config.keybindings.lsp").load_mappings()
     require("config.automation.lsp").diagnostics_in_loclist()
+
     -- this disables the lsp's formatting functions
     -- is so null-ls can take charge of formatting
     client.server_capabilities.document_formatting = false
@@ -86,5 +86,4 @@ end
 M.capabilities = capabilities
 M.handlers = handlers
 M.on_attach = on_attach
-
 return M
