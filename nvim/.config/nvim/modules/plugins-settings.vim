@@ -20,9 +20,9 @@ endif
 
 
 
-if !empty(glob("$HOME/.config/nvim/modules/vimspector.vim")) && empty($NOCOC)
-    source $HOME/.config/nvim/modules/vimspector.vim
-endif
+" if !empty(glob("$HOME/.config/nvim/modules/vimspector.vim")) && empty($NOCOC)
+"     source $HOME/.config/nvim/modules/vimspector.vim
+" endif
 
 
 if !empty(glob("$HOME/.config/nvim/modules/neoterm.vim")) && empty($NOCOC)
