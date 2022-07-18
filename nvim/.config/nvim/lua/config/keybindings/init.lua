@@ -56,10 +56,10 @@ map("", "<c-u>", "<c-u>zz", nor)
 
 -- netrw
 map(
-	"n",
-	"<leader>sp",
-	":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>",
-	nor_s
+    "n",
+    "<leader>sp",
+    ":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>",
+    nor_s
 )
 map("n", "<leader>sP", ":Lex<cr>", nor_s)
 map("n", "<leader>ss", ":Ex<cr>", nor_s)
@@ -237,11 +237,27 @@ map("n", "<leader>cos", ":Obsession<CR>", nor_s)
 
 -- vim-test
 
-map("n", "<leader>Tn", ":TestNearest<cr>", nor_s)
-map("n", "<leader>Tf", ":TestFile<cr>", nor_s)
-map("n", "<leader>Ts", ":TestSuite<cr>", nor_s)
-map("n", "<leader>Tl", ":TestLast<cr>", nor_s)
-map("n", "<leader>Tg", ":TestVisit<cr>", nor_s)
+map("n", "<localleader>tn", ":lua require('neotest').run.run({open_on_run = 'short'})<cr>", nor_s) -- run nearest
+map("n", "<localleader>tx", ":lua require('neotest').run.stop()<cr>", nor_s) -- run nearest
+map("n", "<localleader>tf", ":lua require('neotest').run.run(vim.fn.expand('%'))<cr>", nor_s)
+map("n", "<localleader>ts", ":lua require('neotest').summary.toggle()<cr>", nor_s)
+map("n", "<localleader>to", ":lua require('neotest').output.open()<cr>", nor_s)
+map("n", "<localleader>tl", ":lua require('neotest').run.run_last()<cr>", nor_s)
+map("n", "<localleader>tk", ":lua require('neotest').jump.next({status = 'failed'})<cr>", nor_s)
+map("n", "<localleader>tK", ":lua require('neotest').jump.prev({status = 'failed'})<cr>", nor_s)
+map("n", "<localleader>tt", ":lua require('neotest').run.run({suite = true})<cr>", nor_s)
+map("n", "<localleader>tS", ":lua require('neotest').run.run({suite = true})<cr>", nor_s)
+map("n", "<localleader>tg", ":TestVisit<cr>", nor_s)
+vim.cmd([[cnoreabbrev Tn TestNearest]])
+vim.cmd([[cnoreabbrev Ts TestSuite]])
+vim.cmd([[cnoreabbrev Tf TestFile]])
+vim.cmd([[cnoreabbrev Tl TestLast]])
+
+-- map("n", "<leader>Tn", ":TestNearest<cr>", nor_s)
+-- map("n", "<leader>Tf", ":TestFile<cr>", nor_s)
+-- map("n", "<leader>Tt", ":TestSuite<cr>", nor_s)
+-- map("n", "<leader>Tl", ":TestLast<cr>", nor_s)
+-- map("n", "<leader>Tg", ":TestVisit<cr>", nor_s)
 
 -- macro range
 map("x", "@", ":<C-u>call ExecuteMacroOverVisualRange()<cr>", nor_s)
