@@ -67,6 +67,7 @@ return require("packer").startup({
             requires = {
                 "williamboman/nvim-lsp-installer",
                 "neovim/nvim-lspconfig",
+                "hrsh7th/cmp-nvim-lsp",
             },
             -- config = req("lsp.lsp_old"),
             config = req("lsp.lsp"),
