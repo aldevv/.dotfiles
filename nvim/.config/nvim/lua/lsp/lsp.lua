@@ -5,27 +5,27 @@ local servers = {
     "bashls",
     "pyright",
     "clangd",
-    -- "pylsp", -- snippets completion
     "html",
     "cssls",
-    "jdtls", -- java
-    "zk", -- markdown
     "tsserver",
-    -- "tailwindcss",
     "svelte",
     "sumneko_lua",
     "vimls",
     "gopls",
     "dockerls",
     "jsonls",
-    -- "yamlls",
     "rust_analyzer",
     "volar", -- vue
     "sqls",
     "hls",
-    "solargraph", -- ruby
     "emmet_ls",
     "graphql",
+    -- "tailwindcss",
+    -- "pylsp", -- snippets completion
+    -- "yamlls",
+    -- "solargraph", -- ruby
+    -- "zk", -- markdown
+    -- "jdtls", -- java
 }
 
 local lsp_installer = require("nvim-lsp-installer")
