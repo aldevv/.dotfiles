@@ -40,6 +40,8 @@ myKeysGranular =
 
 myKeys :: [(String, X ())]
 myKeys =
+  -- defaults
+  -- https://wiki.haskell.org/Xmonad/Config_archive/Template_xmonad.hs_(0.9)
   [ ("M-w", spawn "firefox"),
     ("M-R", spawn "nautilus"),
     ("M-r", spawn "st -e ranger"),
@@ -48,12 +50,14 @@ myKeys =
     ("M-S-t", withFocused $ windows . W.sink), -- retile window
     -- Quit xmonad
     ("M-S-q", io exitSuccess),
-    ("M-c", spawn "~/.local/bin/xmonad --recompile; ~/.local/bin/xmonad --restart"),
+    -- ("M-c", spawn "~/.local/bin/xmonad --recompile; ~/.local/bin/xmonad --restart"),
     -----------
     -- MOVEMENT
     -----------
     ("M-n", windows W.focusDown),
     ("M-e", windows W.focusUp),
+    ("M-S-n", windows W.swapDown),
+    ("M-S-e", windows W.swapUp),
     ("M-h", sendMessage Shrink),
     ("M-i", sendMessage Expand),
     -- a basic CycleWS setup
@@ -111,5 +115,6 @@ myManageHook =
   composeAll
     [ className =? "Gimp" --> doFloat,
       className =? "copyq" --> doFloat,
+      className =? "zoom " --> doFloat,
       isDialog --> doFloat
     ]
