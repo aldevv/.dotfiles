@@ -273,7 +273,7 @@ map  <silent><leader>O :silent w !sudo tee %<CR>
 nnoremap <F6> :e $HOME/.config/nvim/init.vim<cr>
 map <leader><F2> :e ~/.zshrc<cr>
 " noremap  <leader>ww :w<CR>
-noremap  ! :!
+
 noremap  <F7> :set spell! \| set wrap<CR>
 noremap  <leader>Ts :set spell! \| set wrap<CR>
 
