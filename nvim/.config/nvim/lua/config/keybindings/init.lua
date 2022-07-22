@@ -41,6 +41,9 @@ local h = "~/.config/nvim"
 -- map("", "gE", "gJ", nor) -- lines
 map("", "E", "mzJ`z", nor) -- lines
 
+-- map("n", "!!", ":.!", nor)
+-- map("n", "!.", ".!bash", nor)
+
 -- jumplist mutations
 map("n", "e", '(v:count > 5  ? "m\'" . v:count : "") . \'k\'', nor_e)
 map("n", "n", '(v:count > 5  ? "m\'" . v:count : "") . \'j\'', nor_e)
