@@ -1,15 +1,30 @@
 #!/bin/bash
-
+WIKI=${WIKI:-"$HOME/.local/share/wiki/"}
 files=$(fd '.' $WIKI -t f -e org)
-chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | dmenu -n)
+
+if getopts 'd' flag; then
+  case "${flag}" in
+    d) chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | dmenu -n) ;;
+  esac
+else
+    chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | fzf)
+fi
+
+
+# chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | dmenu -n)
 
 if [[  $chosen_file == "create" ]]; then
     nvim $WIKI/notes/
     exit 0
 fi
 
-chosen_filepath=$(echo "$files" | grep $chosen_file)
+chosen_filepath=$(echo "$files" | grep $chosen_file 2>/dev/null)
 
 if [[  -n $chosen_filepath ]]; then
-    nvim $chosen_filepath
+    if [[ $flag == '?' ]]; then
+        nvim $chosen_filepath
+    else
+        st -e nvim $chosen_filepath 2>/dev/null
+    fi
+    
 fi

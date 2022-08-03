@@ -5,11 +5,16 @@ import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageHelpers (isDialog)
 import XMonad.Hooks.StatusBar
-import XMonad.Layout.Magnifier
+import XMonad.Layout.Magnifier (magnifiercz)
+import XMonad.Layout.NoBorders (noBorders)
 import XMonad.Layout.ThreeColumns
+import XMonad.Layout.ToggleLayouts (ToggleLayout (..), toggleLayouts)
 import qualified XMonad.StackSet as W
 import XMonad.Util.EZConfig
 import XMonad.Util.Loggers
+import XMonad.Util.NamedScratchpad
+
+-- dollar sign --> https://stackoverflow.com/questions/940382/what-is-the-difference-between-dot-and-dollar-sign
 
 -- ewmhFullscreen lets apps know about the window size
 main :: IO ()
@@ -44,13 +49,21 @@ myKeys =
   -- https://wiki.haskell.org/Xmonad/Config_archive/Template_xmonad.hs_(0.9)
   [ ("M-w", spawn "firefox"),
     ("M-R", spawn "nautilus"),
+    ("M-S-z", spawn "xscreensaver-command -lock"),
     ("M-r", spawn "st -e ranger"),
     ("M-q", kill),
+    ("M-f", sendMessage (Toggle "Full")),
     ("M-l", sendMessage NextLayout),
     ("M-S-t", withFocused $ windows . W.sink), -- retile window
     -- Quit xmonad
     ("M-S-q", io exitSuccess),
     -- ("M-c", spawn "~/.local/bin/xmonad --recompile; ~/.local/bin/xmonad --restart"),
+    --------------
+    -- SCRATCHPADS
+    --------------
+    ("M-c", namedScratchpadAction scratchpads "terminal"),
+    ("M-S-c", namedScratchpadAction scratchpads "terminal-big"),
+    ("M-S-r", namedScratchpadAction scratchpads "ranger"),
     -----------
     -- MOVEMENT
     -----------
@@ -70,7 +83,7 @@ myKeys =
 
 removeDefaultKeys = ["M-t", "M-<Space>"]
 
-customLayout = tiled ||| Mirror tiled ||| Full ||| threeCol
+customLayout = toggleLayouts (noBorders Full) (tiled ||| Mirror tiled ||| threeCol)
   where
     threeCol = magnifiercz 1.3 (ThreeColMid nmaster delta ratio)
     tiled = Tall nmaster delta ratio
@@ -118,3 +131,29 @@ myManageHook =
       className =? "zoom " --> doFloat,
       isDialog --> doFloat
     ]
+    <+> namedScratchpadManageHook scratchpads
+
+-- <+> mappend (monoid)
+
+-- scratchpads = [NS "terminal" "st -n scratchpad" (appName =? "scratchpad") defaultFloating] where role = stringProperty "WM_WINDOW_ROLE"
+
+scratchpads :: [NamedScratchpad]
+scratchpads =
+  [ NS "terminal" "st -n scratchpad" (appName =? "scratchpad") term_dim,
+    NS "terminal-big" "st -n scratchpad-big" (appName =? "scratchpad-big") term_big_dim,
+    NS "ranger" "st -n ranger -e ranger 2>/dev/null" (appName =? "ranger") defaultFloating
+  ]
+  where
+    term_dim = customFloating $ W.RationalRect l t w h
+      where
+        h = 0.5
+        w = 0.50
+        t = 0.75 - h
+        l = 0.75 - w
+
+    term_big_dim = customFloating $ W.RationalRect l t w h
+      where
+        h = 0.9
+        w = 0.9
+        t = 0.95 - h
+        l = 0.95 - w

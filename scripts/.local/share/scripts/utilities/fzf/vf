@@ -6,13 +6,14 @@ FZF_DEFAULT_COMMAND="fd --type f --follow --ignore-file $FD_IGNORE_FILE"
 if [[ -z $1 ]]; then
 	name=$(fzf)
 	[ ! -z "$name" ] && nvim "$name"
+fi
+
+if [[ -d $1 ]]; then
+    FZF_DEFAULT_COMMAND="fd --type f --search-path $1 --follow --ignore-file $FD_IGNORE_FILE -x grep -Il . {}"
+
+    name=$(fd . $1 | fzf -d / --with-nth -2,-1)
+    [ ! -z "$name" ] && nvim "$name"
 else
-	if [[ -d $1 ]]; then
-        FZF_DEFAULT_COMMAND="fd --type f --search-path $1 --follow --ignore-file $FD_IGNORE_FILE -x grep -Il . {}"
-		name=$(fzf -d / --with-nth -5,-4,-3,-2,-1)
-		[ ! -z "$name" ] && nvim "$name"
-	else
-		name=$(fzf --query "$1")
-		[ ! -z "$name" ] && nvim "$name"
-	fi
+    name=$(fzf --query "$1")
+    [ ! -z "$name" ] && nvim "$name"
 fi

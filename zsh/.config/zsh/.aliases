@@ -246,7 +246,6 @@ alias \
 	station="~/.local/bin/Station-1.65.0-x86_64.AppImage" \
 	xc="xclip -selection clipboard" \
 	j="joplin" \
-	xmonad="$HOME/.cabal/bin/xmonad" \
 	rz="mpv 'http://www.youtube.com/watch?v=w-RUTZBbGwM'" \
 	yz="mpv 'https://www.youtube.com/watch?v=mRwcGr8yTws'" \
 	cu="curl" \
