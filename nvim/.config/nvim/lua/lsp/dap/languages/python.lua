@@ -1,6 +1,7 @@
 local M = {}
 local adapter = {
 	type = "executable",
+	-- command = "/home/jubernal/.pyenv/versions/3.6.14/bin/python",
 	command = "/home/jubernal/.pyenv/versions/3.6.14/bin/python",
 	args = { "-m", "debugpy.adapter" },
 }

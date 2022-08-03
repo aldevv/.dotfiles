@@ -5,7 +5,6 @@
 #-------------o---------------
 
 #=====================
-setopt GLOB_DOTS
 setopt extended_glob
 #=====================
 # enables: rm -- ^*.dmg, rm -- ^*.(dmg|txt)
@@ -22,11 +21,10 @@ setopt complete_aliases
 #autoload -U colors && colors   # Load colors
 #PS1="%B%{$fg[red]%}[%{$fg[yellow]%}%n%{$fg[green]%}@%{$fg[blue]%}%M %{$fg[magenta]%}%~%{$fg[red]%}]%{$reset_color%}$%b "
 
-nomyzsh() {autoload -Uz compinit && compinit}
-export SXHKD_SHELL="/usr/bin/sh"
-[ -d "$HOME/.oh-my-zsh" ] &&
+if [[ -d "$HOME/.oh-my-zsh" ]];then
 	export ZSH="$HOME/.oh-my-zsh" ||
-	nomyzsh
+	autoload -Uz compinit && compinit
+fi
 
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 #echo $RANDOM_THEME
@@ -37,13 +35,14 @@ export SXHKD_SHELL="/usr/bin/sh"
 #ZSH_THEME="agnoster"
 # ZSH_THEME="amuse"
 # ZSH_THEME="daivasmara"
-[[ $(whoami) == root ]] &&
-	ZSH_THEME="robbyrussell" ||
+if [[ $(whoami) == root ]]; then
+	ZSH_THEME="robbyrussell"
+else
 	ZSH_THEME="aussiegeek_edited"
+fi
 
 # Preferred editor for local and remote sessions
-[[ -n $SSH_CONNECTION ]] &&
-	color echo "came to visit? enjoy your stay"
+[[ -n $SSH_CONNECTION ]] && color echo "came to visit? enjoy your stay"
 
 #==========
 #FUNCTIONS
@@ -80,6 +79,8 @@ preexec() { echo -ne '\e[5 q'; } # Use beam shape cursor for each new prompt.
 # docker adds completion for docker commands, same docker compose
 ##set history size
 export HISTSIZE=25000
+[ ! -d "$HOME/.cache/zsh" ] &&\
+    mkdir "$HOME/.cache/zsh"
 export HISTFILE="$HOME/.cache/zsh/.zsh_history"
 # plugins=(copybuffer dirhistory jsontools)
 plugins=(
@@ -143,12 +144,6 @@ bindkey -v '^?' backward-delete-char
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
-# this makes autocompletion work on aliased programs
-unsetopt completealiases
-
-
-# comment this for faster loads
-
 doge() {
 	_fzf_complete --multi --reverse --prompt="doge> " -- "$@" < <(
 		echo very
@@ -188,10 +183,6 @@ doge() {
 # echo "opening $file" &&
 # xdg-open "$file"
 
-# PATH
-[[ -d "/usr/local/bin" ]] &&
-	export PATH="/usr/local/bin:$PATH"
-
 
 bindkey -s "^n" "stn^M"
 bindkey -s 'f' '$UTILITIES/tmux/tmux-sessionizer^M' # projects and work
@@ -207,7 +198,9 @@ bindkey -s 'o' '!\$^M'
 bindkey -s 'O' '!*^M'
 bindkey -s 't' '**	'
 # tested, this shows stderr correctly on new terminal window
-bindkey -s '.' 'setsid st &>/dev/null^M'
+
+# this is used for previous command
+# bindkey -s '.' 'setsid st &>/dev/null^M'
 bindkey -s 'r' 'setsid st ranger &>/dev/null^M'
 
 _fzf_compgen_path() {
@@ -244,28 +237,27 @@ bindkey "^ " autosuggest-execute
 #TODO find alternative to lesskey (deprecated)
 # lesskey $HOME/.config/colemak-less
 # aliases
- [ -f $ZDOTDIR/.aliases ] && . $ZDOTDIR/.aliases
+# shellcheck source=/dev/null
+ [ -f "$ZDOTDIR/.aliases" ] && . "$ZDOTDIR/.aliases"
+# shellcheck source=/dev/null
+[ -f "$ZDOTDIR/.auto_aliases" ] && . "$ZDOTDIR/.auto_aliases"
+# shellcheck source=/dev/null
+ [ -f ~/.aliases ] && . ~/.aliases
 
-[ -f $ZDOTDIR/.auto_aliases ] && . $ZDOTDIR/.auto_aliases
-
-# fnm
-nvml() {
-	. "$NVM_DIR/nvm.sh"
-}
-nvmL() {
-	export NVM_DIR="$HOME/.config/nvm"
-	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
-	[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-}
-
-fnml() {
-    export PATH=/home/kanon/.fnm:$PATH
-    eval "`fnm env`"
-}
 # install https://github.com/relastle/pmy
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
 if command -v pmy &>/dev/null; then
     eval "$(pmy init)"
 fi
+
+if test -d .fnm; then
+    export PATH=/home/kanon/.fnm:$PATH
+    eval "`fnm env`"
+fi
+
+CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
+# shellcheck source=/dev/null
+[ -f  "$CARGO_HOME/env" ] && . "$CARGO_HOME/env"
+[ -f "/home/kanon/.ghcup/env" ] && source "/home/kanon/.ghcup/env" # ghcup-env
 
