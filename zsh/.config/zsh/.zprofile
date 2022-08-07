@@ -105,7 +105,7 @@ export FD_DEFAULT_FOR_FZF="fd --type f --follow -uuu --ignore-file $FD_IGNORE_FI
 export FZF_DEFAULT_COMMAND=$FD_DEFAULT_FOR_FZF
 
 # export FZF_DEFAULT_OPTS='--bind=ctrl-e:up,ctrl-n:down'
-export FZF_DEFAULT_OPTS=" --height=75% --layout=reverse --multi --bind=ctrl-e:preview-up,ctrl-n:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept --preview='[[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file || (bat --style=numbers --color=always {} || cat {}) > /dev/null | head -200' --preview-window=50%:rounded:wrap"
+export FZF_DEFAULT_OPTS=" --height=75% --layout=reverse --multi --bind=ctrl-e:preview-up,ctrl-n:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept --preview='[[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file || (bat --style=numbers --color=always {} || cat {}) > /dev/null | head -200' --preview-window=50%:wrap"
 # to unhide preview window, change to --preview-window=right:hidden:wrap"
 # for prompt at the bottom, change layout to "default"
 

@@ -20,22 +20,22 @@ local new_maker = function(filepath, bufnr, opts)
 	}):sync()
 end
 
-local find_command = function()
-	-- if it finds fd use it else let telescope choose
-	if 1 == vim.fn.executable("fd") then
-		return {
-			find_command = { "fd", "--type", "f", "--strip-cwd-prefix" },
-		}
-	else
-		return {}
-	end
-end
+-- local find_command = function()
+-- 	-- if it finds fd use it else let telescope choose
+-- 	if 1 == vim.fn.executable("fd") then
+-- 		return {
+-- 			find_command = { "fd", "--type", "f", "--strip-cwd-prefix" },
+-- 		}
+-- 	else
+-- 		return {}
+-- 	end
+-- end
 
 local actions = require("telescope.actions")
 local actions_layout = require("telescope.actions.layout")
 require("telescope").setup({
 	pickers = {
-		find_files = find_command(),
+		-- find_files = find_command(),
 		buffers = {
 			theme = "cursor", -- ivy, dropdown, cursor
 			layout_config = { width = 0.7 },
