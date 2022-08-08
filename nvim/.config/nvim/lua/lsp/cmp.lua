@@ -111,8 +111,8 @@ cmp.setup({
 			end
 		end,
 		-- these are for the popup docs, TODO change to the ones in coc
-		["<C-e>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
-		["<C-n>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
+		["<s-up>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
+		["<s-down>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
 		["<C-Space>"] = cmp.mapping(cmp.mapping.complete(), { "i", "c" }),
 		["<C-y>"] = cmp.mapping({
 			i = cmp.mapping.abort(),
