@@ -15,6 +15,7 @@ local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 
 local map = vim.keymap.set
 local h = "~/.config/nvim"
+
 -- backlog
 -- <a-?>
 -- <a-i>
@@ -103,7 +104,7 @@ map("t", "<a-'>", "<c-\\><c-n>", nor_s)
 map("n", "<F1>", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
 
 map("n", "<localleader>Vv", ":e .vscode/launch.json<cr>", nor_s)
-map("n", "<localleader>V.", ":e " .. h .. "/init.lua<cr>", nor_s)
+map("n", "<localleader>V.", ":en " .. h .. "/init.lua<cr>", nor_s)
 map("n", "<localleader>Vs", ":e " .. h .. "/lua/config/settings.lua<cr>", nor_s)
 map("n", "<localleader>Vp", ":e " .. h .. "/lua/plugins.lua<cr>", nor_s)
 map("n", "<localleader>Va", ":e " .. h .. "/lua/config/automation/init.lua<cr>", nor_s)
@@ -289,3 +290,5 @@ map("n", "<leader>,pu", ":PackerUpdate<cr>", nor)
 map("n", "<leader>,pc", ":PackerCompile<cr>", nor)
 
 require("config.keybindings.refactoring")
+
+
