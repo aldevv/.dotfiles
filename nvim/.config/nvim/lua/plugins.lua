@@ -443,6 +443,7 @@ return require("packer").startup({
         use({ "Vimjas/vim-python-pep8-indent" }) -- for indentation, treesitter not functional yet 23/01/2022
         use({
             "nvim-orgmode/orgmode",
+            ft = {"org"},
             config = function()
                 require("orgmode").setup({})
                 require("orgmode").setup_ts_grammar()

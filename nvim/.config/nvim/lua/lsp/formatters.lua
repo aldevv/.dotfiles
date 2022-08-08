@@ -16,46 +16,47 @@ local code_actions = null_ls.builtins.code_actions
 --here are the individual files
 -- ~/.local/share/nvim/site/pack/packer/start/null-ls.nvim/lua/null-ls/builtins/formatting
 null_ls.setup({
-	-- Displays all possible log messages and writes them to the null-ls log, which you can view with the command :NullLsLog. This option can slow down Neovim, so it's strongly recommended to disable it for normal use.
-	-- debug = false,
-	debug = false,
+    -- Displays all possible log messages and writes them to the null-ls log, which you can view with the command :NullLsLog. This option can slow down Neovim, so it's strongly recommended to disable it for normal use.
+    -- debug = false,
+    debug = false,
 
-	log = {
-		enable = true,
-		level = "warn",
-		use_console = "async",
-	},
-	on_attach = nil,
-	-- conf options
-	-- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
-	sources = {
-		formatting.black.with({ extra_args = { "--fast" } }),
-		formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }),
-		formatting.shfmt.with({
-			extra_filetypes = { "zsh", "bash" },
-		}),
-		-- formatting.clang_format,
-		-- formatting.uncrustify,
-		formatting.gofmt,
-		-- formatting.json_tool, jsonls already has one
-		-- formatting.prettier,
-		diagnostics.vint, --> for vim
-		-- formatting.eslint_d,
-		diagnostics.shellcheck.with({ extra_filetypes = { "zsh", "bash" } }),
-		diagnostics.eslint_d.with({
-			condition = function(utils)
-				return utils.root_has_file({ ".eslintrc.json" })
-			end,
-		}),
-		-- diagnostics.selene,
-		-- formatting.eslint,
-		-- diagnostics.eslint,
-		-- formatting.prettier,
-		-- my flake config
-		-- diagnostics.flake8.with({ extra_args = { "--ignore", "E203", "--max-line-length", "88" } }), -- extra args for black
-		diagnostics.flake8,
-		-- completion.spell,
-		-- code_actions.gitsigns,
-		code_actions.gitsigns,
-	},
+    log = {
+        enable = true,
+        level = "warn",
+        use_console = "async",
+    },
+    on_attach = function(client, bufnr)
+    end,
+    -- conf options
+    -- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
+    sources = {
+        formatting.black.with({ extra_args = { "--fast" } }),
+        formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }),
+        formatting.shfmt.with({
+            extra_filetypes = { "zsh", "bash" },
+        }),
+        -- formatting.clang_format,
+        -- formatting.uncrustify,
+        formatting.gofmt,
+        -- formatting.json_tool, jsonls already has one
+        -- formatting.prettier,
+        diagnostics.vint, --> for vim
+        -- formatting.eslint_d,
+        diagnostics.shellcheck.with({ extra_filetypes = { "zsh", "bash" } }),
+        diagnostics.eslint_d.with({
+            condition = function(utils)
+                return utils.root_has_file({ ".eslintrc.json" })
+            end,
+        }),
+        -- diagnostics.selene,
+        -- formatting.eslint,
+        -- diagnostics.eslint,
+        -- formatting.prettier,
+        -- my flake config
+        -- diagnostics.flake8.with({ extra_args = { "--ignore", "E203", "--max-line-length", "88" } }), -- extra args for black
+        diagnostics.flake8,
+        -- completion.spell,
+        -- code_actions.gitsigns,
+        code_actions.gitsigns,
+    },
 })
