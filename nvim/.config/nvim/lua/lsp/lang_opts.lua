@@ -49,6 +49,13 @@ local enhance_server_opts = {
     ["clangd"] = function(opts)
         opts.capabilities.offsetEncoding = { "utf-16" }
     end,
+    -- ["gopls"] = function(opts)
+    --     opts.on_attach = function(client, buffnr)
+    --         client.server_capabilities.document_formatting = false
+    --         client.server_capabilities.document_range_formatting = false
+    --     end
+    -- end,
+
     ["sumneko_lua"] = function(opts)
         -- local runtime_path = vim.split(package.path, ";")
         -- table.insert(runtime_path, "lua/?.lua")

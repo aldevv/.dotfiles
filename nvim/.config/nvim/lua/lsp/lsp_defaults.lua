@@ -72,7 +72,7 @@ capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 ------------------------------
 
-local on_attach = function(client, buffnr)
+local on_attach = function(client, bufnr)
     -- these are callbacks that run after the server has loaded
     require("config.keybindings.lsp").load_mappings()
     require("config.automation.lsp").diagnostics_in_loclist()
