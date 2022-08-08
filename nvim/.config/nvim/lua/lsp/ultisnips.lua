@@ -1,7 +1,7 @@
-vim.g.UltiSnipsExpandTrigger = "<a-t>"
-vim.g.UltiSnipsJumpForwardTrigger = "<a-t>"
-vim.g.UltiSnipsJumpBackwardTrigger = "<a-s>"
-vim.g.UltiSnipsListSnippets = "<c-tab>"
+vim.g.UltiSnipsExpandTrigger = "<a-s>"
+vim.g.UltiSnipsJumpForwardTrigger = "<a-k>"
+vim.g.UltiSnipsJumpBackwardTrigger = "<a-K>"
+-- vim.g.UltiSnipsListSnippets = "<c-tab>"
 vim.g.UltiSnipsSnippetDirectories = { "my_snippets", "UltiSnips" }
 
 -- nnoremap <a-t> i<c-r>=UltiSnips#JumpForwards()<cr>

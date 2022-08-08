@@ -2,3 +2,4 @@ ilovepdfkey*
 .zcompdump*
 .auto_aliases
 packer_compiled*
+__pycache__
