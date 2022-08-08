@@ -28,14 +28,16 @@ local servers = {
     -- "jdtls", -- java
 }
 
-local lsp_installer = require("nvim-lsp-installer")
-lsp_installer.setup({ automatic_installation = true })
+require("mason").setup()
+require("mason-lspconfig").setup({
+    automatic_installation = true,
+    ensure_installed = servers,
+})
 local lspconfig = require("lspconfig")
 local lsp_defaults = require("lsp.lsp_defaults")
 local lang_opts = require("lsp.lang_opts")
 
 for _, server in ipairs(servers) do
-    -- for _, server in ipairs(lsp_installer.get_installed_servers()) do
     local opts = {
         capabilities = lsp_defaults.capabilities,
         handlers = lsp_defaults.handlers,
@@ -47,10 +49,3 @@ for _, server in ipairs(servers) do
     end
     lspconfig[server].setup(opts)
 end
-
--- lspconfig.sqls.setup({
---     on_attach = function(client, bufnr)
---         require("sqls").on_attach(client, bufnr)
---         vim.keymap.set("n", "<cr>", "<cmd>SqlsExecuteQuery<cr>", { buffer = 0 })
---     end,
--- })

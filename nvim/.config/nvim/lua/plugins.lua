@@ -61,17 +61,27 @@ return require("packer").startup({
             config = req("config.appearance.lualine"),
         })
 
+        -- use({
+        --     -- "neovim/nvim-lspconfig",
+        --     "junnplus/nvim-lsp-setup",
+        --     requires = {
+        --         "williamboman/nvim-lsp-installer",
+        --         "neovim/nvim-lspconfig",
+        --         "hrsh7th/cmp-nvim-lsp",
+        --     },
+        --     -- config = req("lsp.lsp_old"),
+        --     config = req("lsp.lsp"),
+        --     -- config = req("lsp.lsp_test"),
+        -- })
         use({
-            -- "neovim/nvim-lspconfig",
-            "junnplus/nvim-lsp-setup",
-            requires = {
-                "williamboman/nvim-lsp-installer",
-                "neovim/nvim-lspconfig",
-                "hrsh7th/cmp-nvim-lsp",
-            },
-            -- config = req("lsp.lsp_old"),
+            "neovim/nvim-lspconfig",
             config = req("lsp.lsp"),
-            -- config = req("lsp.lsp_test"),
+            requires = {
+                "hrsh7th/cmp-nvim-lsp",
+                "williamboman/mason.nvim",
+                "williamboman/mason-lspconfig.nvim",
+                "WhoIsSethDaniel/mason-tool-installer.nvim",
+            },
         })
 
         use({
@@ -443,7 +453,7 @@ return require("packer").startup({
         use({ "Vimjas/vim-python-pep8-indent" }) -- for indentation, treesitter not functional yet 23/01/2022
         use({
             "nvim-orgmode/orgmode",
-            ft = {"org"},
+            ft = { "org" },
             config = function()
                 require("orgmode").setup({})
                 require("orgmode").setup_ts_grammar()
