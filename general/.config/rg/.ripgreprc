@@ -1,0 +1,8 @@
+--smart-case
+--max-columns-preview
+--color=auto
+--colors=match:fg:magenta
+#--colors=match:bg:yellow
+#--colors=line:fg:yellow
+# this file doesn't understand env variables
+# rg also reads git/.gitignore (the global git ignore)
