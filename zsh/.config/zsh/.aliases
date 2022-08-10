@@ -77,7 +77,6 @@ vman() {
 
 
 alias openports="sudo netstat -putln | grep LISTEN"
-alias .a="pipenv shell"
 alias gv="neovide"
 alias gV="NOCOC=true neovide"
 alias V="NOCOC='' nvim"
