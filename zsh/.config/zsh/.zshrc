@@ -262,4 +262,3 @@ CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 [ -f "/home/kanon/.ghcup/env" ] && source "/home/kanon/.ghcup/env" # ghcup-env
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
-

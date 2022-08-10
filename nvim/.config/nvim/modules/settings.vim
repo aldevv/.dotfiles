@@ -62,8 +62,6 @@ if executable('rg')
   let g:rg_derive_root='true'
 endif
 
-let g:python_host_prog = '/usr/bin/python'
-let g:python3_host_prog = '/usr/bin/python3'
 let g:termdebug_popup = 0
 let g:termdebug_wide = 163
 

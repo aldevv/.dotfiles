@@ -238,7 +238,6 @@ alias ___='sudo -E env "PATH=$PATH" '
 # yta="$UTILITIES/youtube/downloadAudio.sh"\
 # ytv="$UTILITIES/youtube/downloadVideo.sh"\
 alias \
-	pkg="sudo $PKG" \
 	m="mkdir" \
 	pkgro="sudo eopkg rmo" \
 	dockerclean="docker system prune --volumes -all" \
