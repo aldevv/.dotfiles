@@ -235,7 +235,7 @@ _fzf_compgen_dir() {
 bindkey "^ " autosuggest-execute
 # bindkey "^" autosuggest-toggle
 #TODO find alternative to lesskey (deprecated)
-# lesskey $HOME/.config/colemak-less
+lesskey $HOME/.config/colemak-less
 # aliases
 # shellcheck source=/dev/null
  [ -f "$ZDOTDIR/.aliases" ] && . "$ZDOTDIR/.aliases"
