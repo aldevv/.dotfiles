@@ -11,7 +11,7 @@ setopt extended_glob
 #-------------o---------------
 
 # adds completion to alias arguments
-setopt complete_aliases
+unsetopt complete_aliases
 
 # only source if you dont login from a terminal
 # source ~/.zprofile
