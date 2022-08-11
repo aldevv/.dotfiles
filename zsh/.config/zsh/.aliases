@@ -371,13 +371,6 @@ alias \
 # flatr='flatpak run $($APPS/flatpak/flatlistinstalled)'\
 # flatrmo='flatpak uninstall --unused'\
 
-i() {
-	ip route get 1.2.3.4 | awk '{print \$7; exit}'
-}
-i6() {
-	ip -6 addr | awk '{print \$2}' | grep -P 'fe80' | cut -d '/' -f 1
-}
-
 # bb() {
 #     bat --paging=never "$1" | less -R
 # }
