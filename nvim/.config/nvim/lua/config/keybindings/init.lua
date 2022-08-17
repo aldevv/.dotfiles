@@ -110,6 +110,7 @@ map("n", "<localleader>Vp", ":e " .. h .. "/lua/plugins.lua<cr>", nor_s)
 map("n", "<localleader>Va", ":e " .. h .. "/lua/config/automation/init.lua<cr>", nor_s)
 map("n", "<localleader>Vk", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
 map("n", "<localleader>Vl", ":e " .. h .. "/lua/lsp/lsp.lua<cr>", nor_s)
+map("n", "<localleader>Vf", ":e " .. h .. "/lua/lsp/formatters.lua<cr>", nor_s)
 map("n", "<localleader>Vd", ":e " .. h .. "/lua/lsp/dap/dap.lua<cr>", nor_s)
 map("n", "<localleader>VP", ":e " .. h .. "/modules/plugins.vim<cr>", nor_s)
 

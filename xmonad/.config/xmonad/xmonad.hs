@@ -22,7 +22,7 @@ main =
   xmonad
     . ewmhFullscreen
     . ewmh
-    . withEasySB (statusBarProp "xmobar" (pure myXmobarPP)) toggleStrutsKey
+    . withEasySB (statusBarProp "~/.cabal/bin/xmobar -x 1" (pure myXmobarPP)) toggleStrutsKey
     $ myConfig
   where
     toggleStrutsKey :: XConfig Layout -> (KeyMask, KeySym)
@@ -112,7 +112,7 @@ myXmobarPP =
     -- Windows should have *some* title, which should not not exceed a
     -- sane length.
     ppWindow :: String -> String
-    ppWindow = xmobarRaw . (\w -> if null w then "untitled" else w) . shorten 30
+    ppWindow = xmobarRaw . (\w -> if null w then "untitled" else w) . shorten 80
 
     blue, lowWhite, magenta, red, white, yellow :: String -> String
     magenta = xmobarColor "#ff79c6" ""
@@ -128,7 +128,8 @@ myManageHook =
   composeAll
     [ className =? "Gimp" --> doFloat,
       className =? "copyq" --> doFloat,
-      className =? "zoom " --> doFloat,
+      -- className =? "zoom " --> doFloat,
+      className =? "SimpleScreenRecorder" --> doFloat,
       isDialog --> doFloat
     ]
     <+> namedScratchpadManageHook scratchpads

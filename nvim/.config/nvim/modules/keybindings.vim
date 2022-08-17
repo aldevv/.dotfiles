@@ -158,7 +158,7 @@ endfunction
 
 nnoremap <silent><leader>sn  :silent call CreateFileEnter()<cr>
 nnoremap <silent><leader>sN  :silent call CreateFileTouch()<cr>
-nnoremap <silent><leader>sf  :silent call CreateDir()<cr>
+nnoremap <silent><leader>sd  :silent call CreateDir()<cr>
 " nnoremap <leader>sF  :call RemoveDir()<cr>
 " nnoremap <leader>sN  :call RemoveFile()<cr>
 
@@ -167,7 +167,7 @@ nnoremap <silent><leader>sf  :silent call CreateDir()<cr>
 nnoremap <leader>sc :lcd %:h<CR>
 
 " close buffers
-noremap <leader>sd :bd<cr>
+" noremap <leader>sD :bd<cr>
 
 " change buffers like vscode
 " noremap <silent>E :bprevious<cr>
@@ -413,17 +413,13 @@ nnoremap <silent><leader>ss ^vg_y:lua <c-r>+<cr>
 " nnoremap gw :h <c-r>=expand('<cword>')<cr><bar>resize 15<cr>
 
 " nnoremap <silent><leader>cp :silent call FormatMyCode()<cr>
-nnoremap <silent><leader>cP :silent call FormatMyCode()<cr>
-autocmd BufNewFile *.cpp,*.c,*.java call FormatMyCode()
+" nnoremap <silent><leader>cP :silent call FormatMyCode()<cr>
+" autocmd BufNewFile *.cpp,*.c,*.java call FormatMyCode()
 
-function! FormatMyCode()
-  execute '!$APPS/nvim/programming/formatCode ' . g:extension .' '. expand('%:p')
-  if empty(getenv('NOCOC'))
-    :CocRestart
-  else
-    :LspRestart
-  endif
-endfunction
+" function! FormatMyCode()
+"   execute '!$APPS/nvim/programming/formatCode ' . g:extension .' '. expand('%:p')
+"     :LspRestart
+" endfunction
 
 cnoreabbrev Sne CocCommand snippets.editSnippets
 

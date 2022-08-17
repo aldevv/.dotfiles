@@ -4,7 +4,7 @@ cmd([[
   augroup FormatOnSave
     autocmd!
     " so when it saves it stays saved
-    autocmd BufWritePre *.{js,java,cpp,hs,json,ts,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.formatting_sync()
+    autocmd BufWritePre *.{js,java,c,cpp,hs,json,ts,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.formatting_sync()
   augroup END
 ]])
 
@@ -23,7 +23,7 @@ require("config.automation.lsp").diagnostics_in_loclist() --
 
 -- cmd('autocmd Filetype tex let b:AutoPairs = {"(": ")", "[": "]"}')
 cmd(
-	"autocmd VimEnter,WinEnter,BufNewFile,BufRead,BufEnter,TabEnter *.{vim,jsx,json,ts,js,svelte,vue} :IndentLinesToggle"
+    "autocmd VimEnter,WinEnter,BufNewFile,BufRead,BufEnter,TabEnter *.{vim,jsx,json,ts,js,svelte,vue} :IndentLinesToggle"
 )
 
 cmd([[

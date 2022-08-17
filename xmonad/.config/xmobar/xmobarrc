@@ -1,8 +1,12 @@
+-- https://archives.haskell.org/projects.haskell.org/xmobar/
 Config { overrideRedirect = False
-       , font     = "xft:iosevka-9"
+       , font     = "xft:iosevka-8"
        , bgColor  = "#5f5f5f"
        , fgColor  = "#f8f8f2"
-       , position = TopW L 100
+       , alpha = 190
+       , allDesktops = True
+       -- TopSize L width % height %
+       , position = TopSize L 100 2
        , commands = [ Run Weather "EGPF"
                         [ "--template", "<weather> <tempC>°C"
                         , "-L", "0"
