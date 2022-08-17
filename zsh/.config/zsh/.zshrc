@@ -84,6 +84,7 @@ export HISTSIZE=25000
 export HISTFILE="$HOME/.cache/zsh/.zsh_history"
 # plugins=(copybuffer dirhistory jsontools)
 plugins=(
+	git
 	docker
 	docker-compose
     zsh-autosuggestions

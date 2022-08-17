@@ -506,467 +506,467 @@ alias pwned='ssh'
 alias boosto='chmod +x'
 
 #=====================================================
-#           git
+# GIT
 #=====================================================
 
-grmsecret() {
-    # check https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
-    # must be path from repo ex: ./core/etc.py
-    git filter-repo --invert-paths --path "$1"
-}
-ggrep() {
-    #look for strings in all commits
-    git rev-list --all | GIT_PAGER=cat xargs git grep "$1"
-}
-
-tobare() {
-    # commit the initial structure!
-    folder="$(basename $(pwd))"
-    bare_name="$folder.tmp"
-    mv .git "../$bare_name"
-	cd ..
-	rm -fr "$folder"
-    mv "$bare_name" "$folder"
-	cd "$folder"
-	git config --bool core.bare true
-    git worktree add main # requires at least 1 commit!
-    cd main
-}
-alias gw="git worktree"
-alias gwa="git worktree add"
-alias gwl="git worktree list"
-
-gww() {
-    prj_root=$(git worktree list | sed 1q | awk '{print $1}')
-    branches=$(git worktree list | sed 1d | awk '{print $1}')
-    branch_names=$(echo -n $branches | xargs -n 1 basename)
-    chosen_branch=$(echo -n $branch_names | fzf --preview="[ -f FETCH_HEAD ] && exa -1 {} ||
-        exa -1 $(git worktree list | sed 1q | awk '{print $1}' )/{}")
-    if [ -z $chosen_branch ]; then
-        return
-    fi
-
-    chosen_branch_path=$(echo $branches | grep "${chosen_branch}$")
-    cd $chosen_branch_path || return
-}
-
-fzfgd() {
-	preview="git diff $@ --color=always -- {-1}"
-	args="$@"
-	git diff $args --name-only | fzf -m --ansi --preview $preview
-}
-alias hackzor='git init'
-alias readyperfectoni='git commit -am'
-yolo() {
-	git commit -m "$(curl -s http://whatthecommit.com/index.txt)"
-}
-
-# Functions
+# grmsecret() {
+#     # check https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
+#     # must be path from repo ex: ./core/etc.py
+#     git filter-repo --invert-paths --path "$1"
+# }
+# ggrep() {
+#     #look for strings in all commits
+#     git rev-list --all | GIT_PAGER=cat xargs git grep "$1"
+# }
 #
-
-# The name of the current branch
-# Back-compatibility wrapper for when this function was defined here in
-# the plugin, before being pulled in to core lib/git.zsh as git_current_branch()
-# to fix the core -> git plugin dependency.
-function current_branch() {
-	git_current_branch
-}
-
-# Pretty log messages
-function _git_log_prettily() {
-	if ! [ -z $1 ]; then
-		git log --pretty=$1
-	fi
-}
-compdef _git _git_log_prettily=git-log
-
-# Warn if the current branch is a WIP
-function work_in_progress() {
-	if $(git log -n 1 2>/dev/null | grep -q -c "\-\-wip\-\-"); then
-		echo "WIP!!"
-	fi
-}
-
-# Check if main exists and use instead of master
-function git_main_branch() {
-	if [[ -n "$(git branch --list main)" ]]; then
-		echo main
-	else
-		echo master
-	fi
-}
-
+# tobare() {
+#     # commit the initial structure!
+#     folder="$(basename $(pwd))"
+#     bare_name="$folder.tmp"
+#     mv .git "../$bare_name"
+# 	cd ..
+# 	rm -fr "$folder"
+#     mv "$bare_name" "$folder"
+# 	cd "$folder"
+# 	git config --bool core.bare true
+#     git worktree add main # requires at least 1 commit!
+#     cd main
+# }
+# alias gw="git worktree"
+# alias gwa="git worktree add"
+# alias gwl="git worktree list"
 #
-# Aliases
-# (sorted alphabetically)
-
-alias gF='git flow'
-alias gFf='git flow feature'
-alias gFfs='git flow feature start'
-alias gFfp='git flow feature publish'
-alias gFfP='git flow feature pull'
-alias gFft='git flow feature track'
-alias gFff='git flow feature finish'
-
-alias gFr='git flow release'
-alias gFrs='git flow release start'
-alias gFrp='git flow release publish'
-alias gFrt='git flow release track'
-alias gFrf='git flow release finish'
-
-alias gFh='git flow hotfix'
-alias gFh='git flow hotfix start'
-alias gFh='git flow hotfix finish'
-
-alias gFss='git flow support start'
-alias gFsf='git flow support finish'
-
-alias gFbs='git flow bugfix start'
-alias gFbf='git flow bugfix finish'
-
-alias g='git'
-
-alias groot='cd "$(git rev-parse --show-toplevel)"'
-alias gaa='git add'
-alias ga='git add'
-alias gA='git add --all'
-alias gapa='git add --patch'
-# add modified
-alias gau='git add --update'
-# add untracked
-alias gaU='git add $(git ls-files -o --exclude-standard $(git rev-parse --show-toplevel))'
-alias gav='git add --verbose'
-alias gap='git apply'
-alias gapt='git apply --3way'
-
-alias gb='git branch'
-alias gba='git branch -a'
-alias gbd='git branch -d'
-alias gbda='git branch --no-color --merged | command grep -vE "^(\+|\*|\s*($(git_main_branch)|development|develop|devel|dev)\s*$)" | command xargs -n 1 git branch -d'
-alias gbD='git branch -D'
-alias gbl='git blame -b -w'
-alias gbnm='git branch --no-merged'
-alias gbr='git branch --remote'
-alias gbs='git bisect'
-alias gbsb='git bisect bad'
-alias gbsg='git bisect good'
-alias gbsr='git bisect reset'
-alias gbss='git bisect start'
-
-alias gc='git commit -v'
-alias gca='ggc -a'
-alias gcA='git commit -v --amend'
-alias gcAn='git commit -v --amend --no-edit'
-#alias ggc='git commit -v'
-#alias ggcm='ggc -m'
-#alias ggca='ggc -a'
-# alias gcn='git commit -v --no-edit --amend'
-#alias ggcall='git commit -v -a'
-# alias gca!='git commit -v -a --amend'
-# alias gcan!='git commit -v -a --no-edit --amend'
-# alias gcans!='git commit -v -a -s --no-edit --amend'
-# alias gcam='git commit -a -m'
-# alias gcsm='git commit -s -m'
-alias gcb='git checkout -b'
-alias gcfl='git config --global --list'
-alias gcf='git config --global'
-alias gauthor='git commit --amend --author="Juan Alejandro Bernal <jbernal@unal.edu.co>" --no-edit'
-# alias gcl='git clone --recurse-submodules'
-alias gcld='git clone --depth=1'
-alias gcl='git clone'
-gclb() {
-	git clone --bare $1 ${$(basename $1)%.*}
-}
-
-# clean force and untracked folders
-alias gcL='git clean -fd'
-# clean except pattern
-alias gcLe='git clean -fde'
-# see what WOULD be deleted
-alias gcLn='git clean -fdn'
-
-alias gclean='git clean -id'
-alias gpristine='git reset --hard && git clean -dffx'
-#alias gcm='git checkout $(git_main_branch)'
-#alias gcd='git checkout develop'
-alias gcmsg='git commit -m'
-alias gco='git checkout'
-alias gshort='git shortlog'
-alias gcount='git shortlog -sn'
-alias gcp='git cherry-pick'
-alias gcpa='git cherry-pick --abort'
-alias gcpc='git cherry-pick --continue'
-alias ggcs='git commit -S'
-
-
-alias gd='git diff'
-alias gdca='git diff --cached'
-alias gdcw='git diff --cached --word-diff'
-alias gdct='git describe --tags $(git rev-list --tags --max-count=1)'
-alias gds='git diff --staged'
-alias gdt='git diff-tree --no-commit-id --name-only -r'
-alias gdw='git diff --word-diff'
-
-function gdnolock() {
-	git diff "$@" ":(exclude)package-lock.json" ":(exclude)*.lock"
-}
-compdef _git gdnolock=git-diff
-
-function gdv() {
-	git diff -w "$@" | view -
-}
-compdef _git gdv=git-diff
-
-alias gf='git fetch'
-alias gfa='git fetch --all --prune'
-alias gfo='git fetch origin'
-
-alias gfg='git ls-files | grep'
-
-alias gg='git gui citool'
-alias gga='git gui citool --amend'
-
-function ggf() {
-	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
-	git push --force origin "${b:=$1}"
-}
-compdef _git ggf=git-checkout
-function ggfl() {
-	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
-	git push --force-with-lease origin "${b:=$1}"
-}
-compdef _git ggfl=git-checkout
-
-function ggP() {
-	if [[ "$#" != 0 ]] && [[ "$#" != 1 ]]; then
-		git pull origin "${*}"
-	else
-		[[ "$#" == 0 ]] && local b="$(git_current_branch)"
-		git pull origin "${b:=$1}"
-	fi
-}
-compdef _git ggP=git-checkout
-
-function ggp() {
-	if [[ "$#" != 0 ]] && [[ "$#" != 1 ]]; then
-		git push origin "${*}"
-	else
-		[[ "$#" == 0 ]] && local b="$(git_current_branch)"
-		git push origin "${b:=$1}"
-	fi
-}
-compdef _git ggp=git-checkout
-
-# pull and push
-function ggpp() {
-	if [[ "$#" == 0 ]]; then
-		ggP && ggp
-	else
-		ggP "${*}" && ggp "${*}"
-	fi
-}
-compdef _git ggpp=git-checkout
-
-function ggPr() {
-	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
-	git pull --rebase origin "${b:=$1}"
-}
-compdef _git ggPr=git-checkout
-
-# alias ggpur='ggPr'
-# alias ggPu='git pull origin "$(git_current_branch)"'
+# gww() {
+#     prj_root=$(git worktree list | sed 1q | awk '{print $1}')
+#     branches=$(git worktree list | sed 1d | awk '{print $1}')
+#     branch_names=$(echo -n $branches | xargs -n 1 basename)
+#     chosen_branch=$(echo -n $branch_names | fzf --preview="[ -f FETCH_HEAD ] && exa -1 {} ||
+#         exa -1 $(git worktree list | sed 1q | awk '{print $1}' )/{}")
+#     if [ -z $chosen_branch ]; then
+#         return
+#     fi
 #
-alias ggpush='git push origin "$(git_current_branch)"'
-
-alias gbsup='git branch --set-upstream-to=origin/$(git_current_branch)'
-alias gpsup='git push --set-upstream origin $(git_current_branch)'
-
-alias ghh='git help'
-
-alias gignore='git update-index --assume-unchanged'     # and your file <file>
-alias gnignore='git update-index --no-assume-unchanged' # and your file <file>
-alias gignored='git ls-files -v | grep "^[[:lower:]]"'
-alias gignored2='git ls-files -v | grep "^h" | cut -c3-'
-alias git-svn-dcommit-push='git svn dcommit && git push github $(git_main_branch):svntrunk'
-
-alias gk='\gitk --all --branches'
-alias gke='\gitk --all $(git log -g --pretty=%h)'
-
-# alias gl='git pull'
-alias grf="git reflog"
-
-alias glp="_git_log_prettily"
-
-alias glgm="git log --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr)' --max-count=10"
-alias glG='git log --graph'
-alias glGo='git log --oneline --decorate --graph'
-alias glGoa='git log --oneline --decorate --graph --all'
-alias glGm='git log --graph --max-count=10'
-alias glGom='git log --oneline --decorate --graph --max-count=10'
-alias glGoam='git log --oneline --decorate --graph --all --max-count=10'
-alias glgsm='git log --stat --max-count=10'
-alias glgpm='git log --stat -p --max-count=10'
-alias glgam='git log --decorate --all --max-count=10'
-alias glGam='git log --graph --decorate --all --max-count=10'
-
-alias glg="git log --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr)'"
-alias glgs='git log --stat'
-alias glgp='git log --stat -p'
-alias glga='git log --decorate --all'
-alias glGa='git log --graph --decorate --all'
-# alias glgo='git log --oneline --decorate'
-
-alias glGol="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"
-alias glGols="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --stat"
-alias glGod="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset'"
-alias glGods="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset' --date=short"
-alias glGola="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --all"
-
-alias gm='git merge'
-alias gmom='git merge origin/$(git_main_branch)'
-alias gmt='git mergetool --no-prompt'
-alias gmtvim='git mergetool --no-prompt --tool=vimdiff'
-alias gmum='git merge upstream/$(git_main_branch)'
-alias gma='git merge --abort'
-
-alias gp='git push'
-alias gpd='git push --dry-run'
-alias gpf='git push --force-with-lease'
-alias gpf='git push --force'
-alias gpoat='git push origin --all && git push origin --tags'
-# alias gpu='git push upstream'
-alias gpv='git push -v'
-
-alias gr='git remote'
-alias gra='git remote add'
-alias grao='git remote add origin'
-alias grro='git remote remove origin'
-alias grg='git remote get-url'
-alias grgo='git remote get-url origin'
-alias grb='git rebase'
-alias grba='git rebase --abort'
-alias grbc='git rebase --continue'
-alias grbd='git rebase develop'
-alias grbi='git rebase -i'
-alias grbm='git rebase $(git_main_branch)'
-alias grbs='git rebase --skip'
-alias grev='git revert'
-alias gR='git reset'
-gRh() {
-	if [[ -n "$1" ]]; then
-		git reset --hard $1
-	else
-		git reset --hard HEAD
-	fi
-}
-alias gRoh='git reset origin/$(git_current_branch) --hard'
-alias grm='git rm'
-alias grmc='git rm --cached'
-alias grmv='git remote rename'
-alias grrm='git remote remove'
-alias grs='git restore'
-alias grset='git remote set-url'
-alias grss='git restore --staged'
-alias grso='git restore --source'
-alias grt='cd "$(git rev-parse --show-toplevel || echo .)"'
-alias gru='git reset --'
-alias grup='git remote update'
-alias grv='git remote -v'
-
-alias gsb='git status -sb'
-# alias gsd='git svn dcommit'
-alias gsh='git show'
-alias gsi='git submodule init'
-alias gshp='git show --pretty=short --show-signature'
-alias gsr='git svn rebase'
-alias gsT='git status -s'
-alias gst='git status'
-alias gt='git tag'
-
-# use the default stash push on git 2.13 and newer
-autoload -Uz is-at-least
-is-at-least 2.13 "$(git --version 2>/dev/null | awk '{print $3}')" &&
-	alias gsp='git stash push' ||
-	alias gsp='git stash save'
-
-alias gS='git stash'
-alias gSa='git stash apply'
-alias gSc='git stash clear'
-alias gSd='git stash drop'
-alias gSt='git stash list'
-alias gSP='git stash pop'
-alias gSs='git stash show --text'
-alias gSpu='git stash push --include-untracked'
-alias gStall='git stash --all'
-
-alias gsw='git switch'
-alias gswc='git switch -c'
-
-alias gts='git tag -s'
-alias gtv='git tag | sort -V'
-gtl() {
-	noglob
-	git tag --sort=-v:refname -n -l "${1}*"
-}
-
-alias gunignore='git update-index --no-assume-unchanged'
-alias gunwip='git log -n 1 | grep -q -c "\-\-wip\-\-" && git reset HEAD~1'
-alias gP='git pull'
-alias gPr='git pull --rebase'
-alias gPrv='git pull --rebase -v'
-alias gPra='git pull --rebase --autostash'
-alias gPrav='git pull --rebase --autostash -v'
-alias gPum='git pull upstream $(git_main_branch)'
-
-alias gwch='git whatchanged -p --abbrev-commit --pretty=medium'
-alias gwip='git add -A; git rm $(git ls-files --deleted) 2> /dev/null; git commit --no-verify --no-gpg-sign -m "--wip-- [skip ci]"'
-
-alias gam='git am'
-alias gamc='git am --continue'
-alias gams='git am --skip'
-alias gama='git am --abort'
-alias gamscp='git am --show-current-patch'
-
-function gbR() {
-	if [[ -z "$1" || -z "$2" ]]; then
-		echo "Usage: $0 old_branch new_branch"
-		return 1
-	fi
-
-	# Rename branch locally
-	git branch -m "$1" "$2"
-	# Rename branch in origin remote
-	if git push origin :"$1"; then
-		git push --set-upstream origin "$2"
-	fi
-}
-
-alias gse='git secret' \
-	gser='git secrets reveal' \
-	gseh='git secrets hide' \
-	gsels='git secrets list' \
-	gserm='git secrets remove' \
-	gsea='git secrets add'
-
-ggcam() {
-	if [[ -n "$1" ]]; then
-		ggc -am "$1"
-	else
-		echo "message:"
-		read message
-		ggc -am "$message"
-	fi
-}
-
-ggap() {
-	if [[ -n "$1" ]]; then
-		git commit -am "$1" && ggp
-	else
-		echo "message:"
-		read message
-		git commit -am "$message" && ggp
-	fi
-}
+#     chosen_branch_path=$(echo $branches | grep "${chosen_branch}$")
+#     cd $chosen_branch_path || return
+# }
+#
+# fzfgd() {
+# 	preview="git diff $@ --color=always -- {-1}"
+# 	args="$@"
+# 	git diff $args --name-only | fzf -m --ansi --preview $preview
+# }
+# alias hackzor='git init'
+# alias readyperfectoni='git commit -am'
+# yolo() {
+# 	git commit -m "$(curl -s http://whatthecommit.com/index.txt)"
+# }
+#
+# # Functions
+# #
+#
+# # The name of the current branch
+# # Back-compatibility wrapper for when this function was defined here in
+# # the plugin, before being pulled in to core lib/git.zsh as git_current_branch()
+# # to fix the core -> git plugin dependency.
+# function current_branch() {
+# 	git_current_branch
+# }
+#
+# # Pretty log messages
+# function _git_log_prettily() {
+# 	if ! [ -z $1 ]; then
+# 		git log --pretty=$1
+# 	fi
+# }
+# compdef _git _git_log_prettily=git-log
+#
+# # Warn if the current branch is a WIP
+# function work_in_progress() {
+# 	if $(git log -n 1 2>/dev/null | grep -q -c "\-\-wip\-\-"); then
+# 		echo "WIP!!"
+# 	fi
+# }
+#
+# # Check if main exists and use instead of master
+# function git_main_branch() {
+# 	if [[ -n "$(git branch --list main)" ]]; then
+# 		echo main
+# 	else
+# 		echo master
+# 	fi
+# }
+#
+# #
+# # Aliases
+# # (sorted alphabetically)
+#
+# alias gF='git flow'
+# alias gFf='git flow feature'
+# alias gFfs='git flow feature start'
+# alias gFfp='git flow feature publish'
+# alias gFfP='git flow feature pull'
+# alias gFft='git flow feature track'
+# alias gFff='git flow feature finish'
+#
+# alias gFr='git flow release'
+# alias gFrs='git flow release start'
+# alias gFrp='git flow release publish'
+# alias gFrt='git flow release track'
+# alias gFrf='git flow release finish'
+#
+# alias gFh='git flow hotfix'
+# alias gFh='git flow hotfix start'
+# alias gFh='git flow hotfix finish'
+#
+# alias gFss='git flow support start'
+# alias gFsf='git flow support finish'
+#
+# alias gFbs='git flow bugfix start'
+# alias gFbf='git flow bugfix finish'
+#
+# alias g='git'
+#
+# alias groot='cd "$(git rev-parse --show-toplevel)"'
+# alias gaa='git add'
+# alias ga='git add'
+# alias gA='git add --all'
+# alias gapa='git add --patch'
+# # add modified
+# alias gau='git add --update'
+# # add untracked
+# alias gaU='git add $(git ls-files -o --exclude-standard $(git rev-parse --show-toplevel))'
+# alias gav='git add --verbose'
+# alias gap='git apply'
+# alias gapt='git apply --3way'
+#
+# alias gb='git branch'
+# alias gba='git branch -a'
+# alias gbd='git branch -d'
+# alias gbda='git branch --no-color --merged | command grep -vE "^(\+|\*|\s*($(git_main_branch)|development|develop|devel|dev)\s*$)" | command xargs -n 1 git branch -d'
+# alias gbD='git branch -D'
+# alias gbl='git blame -b -w'
+# alias gbnm='git branch --no-merged'
+# alias gbr='git branch --remote'
+# alias gbs='git bisect'
+# alias gbsb='git bisect bad'
+# alias gbsg='git bisect good'
+# alias gbsr='git bisect reset'
+# alias gbss='git bisect start'
+#
+# alias gc='git commit -v'
+# alias gca='ggc -a'
+# alias gcA='git commit -v --amend'
+# alias gcAn='git commit -v --amend --no-edit'
+# #alias ggc='git commit -v'
+# #alias ggcm='ggc -m'
+# #alias ggca='ggc -a'
+# # alias gcn='git commit -v --no-edit --amend'
+# #alias ggcall='git commit -v -a'
+# # alias gca!='git commit -v -a --amend'
+# # alias gcan!='git commit -v -a --no-edit --amend'
+# # alias gcans!='git commit -v -a -s --no-edit --amend'
+# # alias gcam='git commit -a -m'
+# # alias gcsm='git commit -s -m'
+# alias gcb='git checkout -b'
+# alias gcfl='git config --global --list'
+# alias gcf='git config --global'
+# alias gauthor='git commit --amend --author="Juan Alejandro Bernal <jbernal@unal.edu.co>" --no-edit'
+# # alias gcl='git clone --recurse-submodules'
+# alias gcld='git clone --depth=1'
+# alias gcl='git clone'
+# gclb() {
+# 	git clone --bare $1 ${$(basename $1)%.*}
+# }
+#
+# # clean force and untracked folders
+# alias gcL='git clean -fd'
+# # clean except pattern
+# alias gcLe='git clean -fde'
+# # see what WOULD be deleted
+# alias gcLn='git clean -fdn'
+#
+# alias gclean='git clean -id'
+# alias gpristine='git reset --hard && git clean -dffx'
+# #alias gcm='git checkout $(git_main_branch)'
+# #alias gcd='git checkout develop'
+# alias gcmsg='git commit -m'
+# alias gco='git checkout'
+# alias gshort='git shortlog'
+# alias gcount='git shortlog -sn'
+# alias gcp='git cherry-pick'
+# alias gcpa='git cherry-pick --abort'
+# alias gcpc='git cherry-pick --continue'
+# alias ggcs='git commit -S'
+#
+#
+# alias gd='git diff'
+# alias gdca='git diff --cached'
+# alias gdcw='git diff --cached --word-diff'
+# alias gdct='git describe --tags $(git rev-list --tags --max-count=1)'
+# alias gds='git diff --staged'
+# alias gdt='git diff-tree --no-commit-id --name-only -r'
+# alias gdw='git diff --word-diff'
+#
+# function gdnolock() {
+# 	git diff "$@" ":(exclude)package-lock.json" ":(exclude)*.lock"
+# }
+# compdef _git gdnolock=git-diff
+#
+# function gdv() {
+# 	git diff -w "$@" | view -
+# }
+# compdef _git gdv=git-diff
+#
+# alias gf='git fetch'
+# alias gfa='git fetch --all --prune'
+# alias gfo='git fetch origin'
+#
+# alias gfg='git ls-files | grep'
+#
+# alias gg='git gui citool'
+# alias gga='git gui citool --amend'
+#
+# function ggf() {
+# 	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
+# 	git push --force origin "${b:=$1}"
+# }
+# compdef _git ggf=git-checkout
+# function ggfl() {
+# 	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
+# 	git push --force-with-lease origin "${b:=$1}"
+# }
+# compdef _git ggfl=git-checkout
+#
+# function ggP() {
+# 	if [[ "$#" != 0 ]] && [[ "$#" != 1 ]]; then
+# 		git pull origin "${*}"
+# 	else
+# 		[[ "$#" == 0 ]] && local b="$(git_current_branch)"
+# 		git pull origin "${b:=$1}"
+# 	fi
+# }
+# compdef _git ggP=git-checkout
+#
+# function ggp() {
+# 	if [[ "$#" != 0 ]] && [[ "$#" != 1 ]]; then
+# 		git push origin "${*}"
+# 	else
+# 		[[ "$#" == 0 ]] && local b="$(git_current_branch)"
+# 		git push origin "${b:=$1}"
+# 	fi
+# }
+# compdef _git ggp=git-checkout
+#
+# # pull and push
+# function ggpp() {
+# 	if [[ "$#" == 0 ]]; then
+# 		ggP && ggp
+# 	else
+# 		ggP "${*}" && ggp "${*}"
+# 	fi
+# }
+# compdef _git ggpp=git-checkout
+#
+# function ggPr() {
+# 	[[ "$#" != 1 ]] && local b="$(git_current_branch)"
+# 	git pull --rebase origin "${b:=$1}"
+# }
+# compdef _git ggPr=git-checkout
+#
+# # alias ggpur='ggPr'
+# # alias ggPu='git pull origin "$(git_current_branch)"'
+# #
+# alias ggpush='git push origin "$(git_current_branch)"'
+#
+# alias gbsup='git branch --set-upstream-to=origin/$(git_current_branch)'
+# alias gpsup='git push --set-upstream origin $(git_current_branch)'
+#
+# alias ghh='git help'
+#
+# alias gignore='git update-index --assume-unchanged'     # and your file <file>
+# alias gnignore='git update-index --no-assume-unchanged' # and your file <file>
+# alias gignored='git ls-files -v | grep "^[[:lower:]]"'
+# alias gignored2='git ls-files -v | grep "^h" | cut -c3-'
+# alias git-svn-dcommit-push='git svn dcommit && git push github $(git_main_branch):svntrunk'
+#
+# alias gk='\gitk --all --branches'
+# alias gke='\gitk --all $(git log -g --pretty=%h)'
+#
+# # alias gl='git pull'
+# alias grf="git reflog"
+#
+# alias glp="_git_log_prettily"
+#
+# alias glgm="git log --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr)' --max-count=10"
+# alias glG='git log --graph'
+# alias glGo='git log --oneline --decorate --graph'
+# alias glGoa='git log --oneline --decorate --graph --all'
+# alias glGm='git log --graph --max-count=10'
+# alias glGom='git log --oneline --decorate --graph --max-count=10'
+# alias glGoam='git log --oneline --decorate --graph --all --max-count=10'
+# alias glgsm='git log --stat --max-count=10'
+# alias glgpm='git log --stat -p --max-count=10'
+# alias glgam='git log --decorate --all --max-count=10'
+# alias glGam='git log --graph --decorate --all --max-count=10'
+#
+# alias glg="git log --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr)'"
+# alias glgs='git log --stat'
+# alias glgp='git log --stat -p'
+# alias glga='git log --decorate --all'
+# alias glGa='git log --graph --decorate --all'
+# # alias glgo='git log --oneline --decorate'
+#
+# alias glGol="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"
+# alias glGols="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --stat"
+# alias glGod="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset'"
+# alias glGods="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset' --date=short"
+# alias glGola="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --all"
+#
+# alias gm='git merge'
+# alias gmom='git merge origin/$(git_main_branch)'
+# alias gmt='git mergetool --no-prompt'
+# alias gmtvim='git mergetool --no-prompt --tool=vimdiff'
+# alias gmum='git merge upstream/$(git_main_branch)'
+# alias gma='git merge --abort'
+#
+# alias gp='git push'
+# alias gpd='git push --dry-run'
+# alias gpf='git push --force-with-lease'
+# alias gpf='git push --force'
+# alias gpoat='git push origin --all && git push origin --tags'
+# # alias gpu='git push upstream'
+# alias gpv='git push -v'
+#
+# alias gr='git remote'
+# alias gra='git remote add'
+# alias grao='git remote add origin'
+# alias grro='git remote remove origin'
+# alias grg='git remote get-url'
+# alias grgo='git remote get-url origin'
+# alias grb='git rebase'
+# alias grba='git rebase --abort'
+# alias grbc='git rebase --continue'
+# alias grbd='git rebase develop'
+# alias grbi='git rebase -i'
+# alias grbm='git rebase $(git_main_branch)'
+# alias grbs='git rebase --skip'
+# alias grev='git revert'
+# alias gR='git reset'
+# gRh() {
+# 	if [[ -n "$1" ]]; then
+# 		git reset --hard $1
+# 	else
+# 		git reset --hard HEAD
+# 	fi
+# }
+# alias gRoh='git reset origin/$(git_current_branch) --hard'
+# alias grm='git rm'
+# alias grmc='git rm --cached'
+# alias grmv='git remote rename'
+# alias grrm='git remote remove'
+# alias grs='git restore'
+# alias grset='git remote set-url'
+# alias grss='git restore --staged'
+# alias grso='git restore --source'
+# alias grt='cd "$(git rev-parse --show-toplevel || echo .)"'
+# alias gru='git reset --'
+# alias grup='git remote update'
+# alias grv='git remote -v'
+#
+# alias gsb='git status -sb'
+# # alias gsd='git svn dcommit'
+# alias gsh='git show'
+# alias gsi='git submodule init'
+# alias gshp='git show --pretty=short --show-signature'
+# alias gsr='git svn rebase'
+# alias gsT='git status -s'
+# alias gst='git status'
+# alias gt='git tag'
+#
+# # use the default stash push on git 2.13 and newer
+# autoload -Uz is-at-least
+# is-at-least 2.13 "$(git --version 2>/dev/null | awk '{print $3}')" &&
+# 	alias gsp='git stash push' ||
+# 	alias gsp='git stash save'
+#
+# alias gS='git stash'
+# alias gSa='git stash apply'
+# alias gSc='git stash clear'
+# alias gSd='git stash drop'
+# alias gSt='git stash list'
+# alias gSP='git stash pop'
+# alias gSs='git stash show --text'
+# alias gSpu='git stash push --include-untracked'
+# alias gStall='git stash --all'
+#
+# alias gsw='git switch'
+# alias gswc='git switch -c'
+#
+# alias gts='git tag -s'
+# alias gtv='git tag | sort -V'
+# gtl() {
+# 	noglob
+# 	git tag --sort=-v:refname -n -l "${1}*"
+# }
+#
+# alias gunignore='git update-index --no-assume-unchanged'
+# alias gunwip='git log -n 1 | grep -q -c "\-\-wip\-\-" && git reset HEAD~1'
+# alias gP='git pull'
+# alias gPr='git pull --rebase'
+# alias gPrv='git pull --rebase -v'
+# alias gPra='git pull --rebase --autostash'
+# alias gPrav='git pull --rebase --autostash -v'
+# alias gPum='git pull upstream $(git_main_branch)'
+#
+# alias gwch='git whatchanged -p --abbrev-commit --pretty=medium'
+# alias gwip='git add -A; git rm $(git ls-files --deleted) 2> /dev/null; git commit --no-verify --no-gpg-sign -m "--wip-- [skip ci]"'
+#
+# alias gam='git am'
+# alias gamc='git am --continue'
+# alias gams='git am --skip'
+# alias gama='git am --abort'
+# alias gamscp='git am --show-current-patch'
+#
+# function gbR() {
+# 	if [[ -z "$1" || -z "$2" ]]; then
+# 		echo "Usage: $0 old_branch new_branch"
+# 		return 1
+# 	fi
+#
+# 	# Rename branch locally
+# 	git branch -m "$1" "$2"
+# 	# Rename branch in origin remote
+# 	if git push origin :"$1"; then
+# 		git push --set-upstream origin "$2"
+# 	fi
+# }
+#
+# alias gse='git secret' \
+# 	gser='git secrets reveal' \
+# 	gseh='git secrets hide' \
+# 	gsels='git secrets list' \
+# 	gserm='git secrets remove' \
+# 	gsea='git secrets add'
+#
+# ggcam() {
+# 	if [[ -n "$1" ]]; then
+# 		ggc -am "$1"
+# 	else
+# 		echo "message:"
+# 		read message
+# 		ggc -am "$message"
+# 	fi
+# }
+#
+# ggap() {
+# 	if [[ -n "$1" ]]; then
+# 		git commit -am "$1" && ggp
+# 	else
+# 		echo "message:"
+# 		read message
+# 		git commit -am "$message" && ggp
+# 	fi
+# }
 
 #=====================================================
 #           Systemd
