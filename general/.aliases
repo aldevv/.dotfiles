@@ -2,8 +2,10 @@
 
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
+alias .D="cd ~/.dotfiles"
 alias srcz=". ~/.config/zsh/.zshrc"
 alias srca=". ~/.config/zsh/.aliases"
+alias .r="nvim ~/.config/ranger/rc.conf"
 alias .a="nvim ~/.aliases"
 alias .ao="nvim ~/.config/zsh/.aliases"
 alias .A="nvim ~/Downloads/ansible/"
@@ -22,7 +24,7 @@ alias xin='xinput map-to-output $(xinput | grep -i "pen pen"| cut -d = -f 2 | cu
 alias r='ranger .'
 alias .d="cd ~/.dotfiles"
 alias xmr="xmonad --recompile; xmonad --restart"
-alias .dxm="cp ~/.config/xmonad/xmonad.hs ~/.dotfiles/xmonad/.config/xmonad/xmonad.hs"
+alias .dxm="cp ~/.config/xmonad/xmonad.hs ~/.dotfiles/xmonad/.config/xmonad/xmonad.hs; cp ~/.config/xmobar/xmobarrc ~/.dotfiles/xmonad/.config/xmobar/xmobarrc"
 alias rex="xrandr --output DP-1 --primary --right-of eDP-1 --auto"
 alias \?="noglob ?"
 
@@ -41,4 +43,12 @@ alias \?g="noglob GO"
 
 
 # folders
-alias pro="cd ~/master/projects/main/"
+alias play="cd ~/playground/"
+## projects
+alias pro="cd ~/projects/main/"
+alias pror="cd ~/projects/main/rust/"
+alias prog="cd ~/projects/main/go/"
+alias snip="cd ~/.config/nvim/my_snippets/"
+
+# git
+alias gR="git reset"
