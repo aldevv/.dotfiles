@@ -243,7 +243,7 @@ lesskey $HOME/.config/colemak-less
 # shellcheck source=/dev/null
 [ -f "$ZDOTDIR/.auto_aliases" ] && . "$ZDOTDIR/.auto_aliases"
 # shellcheck source=/dev/null
- [ -f ~/.aliases ] && . ~/.aliases
+ [ -f ~/.config/.aliases ] && . ~/.config/.aliases
 
 # install https://github.com/relastle/pmy
 # config

@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Config locations
-folders="$XDG_CONFIG_HOME/shortcuts/sf"
-dotfiles="$XDG_CONFIG_HOME/shortcuts/sd"
+folders="$XDG_CONFIG_HOME/shortcuts/sd"
+files="$XDG_CONFIG_HOME/shortcuts/sf"
 
 # Output locations
 shellrc="$ZDOTDIR/.zshrc"
@@ -28,6 +28,6 @@ sed "/^#/d; /^$/d" $folders | tee >(envsubst | awk '{shortcut=""; for ( i = 2; i
 # envsubst changes $HOME -> /home/myuser
 
 # dotfile shortcuts
-sed "/^#/d; /^$/d" $dotfiles |tee \
+sed "/^#/d; /^$/d" $files |tee \
     >(awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "alias "$1"=\"$EDITOR "shortcut"\""}' >> $shell_shortcuts) \
     >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "map <backspace>"$1" shell $EDITOR "shortcut}' >> $ranger_shortcuts) >/dev/null
