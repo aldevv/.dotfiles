@@ -14,7 +14,7 @@ fi
 # chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | dmenu -n)
 
 if [[  $chosen_file == "create" ]]; then
-    nvim $WIKI/notes/
+    st -e nvim $WIKI/notes/
     exit 0
 fi
 

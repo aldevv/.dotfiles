@@ -53,6 +53,7 @@ M.git_files_or_cwd = function()
     opts = {
         prompt_title = "<PARENT DIR>",
         cwd = ".",
+        follow = true,
     }
     if not ok then
         t.find_files(opts)

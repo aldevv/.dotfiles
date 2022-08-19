@@ -452,11 +452,13 @@ return require("packer").startup({
 
         use({ "Vimjas/vim-python-pep8-indent" }) -- for indentation, treesitter not functional yet 23/01/2022
         use({
+            -- this is what you can do
+            -- https://nvim-orgmode.github.io/demo.html
             "nvim-orgmode/orgmode",
             ft = { "org" },
             config = function()
-                require("orgmode").setup({})
                 require("orgmode").setup_ts_grammar()
+                require("orgmode").setup()
             end,
         })
         use("nanotee/sqls.nvim")

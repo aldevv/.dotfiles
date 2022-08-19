@@ -5,6 +5,7 @@ Config { overrideRedirect = False
        , fgColor  = "#f8f8f2"
        , alpha = 190
        , allDesktops = True
+       , lowerOnStart = True
        -- TopSize L width % height %
        , position = TopSize L 100 2
        , commands = [ Run Weather "EGPF"
