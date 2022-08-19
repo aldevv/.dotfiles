@@ -7,7 +7,12 @@ local map = vim.api.nvim_set_keymap
 M.load_mappings = function()
     vim.cmd([[cnoreabbrev t Telescope]])
     -- telescope essential
-    map("n", "<a-p>", ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h")} )<cr>', nor_s)
+    map(
+        "n",
+        "<a-p>",
+        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true} )<cr>',
+        nor_s
+    )
     map("n", "<a-b>", ':lua require("telescope.builtin").buffers()<cr>', nor_s)
     map("n", "<a-r>", ':lua require("telescope.builtin").live_grep()<cr>', nor_s)
     map("n", "<a-s-r>", ':lua require("telescope.builtin").grep_string()<cr>', nor_s)
@@ -31,6 +36,7 @@ M.load_mappings = function()
     map("n", "<leader>tvh", ':lua require("telescope.builtin").command_history()<cr>', nor_s)
     map("n", "<leader>ts", ':lua require("telescope.builtin").search_history()<cr>', nor_s)
     -- custom
+
     -- folders
     map("n", "<leader>tb", ':lua require("utils.lua.telescope").select_bg()<cr>', nor_s)
     map("n", "<a-s-p>", ':lua require("utils.lua.telescope").git_files_or_cwd()<cr>', nor_s)

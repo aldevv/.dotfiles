@@ -10,6 +10,7 @@
 .x      ~/.xprofile
 .t      ~/.config/tmux/tmux.conf
 .V      ~/.config/nvim/init.lua
+.V.      ~/.config/nvim/init.lua
 .Va     ~/.config/nvim/lua/config/automation/init.lua
 .Vs     ~/.config/nvim/lua/config/settings.lua
 .Vk     ~/.config/nvim/lua/config/keybindings/init.lua
@@ -20,6 +21,7 @@
 .Vp     ~/.config/nvim/lua/plugins.lua
 .X      ~/.config/sxhkd/sxhkdrc
 .xm     ~/.config/xmonad/xmonad.hs
+.xmb    ~/.config/xmobar/xmobarrc
 .n      ~/.config/newsboat/urls
 .D      $SUCKLESS/dwm-6.2/config.h
 .S      $SUCKLESS/st-0.8.4/config.h

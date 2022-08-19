@@ -50,7 +50,7 @@ require("nvim-treesitter.configs").setup({
     },
     indent = {
         enable = true,
-        disable = { "yaml", "python" }, -- not working in python as of 23/01/2021
+        disable = { "org", "yaml", "python" }, -- not working in python as of 23/01/2021
     },
     incremental_selection = {
         enable = true,
