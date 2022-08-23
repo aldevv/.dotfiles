@@ -33,17 +33,17 @@ endif
 "========================
 " VIM-BUJO
 "========================
-let g:bujo#window_width = 90
-let g:bujo#todo_file_path = $HOME . "/.cache/bujo"
-map <silent><leader><leader>g <Plug>(BujoGlobal)
-map <silent><leader><leader>p <Plug>(BujoProject)
-map <silent><leader><leader>P <Plug>(BujoPrivate)
-
-map <M-,> <Plug>(BujoAddnormal)
-imap <M-,> <Plug>(BujoAddinsert)
-map <M-.> <Plug>(BujoChecknormal)
-imap <M-.> <Plug>(BujoCheckinsert)
-
+" let g:bujo#window_width = 90
+" let g:bujo#todo_file_path = $HOME . "/.cache/bujo"
+" map <silent><leader><leader>g <Plug>(BujoGlobal)
+" map <silent><leader><leader>p <Plug>(BujoProject)
+" map <silent><leader><leader>P <Plug>(BujoPrivate)
+"
+" map <M-,> <Plug>(BujoAddnormal)
+" imap <M-,> <Plug>(BujoAddinsert)
+" map <M-.> <Plug>(BujoChecknormal)
+" imap <M-.> <Plug>(BujoCheckinsert)
+"
 "========================
 " VIM-PROJECTIONIST
 "========================

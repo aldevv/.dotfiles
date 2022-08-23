@@ -4,6 +4,7 @@ cfg = {
     -- default is  ~/.cache/nvim/lsp_signature.log
     verbose = false, -- show debug line number
 
+    -- default is bind = true
     bind = true, -- This is mandatory, otherwise border config won't get registered.
     -- If you want to hook lspsaga or other signature handler, pls set to false
     doc_lines = 10, -- will show two lines of comment/doc(if there are more than two lines in doc, will be truncated);
@@ -35,7 +36,7 @@ cfg = {
     -- to view the hiding contents
     max_width = 80, -- max_width of signature floating_window, line will be wrapped if exceed max_width
     handler_opts = {
-        border = "rounded",   -- double, rounded, single, shadow, none
+        border = "rounded", -- double, rounded, single, shadow, none
         -- border = "none"   -- double, rounded, single, shadow, none
     },
 
