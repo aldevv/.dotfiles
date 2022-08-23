@@ -1,7 +1,7 @@
 
 #something
 H       ~
-d.      .dotfiles
+d.      ~/.dotfiles
 uu      $REMOTES
 wo      $WORK
 bk      $BOOKS

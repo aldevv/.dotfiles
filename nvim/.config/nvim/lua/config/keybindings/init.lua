@@ -62,8 +62,7 @@ map("", "<c-u>", "<c-u>zz", nor)
 map(
     "n",
     "<leader>sp",
-    ":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>"
-    ,
+    ":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>",
     nor_s
 )
 map("n", "<leader>sP", ":Lex<cr>", nor_s)
@@ -300,4 +299,6 @@ require("config.keybindings.overseer").load_mappings()
 map("n", "<leader><leader>g", "<cmd>MindOpenMain<cr>", nor)
 map("n", "<leader><leader>p", "<cmd>MindOpenProject global<cr>", nor)
 map("n", "<leader><leader>P", "<cmd>MindOpenProject<cr>", nor)
+
+map("n", "<leader>sl", "<cmd>IndentBlanklineToggle<cr>", nor)
 -- map("n", "<leader>g", "<cmd>MindOpenProject")
