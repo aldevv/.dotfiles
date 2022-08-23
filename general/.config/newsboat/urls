@@ -8,7 +8,7 @@ http://feeds.weblogssl.com/xataka2
 https://suckless.org/atom.xml
 https://rgoswami.me/posts/index.xml linux
 https://hiphish.github.io/blog/rss.xml neovim linux
-https://this-week-in-neovim.org/api/rss  neovim
+https://this-week-in-neovim.org/rss neovim
 # no rss
 # https://www.craftz.dog/posts linux programming
 # https://www.chrisatmachine.com/blog neovim 

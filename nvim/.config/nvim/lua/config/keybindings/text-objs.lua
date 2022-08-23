@@ -40,23 +40,23 @@ vim.g.textobj_python_no_default_key_mappings = 1
 -- " [c previous class
 -- " ]c next class
 
-vim.cmd([[
-call textobj#user#map('python', {
-            \   'class': {
-            \     'select-a': '<buffer>ax',
-            \     'select-i': '<buffer>lx',
-            \     'move-n': '<buffer>]x',
-            \     'move-p': '<buffer>[x',
-            \   },
-            \   'function': {
-            \     'select-a': '<buffer>af',
-            \     'select-i': '<buffer>lf',
-            \     'move-n': '<buffer>]f',
-            \     'move-p': '<buffer>[f',
-            \   }
-            \ })
-]])
-
+-- vim.cmd([[
+-- call textobj#user#map('python', {
+--             \   'class': {
+--             \     'select-a': '<buffer>ax',
+--             \     'select-i': '<buffer>lx',
+--             \     'move-n': '<buffer>]x',
+--             \     'move-p': '<buffer>[x',
+--             \   },
+--             \   'function': {
+--             \     'select-a': '<buffer>af',
+--             \     'select-i': '<buffer>lf',
+--             \     'move-n': '<buffer>]f',
+--             \     'move-p': '<buffer>[f',
+--             \   }
+--             \ })
+-- ]])
+--
 -- " text object comments
 vim.g.textobj_comment_no_default_key_mappings = 1
 

@@ -42,6 +42,8 @@ return require("packer").startup({
             "gruvbox-community/gruvbox",
             config = req("config.appearance.themes.gruvbox"),
         })
+        use({ "stevearc/dressing.nvim", config = req("config.appearance.dressing") })
+        use({ "rcarriga/nvim-notify", config = req("core.notify"), module = "notify" })
         use({
             "nvim-telescope/telescope.nvim",
             requires = {
@@ -81,8 +83,25 @@ return require("packer").startup({
                 "williamboman/mason.nvim",
                 "williamboman/mason-lspconfig.nvim",
                 "WhoIsSethDaniel/mason-tool-installer.nvim",
+                -- "SmiteshP/nvim-navic",
             },
         })
+        use({
+            "nvim-treesitter/nvim-treesitter",
+            run = ":TSUpdate",
+            config = req("core.treesitter"),
+        })
+        use("nvim-treesitter/nvim-treesitter-context")
+        use({
+            "glepnir/lspsaga.nvim",
+            branch = "main",
+            config = req("lsp.lspsaga"),
+        })
+
+        -- convert to luasnip using
+        -- - https://github.com/smjonas/snippet-converter.nvim
+        -- and
+        -- - https://cj.rs/blog/ultisnips-to-luasnip/
 
         use({
             "SirVer/ultisnips",
@@ -122,12 +141,6 @@ return require("packer").startup({
         })
 
         use({
-            "nvim-treesitter/nvim-treesitter",
-            run = ":TSUpdate",
-            config = req("core.treesitter"),
-        })
-
-        use({
             "nvim-treesitter/playground",
             requires = "nvim-treesitter/nvim-treesitter",
             cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
@@ -145,11 +158,11 @@ return require("packer").startup({
 
         -- Lazy loading:
         -- Load on specific commands
-        use({
-            "tpope/vim-dispatch",
-            cmd = { "Dispatch", "Make", "Focus", "Start" },
-            ft = { "sh", "python", "c", "cpp", "js", "ts", "rs", "go" }, -- test for no filetype
-        })
+        -- use({
+        --     "tpope/vim-dispatch",
+        --     cmd = { "Dispatch", "Make", "Focus", "Start" },
+        --     ft = { "sh", "python", "c", "cpp", "js", "ts", "rs", "go" }, -- test for no filetype
+        -- })
 
         use({
             "kyazdani42/nvim-tree.lua",
@@ -196,8 +209,6 @@ return require("packer").startup({
             module = "osv",
         }) -- debug lua files
 
-        -- add gitsigns
-
         use({
             "github/copilot.vim",
             config = function()
@@ -220,7 +231,7 @@ return require("packer").startup({
         })
         use("tpope/vim-repeat")
         use("tommcdo/vim-exchange")
-        use("tpope/vim-surround")
+        -- use("tpope/vim-surround")
         use("kana/vim-textobj-user")
         use({
             "kana/vim-textobj-line",
@@ -234,6 +245,13 @@ return require("packer").startup({
                 vim.g.textobj_entire_no_default_key_mappings = 1
             end,
         })
+        -- TODO: check in the future to see if is working 22-08-22
+        -- use({
+        --     -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+        --     "nvim-treesitter/nvim-treesitter-textobjects",
+        --     requires = { "nvim-treesitter/nvim-treesitter" },
+        --     config = req("core.nvim-treesitter-textobjects"),
+        -- })
 
         -- meh
         use({
@@ -247,15 +265,15 @@ return require("packer").startup({
             "folke/which-key.nvim",
             config = req("config.appearance.whichkey"),
         })
-        use({
-            "yggdroot/indentLine",
-            config = function()
-                vim.g.indentLine_char = "┆"
-                vim.g.indentLine_enabled = 0
-                -- show double quotes in json
-                -- vim.o.concealLevel = 0
-            end,
-        })
+        -- use({
+        --     "yggdroot/indentLine",
+        --     config = function()
+        --         vim.g.indentLine_char = "┆"
+        --         vim.g.indentLine_enabled = 0
+        --         -- show double quotes in json
+        --         -- vim.o.concealLevel = 0
+        --     end,
+        -- })
         use({
             "Pocco81/TrueZen.nvim",
             config = req("core.truezen"),
@@ -293,6 +311,7 @@ return require("packer").startup({
             config = req("core.autopairs2"),
         })
 
+        -- TODO: change to smolovk/projector.nvim
         use({
             "tpope/vim-projectionist",
             requires = "neovim/nvim-lspconfig",
@@ -320,13 +339,11 @@ return require("packer").startup({
         use({
             "ThePrimeagen/git-worktree.nvim",
         })
+
         use({
             "lewis6991/gitsigns.nvim",
             requires = { "nvim-lua/plenary.nvim" },
             config = req("core.gitsigns"),
-            cond = function()
-                return require("lspconfig.util").root_pattern(".git")(vim.fn.getcwd()) ~= nil
-            end,
         })
 
         use("bkad/CamelCaseMotion")
@@ -427,6 +444,7 @@ return require("packer").startup({
             config = req("core.neotest"),
         })
         use({ "brooth/far.vim", cmd = { "Far", "Fardo", "Farr" } })
+
         use({
             "ThePrimeagen/refactoring.nvim",
             requires = {
@@ -436,9 +454,10 @@ return require("packer").startup({
             config = req("core.refactoring"),
         })
 
-        use({ "rcarriga/nvim-notify", config = req("core.notify"), module = "notify" })
+        -- TODO: migrate to this?
+        -- use({ "michaelb/sniprun", run = "bash ./install.sh", config = req("core.sniprun"), cmd = "SnipRun" })
 
-        use({ "michaelb/sniprun", run = "bash ./install.sh", config = req("core.sniprun"), cmd = "SnipRun" })
+        --  https://github.com/pwntester/octo.nvim
         use({
             "pwntester/octo.nvim",
             requires = {
@@ -462,6 +481,17 @@ return require("packer").startup({
             end,
         })
         use("nanotee/sqls.nvim")
+        -- overseer tutorial, (save tasks, watch tasks etc)
+        -- https://www.youtube.com/watch?v=aq3mU_Oqd6Q
+        use({
+            "stevearc/overseer.nvim",
+            config = req("core.overseer"),
+            requires = {
+                "stevearc/dressing.nvim",
+                "nvim-telescope/telescope.nvim",
+                "rcarriga/nvim-notify",
+            },
+        })
         -- check arpeggio https://github.com/kana/vim-arpeggio
         -- check sideways https://github.com/AndrewRadev/sideways.vim
 
@@ -481,7 +511,6 @@ return require("packer").startup({
         -- })
 
         -- colors
-        -- use("gruvbox-community/gruvbox")
         -- use("dracula/vim")
         -- use("crusoexia/vim-monokai")
         use({
@@ -493,6 +522,61 @@ return require("packer").startup({
                     -- or leave it empty to use the default settings
                     -- refer to the configuration section below
                 })
+            end,
+        })
+        use({
+            "kylechui/nvim-surround",
+            tag = "*", -- Use for stability; omit to use `main` branch for the latest features
+            config = req("core.nvim-surround"),
+            -- after = { "nvim-treesitter", "nvim-treesitter-textobjects" },
+            after = { "nvim-treesitter" },
+        })
+
+        -- https://github.com/anuvyklack/hydra.nvim/wiki/Windows-and-buffers-management
+        -- needs a lot of other plugins so big no no
+        -- use({ "anuvyklack/hydra.nvim", config = req("core.hydra") })
+        -- prettier lsp
+        use({
+            "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+            config = function()
+                local lsp_lines = require("lsp_lines")
+                lsp_lines.setup()
+                vim.diagnostic.config({ virtual_lines = false })
+                local toggle = function()
+                    lsp_lines.toggle()
+                    if vim.diagnostic.config()["virtual_text"] then
+                        vim.diagnostic.config({ virtual_text = false })
+                    else
+                        vim.diagnostic.config({ virtual_text = { spacing = 2 } })
+                    end
+                end
+                vim.keymap.set("", "gO", toggle, { desc = "Toggle lsp_lines" })
+            end,
+        })
+
+        -- TODO: test this
+        -- use("smolovk/projector.nvim")
+        -- TODO: test this to have custom themes per project
+        -- https://muniftanjim.dev/blog/neovim-project-local-config-with-exrc-nvim/
+        -- use("MunifTanjim/exrc.nvim")
+        use({
+            "phaazon/mind.nvim",
+            config = function()
+                require("mind").setup()
+            end,
+        })
+        use({
+            "lukas-reineke/indent-blankline.nvim",
+            config = function()
+                vim.g.indentLine_char = "┆"
+                vim.g.indent_blankline_enabled = true
+                vim.g.indent_blankline_filetype = { "lua", "javascript", "typescript" }
+                require("indent_blankline").setup({
+                    -- for example, context is off by default, use this to turn it on
+                    show_current_context = true,
+                    show_current_context_start = true,
+                })
+                vim.keymap.set("n", "<leader>sl", "<cmd>IndentBlanklineToggle!<cr>", { noremap = true })
             end,
         })
     end,

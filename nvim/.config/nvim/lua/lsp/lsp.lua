@@ -33,6 +33,7 @@ require("mason-lspconfig").setup({
     automatic_installation = true,
     ensure_installed = servers,
 })
+
 local lspconfig = require("lspconfig")
 local lsp_defaults = require("lsp.lsp_defaults")
 local lang_opts = require("lsp.lang_opts")
@@ -49,3 +50,11 @@ for _, server in ipairs(servers) do
     end
     lspconfig[server].setup(opts)
 end
+
+-- diagnostics
+vim.diagnostic.config({
+    -- virtual_text = true,
+    virtual_text = {
+        spacing = 2,
+    },
+})

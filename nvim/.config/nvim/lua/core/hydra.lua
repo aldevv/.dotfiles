@@ -1,0 +1,9 @@
+-- local Hydra = require('hydra')
+-- Hydra({
+--     name = "Hydra's name",
+--     hint = [[...]] -- multiline string
+--     config = {...}
+--     mode = 'n',
+--     body = '<leader>o',
+--     heads = {...},
+-- })

@@ -59,6 +59,7 @@ local init_modules = {
     "lsp",
     "config",
 }
+-- TODO: all appearance should go in the after folder
 
 local sys_modules = {
     "core",

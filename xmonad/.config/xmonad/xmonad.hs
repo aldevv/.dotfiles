@@ -151,6 +151,8 @@ myManageHook =
     [ className =? "Gimp" --> doFloat,
       className =? "copyq" --> doFloat,
       className =? "Slack" --> doShift "6",
+      className =? "Workspacesclient" --> doShift "3",
+      className =? "Zoom" --> doShift "7",
       -- className =? "zoom " --> doFloat,
       className =? "SimpleScreenRecorder" --> doFloat,
       isDialog --> doFloat
