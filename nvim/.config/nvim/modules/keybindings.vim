@@ -41,8 +41,8 @@ noremap J E
 vnoremap L I
 
 
-noremap N i<cr><esc>k$
-vnoremap N : s/\n/ /g<cr>$x
+" noremap N i<cr><esc>k$
+" vnoremap N : s/\n/ /g<cr>$x
 
 " gN is free
 noremap ' `

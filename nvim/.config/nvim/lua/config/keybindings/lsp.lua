@@ -65,7 +65,7 @@ M.load_mappings = function() -- use these on_attach
     -- prefix o --> diagnostics
 
     -- map("n", "go", ":lua vim.diagnostic.open_float()<cr>", nor)
-    map("n", "go", "<cmd>Lspsaga show_cursor_diagnostics<cr>", nor)
+    map("n", "go", "<cmd>Lspsaga show_line_diagnostics<cr>", nor)
     map("n", "<leader>oo", ":lua  require('telescope.builtin').diagnostics({bufnr=0})<cr>", nor)
     map("n", "<leader>oO", ":lua  require('telescope.builtin').diagnostics()<cr>", nor)
     map("n", "<leader>owo", ":lua  require('telescope.builtin').diagnostics()<cr>", nor)

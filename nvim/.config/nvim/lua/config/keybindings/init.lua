@@ -40,7 +40,9 @@ local h = "~/.config/nvim"
 -- map("", "gn", "gj", nor)
 -- map("", "gk", "gn", nor)
 -- map("", "gE", "gJ", nor) -- lines
-map("", "E", "mzJ`z", nor) -- lines
+map("", "N", "mzJ`z", nor) -- lines
+map("n", "E", "i<cr><esc>k$", nor) -- lines
+map("v", "E", ":s/\\n/ /g<cr>$x", nor) -- lines
 
 -- map("n", "!!", ":.!", nor)
 -- map("n", "!.", ".!bash", nor)
@@ -62,7 +64,8 @@ map("", "<c-u>", "<c-u>zz", nor)
 map(
     "n",
     "<leader>sp",
-    ":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>",
+    ":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>"
+    ,
     nor_s
 )
 map("n", "<leader>sP", ":Lex<cr>", nor_s)
@@ -93,6 +96,8 @@ map("", "<leader>cc", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", 
 
 -- terminal
 map("n", "<leader>sñ", ":botright terminal<cr>", nor)
+map("n", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
+map("t", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
 
 -- snippets
 map("n", "<leader>si", "<Plug>(InsertSkeleton)", s)

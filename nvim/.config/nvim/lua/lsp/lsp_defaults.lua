@@ -54,17 +54,9 @@ capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 ------------------------------
--- function run_navic()
--- local navic = require("nvim-navic")
--- navic.attach(client, bufnr)
--- end
 local on_attach = function(client, bufnr)
-    -- these are callbacks that run after the server has loaded
     require("config.keybindings.lsp").load_mappings()
     require("config.automation.lsp").diagnostics_in_loclist()
-
-    -- this disables the lsp's formatting functions
-    -- is so null-ls can take charge of formatting
     client.server_capabilities.document_formatting = false
     client.server_capabilities.document_range_formatting = false
 end
