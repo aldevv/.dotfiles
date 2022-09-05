@@ -63,29 +63,16 @@ return require("packer").startup({
             config = req("config.appearance.lualine"),
         })
 
-        -- use({
-        --     -- "neovim/nvim-lspconfig",
-        --     "junnplus/nvim-lsp-setup",
-        --     requires = {
-        --         "williamboman/nvim-lsp-installer",
-        --         "neovim/nvim-lspconfig",
-        --         "hrsh7th/cmp-nvim-lsp",
-        --     },
-        --     -- config = req("lsp.lsp_old"),
-        --     config = req("lsp.lsp"),
-        --     -- config = req("lsp.lsp_test"),
-        -- })
+        use("williamboman/mason.nvim")
+        use({ "williamboman/mason-lspconfig.nvim" })
         use({
             "neovim/nvim-lspconfig",
             config = req("lsp.lsp"),
-            requires = {
-                "hrsh7th/cmp-nvim-lsp",
-                "williamboman/mason.nvim",
-                "williamboman/mason-lspconfig.nvim",
-                "WhoIsSethDaniel/mason-tool-installer.nvim",
-                -- "SmiteshP/nvim-navic",
-            },
+            -- to auto install the ones I use
+            -- "WhoIsSethDaniel/mason-tool-installer.nvim",
         })
+
+        use("simrat39/rust-tools.nvim")
         use({
             "nvim-treesitter/nvim-treesitter",
             run = ":TSUpdate",
@@ -197,7 +184,6 @@ return require("packer").startup({
                 { "rcarriga/cmp-dap" },
                 { "mfussenegger/nvim-dap-python" },
                 { "leoluz/nvim-dap-go" },
-                { "simrat39/rust-tools.nvim" },
             },
             -- module = "dap",
             config = req("lsp.dap.dap"),
@@ -576,6 +562,14 @@ return require("packer").startup({
                     show_current_context = true,
                     show_current_context_start = false,
                 })
+            end,
+        })
+
+        use({
+            "akinsho/toggleterm.nvim",
+            tag = "v2.*",
+            config = function()
+                require("toggleterm").setup()
             end,
         })
     end,
