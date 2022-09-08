@@ -31,8 +31,8 @@ local enhance_server_opts = {
     ["sqls"] = function(opts)
         local tmp = copy(opts)
         opts.on_attach = function(cl, bufnr)
-            tmp.on_attach(client, bufnr)
-            require("sqls").on_attach(client, bufnr)
+            tmp.on_attach(cl, bufnr)
+            require("sqls").on_attach(cl, bufnr)
             vim.keymap.set("n", "<cr>", "<cmd>SqlsExecuteQuery<cr>", { buffer = 0 })
         end
     end,
