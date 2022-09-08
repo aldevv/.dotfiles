@@ -34,7 +34,37 @@ local enhance_server_opts = {
                 or util.root_pattern("package.json", "jsconfig.json", ".git", ".projections.json")(fname)
         end
     end,
+    ["pyright"] = function(opts)
+        -- add dap keybindings to python
+        -- #TODO check why using a decorator or calling the func here, makes it fail when
+        -- # opening a project from the root (like nvim .) and then entering a folder
+        -- old_on_attach = opts.on_attach
+        opts.on_attach = function(client, bufnr)
+            -- require("config.keybindings.lsp").load_mappings()
+            -- require("config.automation.lsp").diagnostics_in_loclist()
+            -- client.server_capabilities.document_formatting = false
+            -- client.server_capabilities.document_range_formatting = false
 
+            -- old_on_attach(client, bufnr)
+            local lang_opts = require("lsp.lsp_defaults")
+            lang_opts.on_attach(client, bufnr)
+            vim.pretty_print(opts)
+
+            vim.keymap.set(
+                "n",
+                "<localleader>dlm",
+                "<cmd>lua require('dap-python').test_method()<cr>",
+                { noremap = true, silent = true }
+            )
+            vim.keymap.set(
+                "n",
+                "<localleader>dlc",
+                "<cmd>lua require('dap-python').test_class()<cr>",
+                { noremap = true, silent = true }
+            )
+            -- old_on_attach(client, bufnr)
+        end
+    end,
     ["pylsp"] = function(opts)
         opts.settings = {
             pylsp = {

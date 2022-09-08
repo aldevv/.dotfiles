@@ -10,6 +10,7 @@ local on_attach_deco = function(fn)
 end
 
 M.exec = function(opts)
-    opts.on_attach = on_attach_deco(opts.on_attach)
+    old_on_attach = opts.on_attach
+    opts.on_attach = on_attach_deco(old_on_attach)
 end
 return M
