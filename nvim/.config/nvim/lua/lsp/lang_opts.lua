@@ -9,6 +9,14 @@ local nvim_paths = vim.tbl_extend(
     { vim.fn.expand("$VIMRUNTIME/lua/vim"), vim.fn.expand("$VIMRUNTIME/lua/vim/lsp") }
 )
 
+function copy(opts)
+    local tmp = {}
+    for k, v in pairs(opts) do
+        tmp[k] = v
+    end
+    return tmp
+end
+
 local runtime_path = vim.split(package.path, ";")
 table.insert(runtime_path, "lua/?.lua")
 table.insert(runtime_path, "lua/?/init.lua")
@@ -21,7 +29,12 @@ local enhance_server_opts = {
         opts.filetypes = { "sh", "zsh", "bash" }
     end,
     ["sqls"] = function(opts)
-        require("lsp.languages.sqls").exec(opts)
+        local tmp = copy(opts)
+        opts.on_attach = function(cl, bufnr)
+            tmp.on_attach(client, bufnr)
+            require("sqls").on_attach(client, bufnr)
+            vim.keymap.set("n", "<cr>", "<cmd>SqlsExecuteQuery<cr>", { buffer = 0 })
+        end
     end,
     ["tsserver"] = function(opts)
         -- :h lspconfig-root-advanced
@@ -45,6 +58,28 @@ local enhance_server_opts = {
                 },
             },
         }
+    end,
+    ["rust_analyzer"] = function(opts)
+        local tmp = copy(opts)
+        opts.server = {
+            capabilities = tmp.capabilities,
+            handlers = tmp.handlers,
+            on_attach = function(cl, bufnr)
+                tmp.on_attach(cl, bufnr)
+                -- hover
+                vim.keymap.set("n", "+", require("rust-tools").hover_actions.hover_actions, { buffer = bufnr })
+                -- Code action groups
+                vim.keymap.set(
+                    "n",
+                    "<Leader>la",
+                    require("rust-tools").code_action_group.code_action_group,
+                    { buffer = bufnr }
+                )
+            end,
+        }
+        opts.on_attach = nil
+        opts.handlers = nil
+        opts.capabilities = nil
     end,
     ["clangd"] = function(opts)
         opts.capabilities.offsetEncoding = { "utf-16" }
