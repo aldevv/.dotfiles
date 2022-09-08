@@ -47,7 +47,24 @@ local enhance_server_opts = {
                 or util.root_pattern("package.json", "jsconfig.json", ".git", ".projections.json")(fname)
         end
     end,
-
+    ["pyright"] = function(opts)
+        local tmp = copy(opts)
+        opts.on_attach = function(client, bufnr)
+            tmp.on_attach(client, bufnr)
+            vim.keymap.set(
+                "n",
+                "<localleader>dlm",
+                "<cmd>lua require('dap-python').test_method()<cr>",
+                { noremap = true, silent = true }
+            )
+            vim.keymap.set(
+                "n",
+                "<localleader>dlc",
+                "<cmd>lua require('dap-python').test_class()<cr>",
+                { noremap = true, silent = true }
+            )
+        end
+    end,
     ["pylsp"] = function(opts)
         opts.settings = {
             pylsp = {
