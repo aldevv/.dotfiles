@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #https://www.reddit.com/r/unixporn/comments/6p40ic/volume_notifications_with_dunst/
 #https://gist.github.com/sebastiencs/5d7227f388d93374cebdf72e783fbd6a
 
@@ -28,14 +29,14 @@ cur_vol=$(pactl get-sink-volume @DEFAULT_SINK@ | awk 'NR==1{print $5}' | tr -d '
 case $1 in
     up)
 		# Set the volume on (if it was muted)
+        echo "up"
 		pactl set-sink-mute @DEFAULT_SINK@ 0
-		[ $cur_vol -lt 100 ] && pactl set-sink-volume @DEFAULT_SINK@ +5%
+		[[ $cur_vol -lt 100 ]] && pactl set-sink-volume @DEFAULT_SINK@ +5%
 		send_notification
 	;;
     down)
 		pactl set-sink-mute @DEFAULT_SINK@ 0
-
-		[ $cur_vol -gt 0 ] && pactl set-sink-volume @DEFAULT_SINK@ -5%
+		[[ $cur_vol -gt 0 ]] && pactl set-sink-volume @DEFAULT_SINK@ -5%
 		send_notification
 	;;
     mute)
@@ -43,6 +44,7 @@ case $1 in
 
 	if is_mute ; then
 	    dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "Mute"
+        echo "is mute"
 	else
 	    send_notification
 	fi
