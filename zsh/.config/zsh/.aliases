@@ -103,11 +103,11 @@ alias cpP="pwd | xsel -b"
 # TMUX
 alias tmS="tma \$(tmux list-sessions | sed -E 's/:.*$//' | fzf --no-preview)"
 
-alias tm="tmux"       # attach
+alias tm="tmux -u"       # attach
 alias tmls="tmux ls"  # list sessions
-alias tmA="tmux a -t" # attach
-alias tmn="tmux new -s"
-alias tma="tmux new -A -s" # attach or create new one
+alias tmA="tmux -u a -t" # attach
+alias tmn="tmux -u new -s"
+alias tma="tmux -u new -A -s" # attach or create new one
 alias tmk="tmux kill-server"
 alias tmK="tmux list-keys"
 # for remote connections

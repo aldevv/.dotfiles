@@ -1,0 +1,3 @@
+#!/bin/bash
+
+w3m "https://pkg.go.dev/search?q=$*"
