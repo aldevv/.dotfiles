@@ -141,6 +141,7 @@ bindkey -M menuselect 'e' vi-up-line-or-history
 bindkey -M menuselect 'i' vi-forward-char
 bindkey -M menuselect 'n' vi-down-line-or-history
 bindkey -v '^?' backward-delete-char
+bindkey '^[.' insert-last-word
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"

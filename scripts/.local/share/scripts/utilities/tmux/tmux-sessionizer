@@ -16,13 +16,13 @@ tmux_running=$(pgrep tmux)
 
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
     echo "no tmux running"
-    tmux new-session -s $selected_name -c $selected
+    tmux -f ~/.config/tmux/tmux.conf new-session -s $selected_name -c $selected
     exit 0
 fi
 
 if ! tmux has-session -t $selected_name 2> /dev/null; then
     echo "second"
-    tmux new-session -ds $selected_name -c $selected
+    tmux -f ~/.config/tmux/tmux.conf new-session -ds $selected_name -c $selected
 fi
 
 if ! tmux switch-client -t $selected_name 2> /dev/null; then
