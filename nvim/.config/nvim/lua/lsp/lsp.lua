@@ -57,7 +57,7 @@ for _, server in ipairs(servers) do
     end
 
     if not is_exception then
-        require("lspconfig")[server].setup(opts)
+    require("lspconfig")[server].setup(opts)
     end
 end
 

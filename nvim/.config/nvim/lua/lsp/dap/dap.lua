@@ -21,7 +21,6 @@ require("dap-python").setup()
 table.insert(dap.configurations.python, unpack(my_py_config))
 require("dap-python").test_runner = "pytest"
 require("dap-go").setup()
-require("rust-tools").setup({})
 require("dap.ext.vscode").load_launchjs()
 
 -- open dapui automatically
