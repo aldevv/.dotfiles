@@ -1,0 +1,4 @@
+#!/bin/bash
+
+xmodmap -e "keycode  51 = braceright bracketright braceright bracketright grave braceright grave braceright braceright bracketright grave braceright"
+xmodmap -e "keycode  48 = braceleft bracketleft braceleft bracketleft asciicircum braceleft asciicircum braceleft braceleft bracketleft asciicircum braceleft"
