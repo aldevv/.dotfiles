@@ -1,0 +1,46 @@
+super + space
+   st 2>/dev/null
+    
+super + p
+    dmenu_run
+
+super + shift + o
+	~/.config/sxhkd/dm_p 2>/dev/null
+
+Print + shift
+	flameshot gui
+
+mode_switch + c
+	copyq toggle
+
+# lsp not working
+super + shift + x
+	st -e nvim ~/.config/xmonad/xmonad.hs
+
+super + Escape
+    browseWiki -d 
+
+super + o
+    simplescreenrecorder
+
+super + shift +  p
+    xrandr-dmenu
+
+XF86AudioMute
+     $SCRIPTS/shared/volume mute; $APPS/dwm/refreshVolume
+     # pactl set-sink-mute 0 toggle
+
+XF86AudioRaiseVolume
+     $SCRIPTS/shared/volume up; $APPS/dwm/refreshVolume
+     # pactl set-sink-volume 0 +5%
+
+XF86AudioLowerVolume
+     $SCRIPTS/shared/volume down; $APPS/dwm/refreshVolume
+     # pactl set-sink-volume 0 -5%
+
+XF86MonBrightnessUp
+    xbacklight -inc 10
+
+XF86MonBrightnessDown
+    xbacklight -dec 10
+
