@@ -239,10 +239,13 @@ bindkey "^ " autosuggest-execute
 #TODO find alternative to lesskey (deprecated)
 lesskey $HOME/.config/colemak-less
 # aliases
+
+# old aliases
 # shellcheck source=/dev/null
  [ -f "$ZDOTDIR/.aliases" ] && . "$ZDOTDIR/.aliases"
 # shellcheck source=/dev/null
 [ -f "$ZDOTDIR/.auto_aliases" ] && . "$ZDOTDIR/.auto_aliases"
+# new aliases
 # shellcheck source=/dev/null
  [ -f ~/.config/.aliases ] && . ~/.config/.aliases
 
