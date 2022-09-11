@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# programs
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
+alias irssi="irssi --home=~/.config/irssi --config=~/.config/irssi/config"
+
 alias srcz=". ~/.config/zsh/.zshrc"
 alias srca=". ~/.config/zsh/.aliases"
 alias .s="nvim ~/.dotfiles/scripts/.local/share/scripts/"
@@ -11,19 +14,9 @@ alias xmr="xmonad --recompile; xmonad --restart"
 alias .dxm="cp ~/.config/xmonad/xmonad.hs ~/.dotfiles/xmonad/.config/xmonad/xmonad.hs; cp ~/.config/xmobar/xmobarrc ~/.dotfiles/xmonad/.config/xmobar/xmobarrc"
 alias rex="xrandr --output DP-1 --primary --right-of eDP-1 --auto"
 alias \?="noglob ?"
-
-GO(){
-    w3m "https://pkg.go.dev/search?q=$*"
-}
-
-RS(){
-    # keybindings for w3m
-    # https://cheatsheetfactory.geekyhacker.com/linux/w3m
-    w3m "https://doc.rust-lang.org/std/all.html?search=$*"
-}
-
-alias \?r="noglob RS"
-alias \?g="noglob GO"
+alias \?g="noglob ?g"
+alias \?r="noglob ?r"
+alias \?s="noglob ?s"
 
 
 # folders
@@ -37,3 +30,6 @@ alias .f="cd ~/.config/"
 
 # git
 alias gR="git reset"
+
+# tmux
+alias tms="tmux-sessionizer"

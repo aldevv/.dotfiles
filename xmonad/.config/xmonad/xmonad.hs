@@ -4,6 +4,7 @@ import XMonad.Actions.CycleWS
 import XMonad.Actions.SpawnOn
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers (isDialog)
 import XMonad.Hooks.StatusBar
@@ -32,7 +33,8 @@ myConfig =
       modMask = mod4Mask,
       terminal = "st",
       layoutHook = customLayout,
-      manageHook = myManageHook
+      manageHook = myManageHook,
+      logHook = myLogHook
     }
     `additionalKeys` myKeysGranular
     `additionalKeysP` myKeys
@@ -82,7 +84,7 @@ myKeys =
     -- , ("M-,",    prevWS)
   ]
 
-removeDefaultKeys = []
+removeDefaultKeys = ["M-S-p"]
 
 -- gaps [(U,18), (R,23)] $ toggleLayouts ...
 -- gaps [(U, 18), (D, 18), (R, 18), (L, 18)] $
@@ -115,19 +117,24 @@ customLayout =
 -- https://hackage.haskell.org/package/xmonad-contrib-0.17.0/docs/XMonad-Hooks-StatusBar-PP.html
 myXmobarPP :: PP
 myXmobarPP =
-  def
-    { ppSep = magenta " • ",
-      ppTitleSanitize = xmobarStrip,
-      ppCurrent = wrap " " "" . xmobarBorder "Top" "#8be9fd" 2,
-      ppHidden = white . wrap " " "",
-      ppHiddenNoWindows = lowWhite . wrap " " "",
-      ppUrgent = red . wrap (yellow "!") (yellow "!"),
-      -- we ignore the third argument because wins already shows cur window!
-      ppOrder = \[ws, l, _, wins] -> [ws, l, wins], -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
-      ppExtras = [logTitles formatFocused formatUnfocused] -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
-    }
+  filterOutWsPP
+    [scratchpadWorkspaceTag] -- > removes NSP from xmobar NSP cratchpad)
+    def
+      { ppSep = magenta " • ",
+        ppTitleSanitize = xmobarStrip,
+        ppCurrent = currentWs, -- > current workspace
+        ppHidden = white . wrap " " "", -- > hidden workspace
+        ppHiddenNoWindows = lowWhite . wrap " " "",
+        ppUrgent = red . wrap (yellow "!") (yellow "!"),
+        -- ppTitle = xmobarColor "magenta" "" . wrap (white "[") (white "]"),
+        ppTitle = formatFocused, -- > the format of the current window title
+        -- ppExtras = [logTitles formatFocused formatUnfocused], -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
+        ppOrder = \[ws, l, c, _] -> [ws, l, c] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
+        -- ppOrder = \[ws, l, _, wins] -> [ws, l, wins] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
+      }
   where
     -- myOrder [ws, l, _, wins] = [ws, l, wins]  here we could, but we used a lambda better
+    currentWs = wrap " " "" . xmobarBorder "Top" "#8be9fd" 2
     formatFocused = wrap (white "[") (white "]") . magenta . ppWindow
     formatUnfocused = wrap (lowWhite "[") (lowWhite "]") . blue . ppWindow
 
@@ -186,6 +193,12 @@ scratchpads =
         w = 0.9
         t = 0.95 - h
         l = 0.95 - w
+
+myLogHook :: X ()
+myLogHook = fadeInactiveLogHook fadeAmount
+  where
+    -- fadeAmount = 0.95
+    fadeAmount = 1 -- > sets opacity for unfocused windows
 
 -- ewmhFullscreen lets apps know about the window size
 main :: IO ()
