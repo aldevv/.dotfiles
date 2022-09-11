@@ -2,12 +2,12 @@ import System.Exit
 import XMonad
 import XMonad.Actions.CycleWS
 import XMonad.Actions.SpawnOn
-import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers (isDialog)
 import XMonad.Hooks.StatusBar
+import XMonad.Hooks.StatusBar.PP
 import XMonad.Layout.Gaps
 import XMonad.Layout.Magnifier (magnifiercz)
 import XMonad.Layout.NoBorders (noBorders)
@@ -19,6 +19,7 @@ import qualified XMonad.StackSet as W
 import XMonad.Util.EZConfig
 import XMonad.Util.Loggers
 import XMonad.Util.NamedScratchpad
+import XMonad.Util.Run (hPutStrLn, spawnPipe)
 
 -- check for ideas (good config)
 -- https://github.com/alternateved/nixos-config/blob/c480271a7c84f5ef6a7c91f7f88142540552cd9d/config/xmonad/xmonad.hs#L191
@@ -129,7 +130,8 @@ myXmobarPP =
         -- ppTitle = xmobarColor "magenta" "" . wrap (white "[") (white "]"),
         ppTitle = formatFocused, -- > the format of the current window title
         -- ppExtras = [logTitles formatFocused formatUnfocused], -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
-        ppOrder = \[ws, l, c, _] -> [ws, l, c] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
+        ppExtras = [winCount], -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
+        ppOrder = \[ws, l, c, ex] -> [ws, l, ex, c] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
         -- ppOrder = \[ws, l, _, wins] -> [ws, l, wins] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
       }
   where
@@ -137,6 +139,8 @@ myXmobarPP =
     currentWs = wrap " " "" . xmobarBorder "Top" "#8be9fd" 2
     formatFocused = wrap (white "[") (white "]") . magenta . ppWindow
     formatUnfocused = wrap (lowWhite "[") (lowWhite "]") . blue . ppWindow
+    winCount :: X (Maybe String)
+    winCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace . W.current . windowset
 
     -- Windows should have *some* title, which should not not exceed a
     -- sane length.
@@ -195,20 +199,27 @@ scratchpads =
         l = 0.95 - w
 
 myLogHook :: X ()
-myLogHook = fadeInactiveLogHook fadeAmount
+myLogHook =
+  fadeInactiveLogHook fadeAmount
   where
-    -- fadeAmount = 0.95
     fadeAmount = 1 -- > sets opacity for unfocused windows
 
 -- ewmhFullscreen lets apps know about the window size
 main :: IO ()
-main =
+main = do
   xmonad
     . ewmhFullscreen
     . ewmh
-    . withEasySB (statusBarProp "~/.cabal/bin/xmobar -x 1" (pure myXmobarPP)) toggleStrutsKey
+    . withEasySB (xmobar1 <> xmobar2) toggleStrutsKey
     . docks
     $ myConfig
   where
     toggleStrutsKey :: XConfig Layout -> (KeyMask, KeySym)
     toggleStrutsKey XConfig {modMask = m} = (m, xK_b)
+    xmobar1 = statusBarPropTo "_XMONAD_LOG_1" "xmobar -x 0 $HOME/.config/xmobar/xmobarrc1" (pure myXmobarPP)
+    xmobar2 = statusBarPropTo "_XMONAD_LOG_2" "xmobar -x 1 $HOME/.config/xmobar/xmobarrc2" (pure myXmobarPP)
+
+-- barSpawner :: ScreenId -> IO StatusBarConfig
+-- barSpawner 0 = pure $ xmobar1
+-- barSpawner 1 = pure $ xmobar2
+-- barSpawner _ = mempty -- nothing on the rest of the screens
