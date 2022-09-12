@@ -433,7 +433,7 @@ alias su="su -" # the - lets you have env variables in root
 
 # lol git systemd vscode npm
 #
-ex() {
+extract() {
 	if [ -f $1 ]; then
 		case $1 in
 		*.tar.bz2) tar xjf $1 ;;
