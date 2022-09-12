@@ -5,7 +5,7 @@ local nor_s = vim.tbl_extend("keep", nor, s)
 local map = vim.api.nvim_set_keymap
 
 M.load_mappings = function()
-    vim.cmd([[cnoreabbrev t Telescope]])
+    -- vim.cmd([[cnoreabbrev t Telescope]])
     -- telescope essential
     map(
         "n",
