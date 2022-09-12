@@ -4,8 +4,6 @@ k    repeat-search
 \ek  repeat-search-all
 K    reverse-search
 \eK  reverse-search-all
--    forw-search
-/    toggle-option
 ñ    quit
 I    toggle-option i
 h   left-scroll
