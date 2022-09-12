@@ -4,6 +4,7 @@
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
 alias irssi="irssi --home=~/.config/irssi --config=~/.config/irssi/config"
+alias lynx="lynx -cfg=~/.config/lynx/lynx.cfg -lss=~/.config/lynx/lynx.lss"
 
 alias srcz=". ~/.config/zsh/.zshrc"
 alias srca=". ~/.config/zsh/.aliases"
@@ -11,7 +12,7 @@ alias .s="nvim ~/.dotfiles/scripts/.local/share/scripts/"
 alias xin='xinput map-to-output $(xinput | grep -i "pen pen"| cut -d = -f 2 | cut -d [ -f 1) DP-1'
 alias r='ranger .'
 alias xmr="xmonad --recompile; xmonad --restart"
-alias .dxm="cp ~/.config/xmonad/xmonad.hs ~/.dotfiles/xmonad/.config/xmonad/xmonad.hs; cp ~/.config/xmobar/xmobarrc ~/.dotfiles/xmonad/.config/xmobar/xmobarrc"
+alias .dxm="cp ~/.config/xmonad/xmonad.hs ~/.dotfiles/xmonad/.config/xmonad/xmonad.hs; cp ~/.config/xmobar/xmobarrc1 ~/.dotfiles/xmonad/.config/xmobar/xmobarrc1; cp ~/.config/xmobar/xmobarrc2 ~/.dotfiles/xmonad/.config/xmobar/xmobarrc2"
 alias rex="xrandr --output DP-1 --primary --right-of eDP-1 --auto"
 alias \?="noglob ?"
 alias \?g="noglob ?g"
