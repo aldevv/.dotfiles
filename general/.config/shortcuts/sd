@@ -71,8 +71,13 @@ ro      /opt
 rmn     /mnt
 sc      ~/Pictures/screenshots
 vo      $VOLUMES
-pM      $PROJECTS/micro
-pm      $PROJECTS/main/
+
+P.       $PROGRAMS/
+
+p.p     $PROJECTS/
+p.r     $PROJECTS/rust/
+p.g     $PROJECTS/go/
+p.h     $PROJECTS/haskell/
 # temp shortcuts
 
 

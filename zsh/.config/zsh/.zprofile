@@ -25,15 +25,14 @@ export EXP="/opt/exploitdb/exploits"
 export WORD="/opt/wordlists"
 export BOOKS="$HOME/Documents/books"
 export PROJECTS="$HOME/projects"
-export MAIN="$PROJECTS/main"
-export MICRO="$PROJECTS/micro"
 export WORK="$HOME/work"
+export REPOS="$HOME/repos"
 export LEARN="$HOME/learn"
 export VOLUMES="$HOME/volumes"
 export PLAYGROUND="$HOME/playground"
 export REMOTES="$HOME/remotes"
 export BACKUPS="$HOME/.local/share/.backups"
-export PROGRAMS="$HOME/.local/programs"
+export PROGRAMS="$HOME/programs"
 export SUCKLESS="$PROGRAMS/suckless"
 export WIKI="$HOME/.local/share/wiki"
 export TRASH="$HOME/.local/share/trash/files"
@@ -45,6 +44,7 @@ export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 
 # path
 export PATH="/usr/local/bin:$HOME/.local/bin:$PATH"
+export CDPATH="$REPOS/:$PROJECTS/rust/commandline_book/:$PROJECTS/rust/the_rust_programming_book/"
 
 
 export SCRIPTS="$HOME/.local/share/scripts"
