@@ -1,6 +1,7 @@
 # w3m vim-like keymap file
 #   by @sansna
 
+
 ########## invalidate defaults ##########
 keymap K NULL
 keymap J NULL
@@ -155,7 +156,7 @@ keymap ZQ NULL
 ########## command ##########
 keymap :: COMMAND
 keymap :H HELP
-keymap :O OPTIONS
+keymap :o OPTIONS
 keymap :d DOWNLOAD_LIST
 
 ########## history navigation ##########
@@ -172,6 +173,7 @@ keymap C-y DOWN
 keymap gg BEGIN
 keymap G END
 keymap C-d NEXT_PAGE
+keymap SPC NEXT_PAGE
 keymap d NEXT_PAGE
 keymap C-u PREV_PAGE
 keymap u PREV_PAGE
@@ -247,3 +249,32 @@ keymap ZZ EXIT
 keymap C-Q EXIT
 keymap ZQ QUIT
 keymap q QUIT
+
+# The most important
+keymap m  MARK
+keymap .  NEXT_MARK
+keymap ,  PREV_MARK
+
+# Mark all search terms
+# this is only double quotes, no backslash
+keymap !   REG_MARK 
+
+# Mark URL-like strings as anchors
+keymap \"    MARK_URL
+
+# Mark current word as URL
+keymap ";"  MARK_WORD
+
+keymap M-:  MARK_MID
+
+# First link on page
+keymap [    LINK_BEGIN
+
+# Last link
+keymap ]    LINK_END
+
+# -------
+# macros
+# -------
+# Open search engine, proceed to and select the search box
+keymap M-/ COMMAND  "GOTO https://duckduckgo.com/lite/; NEXT_LINK; GOTO_LINK"

@@ -72,6 +72,7 @@ map("n", "<leader>ss", ":Ex<cr>", nor_s)
 
 -- t commands
 map("n", "ts", ":Ex<cr>", nor_s)
+map("n", "tt", ":tabedit<cr>", nor_s)
 
 -- for pasting (no replacing of the register when pasting in visual mode)
 map("x", "p", "pgvy", nor_s)
