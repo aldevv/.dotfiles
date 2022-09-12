@@ -1,4 +1,5 @@
 #!/bin/bash
+
 script="$(find ~/.local/share/scripts/utilities/ -type f -exec basename {} ';' | fzf)"
 test -n "$script" && \
-    nvim $(find "$UTILITIES" -name "$script" -type f)
+    nvim "$(find "$UTILITIES" -name "$script" -type f)"
