@@ -98,6 +98,7 @@ require("telescope").setup({
         vimgrep_arguments = {
             "rg",
             "-L",
+            "--hidden", --  remove this for live_grep
             "--color=never",
             "--no-heading",
             "--with-filename",
