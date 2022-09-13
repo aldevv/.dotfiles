@@ -93,16 +93,27 @@ export DISPLAY=:0
 #====
 #FZF
 #====
+exp_if_cmd(){
+    local cmd="$1"
+    shift
+    [ -n $(command -v "$cmd") ] \
+        && export "$*" && return 0
+    return 1
+}
 export FZF_CTRL_R_OPTS='--no-preview'
 export FZF_COMPLETION_TRIGGER='º'
+
 export RG_IGNORE_FILE="$XDG_CONFIG_HOME/rg/.ignore"
-export FD_IGNORE_FILE="$XDG_CONFIG_HOME/fd/.ignore"
 export RG_DEFAULT_FOR_FZF="rg --files --hidden --no-heading --smart-case --follow --ignore-file $RG_IGNORE_FILE  --"
-export FD_DEFAULT_FOR_FZF="fd --type f --follow -uuu --ignore-file $FD_IGNORE_FILE"
-export FZF_DEFAULT_COMMAND=$FD_DEFAULT_FOR_FZF
+
+export FD_IGNORE_FILE="$XDG_CONFIG_HOME/fd/.ignore"
+export FD_DEFAULT_FOR_FZF="fd --type f --follow --hidden --ignore-file $FD_IGNORE_FILE"
+
+exp_if_cmd "fd" FZF_DEFAULT_COMMAND=$FD_DEFAULT_FOR_FZF
+[ "$?" = 1 ] && exp_if_cmd "rg" FZF_DEFAULT_COMMAND=$RG_DEFAULT_FOR_FZF
 
 # export FZF_DEFAULT_OPTS='--bind=ctrl-e:up,ctrl-n:down'
-export FZF_DEFAULT_OPTS=" --height=75% --layout=reverse --multi --bind=ctrl-e:preview-up,ctrl-n:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept --preview='[[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file || (bat --style=numbers --color=always {} || cat {}) > /dev/null | head -200' --preview-window=50%:wrap"
+export FZF_DEFAULT_OPTS=" --ansi --height=75% --layout=reverse --multi --bind=ctrl-e:preview-up,ctrl-n:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept --preview='[[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file || (bat --style=numbers --color=always {} || cat {}) > /dev/null | head -200' --preview-window=50%:wrap"
 # to unhide preview window, change to --preview-window=right:hidden:wrap"
 # for prompt at the bottom, change layout to "default"
 
