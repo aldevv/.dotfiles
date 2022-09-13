@@ -18,7 +18,7 @@ if [[  $chosen_file == "create" ]]; then
     exit 0
 fi
 
-chosen_filepath=$(echo "$files" | grep $chosen_file 2>/dev/null)
+chosen_filepath=$(echo "$files" | grep "/${chosen_file}.org" 2>/dev/null)
 
 if [[  -n $chosen_filepath ]]; then
     if [[ $flag == '?' ]]; then

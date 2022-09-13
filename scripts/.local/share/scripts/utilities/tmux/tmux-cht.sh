@@ -9,6 +9,8 @@ read -p "Enter Query: " query
 if grep -qs "$selected" $UTILITIES/tmux/tmux-cht-languages; then
 	query=$(echo $query | tr ' ' '+')
 	tmux neww bash -c "echo \"curl cht.sh/$selected/$query/\" & curl cht.sh/$selected/$query & while [ : ]; do sleep 1; done"
+	tmux swap-window -t -1
 else
 	tmux neww bash -c "curl -s cht.sh/$selected~$query | less"
+	tmux swap-window -t -1
 fi
