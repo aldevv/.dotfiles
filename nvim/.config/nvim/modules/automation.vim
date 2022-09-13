@@ -15,7 +15,7 @@ endif
         let name = system('basename '.shellescape(path))
         " exec 'echo '.shellescape(name)
         silent exec '!cd ' . shellescape(path)
-        if name =~ "dwm-6.2"
+        if name =~ "dwm"
             echo name
             :exec '!changeWallpaperKeepBorders'
         else

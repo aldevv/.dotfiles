@@ -23,8 +23,8 @@
 .xm     ~/.config/xmonad/xmonad.hs
 .xmb    ~/.config/xmobar/xmobarrc
 .n      ~/.config/newsboat/urls
-.D      $SUCKLESS/dwm-6.2/config.h
-.S      $SUCKLESS/st-0.8.4/config.h
+.dwm    $SUCKLESS/dwm/config.h
+.st     $SUCKLESS/st/config.h
 .a      ~/.config/.aliases
 # old aliases
 .ao     ~/.config/zsh/.aliases
@@ -32,6 +32,6 @@
 .Z      /root/.config/zsh/.zshrc
 .pr     $FILES/projections/global/.projections.json
 .s      $HOME/.ssh/config
-.A      ~/Downloads/ansible/
-.At     ~/Downloads/ansible/tasks
-.AT     ~/Downloads/ansible/TODO
+.an      ~/.local/share/ansible/local.yml
+.ant     ~/.local/share/ansible/tasks
+.anT     ~/.local/share/ansible/TODO

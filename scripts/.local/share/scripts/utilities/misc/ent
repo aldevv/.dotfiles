@@ -2,4 +2,4 @@
 
 file="$1"
 shift
-entr $* <<< $file
+entr -c "$*" <<< "$file"

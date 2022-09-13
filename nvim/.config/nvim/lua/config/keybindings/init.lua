@@ -60,19 +60,27 @@ map("i", "?", "?<c-g>u", nor)
 map("", "<c-d>", "<c-d>zz", nor)
 map("", "<c-u>", "<c-u>zz", nor)
 
--- netrw
-map(
-    "n",
-    "<leader>sp",
-    ":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>",
-    nor_s
-)
-map("n", "<leader>sP", ":Lex<cr>", nor_s)
-map("n", "<leader>ss", ":Ex<cr>", nor_s)
+-- s commands
+map("n", "ss", "<cmd>Ex<cr>", nor_s)
+map("n", "st", "<cmd>Texplore<cr>", nor_s)
+map("n", "sn", "<cmd>call CreateFileEnter()<cr>", nor_s)
+map("n", "sN", "<cmd>call CreateFileTouch()<cr>", nor_s)
+map("n", "sD", "<cmd>call CreateDir()<cr>", nor_s)
+map("n", "sd", "<cmd>bd<cr>", nor_s)
+map("n", "si", "<Plug>(InsertSkeleton)", s)
+vim.cmd([[
+augroup netrw_mapping
+    autocmd!
+    autocmd filetype netrw call NetrwMapping()
+augroup END
 
--- t commands
-map("n", "ts", ":Ex<cr>", nor_s)
-map("n", "tt", ":tabedit<cr>", nor_s)
+function! NetrwMapping()
+    noremap <buffer> sd <cmd>bd<cr>
+endfunction
+]])
+-- 'cd' towards the directory in which the current file is edited
+-- but only change the path for the current window
+map("n", "sc", "<cmd>lcd %:h<cr>", nor_s)
 
 -- for pasting (no replacing of the register when pasting in visual mode)
 map("x", "p", "pgvy", nor_s)
@@ -101,9 +109,6 @@ map("", "<leader>cc", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", 
 map("n", "<leader>sñ", ":botright terminal<cr>", nor)
 map("n", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
 map("t", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
-
--- snippets
-map("n", "<leader>si", "<Plug>(InsertSkeleton)", s)
 
 -- terminal
 map("t", "<a-'>", "<c-\\><c-n>", nor_s)
@@ -148,13 +153,11 @@ map("", "zn", "zk", nor)
 map("", "zD", "zE", nor)
 
 -- tagbar
--- TODO: check if should delete tagbar
--- map("n", "<c-h>", ":TagbarToggle<cr>", nor_s)
 map("n", "<c-h>", ":LSoutlineToggle<cr>", nor_s)
 
 -- hop
-map("n", "s", ":HopChar1<cr>", nor_s)
-map("o", "S", ":HopChar1<cr>", nor_s)
+-- map("n", "s", ":HopChar1<cr>", nor_s)
+-- map("o", "S", ":HopChar1<cr>", nor_s)
 
 -- leader commands
 -- -----------------
@@ -185,6 +188,8 @@ require("config.keybindings.dap").load_mappings()
 map("n", "<leader>.vo", ":noautocmd w | luafile %<cr>", nor_s)
 map("n", "<leader>.vd", ":lua require('osv').launch({port=3333})<cr>", nor_s)
 map("n", "<leader>.vD", ":lua require('osv').run_this()<cr>", nor_s)
+map("n", "<leader>.sb", "ggO#!/bin/bash<escape>", nor_s)
+map("n", "<leader>.sB", "ggO#!/bin/bash<escape>", nor_s)
 
 require("config.keybindings.text-objs")
 

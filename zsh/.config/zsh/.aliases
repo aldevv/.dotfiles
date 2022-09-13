@@ -80,7 +80,7 @@ alias openports="sudo netstat -putln | grep LISTEN"
 alias gv="neovide"
 alias gV="NOCOC=true neovide"
 alias V="NOCOC='' nvim"
-alias f='file=$(fzf); [[ -n $file ]] && nvim $file'
+alias f='file=$(find . -type d -print | fzf --no-preview); [[ -n $file ]] && cd $file'
 alias uuid='uui=$(python -c "import uuid; print(uuid.uuid4())"); echo $uui | xsel -b; echo $uui '
 alias wireshark="sudo wireshark"
 alias vid="neovide"
@@ -1642,40 +1642,6 @@ vimR() {
 	vim scp://$1/$2
 }
 
-#==================
-# EXPRESS
-#==================
 
-alias initexpress="npx express-generator"
 
-#==================
-# CHEZMOI
-#==================
-
-alias chf="chezmoi cd"
-alias chd="chezmoi data"
-alias ch="chezmoi"
-alias cha="chezmoi add"
-alias che="chezmoi edit"
-alias chE="chezmoi execute-template"
-alias chat="chezmoi add --template"
-alias chaat="chezmoi add --autotemplate"
-# add the template attribute to a dotfile
-alias chch="chezmoi chattr +template"
-alias chA="chezmoi -v apply"
-alias chst="chezmoi status"
-alias chfr="chezmoi forget" # remove from repo
-alias chrm="chezmoi remove" # remove from repo and filesystem
-
-alias ans="ansible"
-alias ansi="ansible -i" # for inventory, can be an ip
-ansp() {
-    # a ping command
-    ansible $1 -m ping
-}
-
-anss() {
-    # a shell command
-    ansible $1 -m shell -a $2
-}
 alias fixkeys="/usr/local/bin/arcolinux-fix-pacman-databases-and-keys"
