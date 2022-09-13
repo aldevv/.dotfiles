@@ -71,13 +71,13 @@ ro      /opt
 rmn     /mnt
 sc      ~/Pictures/screenshots
 vo      $VOLUMES
-
-P.       $PROGRAMS/
-
-p.p     $PROJECTS/
+an.       ~/.local/share/ansible/
+P       $PROGRAMS/
+p       $PROJECTS/
 p.r     $PROJECTS/rust/
 p.g     $PROJECTS/go/
 p.h     $PROJECTS/haskell/
+tdg     work/tdg/
 # temp shortcuts
 
 

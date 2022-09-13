@@ -151,12 +151,13 @@ return require("packer").startup({
         --     ft = { "sh", "python", "c", "cpp", "js", "ts", "rs", "go" }, -- test for no filetype
         -- })
 
-        use({
-            "kyazdani42/nvim-tree.lua",
-            requires = { "kyazdani42/nvim-web-devicons", opt = true }, -- optional, for file icons
-            config = req("core.nvim-tree"),
-            cmd = { "NvimTreeToggle", "NvimTreeOpen" },
-        })
+        -- TODO: remove this
+        -- use({
+        --     "kyazdani42/nvim-tree.lua",
+        --     requires = { "kyazdani42/nvim-web-devicons", opt = true }, -- optional, for file icons
+        --     config = req("core.nvim-tree"),
+        --     cmd = { "NvimTreeToggle", "NvimTreeOpen" },
+        -- })
 
         use({
             "ThePrimeagen/harpoon",
@@ -165,14 +166,15 @@ return require("packer").startup({
             module = "harpoon",
         })
 
-        use({
-            "phaazon/hop.nvim",
-            branch = "v1", -- optional but strongly recommended
-            config = function()
-                require("hop").setup({ keys = "etovxqpdygfblzhckisuran" })
-            end,
-            cmd = { "HopChar1" },
-        })
+        -- TODO: delete this
+        -- use({
+        --     "phaazon/hop.nvim",
+        --     branch = "v1", -- optional but strongly recommended
+        --     config = function()
+        --         require("hop").setup({ keys = "etovxqpdygfblzhckisuran" })
+        --     end,
+        --     cmd = { "HopChar1" },
+        -- })
 
         use({
             "mfussenegger/nvim-dap",

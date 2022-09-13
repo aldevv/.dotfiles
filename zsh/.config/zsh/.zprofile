@@ -44,7 +44,7 @@ export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 
 # path
 export PATH="/usr/local/bin:$HOME/.local/bin:$PATH"
-export CDPATH="$REPOS/:$PROJECTS/rust/commandline_book/:$PROJECTS/rust/the_rust_programming_book/"
+export CDPATH="$REPOS:$REPOS/github.com/:$PROJECTS/rust/commandline_book/:$PROJECTS/rust/the_rust_programming_book/"
 
 
 export SCRIPTS="$HOME/.local/share/scripts"
