@@ -23,7 +23,9 @@ unsetopt complete_aliases
 
 if [[ -d "$HOME/.oh-my-zsh" ]];then
 	export ZSH="$HOME/.oh-my-zsh" ||
-	autoload -Uz compinit && compinit
+    if [[ -n "$(command -v compinit)" ]];then
+        autoload -Uz compinit && compinit
+    fi
 fi
 
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes

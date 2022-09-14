@@ -574,6 +574,8 @@ return require("packer").startup({
                 require("toggleterm").setup()
             end,
         })
+        -- this is for faster startup!
+        --https://github.com/lewis6991/impatient.nvim
     end,
     config = {
         display = {

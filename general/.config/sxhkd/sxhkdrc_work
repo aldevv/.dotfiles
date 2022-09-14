@@ -1,0 +1,14 @@
+alt + shift + space
+   st -e bash -c "exec zsh" 2>/dev/null
+    
+super + p
+    dmenu_run
+
+super + s
+	caja
+
+super + D
+	sqldeveloper
+
+super + d
+	slack
