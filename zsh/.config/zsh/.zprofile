@@ -23,11 +23,11 @@ export BROWSER=firefox
 export WALL="$HOME/Pictures/Wallpapers/all_time"
 export EXP="/opt/exploitdb/exploits"
 export WORD="/opt/wordlists"
-export BOOKS="$HOME/Documents/books"
 export PROJECTS="$HOME/projects"
 export WORK="$HOME/work"
 export REPOS="$HOME/repos"
 export LEARN="$HOME/learn"
+export BOOKS="$LEARN/books"
 export VOLUMES="$HOME/volumes"
 export PLAYGROUND="$HOME/playground"
 export REMOTES="$HOME/remotes"
@@ -103,11 +103,13 @@ exp_if_cmd(){
 export FZF_CTRL_R_OPTS='--no-preview'
 export FZF_COMPLETION_TRIGGER='º'
 
-export RG_IGNORE_FILE="$XDG_CONFIG_HOME/rg/.ignore"
-export RG_DEFAULT_FOR_FZF="rg --files --hidden --no-heading --smart-case --follow --ignore-file $RG_IGNORE_FILE  --"
+# export RG_IGNORE_FILE="$XDG_CONFIG_HOME/rg/.ignore"
+# export RG_DEFAULT_FOR_FZF="rg --files --hidden --no-heading --smart-case --follow --ignore-file $RG_IGNORE_FILE  --"
+export RG_DEFAULT_FOR_FZF="rg --files --hidden --no-heading --smart-case --follow --"
 
-export FD_IGNORE_FILE="$XDG_CONFIG_HOME/fd/.ignore"
-export FD_DEFAULT_FOR_FZF="fd --type f --follow --hidden --ignore-file $FD_IGNORE_FILE"
+# export FD_IGNORE_FILE="$XDG_CONFIG_HOME/fd/.ignore" it already looks for .ignore in $HOME
+# export FD_DEFAULT_FOR_FZF="fd --type f --follow --hidden --ignore-file $FD_IGNORE_FILE"
+export FD_DEFAULT_FOR_FZF="fd --type f --follow --hidden"
 
 exp_if_cmd "fd" FZF_DEFAULT_COMMAND=$FD_DEFAULT_FOR_FZF
 [ "$?" = 1 ] && exp_if_cmd "rg" FZF_DEFAULT_COMMAND=$RG_DEFAULT_FOR_FZF

@@ -1,7 +1,4 @@
 #!/bin/bash
-work="$HOME/galileo"
-[[ -d "$work" ]] && source "$work/.aliases"
-
 alias csvviewer="visidata"
 
 # projectionist
