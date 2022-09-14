@@ -18,19 +18,20 @@ config_file="$HOME/.cache/.bookpractice.json";
 
 names="$(jq -r 'keys | .[]' "$config_file")"
 name="$(dmenu <<< "$names")";
-
+[ -z "$name" ] && exit
 book="$(jq -r ".$name | .book " "$config_file" | envsubst)";
 project="$(jq -r ".$name | .project " "$config_file" | envsubst)";
 
-
 setsid zathura "$book" &
 if "$in_shell"; then
-    cd "$project" || exit
-    tmux -u -f ~/.config/tmux/tmux.conf new -A -s "$name" 
+    cd "$project" || exit;
+    tmux -u -f ~/.config/tmux/tmux.conf new -d -s "$name" 
+    tmux send-keys -t  "$name" "nvim ." Enter;
+    exec tmux attach-session -t "$name"
 else
     setsid "$TERMINAL" -e \
-        bash -c \
-        "cd $project &&
-        tmux -u -f ~/.config/tmux/tmux.conf new -A -s $name" &
-fi
-tmux -u -f ~/.config/tmux/tmux.conf send-keys -t  "$name" "nvim ." Enter;
+        bash -c "cd $project && 
+        tmux -u -f ~/.config/tmux/tmux.conf new -d -s $name
+        tmux send-keys -t  $name 'nvim .' Enter;
+        tmux attach-session -t $name"
+fi 
