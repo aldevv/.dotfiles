@@ -31,13 +31,9 @@ unsetopt complete_aliases
 
 if [[ -d "$HOME/.oh-my-zsh" ]];then
 	export ZSH="$HOME/.oh-my-zsh" ||
-<<<<<<< HEAD
-	# autoload -Uz compinit && compinit
-=======
     if [[ -n "$(command -v compinit)" ]];then
         autoload -Uz compinit && compinit
     fi
->>>>>>> @{-1}
 fi
 
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
@@ -282,7 +278,7 @@ CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
 
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-[ -n $(command -v pyenv) ] && eval "$(pyenv init -)"
+# command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+# [ -n $(command -v pyenv) ] && eval "$(pyenv init -)"
 
 [ -f ~/.config/.auto_aliases ] &&. $ZDOTDIR/.auto_aliases
