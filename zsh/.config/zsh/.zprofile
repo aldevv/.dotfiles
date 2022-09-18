@@ -12,12 +12,17 @@ export READER=zathura
 # export MANPAGER="less"
 # export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 # export MANPAGER="nvim -c ' set ft=man' -"
-export TERMINAL=st
-export TERM=st
+
+# export TERMINAL=st
+# export TERM=st
+
 export DEFAULT_DMENU_FONT="Cascadia:style=Italic"
+
 export COLORTERM=truecolor
+
 export BAT_PAGER='less -R'
 export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat/config"
+
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/rg/.ripgreprc"
 export BROWSER=firefox
 export WALL="$HOME/Pictures/Wallpapers/all_time"

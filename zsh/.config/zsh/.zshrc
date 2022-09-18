@@ -235,7 +235,6 @@ _fzf_compgen_dir() {
 bindkey "^ " autosuggest-execute
 # bindkey "^" autosuggest-toggle
 #TODO find alternative to lesskey (deprecated)
-lesskey $HOME/.config/colemak-less
 # aliases
 # shellcheck source=/dev/null
  [ -f "$ZDOTDIR/.aliases" ] && . "$ZDOTDIR/.aliases"
@@ -264,4 +263,10 @@ CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
 
-export PATH="$HOME/.local/bin/:$PATH"
+. $HOME/.config/zsh/.zprofile
+
+[[ -d "$SHARED" ]] && export PATH="$(find $SHARED -type d | tr '\n' ':')$PATH"
+[[ -d "$APPS" ]] && export PATH="$(find $APPS -type d | tr '\n' ':')$PATH"
+[[ -d "$AUTOMATION" ]] && export PATH="$(find $AUTOMATION -type d | tr '\n' ':')$PATH"
+[[ -d "$UTILITIES" ]] && export PATH="$(find $UTILITIES -type d | tr '\n' ':')$PATH"
+[[ -d "$HOME/.local/bin" ]] && export PATH="$(find $HOME/.local/bin -type d | tr '\n' ':')$PATH"
