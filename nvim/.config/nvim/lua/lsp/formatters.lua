@@ -35,9 +35,9 @@ null_ls.setup({
         formatting.shfmt.with({
             extra_filetypes = { "zsh", "bash" },
         }),
-        -- formatting.clang_format,
         -- formatting.uncrustify,
-        formatting.gofmt,
+        -- formatting.gofmt,
+        formatting.clang_format,
         -- formatting.json_tool, jsonls already has one
         -- formatting.prettier,
         diagnostics.vint, --> for vim

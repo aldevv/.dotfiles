@@ -40,7 +40,9 @@ local h = "~/.config/nvim"
 -- map("", "gn", "gj", nor)
 -- map("", "gk", "gn", nor)
 -- map("", "gE", "gJ", nor) -- lines
-map("", "E", "mzJ`z", nor) -- lines
+map("", "N", "mzJ`z", nor) -- lines
+map("n", "E", "i<cr><esc>k$", nor) -- lines
+map("v", "E", ":s/\\n/ /g<cr>$x", nor) -- lines
 
 -- map("n", "!!", ":.!", nor)
 -- map("n", "!.", ".!bash", nor)
@@ -58,15 +60,27 @@ map("i", "?", "?<c-g>u", nor)
 map("", "<c-d>", "<c-d>zz", nor)
 map("", "<c-u>", "<c-u>zz", nor)
 
--- netrw
-map(
-    "n",
-    "<leader>sp",
-    ":if &ft != 'netrw' && !exists('g:netrw_buffer') | :execute ':Lex ' . expand(\"%:p:h\") | let g:netrw_buffer=bufnr('%') | else | :Lex | unlet g:netrw_buffer | endif<cr>",
-    nor_s
-)
-map("n", "<leader>sP", ":Lex<cr>", nor_s)
-map("n", "<leader>ss", ":Ex<cr>", nor_s)
+-- s commands
+map("n", "ss", "<cmd>Ex<cr>", nor_s)
+map("n", "st", "<cmd>Texplore<cr>", nor_s)
+map("n", "sn", "<cmd>call CreateFileEnter()<cr>", nor_s)
+map("n", "sN", "<cmd>call CreateFileTouch()<cr>", nor_s)
+map("n", "sD", "<cmd>call CreateDir()<cr>", nor_s)
+map("n", "sd", "<cmd>bd<cr>", nor_s)
+map("n", "si", "<Plug>(InsertSkeleton)", s)
+vim.cmd([[
+augroup netrw_mapping
+    autocmd!
+    autocmd filetype netrw call NetrwMapping()
+augroup END
+
+function! NetrwMapping()
+    noremap <buffer> sd <cmd>bd<cr>
+endfunction
+]])
+-- 'cd' towards the directory in which the current file is edited
+-- but only change the path for the current window
+map("n", "sc", "<cmd>lcd %:h<cr>", nor_s)
 
 -- for pasting (no replacing of the register when pasting in visual mode)
 map("x", "p", "pgvy", nor_s)
@@ -89,13 +103,12 @@ map("n", "<a-down>", ":m .+1<cr>==", nor)
 -- map("n", "<a-n>", ":m .+1<cr>==", nor)
 
 map("i", "<c-y>", "copilot#Accept('<CR>')", vim.tbl_extend("keep", s_e, { script = true }))
-map("", "<leader>cc", ":lua require('utils.lua.keybindings').toggle_copilot()<cr>", nor)
+map("", "<leader>cc", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
 
 -- terminal
 map("n", "<leader>sñ", ":botright terminal<cr>", nor)
-
--- snippets
-map("n", "<leader>si", "<Plug>(InsertSkeleton)", s)
+map("n", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
+map("t", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
 
 -- terminal
 map("t", "<a-'>", "<c-\\><c-n>", nor_s)
@@ -110,6 +123,7 @@ map("n", "<localleader>Vp", ":e " .. h .. "/lua/plugins.lua<cr>", nor_s)
 map("n", "<localleader>Va", ":e " .. h .. "/lua/config/automation/init.lua<cr>", nor_s)
 map("n", "<localleader>Vk", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
 map("n", "<localleader>Vl", ":e " .. h .. "/lua/lsp/lsp.lua<cr>", nor_s)
+map("n", "<localleader>Vf", ":e " .. h .. "/lua/lsp/formatters.lua<cr>", nor_s)
 map("n", "<localleader>Vd", ":e " .. h .. "/lua/lsp/dap/dap.lua<cr>", nor_s)
 map("n", "<localleader>VP", ":e " .. h .. "/modules/plugins.vim<cr>", nor_s)
 
@@ -139,11 +153,11 @@ map("", "zn", "zk", nor)
 map("", "zD", "zE", nor)
 
 -- tagbar
-map("n", "<c-h>", ":TagbarToggle<cr>", nor_s)
+map("n", "<c-h>", ":LSoutlineToggle<cr>", nor_s)
 
 -- hop
-map("n", "s", ":HopChar1<cr>", nor_s)
-map("o", "S", ":HopChar1<cr>", nor_s)
+-- map("n", "s", ":HopChar1<cr>", nor_s)
+-- map("o", "S", ":HopChar1<cr>", nor_s)
 
 -- leader commands
 -- -----------------
@@ -174,6 +188,8 @@ require("config.keybindings.dap").load_mappings()
 map("n", "<leader>.vo", ":noautocmd w | luafile %<cr>", nor_s)
 map("n", "<leader>.vd", ":lua require('osv').launch({port=3333})<cr>", nor_s)
 map("n", "<leader>.vD", ":lua require('osv').run_this()<cr>", nor_s)
+map("n", "<leader>.sb", "ggO#!/bin/bash<escape>", nor_s)
+map("n", "<leader>.sB", "ggO#!/bin/bash<escape>", nor_s)
 
 require("config.keybindings.text-objs")
 
@@ -290,3 +306,12 @@ map("n", "<leader>,pu", ":PackerUpdate<cr>", nor)
 map("n", "<leader>,pc", ":PackerCompile<cr>", nor)
 
 require("config.keybindings.refactoring")
+require("config.keybindings.lspsaga").load_mappings()
+require("config.keybindings.overseer").load_mappings()
+
+map("n", "<leader><leader>g", "<cmd>MindOpenMain<cr>", nor)
+map("n", "<leader><leader>p", "<cmd>MindOpenProject global<cr>", nor)
+map("n", "<leader><leader>P", "<cmd>MindOpenProject<cr>", nor)
+
+map("n", "<leader>sl", "<cmd>IndentBlanklineToggle<cr>", nor)
+-- map("n", "<leader>g", "<cmd>MindOpenProject")

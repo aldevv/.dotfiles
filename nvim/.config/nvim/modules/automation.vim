@@ -15,7 +15,7 @@ endif
         let name = system('basename '.shellescape(path))
         " exec 'echo '.shellescape(name)
         silent exec '!cd ' . shellescape(path)
-        if name =~ "dwm-6.2"
+        if name =~ "dwm"
             echo name
             :exec '!changeWallpaperKeepBorders'
         else
@@ -35,7 +35,7 @@ endif
     autocmd BufWritePost *sxhkdrc :!killall -s SIGUSR1 sxhkd
 
 " auto shortcuts
-    autocmd BufWritePost,TextChanged sf,sd !$AUTOMATION/shortcut_maker_better
+    autocmd BufWritePost,TextChanged sf,sd !$AUTOMATION/shortcuts
 
 " functions
 function Autosaving()

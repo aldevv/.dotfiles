@@ -1,3 +1,11 @@
+. $HOME/.config/zsh/.zprofile
+
+[[ -d "$SHARED" ]] && export PATH="$(find $SHARED -type d | tr '\n' ':')$PATH"
+[[ -d "$APPS" ]] && export PATH="$(find $APPS -type d | tr '\n' ':')$PATH"
+[[ -d "$AUTOMATION" ]] && export PATH="$(find $AUTOMATION -type d | tr '\n' ':')$PATH"
+[[ -d "$UTILITIES" ]] && export PATH="$(find $UTILITIES -type d | tr '\n' ':')$PATH"
+[[ -d "$HOME/.local/bin" ]] && export PATH="$(find $HOME/.local/bin -type d | tr '\n' ':')$PATH"
+
 #==============
 # setopt KSH_GLOB
 #==============
@@ -23,7 +31,13 @@ unsetopt complete_aliases
 
 if [[ -d "$HOME/.oh-my-zsh" ]];then
 	export ZSH="$HOME/.oh-my-zsh" ||
+<<<<<<< HEAD
 	# autoload -Uz compinit && compinit
+=======
+    if [[ -n "$(command -v compinit)" ]];then
+        autoload -Uz compinit && compinit
+    fi
+>>>>>>> @{-1}
 fi
 
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
@@ -84,6 +98,7 @@ export HISTSIZE=25000
 export HISTFILE="$HOME/.cache/zsh/.zsh_history"
 # plugins=(copybuffer dirhistory jsontools)
 plugins=(
+	git
 	docker
 	docker-compose
     zsh-autosuggestions
@@ -140,6 +155,7 @@ bindkey -M menuselect 'e' vi-up-line-or-history
 bindkey -M menuselect 'i' vi-forward-char
 bindkey -M menuselect 'n' vi-down-line-or-history
 bindkey -v '^?' backward-delete-char
+bindkey '^[.' insert-last-word
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
@@ -190,8 +206,8 @@ bindkey -s 'p' 'vf ^M'
 bindkey -s 'P' '. cf ^M'
 bindkey -s 'a' 'vf $HOME/.config ^M'
 bindkey -s 'A' '. cf $HOME/.config ^M'
-bindkey -s 'z' 'vf  "$LEARN"^M'
-bindkey -s 'z' '. cf  "$LEARN"^M'
+# bindkey -s 'z' 'vf  "$LEARN"^M'
+# bindkey -s 'z' '. cf  "$LEARN"^M'
 bindkey -s 'm' 'vf  "$SCRIPTS"^M'
 bindkey -s 'M' '. cf  "$SCRIPTS"^M'
 bindkey -s 'o' '!\$^M'
@@ -236,12 +252,15 @@ bindkey "^ " autosuggest-execute
 # bindkey "^" autosuggest-toggle
 #TODO find alternative to lesskey (deprecated)
 # aliases
+
+# old aliases
 # shellcheck source=/dev/null
  [ -f "$ZDOTDIR/.aliases" ] && . "$ZDOTDIR/.aliases"
 # shellcheck source=/dev/null
 [ -f "$ZDOTDIR/.auto_aliases" ] && . "$ZDOTDIR/.auto_aliases"
+# new aliases
 # shellcheck source=/dev/null
- [ -f ~/.aliases ] && . ~/.aliases
+ [ -f ~/.config/.aliases ] && . ~/.config/.aliases
 
 # install https://github.com/relastle/pmy
 # config
@@ -263,10 +282,7 @@ CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
 
-. $HOME/.config/zsh/.zprofile
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+[ -n $(command -v pyenv) ] && eval "$(pyenv init -)"
 
-[[ -d "$SHARED" ]] && export PATH="$(find $SHARED -type d | tr '\n' ':')$PATH"
-[[ -d "$APPS" ]] && export PATH="$(find $APPS -type d | tr '\n' ':')$PATH"
-[[ -d "$AUTOMATION" ]] && export PATH="$(find $AUTOMATION -type d | tr '\n' ':')$PATH"
-[[ -d "$UTILITIES" ]] && export PATH="$(find $UTILITIES -type d | tr '\n' ':')$PATH"
-[[ -d "$HOME/.local/bin" ]] && export PATH="$(find $HOME/.local/bin -type d | tr '\n' ':')$PATH"
+[ -f ~/.config/.auto_aliases ] &&. $ZDOTDIR/.auto_aliases

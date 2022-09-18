@@ -1,39 +1,41 @@
 import System.Exit
 import XMonad
 import XMonad.Actions.CycleWS
-import XMonad.Hooks.DynamicLog
+import XMonad.Actions.SpawnOn
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.FadeInactive
+import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers (isDialog)
 import XMonad.Hooks.StatusBar
+import XMonad.Hooks.StatusBar.PP
+import XMonad.Layout.Gaps
 import XMonad.Layout.Magnifier (magnifiercz)
 import XMonad.Layout.NoBorders (noBorders)
+import XMonad.Layout.Renamed
+import XMonad.Layout.Spacing
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.ToggleLayouts (ToggleLayout (..), toggleLayouts)
 import qualified XMonad.StackSet as W
 import XMonad.Util.EZConfig
 import XMonad.Util.Loggers
 import XMonad.Util.NamedScratchpad
+import XMonad.Util.Run (hPutStrLn, spawnPipe)
+
+-- check for ideas (good config)
+-- https://github.com/alternateved/nixos-config/blob/c480271a7c84f5ef6a7c91f7f88142540552cd9d/config/xmonad/xmonad.hs#L191
+-- DT
+-- https://gitlab.com/dwt1/dotfiles/-/blob/master/.config/xmonad/xmonad.hs
 
 -- dollar sign --> https://stackoverflow.com/questions/940382/what-is-the-difference-between-dot-and-dollar-sign
 
--- ewmhFullscreen lets apps know about the window size
-main :: IO ()
-main =
-  xmonad
-    . ewmhFullscreen
-    . ewmh
-    . withEasySB (statusBarProp "xmobar" (pure myXmobarPP)) toggleStrutsKey
-    $ myConfig
-  where
-    toggleStrutsKey :: XConfig Layout -> (KeyMask, KeySym)
-    toggleStrutsKey XConfig {modMask = m} = (m, xK_b)
-
 myConfig =
   def
-    { modMask = mod4Mask,
+    { workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+      modMask = mod4Mask,
       terminal = "st",
       layoutHook = customLayout,
-      manageHook = myManageHook
+      manageHook = myManageHook,
+      logHook = myLogHook
     }
     `additionalKeys` myKeysGranular
     `additionalKeysP` myKeys
@@ -53,8 +55,10 @@ myKeys =
     ("M-r", spawn "st -e ranger"),
     ("M-q", kill),
     ("M-f", sendMessage (Toggle "Full")),
+    ("M-t", toggleWindowSpacingEnabled >> toggleScreenSpacingEnabled),
     ("M-l", sendMessage NextLayout),
     ("M-S-t", withFocused $ windows . W.sink), -- retile window
+    ("M-b", sendMessage ToggleStruts), -- retile window
     -- Quit xmonad
     ("M-S-q", io exitSuccess),
     -- ("M-c", spawn "~/.local/bin/xmonad --recompile; ~/.local/bin/xmonad --restart"),
@@ -81,38 +85,67 @@ myKeys =
     -- , ("M-,",    prevWS)
   ]
 
-removeDefaultKeys = ["M-t", "M-<Space>"]
+removeDefaultKeys = ["M-S-p"]
 
-customLayout = toggleLayouts (noBorders Full) (tiled ||| Mirror tiled ||| threeCol)
+-- gaps [(U,18), (R,23)] $ toggleLayouts ...
+-- gaps [(U, 18), (D, 18), (R, 18), (L, 18)] $
+-- spacingRaw True (Border 0 10 10 10) True (Border 10 10 10 10) True
+
+-- https://hackage.haskell.org/package/xmonad-contrib-0.17.0/docs/XMonad-Layout-Spacing.html
+mySpacing i = spacingRaw True (Border i i i i) True (Border i i i i) True
+
+-- first True is smartBorder, no spaces when only one window
+-- define a screen border
+-- True for activate that border
+-- define a window border
+-- True for activate that window border
+
+customLayout =
+  avoidStruts $
+    toggleMonocle $
+      tiled
+        ||| Mirror tiled
+        ||| threeCol
   where
-    threeCol = magnifiercz 1.3 (ThreeColMid nmaster delta ratio)
-    tiled = Tall nmaster delta ratio
+    threeCol = renamed [Replace "3"] $ mySpacing 10 $ magnifiercz 1.3 (ThreeColMid nmaster delta ratio)
+    tiled = renamed [Replace "T"] $ mySpacing 10 $ Tall nmaster delta ratio
+    toggleMonocle = toggleLayouts $ noBorders Full
     nmaster = 1 -- Default number of windows in the master pane
     ratio = 1 / 2 -- Default proportion of screen occupied by master pane
     delta = 3 / 100 -- Percent of screen to increment by when resizing panes
 
+-- PP docs pretty print
+-- https://hackage.haskell.org/package/xmonad-contrib-0.17.0/docs/XMonad-Hooks-StatusBar-PP.html
 myXmobarPP :: PP
 myXmobarPP =
-  def
-    { ppSep = magenta " • ",
-      ppTitleSanitize = xmobarStrip,
-      ppCurrent = wrap " " "" . xmobarBorder "Top" "#8be9fd" 2,
-      ppHidden = white . wrap " " "",
-      ppHiddenNoWindows = lowWhite . wrap " " "",
-      ppUrgent = red . wrap (yellow "!") (yellow "!"),
-      -- we ignore the third argument because wins already shows cur window!
-      ppOrder = \[ws, l, _, wins] -> [ws, l, wins], -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
-      ppExtras = [logTitles formatFocused formatUnfocused] -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
-    }
+  filterOutWsPP
+    [scratchpadWorkspaceTag] -- > removes NSP from xmobar NSP cratchpad)
+    def
+      { ppSep = magenta " • ",
+        ppTitleSanitize = xmobarStrip,
+        ppCurrent = currentWs, -- > current workspace
+        ppHidden = white . wrap " " "", -- > hidden workspace
+        ppHiddenNoWindows = lowWhite . wrap " " "",
+        ppUrgent = red . wrap (yellow "!") (yellow "!"),
+        -- ppTitle = xmobarColor "magenta" "" . wrap (white "[") (white "]"),
+        ppTitle = formatFocused, -- > the format of the current window title
+        -- ppExtras = [logTitles formatFocused formatUnfocused], -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
+        ppExtras = [winCount], -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
+        ppOrder = \[ws, l, c, ex] -> [ws, l, ex, c] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
+        -- ppOrder = \[ws, l, _, wins] -> [ws, l, wins] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
+      }
   where
     -- myOrder [ws, l, _, wins] = [ws, l, wins]  here we could, but we used a lambda better
+    currentWs = wrap " " "" . xmobarBorder "Top" "#8be9fd" 2
     formatFocused = wrap (white "[") (white "]") . magenta . ppWindow
     formatUnfocused = wrap (lowWhite "[") (lowWhite "]") . blue . ppWindow
+    winCount :: X (Maybe String)
+    winCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace . W.current . windowset
 
     -- Windows should have *some* title, which should not not exceed a
     -- sane length.
     ppWindow :: String -> String
-    ppWindow = xmobarRaw . (\w -> if null w then "untitled" else w) . shorten 30
+    ppWindow = xmobarRaw . (\w -> if null w then "untitled" else w) . shorten 80
 
     blue, lowWhite, magenta, red, white, yellow :: String -> String
     magenta = xmobarColor "#ff79c6" ""
@@ -128,10 +161,17 @@ myManageHook =
   composeAll
     [ className =? "Gimp" --> doFloat,
       className =? "copyq" --> doFloat,
-      className =? "zoom " --> doFloat,
+      className =? "Slack" --> doShift "6",
+      className =? "Workspacesclient" --> doShift "3",
+      className =? "Zoom" --> doShift "7",
+      -- className =? "zoom " --> doFloat,
+      className =? "SimpleScreenRecorder" --> doFloat,
       isDialog --> doFloat
     ]
+    <+> manageSpawn
     <+> namedScratchpadManageHook scratchpads
+    <+> manageDocks
+    <+> manageHook def
 
 -- <+> mappend (monoid)
 
@@ -157,3 +197,29 @@ scratchpads =
         w = 0.9
         t = 0.95 - h
         l = 0.95 - w
+
+myLogHook :: X ()
+myLogHook =
+  fadeInactiveLogHook fadeAmount
+  where
+    fadeAmount = 1 -- > sets opacity for unfocused windows
+
+-- ewmhFullscreen lets apps know about the window size
+main :: IO ()
+main = do
+  xmonad
+    . ewmhFullscreen
+    . ewmh
+    . withEasySB (xmobar1 <> xmobar2) toggleStrutsKey
+    . docks
+    $ myConfig
+  where
+    toggleStrutsKey :: XConfig Layout -> (KeyMask, KeySym)
+    toggleStrutsKey XConfig {modMask = m} = (m, xK_b)
+    xmobar1 = statusBarPropTo "_XMONAD_LOG_1" "xmobar -x 0 $HOME/.config/xmobar/xmobarrc1" (pure myXmobarPP)
+    xmobar2 = statusBarPropTo "_XMONAD_LOG_2" "xmobar -x 1 $HOME/.config/xmobar/xmobarrc2" (pure myXmobarPP)
+
+-- barSpawner :: ScreenId -> IO StatusBarConfig
+-- barSpawner 0 = pure $ xmobar1
+-- barSpawner 1 = pure $ xmobar2
+-- barSpawner _ = mempty -- nothing on the rest of the screens

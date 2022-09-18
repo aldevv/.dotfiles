@@ -17,11 +17,10 @@ local my_py_adapter = require("lsp.dap.languages.python").adapter()
 local my_py_config = require("lsp.dap.languages.python").config()
 
 -- require("dap-python").setup("~/.pyenv/versions/3.6.14/bin/python")
-require("dap-python").setup("~/.local/bin/python")
+require("dap-python").setup()
 table.insert(dap.configurations.python, unpack(my_py_config))
 require("dap-python").test_runner = "pytest"
 require("dap-go").setup()
-require("rust-tools").setup({})
 require("dap.ext.vscode").load_launchjs()
 
 -- open dapui automatically

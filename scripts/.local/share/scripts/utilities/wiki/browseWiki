@@ -14,11 +14,11 @@ fi
 # chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | dmenu -n)
 
 if [[  $chosen_file == "create" ]]; then
-    nvim $WIKI/notes/
+    st -e nvim $WIKI/notes/
     exit 0
 fi
 
-chosen_filepath=$(echo "$files" | grep $chosen_file 2>/dev/null)
+chosen_filepath=$(echo "$files" | grep "/${chosen_file}.org" 2>/dev/null)
 
 if [[  -n $chosen_filepath ]]; then
     if [[ $flag == '?' ]]; then

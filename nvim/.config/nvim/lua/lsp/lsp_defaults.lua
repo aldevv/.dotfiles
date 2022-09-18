@@ -43,23 +43,6 @@ for k, v in pairs(lsp_handlers) do
     handlers[k] = v
 end
 
--- ============
--- DIAGNOSTICS
--- ============
-local diagnostic_handlers = {
-    ["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
-        underline = true,
-        virtual_text = {
-            spacing = 2,
-        },
-        signs = true,
-        update_in_insert = true,
-    }),
-}
-for k, v in pairs(diagnostic_handlers) do
-    handlers[k] = v
-end
-
 -- =====
 -- LSP
 -- =====
@@ -71,14 +54,9 @@ capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 ------------------------------
-
 local on_attach = function(client, bufnr)
-    -- these are callbacks that run after the server has loaded
     require("config.keybindings.lsp").load_mappings()
     require("config.automation.lsp").diagnostics_in_loclist()
-
-    -- this disables the lsp's formatting functions
-    -- is so null-ls can take charge of formatting
     client.server_capabilities.document_formatting = false
     client.server_capabilities.document_range_formatting = false
 end

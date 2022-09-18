@@ -30,33 +30,3 @@ if !executable('pip3') && !IS_MINE
 endif
 
 
-if !filereadable($HOME . '/.local/bin/black') && executable('pip3') && $USER != 'root'
-    :!pip3 install black
-endif
-
-if !executable('prettier') && $USER != 'root'
-  if executable('yarn')
-    if isdirectory($HOME . '/.config/nvm/')
-      :!yarn global add prettier
-    else
-      :!sudo yarn global add prettier
-    endif
-  else
-    if executable('npm')
-      if isdirectory($HOME . '/.config/nvm/')
-        :!npm install -g prettier
-      else
-        :!sudo npm install -g prettier
-      endif
-    endif
-  endif
-endif
-
-if !filereadable($HOME . '/.local/bin/clang-format') && executable('pip3') && $USER != 'root'
-    :!pip3 install clang-format
-endif
-
-" if !executable('uncrustify')
-"     :!sudo eopkg install uncrustify
-" endif
-

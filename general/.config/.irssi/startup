@@ -1,0 +1,4 @@
+SCRIPT LOAD vim-mode/vim_mode.pl
+statusbar window add vim_mode
+statusbar window add vim_windows
+set autolog on

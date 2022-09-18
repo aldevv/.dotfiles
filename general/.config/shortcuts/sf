@@ -1,0 +1,37 @@
+#fi not allowed
+.sf     ~/.config/shortcuts/sf
+.sd     ~/.config/shortcuts/sd
+.z      ~/.config/zsh/.zshrc
+.zp     ~/.config/zsh/.zprofile
+.p      ~/.config/picom/picom.conf
+.r      ~/.config/ranger/rc.conf
+.b      ~/.bashrc
+.xr     ~/.Xresources
+.x      ~/.xprofile
+.t      ~/.config/tmux/tmux.conf
+.V      ~/.config/nvim/init.lua
+.V.      ~/.config/nvim/init.lua
+.Va     ~/.config/nvim/lua/config/automation/init.lua
+.Vs     ~/.config/nvim/lua/config/settings.lua
+.Vk     ~/.config/nvim/lua/config/keybindings/init.lua
+.VK     ~/.config/nvim/lua/config/keybindings/dap.lua
+.Vl     ~/.config/nvim/lua/lsp/init.lua
+.VC     ~/.config/nvim/lua/config/init.lua
+.Vc     ~/.config/nvim/lua/core/init.lua
+.Vp     ~/.config/nvim/lua/plugins.lua
+.X      ~/.config/sxhkd/sxhkdrc
+.xm     ~/.config/xmonad/xmonad.hs
+.xmb    ~/.config/xmobar/xmobarrc
+.n      ~/.config/newsboat/urls
+.dwm    $SUCKLESS/dwm/config.h
+.st     $SUCKLESS/st/config.h
+.a      ~/.config/.aliases
+# old aliases
+.ao     ~/.config/zsh/.aliases
+.K      $SCRIPTS/apps/qmk/lily58/keymap.c
+.Z      /root/.config/zsh/.zshrc
+.pr     $FILES/projections/global/.projections.json
+.s      $HOME/.ssh/config
+.an      ~/.local/share/ansible/local.yml
+.ant     ~/.local/share/ansible/tasks
+.anT     ~/.local/share/ansible/TODO

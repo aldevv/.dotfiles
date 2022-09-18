@@ -28,20 +28,16 @@ export BROWSER=firefox
 export WALL="$HOME/Pictures/Wallpapers/all_time"
 export EXP="/opt/exploitdb/exploits"
 export WORD="/opt/wordlists"
-export BOOKS="$HOME/Documents/Books"
-export MASTER="$HOME/master"
-export PROJECTS="$MASTER/projects"
-export MAIN="$PROJECTS/main"
-export MICRO="$PROJECTS/micro"
-export WORK="$MASTER/work"
-export CLASS="$MASTER/classes"
-export LEARN="$MASTER/learn"
-export VOLUMES="$MASTER/volumes"
-export GAMES="$MASTER/games"
-export PLAYGROUND="$MASTER/playground"
-export REMOTES="$MASTER/remotes"
+export PROJECTS="$HOME/projects"
+export WORK="$HOME/work"
+export REPOS="$HOME/repos"
+export LEARN="$HOME/learn"
+export BOOKS="$LEARN/books"
+export VOLUMES="$HOME/volumes"
+export PLAYGROUND="$HOME/playground"
+export REMOTES="$HOME/remotes"
 export BACKUPS="$HOME/.local/share/.backups"
-export PROGRAMS="$HOME/.local/programs"
+export PROGRAMS="$HOME/programs"
 export SUCKLESS="$PROGRAMS/suckless"
 export WIKI="$HOME/.local/share/wiki"
 export TRASH="$HOME/.local/share/trash/files"
@@ -53,6 +49,7 @@ export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 
 # path
 export PATH="/usr/local/bin:$HOME/.local/bin:$PATH"
+export CDPATH="$REPOS:$REPOS/github.com/:$PROJECTS/rust/commandline_book/:$PROJECTS/rust/the_rust_programming_book/"
 
 
 export SCRIPTS="$HOME/.local/share/scripts"
@@ -101,16 +98,29 @@ export DISPLAY=:0
 #====
 #FZF
 #====
+exp_if_cmd(){
+    local cmd="$1"
+    shift
+    [ -n $(command -v "$cmd") ] \
+        && export "$*" && return 0
+    return 1
+}
 export FZF_CTRL_R_OPTS='--no-preview'
 export FZF_COMPLETION_TRIGGER='º'
-export RG_IGNORE_FILE="$XDG_CONFIG_HOME/rg/.ignore"
-export FD_IGNORE_FILE="$XDG_CONFIG_HOME/fd/.ignore"
-export RG_DEFAULT_FOR_FZF="rg --files --hidden --no-heading --smart-case --follow --ignore-file $RG_IGNORE_FILE  --"
-export FD_DEFAULT_FOR_FZF="fd --type f --follow -uuu --ignore-file $FD_IGNORE_FILE"
-export FZF_DEFAULT_COMMAND=$FD_DEFAULT_FOR_FZF
+
+# export RG_IGNORE_FILE="$XDG_CONFIG_HOME/rg/.ignore"
+# export RG_DEFAULT_FOR_FZF="rg --files --hidden --no-heading --smart-case --follow --ignore-file $RG_IGNORE_FILE  --"
+export RG_DEFAULT_FOR_FZF="rg --files --hidden --no-heading --smart-case --follow --"
+
+# export FD_IGNORE_FILE="$XDG_CONFIG_HOME/fd/.ignore" it already looks for .ignore in $HOME
+# export FD_DEFAULT_FOR_FZF="fd --type f --follow --hidden --ignore-file $FD_IGNORE_FILE"
+export FD_DEFAULT_FOR_FZF="fd --type f --follow --hidden"
+
+exp_if_cmd "fd" FZF_DEFAULT_COMMAND=$FD_DEFAULT_FOR_FZF
+[ "$?" = 1 ] && exp_if_cmd "rg" FZF_DEFAULT_COMMAND=$RG_DEFAULT_FOR_FZF
 
 # export FZF_DEFAULT_OPTS='--bind=ctrl-e:up,ctrl-n:down'
-export FZF_DEFAULT_OPTS=" --height=75% --layout=reverse --multi --bind=ctrl-e:preview-up,ctrl-n:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept --preview='[[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file || (bat --style=numbers --color=always {} || cat {}) > /dev/null | head -200' --preview-window=50%:wrap"
+export FZF_DEFAULT_OPTS=" --ansi --height=75% --layout=reverse --multi --bind=ctrl-e:preview-up,ctrl-n:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept --preview='[[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file || (bat --style=numbers --color=always {} || cat {}) > /dev/null | head -200' --preview-window=50%:wrap"
 # to unhide preview window, change to --preview-window=right:hidden:wrap"
 # for prompt at the bottom, change layout to "default"
 

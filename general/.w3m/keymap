@@ -1,6 +1,7 @@
 # w3m vim-like keymap file
 #   by @sansna
 
+
 ########## invalidate defaults ##########
 keymap K NULL
 keymap J NULL
@@ -155,12 +156,10 @@ keymap ZQ NULL
 ########## command ##########
 keymap :: COMMAND
 keymap :H HELP
-keymap :O OPTIONS
+keymap :o OPTIONS
 keymap :d DOWNLOAD_LIST
 
 ########## history navigation ##########
-keymap I NEXT
-keymap H PREV
 keymap :p SELECT_MENU
 keymap M-p SELECT_MENU
 keymap :h HISTORY
@@ -172,6 +171,7 @@ keymap C-y DOWN
 keymap gg BEGIN
 keymap G END
 keymap C-d NEXT_PAGE
+keymap SPC NEXT_PAGE
 keymap d NEXT_PAGE
 keymap C-u PREV_PAGE
 keymap u PREV_PAGE
@@ -179,12 +179,6 @@ keymap zz CENTER_V
 ########## cursor ##########
 keymap } NEXT_TAB
 keymap { PREV_TAB
-keymap DOWN UP
-keymap UP DOWN
-keymap i MOVE_RIGHT
-keymap h MOVE_LEFT
-keymap n MOVE_DOWN1
-keymap e MOVE_UP1
 keymap 0 LINE_BEGIN
 keymap $ LINE_END
 keymap w NEXT_WORD
@@ -193,10 +187,8 @@ keymap b PREV_WORD
 keymap C-i REDO
 keymap C-o UNDO
 ########## navigation ##########
-keymap f MOVE_LIST_MENU
-keymap F LIST_MENU
-keymap M-n NEXT_LINK
-keymap M-e PREV_LINK
+keymap sf MOVE_LIST_MENU
+keymap sF LIST_MENU
 keymap :l PEEK_LINK
 
 # reload
@@ -222,6 +214,7 @@ keymap gf VIEW
 
 ########## search ##########
 keymap / ISEARCH
+# keymap - SEARCH
 keymap ? ISEARCH_BACK
 keymap k SEARCH_NEXT
 keymap K SEARCH_PREV
@@ -240,10 +233,73 @@ keymap gT PREV_TAB
 keymap C-wL TAB_RIGHT
 keymap C-wH TAB_LEFT
 keymap C-t TAB_GOTO
-keymap T TAB_MENU
 
 ########## quit ##########
 keymap ZZ EXIT
 keymap C-Q EXIT
 keymap ZQ QUIT
 keymap q QUIT
+
+# custom movement
+keymap RIGHT MOVE_RIGHT
+keymap LEFT MOVE_LEFT
+keymap DOWN MOVE_DOWN1
+keymap UP MOVE_UP1
+
+# new behaviour for home row
+keymap n NEXT_LINK
+keymap e PREV_LINK
+keymap i NEXT
+keymap h PREV
+
+
+# The most important
+keymap m  MARK
+keymap .  NEXT_MARK
+keymap ,  PREV_MARK
+
+# Mark all search terms
+# this is only double quotes, no backslash
+keymap !   REG_MARK 
+
+# Mark URL-like strings as anchors
+keymap \"    MARK_URL
+
+# Mark current word as URL
+keymap ";"  MARK_WORD
+
+keymap M-:  MARK_MID
+
+# First link on page
+keymap [    LINK_BEGIN
+
+# Last link
+keymap ]    LINK_END
+
+# Editor
+keymap v EDIT_SCREEN
+keymap V EDIT
+
+# open tab menu  
+keymap st TAB_MENU
+
+# -------
+# macros
+# -------
+# Open search engine, proceed to and select the search box
+keymap s1 COMMAND  "TAB_GOTO https://duckduckgo.com/lite/; NEXT_LINK; GOTO_LINK"
+keymap s2 COMMAND  "TAB_GOTO https://google.com/; GOTO_LINE 6; NEXT_LINK; GOTO_LINK"
+keymap si COMMAND "SET_OPTION display_image=toggle ; RELOAD"        # toggle image display
+
+#### toggle hinting mode (vimium similar)
+keymap - COMMAND "SET_OPTION display_link_number=toggle ; RESHAPE"
+
+#### vimium jump to link number and open it
+keymap  f       COMMAND "SET_OPTION display_link_number=0 ; RESHAPE ; LINK_BEGIN ; GOTO_LINK"
+
+#### vimium jump without opening it
+keymap  F      COMMAND "SET_OPTION display_link_number=0 ; RESHAPE ; LINK_BEGIN"
+
+#### vimium open in new tab
+keymap  T       COMMAND "SET_OPTION display_link_number=0 ; RESHAPE ; LINK_BEGIN ; TAB_LINK"
+

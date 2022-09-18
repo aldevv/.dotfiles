@@ -1,0 +1,27 @@
+#!/bin/bash
+CONFIG=~/.config/tmux/tmux.conf
+tmux -u -f $CONFIG new-session -s Fun -n money -d
+tmux new-window -t Fun -d -n weather
+tmux new-window -t Fun -d -n parrot
+
+tmux send-keys -t Fun:money 'curl rate.sx' Enter
+tmux send-keys -t Fun:weather 'curl wttr.in' Enter
+tmux send-keys -t Fun:parrot 'curl parrot.live' Enter
+
+tmux select-window -t Fun:parrot 
+# tmux split-window -h 'curl parrot.live' 
+# tmux split-window -v 'curl parrot.live' 
+# tmux split-window -h 'curl parrot.live'
+tmux split-window -h
+tmux send-keys -t Fun:parrot 'curl parrot.live' Enter
+tmux split-window -v
+tmux send-keys -t Fun:parrot 'curl parrot.live' Enter
+tmux split-window -h
+tmux send-keys -t Fun:parrot 'curl parrot.live' Enter
+tmux select-layout tiled
+
+
+tmux select-window -t Fun:money
+# -u is for utf-8
+tmux -u attach -t Fun
+

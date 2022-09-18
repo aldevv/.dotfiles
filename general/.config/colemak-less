@@ -1,0 +1,12 @@
+n    forw-line
+e    back-line
+k    repeat-search
+\ek  repeat-search-all
+K    reverse-search
+\eK  reverse-search-all
+ñ    quit
+I    toggle-option i
+h   left-scroll
+i   right-scroll
+H   help
+g   goto-line

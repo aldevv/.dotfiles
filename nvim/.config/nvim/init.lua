@@ -9,36 +9,34 @@ CONFIG_HOME = "~/.config"
 --==================
 -- SETTINGS
 --==================
-if os.getenv("DEBUG_VIM") then
-    require("utils.lua.globals")
-    require("config.pre-settings")
+if os.getenv("DEBUG") then
+    -- require("plugins")
     require("plugins-debug")
     return
-else
-    require("utils.lua.globals")
-    require("config.pre-settings")
-    vim.cmd("source ~/.config/nvim/modules/settings.vim")
+end
+require("utils.lua.globals")
+require("config.pre-settings")
+vim.cmd("source ~/.config/nvim/modules/settings.vim")
 
-    --==================
-    -- KEYBINDINGS
-    --==================
-    vim.cmd("source ~/.config/nvim/modules/keybindings.vim")
-    if os.getenv("USER") == "root" then
-        vim.cmd("source ~/.config/nvim/modules/appearance.vim")
-        vim.cmd("source ~/.config/nvim/modules/automation.vim")
-        return
-    end
-    --===================
-    -- DEPENDENCIES
-    --===================
-    -- vim.cmd("source ~/.config/nvim/modules/dependencies.vim")
-    --==================
-    -- PLUGINS
-    --==================
-    vim.cmd([[
+--==================
+-- KEYBINDINGS
+--==================
+vim.cmd("source ~/.config/nvim/modules/keybindings.vim")
+if os.getenv("USER") == "root" then
+    vim.cmd("source ~/.config/nvim/modules/appearance.vim")
+    vim.cmd("source ~/.config/nvim/modules/automation.vim")
+    return
+end
+--===================
+-- DEPENDENCIES
+--===================
+-- vim.cmd("source ~/.config/nvim/modules/dependencies.vim")
+--==================
+-- PLUGINS
+--==================
+vim.cmd([[
     source ~/.config/nvim/modules/plugins-settings.vim
   ]])
-end
 --==================
 -- APPEARANCE
 --==================
