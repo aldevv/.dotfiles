@@ -77,7 +77,6 @@ alias openports="sudo netstat -putln | grep LISTEN"
 alias gv="neovide"
 alias gV="NOCOC=true neovide"
 alias V="NOCOC='' nvim"
-alias f='file=$(find . -type d -print | fzf --no-preview); [[ -n $file ]] && cd $file'
 alias uuid='uui=$(python -c "import uuid; print(uuid.uuid4())"); echo $uui | xsel -b; echo $uui '
 alias wireshark="sudo wireshark"
 alias vid="neovide"
