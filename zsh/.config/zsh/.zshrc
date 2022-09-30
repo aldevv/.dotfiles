@@ -270,9 +270,13 @@ CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 # shellcheck source=/dev/null
 [ -f  "$CARGO_HOME/env" ] && . "$CARGO_HOME/env"
 [ -f "/home/kanon/.ghcup/env" ] && source "/home/kanon/.ghcup/env" # ghcup-env
-[ -n $(command -v pyenv) ] && eval "$(pyenv init -)"
-[ -n $(command -v pyenv) ] && eval "$(pyenv init --path)"
-# for auto activate on dir enter
-[ -n $(command -v pyenv) ] && eval "$(pyenv virtualenv-init -)"
+
+load_pyenv() {
+    eval "$(pyenv init -)"
+    eval "$(pyenv init --path)"
+    eval "$(pyenv virtualenv-init -)"
+}
+
+[ -n $(command -v pyenv) ] && load_pyenv
 
 . $ZDOTDIR/.auto_aliases
