@@ -2,13 +2,13 @@
 
 set -e
 
-FZF_DEFAULT_COMMAND="fd --type d --follow --hidden --ignore-file $FD_IGNORE_FILE"
+FZF_DEFAULT_COMMAND="fd --type d --follow --hidden"
 if [ -z "$1" ]; then
 	name=$(fzf)
 	[ -n "$name" ] && cd "$name"
 else
     if [ -d "$1" ]; then
-		FZF_DEFAULT_COMMAND="fd --type d --search-path $1 --follow --hidden --ignore-file $FD_IGNORE_FILE"
+		FZF_DEFAULT_COMMAND="fd --type d --search-path $1 --follow --hidden"
 		name=$(fzf -d / --with-nth -5,-4,-3,-2,-1)
 		[ -n "$name" ] && cd "$name"
 	fi

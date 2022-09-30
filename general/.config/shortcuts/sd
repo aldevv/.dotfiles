@@ -11,7 +11,7 @@ tt      $TRASH
 T       $HOME/Downloads/torrents
 sk      $SUCKLESS
 bK      $BOOKS/LN
-c.      $XDG_CONFIG_HOME
+f.      $XDG_CONFIG_HOME
 v.      $XDG_CONFIG_HOME/nvim
 vl      $XDG_CONFIG_HOME/nvim/lua/lsp
 va      $XDG_CONFIG_HOME/nvim/lua/config/automation

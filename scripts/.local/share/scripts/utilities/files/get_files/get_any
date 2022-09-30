@@ -1,0 +1,7 @@
+#!/bin/bash
+
+folder=$FILES
+file=$(find $folder -type f | fzf)
+
+[[ -f "$file"  ]] \
+    &&  cp "$file" . 
