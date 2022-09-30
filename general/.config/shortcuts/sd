@@ -1,4 +1,3 @@
-
 #something
 H       ~
 d.      ~/.dotfiles
@@ -69,11 +68,10 @@ P       $PROGRAMS/
 p       $PROJECTS/
 pp      ~/Pictures
 pl      $PLAYGROUND
+.c      $PLAYGROUND/code/
 p..     $PROJECTS/
 p.r     $PROJECTS/rust/
 p.g     $PROJECTS/go/
 p.h     $PROJECTS/haskell/
 tdg     work/tdg/
 # temp shortcuts
-
-
