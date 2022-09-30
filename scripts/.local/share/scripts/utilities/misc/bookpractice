@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# can be migrated to using json by just changing the yq to jq
+# example config:
+# name:
+#   book: book_path
+#   project: project_path
+
 in_shell=true
 while getopts "d" arg; do
     case "$arg" in
@@ -13,14 +19,14 @@ while getopts "d" arg; do
     esac
 done
 
-config_file="$HOME/.cache/.bookpractice.json";
+config_file="$HOME/.cache/.bookpractice.yml";
 [[ ! -f "$config_file" ]] && touch "$config_file";
 
-names="$(jq -r 'keys | .[]' "$config_file")"
+names="$(yq -r 'keys | .[]' "$config_file")"
 name="$(dmenu <<< "$names")";
 [ -z "$name" ] && exit
-book="$(jq -r ".$name | .book " "$config_file" | envsubst)";
-project="$(jq -r ".$name | .project " "$config_file" | envsubst)";
+book="$(yq -r ".$name | .book " "$config_file" | envsubst)";
+project="$(yq -r ".$name | .project " "$config_file" | envsubst)";
 
 setsid zathura "$book" &
 if "$in_shell"; then

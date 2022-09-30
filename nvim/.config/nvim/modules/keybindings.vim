@@ -192,7 +192,6 @@ nmap <leader>gp "+gp
 
 "useful
 nnoremap Y y$
-nnoremap V v$
 nnoremap gl gi
 " nnoremap , ;
 " nnoremap ; ,

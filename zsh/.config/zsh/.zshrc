@@ -269,5 +269,4 @@ CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 [ -f "/home/kanon/.ghcup/env" ] && source "/home/kanon/.ghcup/env" # ghcup-env
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 [ -n $(command -v pyenv) ] && eval "$(pyenv init -)"
-
-[ -f ~/.config/.auto_aliases ] &&. $ZDOTDIR/.auto_aliases
+. $ZDOTDIR/.auto_aliases
