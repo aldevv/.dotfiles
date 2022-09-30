@@ -524,23 +524,25 @@ return require("packer").startup({
         -- needs a lot of other plugins so big no no
         -- use({ "anuvyklack/hydra.nvim", config = req("core.hydra") })
         -- prettier lsp
-        use({
-            "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-            config = function()
-                local lsp_lines = require("lsp_lines")
-                lsp_lines.setup()
-                vim.diagnostic.config({ virtual_lines = false })
-                local toggle = function()
-                    lsp_lines.toggle()
-                    if vim.diagnostic.config()["virtual_text"] then
-                        vim.diagnostic.config({ virtual_text = false })
-                    else
-                        vim.diagnostic.config({ virtual_text = { spacing = 2 } })
+        if not vim.fn.getenv("WORKENV") then
+            use({
+                "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+                config = function()
+                    local lsp_lines = require("lsp_lines")
+                    lsp_lines.setup()
+                    vim.diagnostic.config({ virtual_lines = false })
+                    local toggle = function()
+                        lsp_lines.toggle()
+                        if vim.diagnostic.config()["virtual_text"] then
+                            vim.diagnostic.config({ virtual_text = false })
+                        else
+                            vim.diagnostic.config({ virtual_text = { spacing = 2 } })
+                        end
                     end
-                end
-                vim.keymap.set("", "gO", toggle, { desc = "Toggle lsp_lines" })
-            end,
-        })
+                    vim.keymap.set("", "gO", toggle, { desc = "Toggle lsp_lines" })
+                end,
+            })
+        end
 
         -- TODO: test this
         -- use("smolovk/projector.nvim")

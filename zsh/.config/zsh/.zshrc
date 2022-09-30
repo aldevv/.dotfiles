@@ -1,3 +1,6 @@
+# work
+ [ -f ~/.config/.aliases_work ] && . ~/.config/.aliases_work
+
 #==============
 # setopt KSH_GLOB
 #==============
@@ -38,7 +41,7 @@ fi
 # ZSH_THEME="amuse"
 # ZSH_THEME="daivasmara"
 if [[ $(whoami) == root ]]; then
-	ZSH_THEME="robbyrussell"
+	ZSH_THEME="afowler"
 else
 	ZSH_THEME="aussiegeek_edited"
 fi
@@ -244,12 +247,12 @@ lesskey $HOME/.config/colemak-less
 
 # old aliases
 # shellcheck source=/dev/null
- [ -f "$ZDOTDIR/.aliases" ] && . "$ZDOTDIR/.aliases"
+ [ -f "$ZDOTDIR/.aliases" ] && . "$ZDOTDIR/.aliases" # old aliases
 # shellcheck source=/dev/null
 [ -f "$ZDOTDIR/.auto_aliases" ] && . "$ZDOTDIR/.auto_aliases"
 # new aliases
 # shellcheck source=/dev/null
- [ -f ~/.config/.aliases ] && . ~/.config/.aliases
+ [ -f ~/.config/.aliases ] && . ~/.config/.aliases # new aliases
 
 # install https://github.com/relastle/pmy
 # config
@@ -267,7 +270,9 @@ CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 # shellcheck source=/dev/null
 [ -f  "$CARGO_HOME/env" ] && . "$CARGO_HOME/env"
 [ -f "/home/kanon/.ghcup/env" ] && source "/home/kanon/.ghcup/env" # ghcup-env
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 [ -n $(command -v pyenv) ] && eval "$(pyenv init -)"
+[ -n $(command -v pyenv) ] && eval "$(pyenv init --path)"
+# for auto activate on dir enter
+[ -n $(command -v pyenv) ] && eval "$(pyenv virtualenv-init -)"
 
-[ -f ~/.config/.auto_aliases ] &&. $ZDOTDIR/.auto_aliases
+. $ZDOTDIR/.auto_aliases

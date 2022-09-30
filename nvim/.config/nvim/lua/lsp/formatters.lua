@@ -31,6 +31,7 @@ null_ls.setup({
     -- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
     sources = {
         formatting.black.with({ extra_args = { "--fast" } }),
+        formatting.isort,
         formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }),
         formatting.shfmt.with({
             extra_filetypes = { "zsh", "bash" },

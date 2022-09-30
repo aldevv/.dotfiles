@@ -1,5 +1,6 @@
 #!/bin/zsh
 
+export WORKENV="true"
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export EDITOR=nvim
@@ -43,8 +44,8 @@ export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 
 # path
-export PATH="/usr/local/bin:$HOME/.local/bin:$PATH"
-export CDPATH="$REPOS:$REPOS/github.com/:$PROJECTS/rust/commandline_book/:$PROJECTS/rust/the_rust_programming_book/"
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+export CDPATH="$WORK:$REPOS:$REPOS/github.com/:$PROJECTS/rust/commandline_book/:$PROJECTS/rust/the_rust_programming_book/"
 
 
 export SCRIPTS="$HOME/.local/share/scripts"
@@ -82,13 +83,13 @@ export UNCRUSTIFY_CONFIG="$XDG_CONFIG_HOME/uncristify/config.cfg"
 
 
 # export PATH="$GOROOT/bin:$CARGO_HOME/bin:${PATH}:$JAVA_HOME/bin:$GOPATH/bin:$GEM_HOME/ruby/3.0.0/bin"
-# export PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:${PATH}"
+export PATH="$PYENV_ROOT/bin:${PATH}"
 #=============================================================================
 
 #====
 #WINE
 #====
-export DISPLAY=:0
+# export DISPLAY=:0
 
 #====
 #FZF
@@ -138,3 +139,15 @@ export  LESS_TERMCAP_us=$'\e[1;32m'
 # export LD_LIBRARY_PATH=.:/usr/local/lib
 # export MLIBS="$FILES/mlibs"
 # export C_INCLUDE_PATH=.:$MLIBS
+
+#=================================================
+alias .aw="nvim ~/.config/.aliases_work"
+
+[[ -d "$UTILITIES" ]] && export PATH="$(find $UTILITIES -type d | tr '\n' ':')$PATH"
+[[ -d "$AUTOMATION" ]] && export PATH="$(find $AUTOMATION -type d | tr '\n' ':')$PATH"
+[[ -d "$APPS" ]] && export PATH="$(find $APPS -type d | tr '\n' ':')$PATH"
+[[ -d "$SHARED" ]] && export PATH="$(find $SHARED -type d | tr '\n' ':')$PATH"
+
+dbcli() {
+    docker exec -it compose_py3_db_1 dbcli migrate --service-name newgaldb.devgp --migrations-version $1
+}
