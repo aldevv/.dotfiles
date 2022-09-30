@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # show only text files
-FZF_DEFAULT_COMMAND="fd --type f --follow  --hidden"
+FZF_DEFAULT_COMMAND="fd --type f --follow  --hidden "
 
 if [[ -z $1 ]]; then
 	name=$(fzf)
@@ -10,7 +10,7 @@ if [[ -z $1 ]]; then
 fi
 
 if [[ -d $1 ]]; then
-    FZF_DEFAULT_COMMAND="fd --type f  --search-path $1 --follow --hidden"
+    FZF_DEFAULT_COMMAND="fd --type f  --search-path $1 --follow --hidden -x grep -Il . {}"
 
     name=$(fd . "$1" | fzf -d / --with-nth -2,-1)
     [ -n "$name" ] && exec nvim "$name"

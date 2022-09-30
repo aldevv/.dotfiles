@@ -1,6 +1,6 @@
 #!/bin/bash
 WIKI=${WIKI:-"$HOME/.local/share/wiki/"}
-files=$(fd '.' $WIKI -t f -e org)
+files=$(fd '.' $WIKI/notes -t f -e org)
 
 if getopts 'd' flag; then
   case "${flag}" in

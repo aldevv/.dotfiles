@@ -25,8 +25,7 @@ null_ls.setup({
         level = "warn",
         use_console = "async",
     },
-    on_attach = function(client, bufnr)
-    end,
+    on_attach = function(client, bufnr) end,
     -- conf options
     -- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
     sources = {
