@@ -2,7 +2,7 @@
 
 xset r rate 300 80
 
-# remove_dead_keys
+remove_dead_keys
 
 #=========================
 # GET ESCAPE ON CAPS PRESS
