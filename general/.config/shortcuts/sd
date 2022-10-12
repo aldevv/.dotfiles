@@ -68,7 +68,7 @@ P       $PROGRAMS/
 p       $PROJECTS/
 pp      ~/Pictures
 pl      $PLAYGROUND
-.c      $PLAYGROUND/code/
+c.      $PLAYGROUND/code/
 p..     $PROJECTS/
 p.r     $PROJECTS/rust/
 p.g     $PROJECTS/go/

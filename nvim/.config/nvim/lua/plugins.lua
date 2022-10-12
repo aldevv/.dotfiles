@@ -576,6 +576,8 @@ return require("packer").startup({
                 require("toggleterm").setup()
             end,
         })
+        -- for better go experience
+        -- https://github.com/ray-x/go.nvim
         -- this is for faster startup!
         --https://github.com/lewis6991/impatient.nvim
     end,

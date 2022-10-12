@@ -153,7 +153,8 @@ map("", "zn", "zk", nor)
 map("", "zD", "zE", nor)
 
 -- tagbar
-map("n", "<c-h>", ":LSoutlineToggle<cr>", nor_s)
+map("n", "<c-h>", ":TagbarToggle<cr>", nor_s)
+map("n", "<c-s-h>", ":LSoutlineToggle<cr>", nor_s)
 
 -- hop
 -- map("n", "s", ":HopChar1<cr>", nor_s)
