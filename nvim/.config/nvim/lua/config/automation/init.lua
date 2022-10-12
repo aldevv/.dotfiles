@@ -4,9 +4,9 @@ cmd([[
   augroup FormatOnSave
     autocmd!
     " so when it saves it stays saved
-    " autocmd BufWritePre *.{js,java,c,cpp,hs,json,ts,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.format()
+     autocmd BufWritePre *.{js,java,c,cpp,hs,json,ts,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.format()
     " uncomment when you change to neovim 0.8
-    autocmd BufWritePre *.{js,java,c,cpp,hs,json,ts,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.formatting_sync()
+    " autocmd BufWritePre *.{js,java,c,cpp,hs,json,ts,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.formatting_sync()
   augroup END
 ]])
 
@@ -22,20 +22,6 @@ require("config.automation.lsp").diagnostics_in_loclist() --
 
 -- so far is working
 -- cmd('autocmd BufReadPre *.{html,css,js,jsx,ts} EmmetInstall')
-
-cmd([[
-    function! NetrwMaps()
-        :nnoremap ? :help netrw-quickmap<CR>
-        nmap <buffer> P <C-w>z
-        "open file and close netrw
-        nmap <buffer> L <CR>:Lexplore<CR>
-    endfunction
-
-    augroup NetrwSettings
-        autocmd!
-        autocmd FileType netrw execute 'call NetrwMaps()'
-    augroup END
-]])
 
 --autopairs disabled
 -- cmd("autocmd FileType TelescopePrompt let b:autopairs_enabled = 0")

@@ -13,8 +13,8 @@ M.load_mappings = function()
         ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>',
         nor_s
     )
+    map("n", "<a-r>", ':lua require("telescope.builtin").live_grep({cwd = vim.fn.expand("%:p:h"), hidden = true })<cr>', nor_s)
     map("n", "<a-b>", ':lua require("telescope.builtin").buffers()<cr>', nor_s)
-    map("n", "<a-r>", ':lua require("telescope.builtin").live_grep()<cr>', nor_s)
     map("n", "<a-s-r>", ':lua require("telescope.builtin").grep_string()<cr>', nor_s)
     map("n", "<leader>sz", ':lua require("utils.lua.telescope").zenmode()<cr>', nor_s)
 
