@@ -20,10 +20,6 @@ alias \?r="noglob ?r"
 alias \?s="noglob ?s"
 
 
-## projects
-alias snip="cd ~/.config/nvim/my_snippets/"
-alias .f="cd ~/.config/"
-
 # git
 alias gR="git reset"
 alias grs="git remote set-url"
