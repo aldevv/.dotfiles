@@ -77,12 +77,12 @@ export UNCRUSTIFY_CONFIG="$XDG_CONFIG_HOME/uncristify/config.cfg"
 #======================================
 # export CARGO_HOME="$HOME/.local/share/rust/cargo"
 # export RUSTUP_HOME="$HOME/.local/share/rust/rustup"
-# export GOPATH=$HOME/.local/share/go
+export GOPATH=$HOME/.local/share/go
 # export GEM_HOME=$HOME/.local/share/gem
 # export PIPENV_VENV_IN_PROJECT="enabled"
 
 
-# export PATH="$GOROOT/bin:$CARGO_HOME/bin:${PATH}:$JAVA_HOME/bin:$GOPATH/bin:$GEM_HOME/ruby/3.0.0/bin"
+export PATH="$CARGO_HOME/bin:${PATH}:$JAVA_HOME/bin:$GOPATH/bin"
 export PATH="$PYENV_ROOT/bin:${PATH}"
 #=============================================================================
 
