@@ -47,15 +47,23 @@ M.select_bg = function()
     })
 end
 
+local function is_git_repo()
+    local is_repo = vim.fn.system("git rev-parse --is-inside-work-tree")
+
+    return vim.v.shell_error == 0
+end
+
 M.git_files_or_cwd = function()
     local opts = {}
-    local ok = pcall(t.git_files, opts)
-    opts = {
-        prompt_title = "<PARENT DIR>",
-        cwd = ".",
-        follow = true,
-    }
-    if not ok then
+
+    if is_git_repo() then
+        t.git_files(opts)
+    else
+        opts = {
+            prompt_title = "<CWD DIR>",
+            cwd = ".",
+            follow = true,
+        }
         t.find_files(opts)
     end
 end
