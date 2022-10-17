@@ -1,4 +1,5 @@
 #!/bin/bash
-script="$(find ~/.local/share/scripts/utilities/ -type f -exec basename {} ';' | fzf)"
+# script=$(find ~/.local/share/scripts/utilities/ -type f | fzf --preview="bat --color always {}" --delimiter '/' --with-nth -1)
+script=$(find ~/.local/share/scripts/utilities/ -type f | fzf --preview="bat --color always {}" --with-nth -2,-1 --delimiter '/')
 test -n "$script" && \
-    nvim $(find "$UTILITIES" -name "$script" -type f)
+    nvim "$script"
