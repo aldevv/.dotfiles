@@ -103,7 +103,8 @@ map("n", "<a-down>", ":m .+1<cr>==", nor)
 -- map("n", "<a-n>", ":m .+1<cr>==", nor)
 
 map("i", "<c-y>", "copilot#Accept('<CR>')", vim.tbl_extend("keep", s_e, { script = true }))
-map("", "<leader>cc", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
+map("", "<leader>C", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
+map("", "<leader>cO", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
 
 -- terminal
 map("n", "<leader>sñ", ":botright terminal<cr>", nor)
@@ -316,3 +317,7 @@ map("n", "<leader><leader>P", "<cmd>MindOpenProject<cr>", nor)
 
 map("n", "<leader>sl", "<cmd>IndentBlanklineToggle<cr>", nor)
 -- map("n", "<leader>g", "<cmd>MindOpenProject")
+
+-- curl
+map("n", "<leader>.cc", "vip:w !bash<cr>", nor)
+map("n", "<a-c>", "vip:w !bash<cr>", nor)
