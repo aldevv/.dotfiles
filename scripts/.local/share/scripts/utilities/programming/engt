@@ -1,4 +1,3 @@
 #!/bin/bash
 
-# when any file changes do the command
-entr -c go test < <(find . -type f)
+entr -c go test < <(find .)
