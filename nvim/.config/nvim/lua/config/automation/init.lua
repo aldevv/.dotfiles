@@ -39,3 +39,9 @@ endfunction
 --         autocmd BufWritePost  *.org :!rclone sync $WIKI gd:wiki
 --     augroup END
 --     ]])
+
+cmd([[
+augroup MardownAuto
+        autocmd BufReadPre *.{md,org,py,go,rs,c,cpp,js,jsx,ts,tsx} :set spell | syntax on
+augroup END
+]])

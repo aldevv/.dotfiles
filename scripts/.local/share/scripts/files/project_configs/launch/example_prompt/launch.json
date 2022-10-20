@@ -1,0 +1,49 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "https://code.visualstudio.com/Docs/editor/debugging#_launchjson-attributes": 1,
+            "https://code.visualstudio.com/Docs/editor/debugging#_redirect-inputoutput-tofrom-the-debug-target": 1,
+            "https://code.visualstudio.com/Docs/editor/debugging#_multitarget-debugging": 1,
+            "https://code.visualstudio.com/Docs/editor/debugging#_compound-launch-configurations": 1,
+            "type": "python",
+            "request": "launch",
+            "name": "Client",
+            "program": "${input:myPick}",
+            "args": [
+                "${env:MYVAR}"
+            ],
+            "env": {
+                "MYOTHERVAR": "1"
+            },
+            "envFile": [
+                ".env"
+            ],
+            "console": "externalTerminal"
+        },
+        {
+            "type": "python",
+            "request": "launch",
+            "name": "Server",
+            "program": "${input:myPrompt}"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "myPrompt",
+            "type": "promptString",
+            "description": "Program to run: ",
+            "default": "foobar"
+        },
+        {
+            "id": "myPick",
+            "type": "pickString",
+            "options": [
+                "main.py",
+                "test.py"
+            ],
+            "description": "Program to run: ",
+            "default": "foobar"
+        }
+    ]
+}

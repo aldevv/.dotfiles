@@ -61,6 +61,7 @@ map("", "<c-d>", "<c-d>zz", nor)
 map("", "<c-u>", "<c-u>zz", nor)
 
 -- s commands
+map("n", "sq", "<cmd>lua require('notify').dismiss()<cr>", nor_s)
 map("n", "ss", "<cmd>Ex<cr>", nor_s)
 map("n", "st", "<cmd>Texplore<cr>", nor_s)
 map("n", "sn", "<cmd>call CreateFileEnter()<cr>", nor_s)
