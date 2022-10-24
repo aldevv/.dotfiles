@@ -4,7 +4,8 @@ d.      ~/.dotfiles
 uu      $REMOTES
 wo      $WORK
 bk      $BOOKS
-bK      $BOOKS/LN
+bK      $BOOKS/ln
+ln      $BOOKS/ln
 ba      $BACKUPS
 ll      $LEARN
 l.      $LEARN
