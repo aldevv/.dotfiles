@@ -282,4 +282,4 @@ load_pyenv() {
 . $ZDOTDIR/.auto_aliases
 
 # fzf keybindings
-. /usr/share/doc/fzf/examples/key-bindings.zsh
+[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ] && . /usr/share/doc/fzf/examples/key-bindings.zsh
