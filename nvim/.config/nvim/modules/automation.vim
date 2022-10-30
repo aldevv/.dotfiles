@@ -52,3 +52,4 @@ autocmd! BufRead,BufNewFile .vimspector.json  set filetype=vimspector.json synta
 
 " for tmux
 autocmd BufReadPost,FileReadPost,BufNewFile * call system("tmux rename-window " . expand("%:t:r"))
+

@@ -1,5 +1,5 @@
 require("notify").setup({
-    background_colour = "Normal",
+    background_colour = "#000000",
     fps = 30,
     icons = {
         DEBUG = "",
@@ -14,5 +14,3 @@ require("notify").setup({
     stages = "fade_in_slide_out",
     timeout = 5000,
 })
-
-vim.notify = require('notify')

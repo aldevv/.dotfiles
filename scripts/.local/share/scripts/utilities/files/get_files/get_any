@@ -1,7 +1,7 @@
 #!/bin/bash
 
 folder=$FILES
-file=$(find $folder -type f | fzf)
+file=$(find $folder -type f | fzf --delimiter / --with-nth -3,-2,-1)
 
 [[ -f "$file"  ]] \
     &&  cp "$file" . 

@@ -14,18 +14,22 @@ fi
 selected_name=$(basename "$selected" | tr . _)
 tmux_running=$(pgrep tmux)
 
+if [[ -z $TMUX ]] &&  tmux has-session -t "$selected_name" ; then
+    tmux attach -t "$selected_name"
+fi
+
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
     echo "no tmux running"
-    tmux -f ~/.config/tmux/tmux.conf new-session -s $selected_name -c $selected
+    tmux -f ~/.config/tmux/tmux.conf new-session -s "$selected_name" -c "$selected"
     exit 0
 fi
 
-if ! tmux has-session -t $selected_name 2> /dev/null; then
+if ! tmux has-session -t "$selected_name" 2> /dev/null; then
     echo "second"
-    tmux -f ~/.config/tmux/tmux.conf new-session -ds $selected_name -c $selected
+    tmux -f ~/.config/tmux/tmux.conf new-session -ds "$selected_name" -c "$selected"
 fi
-
-if ! tmux switch-client -t $selected_name 2> /dev/null; then
+#
+if ! tmux switch-client -t "$selected_name" 2> /dev/null; then
     echo "third"
-    tmux attach -t $selected_name
+    tmux attach -t "$selected_name"
 fi

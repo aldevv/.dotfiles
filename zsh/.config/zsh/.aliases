@@ -140,62 +140,65 @@ fi
 # or
 #git init --bare $HOME/<repo_name>
 #dotrepo config --local status.showUntrackedFiles no
+# dfiles="dotrepo ls-tree --full-tree -r HEAD --name-only" \
+# 	dst='dotrepo status' \
+# 	daa='dotrepo add' \
+# 	dau='dotrepo add -u' \
+# 	drm='dotrepo rm' \
+# 	drmc='dotrepo rm --cached' \
+# 	dgc='dotrepo commit -v' \
+# 	dgca='dgc -a' \
+# 	dgcA='dgc -v --amend' \
+# 	dgcAn='dgc -v --amend --no-edit' \
+# 	drgo='dotrepo remote get-url origin' \
+# 	drao='dotrepo remote add origin' \
+# 	dgd='dotrepo diff' \
+# 	dlg='dotrepo log --oneline' \
+# 	dlG='dotrepo log --graph ' \
+# 	dgpo='dotrepo push origin HEAD' \
+# 	dSr='dotrepo secret reveal' \
+# 	dSh='dotrepo secret hide' \
+# 	dSls='dotrepo secret list' \
+# 	dSrm='dotrepo secret remove' \
+# 	dSaa='dotrepo secret add' \
+
+
+# dgcm() {
+# 	if [[ -n "$1" ]]; then
+# 		dgc -m "$1"
+# 	else
+# 		echo "message:"
+# 		read message
+# 		dgc -m "$message"
+# 	fi
+# }
+# dgcam() {
+# 	if [[ -n "$1" ]]; then
+# 		dgc -am "$1"
+# 	else
+# 		echo "message:"
+# 		read message
+# 		dgc -am "$message"
+# 	fi
+# }
+#
+# dgap() {
+# 	if [[ -n "$1" ]]; then
+# 		dotrepo commit -am "$1" && dgpo
+# 	else
+# 		echo "message:"
+# 		read message
+# 		dotrepo commit -am "$message" && dgpo
+# 	fi
+# }
 
 alias g.='bat .gitignore'
 alias dotrepo="git --git-dir=$HOME/.local/share/dotfiles --work-tree=$HOME"
 alias \
-    dfiles="dotrepo ls-tree --full-tree -r HEAD --name-only" \
-	dst='dotrepo status' \
-	daa='dotrepo add' \
-	dau='dotrepo add -u' \
-	drm='dotrepo rm' \
-	drmc='dotrepo rm --cached' \
-	dgc='dotrepo commit -v' \
-	dgca='dgc -a' \
-	dgcA='dgc -v --amend' \
-	dgcAn='dgc -v --amend --no-edit' \
-	drgo='dotrepo remote get-url origin' \
-	drao='dotrepo remote add origin' \
-	dgd='dotrepo diff' \
-	dlg='dotrepo log --oneline' \
-	dlG='dotrepo log --graph ' \
-	dgpo='dotrepo push origin HEAD' \
-	dSr='dotrepo secret reveal' \
-	dSh='dotrepo secret hide' \
-	dSls='dotrepo secret list' \
-	dSrm='dotrepo secret remove' \
-	dSaa='dotrepo secret add' \
-	dp='dotpass' \
+    dp='dotpass' \
 	dpf='dotpassfile'
 
-dgcm() {
-	if [[ -n "$1" ]]; then
-		dgc -m "$1"
-	else
-		echo "message:"
-		read message
-		dgc -m "$message"
-	fi
-}
-dgcam() {
-	if [[ -n "$1" ]]; then
-		dgc -am "$1"
-	else
-		echo "message:"
-		read message
-		dgc -am "$message"
-	fi
-}
 
-dgap() {
-	if [[ -n "$1" ]]; then
-		dotrepo commit -am "$1" && dgpo
-	else
-		echo "message:"
-		read message
-		dotrepo commit -am "$message" && dgpo
-	fi
-}
 
 high() {
 	[ -z "$2" ] &&
