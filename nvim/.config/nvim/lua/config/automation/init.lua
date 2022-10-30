@@ -4,9 +4,9 @@ cmd([[
   augroup FormatOnSave
     autocmd!
     " so when it saves it stays saved
-     autocmd BufWritePre *.{js,java,c,cpp,hs,json,ts,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.format()
+     autocmd BufWritePre *.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.format()
     " uncomment when you change to neovim 0.8
-    " autocmd BufWritePre *.{js,java,c,cpp,hs,json,ts,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.formatting_sync()
+    " autocmd BufWritePre *.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.formatting_sync()
   augroup END
 ]])
 
@@ -39,3 +39,9 @@ endfunction
 --         autocmd BufWritePost  *.org :!rclone sync $WIKI gd:wiki
 --     augroup END
 --     ]])
+
+cmd([[
+augroup MardownAuto
+        autocmd BufReadPre *.{md,org,py,go,rs,c,cpp,js,jsx,ts,tsx} :set spell | syntax on
+augroup END
+]])

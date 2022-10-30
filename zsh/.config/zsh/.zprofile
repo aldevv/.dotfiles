@@ -35,7 +35,8 @@ export REMOTES="$HOME/remotes"
 export BACKUPS="$HOME/.local/share/.backups"
 export PROGRAMS="$HOME/programs"
 export SUCKLESS="$PROGRAMS/suckless"
-export WIKI="$HOME/.local/share/wiki"
+export WIKI="$HOME/.dotfiles/wiki"
+export DOTFILES="$HOME/.dotfiles/"
 export TRASH="$HOME/.local/share/trash/files"
 export PASSWORD_STORE_DIR="$HOME/.local/share/.pass"
 export SECRETS_EXTENSION=".scr"
@@ -77,12 +78,12 @@ export UNCRUSTIFY_CONFIG="$XDG_CONFIG_HOME/uncristify/config.cfg"
 #======================================
 # export CARGO_HOME="$HOME/.local/share/rust/cargo"
 # export RUSTUP_HOME="$HOME/.local/share/rust/rustup"
-# export GOPATH=$HOME/.local/share/go
+export GOPATH=$HOME/.local/share/go
 # export GEM_HOME=$HOME/.local/share/gem
 # export PIPENV_VENV_IN_PROJECT="enabled"
 
 
-# export PATH="$GOROOT/bin:$CARGO_HOME/bin:${PATH}:$JAVA_HOME/bin:$GOPATH/bin:$GEM_HOME/ruby/3.0.0/bin"
+export PATH="$CARGO_HOME/bin:${PATH}:$JAVA_HOME/bin:$GOPATH/bin"
 export PATH="$PYENV_ROOT/bin:${PATH}"
 #=============================================================================
 

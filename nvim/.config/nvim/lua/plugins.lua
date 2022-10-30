@@ -43,7 +43,13 @@ return require("packer").startup({
             config = req("config.appearance.themes.gruvbox"),
         })
         use({ "stevearc/dressing.nvim", config = req("config.appearance.dressing") })
-        use({ "rcarriga/nvim-notify", config = req("core.notify"), module = "notify" })
+        use({
+            "rcarriga/nvim-notify",
+            config = function()
+                require("core.notify")
+                vim.notify = require("notify")
+            end,
+        })
         use({
             "nvim-telescope/telescope.nvim",
             requires = {
