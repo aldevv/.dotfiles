@@ -40,8 +40,14 @@ endfunction
 --     augroup END
 --     ]])
 
+if is_work_env() then
+    vim.opt.spelllang="en_us"
+else
+    vim.opt.spelllang="en_us,es"
+end
+
 cmd([[
-augroup MardownAuto
-        autocmd BufReadPre *.{md,org,py,go,rs,c,cpp,js,jsx,ts,tsx} :set spell | syntax on
-augroup END
+    augroup MardownAuto
+            autocmd BufReadPre *.{md,org,py,go,rs,c,cpp,js,jsx,ts,tsx} :set spell | syntax on
+    augroup END
 ]])

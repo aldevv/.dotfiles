@@ -14,7 +14,7 @@ set splitbelow
 set title
 set titlestring=\ %{expand(\"%:p:~\")}%a%r%m
 let g:yankring_clipboard_monitor=0
-set spelllang=en_us,es
+" set spelllang=en_us,es
 let &t_8f = '\<esc>[38;2;%lu;%lu;%lum'
 let &t_8b = '\<esc>[48;2;%lu;%lu;%lum'
 set textwidth=95
