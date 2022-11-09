@@ -209,6 +209,7 @@ bindkey -s 't' '**	'
 # this is used for previous command
 # bindkey -s '.' 'setsid st &>/dev/null^M'
 bindkey -s 'r' 'setsid st ranger &>/dev/null^M'
+bindkey '^R' history-incremental-search-backward
 
 _fzf_compgen_path() {
 	fd --hidden --follow . "$1"
