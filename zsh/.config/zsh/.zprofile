@@ -26,6 +26,7 @@ export EXP="/opt/exploitdb/exploits"
 export WORD="/opt/wordlists"
 export PROJECTS="$HOME/projects"
 export WORK="$HOME/work"
+export NOTES="$HOME/notes"
 export REPOS="$HOME/repos"
 export LEARN="$HOME/learn"
 export BOOKS="$LEARN/books"
@@ -148,6 +149,9 @@ alias .aw="nvim ~/.config/.aliases_work"
 [[ -d "$AUTOMATION" ]] && export PATH="$(find $AUTOMATION -type d | tr '\n' ':')$PATH"
 [[ -d "$APPS" ]] && export PATH="$(find $APPS -type d | tr '\n' ':')$PATH"
 [[ -d "$SHARED" ]] && export PATH="$(find $SHARED -type d | tr '\n' ':')$PATH"
+
+# add flutter
+[[ -d "$PROGRAMS/flutter" ]] && export PATH="$(find $PROGRAMS/flutter $PROGRAMS/android-studio -maxdepth 1 -type d -iname 'bin' | tr '\n' ':')$PATH"
 
 dbcli() {
     docker exec -it compose_py3_db_1 dbcli migrate --service-name newgaldb.devgp --migrations-version $1

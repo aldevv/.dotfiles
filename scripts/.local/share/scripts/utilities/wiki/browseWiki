@@ -4,16 +4,16 @@ files=$(fd '.' $WIKI/notes -t f -e org)
 
 if getopts 'd' flag; then
   case "${flag}" in
-    d) chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | dmenu -n) ;;
+    d) chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} .org | dmenu -n) ;;
   esac
 else
-    chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | fzf)
+    chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} .org | fzf)
 fi
 
 
-# chosen_file=$(echo -e "$files\ncreate" | xargs -I {} basename {} .org | dmenu -n)
+# chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} .org | dmenu -n)
 
-if [[  $chosen_file == "create" ]]; then
+if [[  $chosen_file == "new" ]]; then
     st -e nvim $WIKI/notes/
     exit 0
 fi

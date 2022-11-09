@@ -582,6 +582,8 @@ return require("packer").startup({
                 require("toggleterm").setup()
             end,
         })
+
+        -- https://github.com/nvim-telescope/telescope-media-files.nvim
         -- for better go experience
         -- https://github.com/ray-x/go.nvim
         -- this is for faster startup!
