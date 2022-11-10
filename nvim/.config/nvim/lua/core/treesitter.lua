@@ -19,6 +19,7 @@ require("nvim-treesitter.configs").setup({
         "dockerfile",
         "cmake",
         "markdown",
+        "markdown_inline",
         "make",
         "yaml",
         "org",
@@ -33,10 +34,10 @@ require("nvim-treesitter.configs").setup({
     highlight = {
         -- `false` will disable the whole extension
         enable = true,
+        additional_vim_regex_highlighting = { "org" },
         custom_captures = {
             -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
             ["foo.bar"] = "Identifier",
-            additional_vim_regex_highlighting = { "org" },
         },
 
         -- list of language that will be disabled
@@ -46,7 +47,6 @@ require("nvim-treesitter.configs").setup({
         -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
         -- Using this option may slow down your editor, and you may see some duplicate highlights.
         -- Instead of true it can also be a list of languages
-        additional_vim_regex_highlighting = false,
     },
     indent = {
         enable = true,

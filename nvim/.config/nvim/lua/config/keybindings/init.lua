@@ -62,23 +62,14 @@ map("", "<c-u>", "<c-u>zz", nor)
 
 -- s commands
 map("n", "sq", "<cmd>lua require('notify').dismiss()<cr>", nor_s)
-map("n", "ss", "<cmd>Ex<cr>", nor_s)
-map("n", "st", "<cmd>Texplore<cr>", nor_s)
+map("n", "ss", "<cmd>silent Ex<cr>", nor_s)
+map("n", "st", "<cmd>silent Texplore<cr>", nor_s)
+map("n", "sv", "<cmd>silent Vexplore<cr>", nor_s)
 map("n", "sn", "<cmd>call CreateFileEnter()<cr>", nor_s)
 map("n", "sN", "<cmd>call CreateFileTouch()<cr>", nor_s)
 map("n", "sD", "<cmd>call CreateDir()<cr>", nor_s)
 map("n", "sd", "<cmd>bd<cr>", nor_s)
 map("n", "si", "<Plug>(InsertSkeleton)", s)
-vim.cmd([[
-augroup netrw_mapping
-    autocmd!
-    autocmd filetype netrw call NetrwMapping()
-augroup END
-
-function! NetrwMapping()
-    noremap <buffer> sd <cmd>bd<cr>
-endfunction
-]])
 -- 'cd' towards the directory in which the current file is edited
 -- but only change the path for the current window
 map("n", "sc", "<cmd>lcd %:h<cr>", nor_s)
@@ -321,3 +312,6 @@ map("n", "<leader>sl", "<cmd>IndentBlanklineToggle<cr>", nor)
 -- curl
 map("n", "<leader>.cc", "vip:w !bash<cr>", nor)
 map("n", "<a-c>", "vip:w !bash<cr>", nor)
+
+-- markdown
+map("n", "<leader>.mp", "<cmd>MarkdownPreviewToggle<cr>", nor)

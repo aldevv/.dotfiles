@@ -38,10 +38,19 @@ end
 return require("packer").startup({
     function(use)
         use({ "wbthomason/packer.nvim" })
+        -- use({
+        --     "gruvbox-community/gruvbox",
+        --     config = req("config.appearance.themes.gruvbox"),
+        -- })
         use({
-            "gruvbox-community/gruvbox",
+            "ellisonleao/gruvbox.nvim",
             config = req("config.appearance.themes.gruvbox"),
         })
+
+        -- use({
+        --     "sainnhe/gruvbox-material",
+        --     config = req("config.appearance.themes.gruvbox"),
+        -- })
         use({ "stevearc/dressing.nvim", config = req("config.appearance.dressing") })
         use({
             "rcarriga/nvim-notify",
@@ -58,11 +67,11 @@ return require("packer").startup({
             },
             config = req("core.telescope"),
         })
-        -- use({
-        --     "folke/tokyonight.nvim",
-        --      branch = "main",
-        --      config = req("config.appearance.themes.tokyonight"),
-        -- })
+        use({
+            "folke/tokyonight.nvim",
+            branch = "main",
+            -- config = req("config.appearance.themes.tokyonight"),
+        })
         use({
             "nvim-lualine/lualine.nvim",
             requires = { "kyazdani42/nvim-web-devicons", opt = true },
@@ -582,6 +591,14 @@ return require("packer").startup({
                 require("toggleterm").setup()
             end,
         })
+        -- install without yarn or npm
+        use({
+            "iamcco/markdown-preview.nvim",
+            run = function()
+                vim.fn["mkdp#util#install"]()
+            end,
+        })
+        -- https://github.com/nvim-neorg/neorg
 
         -- https://github.com/nvim-telescope/telescope-media-files.nvim
         -- for better go experience
