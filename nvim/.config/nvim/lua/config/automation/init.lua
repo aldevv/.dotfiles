@@ -41,13 +41,15 @@ endfunction
 --     ]])
 
 if is_work_env() then
-    vim.opt.spelllang="en_us"
+    vim.opt.spelllang = "en_us"
 else
-    vim.opt.spelllang="en_us,es"
+    vim.opt.spelllang = "en_us,es"
 end
 
+-- since spelling commented options is a pain
+-- disable if you ever need to build something using lua
 cmd([[
     augroup MardownAuto
-            autocmd BufReadPre *.{md,org,py,go,rs,c,cpp,js,jsx,ts,tsx} :set spell | syntax on
+            autocmd BufReadPre *.{lua} :set nospell
     augroup END
 ]])

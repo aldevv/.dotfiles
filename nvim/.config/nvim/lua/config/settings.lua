@@ -49,4 +49,5 @@ vim.opt.pumblend = 10
 vim.opt.statusline = "%t"
 -- uses nvim-navic
 -- vim.o.winbar = "%{%v:lua.require'nvim-navic'.get_location()%}"
-vim.opt.cmdheight=0
+vim.opt.cmdheight = 0
+vim.opt.spell = true

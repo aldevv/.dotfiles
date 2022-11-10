@@ -1,0 +1,43 @@
+#!/bin/bash
+NOTES="${NOTES:-$HOME/notes}"
+name="$(date +%d%m%Y).md"
+if [[ $1 != "list" ]]; then
+    subject="$1"
+fi
+
+if [[ -z "$subject" ]]; then
+    subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d)\nnew" | fzf --delimiter / --with-nth -1 --preview="ls {} --color")
+fi
+
+if [[ $subject == "dmenu" ]]; then
+    subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d -printf '%f\n')\nnew" | dmenu 2>/dev/null )
+    if [[ $subject == "new" ]]; then
+        st -e nvim "$NOTES" 
+        exit
+    fi
+fi
+
+if [[ $1 == "list" ]]; then
+    [[ -z "$subject" ]] && exit
+    chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' | fzf --preview="bat {}")
+    if [[ -n "$chosen_file" ]]; then
+        nvim "$subject/$chosen_file"
+    fi
+    exit
+fi
+
+if [[ $subject == "new" ]]; then
+    echo -e "\e[35mEnter new subject"
+    read -r subject
+fi
+
+[[ -z "$subject" ]] && exit
+
+if [[ ! -d "$subject" ]]; then
+    mkdir -p "$NOTES/$subject"
+    nvim "$NOTES/$subject/$name"
+    exit
+fi
+nvim "$subject/$name"
+
+
