@@ -1,0 +1,60 @@
+#!/bin/bash
+
+as_argument() {
+[[ $1 == code ]] && _type="code" && shift && return
+[[ $1 == project ]] && _type="project" && shift && return
+[[ $1 == work ]] && _type="work" && shift && return
+}
+
+as_argument "$@"
+if [[ -z "$_type" ]]; then
+_type=$(fzf --prompt="Enter type" << EOF
+code
+project
+work
+EOF
+)
+fi
+
+[ -z "$_type" ] && exit 1
+
+declare -A types=(["code"]="$PLAYGROUND/code" ["project"]="$PROJECTS" ["work"]="$WORK")
+
+echo -e -n "\e[34mEnter name: "
+read -r name
+folder="${types[$_type]}/$name"
+# if folder exists, keep asking for other name
+while [ -d "$folder" ]; do
+    echo -e -n "\e[31mName already exists...\n"
+    echo -e -n "\e[34mEnter name: "
+    read -r name
+    folder="${types[$_type]}/$name"
+done
+
+open_nvim_if_flag() {
+    if [[ "$1" == "v" || "$1" == "nvim" ]]; then
+        tmux send-keys -t "$name" "nvim ." Enter
+    fi
+}
+
+mkdir -p "$folder"
+
+if [[ -z $TMUX ]]; then
+    tmux -f ~/.config/tmux/tmux.conf new -ds "$name" -c "$folder"
+    open_nvim_if_flag "$@"
+    exec tmux attach -t "$name"
+    exit
+fi
+
+if ! tmux has-session -t "$name" 2> /dev/null; then
+    tmux -f ~/.config/tmux/tmux.conf new -ds "$name" -c "$folder"
+    open_nvim_if_flag "$@"
+fi
+
+if ! tmux switch-client -t "$name" 2> /dev/null; then
+    echo "third"
+    exec tmux attach -t "$name"
+fi
+
+
+
