@@ -322,10 +322,8 @@ alias \
 	pipr='pip install -r requirements.txt' \
 	brave='brave-browser' \
 	pyv='python3 -m venv .venv' \
-	c='cat' \
 	fla='qmk flash' \
 	stn='setsid st >/dev/null 2>&1 & disown' \
-	.c='sudo ./configure' \
 	mk='make' \
 	mkc='make clean' \
 	mk='make' \
