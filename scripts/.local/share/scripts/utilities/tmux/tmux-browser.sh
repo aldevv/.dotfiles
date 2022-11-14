@@ -2,4 +2,9 @@
 
 read -r -p "Enter port [3000]: " port
 [[ -z $port ]] && port=3000
-firefox --new-window "localhost:$port"
+
+if command -v brave-browser; then
+	brave-browser --new-window "http://localhost:$port"
+else
+	firefox --new-window "localhost:$port"
+fi
