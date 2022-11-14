@@ -4,7 +4,7 @@ if [[ $# -eq 1 ]]; then
     selected=$1
 else
     # the -not -path is to ignore hidden folders 
-    selected=$(find -L $WORK $PROJECTS $PLAYGROUND/code  -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d | fzf --preview="ls {} --color=always" --delimiter / --with-nth -2,-1 --preview-window=60%:wrap)
+    selected=$(find -L $WORK $PROJECTS $PLAYGROUND/code $LEARN  -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d | fzf --preview="ls {} --color=always" --delimiter / --with-nth -2,-1 --preview-window=60%:wrap)
 fi
 
 if [[ -z $selected ]]; then

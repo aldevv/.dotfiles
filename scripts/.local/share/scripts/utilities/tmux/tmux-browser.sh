@@ -4,7 +4,7 @@ read -r -p "Enter port [3000]: " port
 [[ -z $port ]] && port=3000
 
 if command -v brave-browser; then
-	brave-browser --new-window "http://localhost:$port"
+	setsid brave-browser --new-window "http://localhost:$port" &>/dev/null
 else
-	firefox --new-window "localhost:$port"
+	setsid firefox --new-window "localhost:$port" &>/dev/null
 fi

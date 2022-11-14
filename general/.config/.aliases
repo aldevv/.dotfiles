@@ -22,6 +22,10 @@ alias \?s="noglob ?s"
 # scripts
 alias sz="tmux-sessionizer"
 
+# builtin
+alias c="cd"
+alias f="find"
+
 # git
 alias gcA="git commit --amend"
 alias gcAn="git commit --amend --no-edit"
@@ -32,6 +36,7 @@ alias grg="git remote get-url origin"
 
 # tmux
 alias tms="tmux-sessionizer"
+
 # curl
 alias curlh='curl --header "Content-Type: application/json"'
 

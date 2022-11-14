@@ -10,10 +10,11 @@ as_argument() {
 as_argument "$@"
 if [[ -z "$_type" ]]; then
 	_type=$(
-		fzf --prompt="Enter type" <<EOF
+		fzf --no-preview --prompt="Enter type: "<<EOF
 code
 project
 work
+learn
 tmp
 EOF
 	)
@@ -21,7 +22,7 @@ fi
 
 [ -z "$_type" ] && exit 1
 
-declare -A types=(["code"]="$PLAYGROUND/code" ["project"]="$PROJECTS" ["work"]="$WORK" ["tmp"]="/tmp")
+declare -A types=(["code"]="$PLAYGROUND/code" ["project"]="$PROJECTS" ["work"]="$WORK" ["tmp"]="/tmp" ["learn"]="$LEARN")
 
 echo -e -n "\e[34mEnter name: "
 read -r name
