@@ -1,12 +1,12 @@
 #!/bin/bash
-FZF_DEFAULT_COMMAND="fd --type d --follow --hidden"
+FZF_DEFAULT_COMMAND="find -L . -type d -mindepth 1 -printf '%f\n'"
 if [ -z "$1" ]; then
-	name=$(fzf --preview 'ls {} --color=always')
+	name=$(fzf --preview 'ls {} --color=always' --preview-window=50%:wrap)
 	[ -n "$name" ] && cd "$name"
 else
     if [ -d "$1" ]; then
-		FZF_DEFAULT_COMMAND="fd --type d --search-path $1 --follow --hidden"
-		name=$(fzf -d / --with-nth -5,-4,-3,-2,-1 --preview 'ls {} --color=always')
+        FZF_DEFAULT_COMMAND="find -L "$1" -type d"
+		name=$(fzf -d / --with-nth -5,-4,-3,-2,-1 --preview 'ls {} --color=always' --preview-window=50%:wrap)
 		[ -n "$name" ] && cd "$name"
 	fi
 fi
