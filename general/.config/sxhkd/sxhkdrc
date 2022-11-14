@@ -29,6 +29,12 @@ super + o
 super + shift +  p
     xrandr-dmenu
 
+super + F1
+    browseCheatsheets
+
+control + shift + Escape
+    pskill
+
 XF86AudioMute
      $SCRIPTS/shared/volume mute; $APPS/dwm/refreshVolume
      # pactl set-sink-mute 0 toggle
@@ -47,3 +53,14 @@ XF86MonBrightnessUp
 XF86MonBrightnessDown
     xbacklight -dec 10
 
+XF86MonBrightnessUp
+    xbacklight -inc 10
+
+XF86MonBrightnessDown
+    xbacklight -dec 10
+
+XF86TouchpadToggle
+	synclient TouchpadOff={1,0}
+
+XF86AudioPlay
+	mpc toggle

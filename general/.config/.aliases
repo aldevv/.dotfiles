@@ -19,8 +19,12 @@ alias \?g="noglob ?g"
 alias \?r="noglob ?r"
 alias \?s="noglob ?s"
 
+# scripts
+alias sz="tmux-sessionizer"
 
 # git
+alias gcA="git commit --amend"
+alias gcAn="git commit --amend --no-edit"
 alias gR="git reset"
 alias grs="git remote set-url"
 alias grso="git remote set-url origin"
@@ -28,6 +32,8 @@ alias grg="git remote get-url origin"
 
 # tmux
 alias tms="tmux-sessionizer"
+# curl
+alias curlh='curl --header "Content-Type: application/json"'
 
 # ansible
 alias an="ansible"
@@ -37,8 +43,12 @@ ashell() {
     ansible $1 -m shell -a $2
 }
 
+
+
 alias run_debian="~/.local/share/ansible/run_debian"
 alias run_arch="~/.local/share/ansible/run_arch"
+alias ssh_phone="ssh -p 8022 u0_a473@axlknight1-everest.nord"
+alias toasc="ascii-image-converter"
 
 
 # functions
@@ -86,4 +96,52 @@ program() {
     mv "$_file" "/tmp/"
     local RED='\033[0;31m'
     echo "${RED}couldn't find folder extracted from file"
+}
+
+# vpn
+nord() {
+    sudo nordvpn set meshnet on
+    sudo nordvpn connect japan
+}
+
+# dotfiles
+dgp() {
+    # argument is the path
+    clear
+    current_folder="$(pwd)"
+    cd "$1" || return
+    echo "\e[35mIN $(basename $1 | tr a-z A-Z)"
+    changes=$(git status -s)
+    if [ -z "$(tr -d '\n' <<< "$changes")" ]; then 
+        printf "\e[31mno changes\n"
+        return
+    fi
+    git status -s
+    printf "\nmessage: \n"
+    read -r message
+    git add -u
+    # if there are untracked files, choose to add them
+    if [[ -n $(git ls-files --other --directory --exclude-standard | sed q1) ]]; then
+        echo -e "\nadd untracked files? [y/N]"
+        read -r untracked
+        if [[ "$untracked" == "y" || "$untracked" == "Y" ]]; then
+            git add -A
+        fi
+    fi
+    git commit -m "$message"
+    git push origin HEAD
+    cd "$current_folder" || return
+}
+
+dgpa() {
+    dgp "$WIKI"
+    dgp "$DOTFILES"
+}
+
+dgpd() {
+    dgp "$DOTFILES"
+}
+
+dgpw() {
+    dgp "$WIKI"
 }
