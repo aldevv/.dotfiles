@@ -70,6 +70,7 @@ p       $PROJECTS/
 pp      ~/Pictures
 pl      $PLAYGROUND
 c.      $PLAYGROUND/code/
+P..     $PROJECTS/
 p..     $PROJECTS/
 p.r     $PROJECTS/rust/
 p.g     $PROJECTS/go/
