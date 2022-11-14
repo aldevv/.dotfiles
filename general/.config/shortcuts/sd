@@ -23,7 +23,7 @@ vk      $XDG_CONFIG_HOME/nvim/lua/config/keybindings
 vc      $XDG_CONFIG_HOME/nvim/lua/core
 sp      ~/.config/nvim/my_snippets
 
-s.      $SCRIPTS
+m.      $SCRIPTS
 F.      $FILES
 o.      $OS
 u.      $UTILITIES
@@ -32,7 +32,7 @@ a.      $AUTOMATION
 A.      $APPS
 ml.      $MLIBS
 D       ~/Downloads
-d       ~/Documents
+dd       ~/Documents
 vv      ~/Videos
 wa      $WALL
 wi      $WIKI

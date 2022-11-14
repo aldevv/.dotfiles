@@ -1,12 +1,15 @@
 #!/bin/zsh
+
 # Config locations
-folders="$XDG_CONFIG_HOME/shortcuts/sd"
-files="$XDG_CONFIG_HOME/shortcuts/sf"
+CONF_PATH="${DOTFILES:-~/.dotfiles}/general/.config"
+ZSH_PATH="${DOTFILES:-~/.dotfiles}/zsh/.config/zsh"
+folders="$CONF_PATH/shortcuts/sd"
+files="$CONF_PATH/shortcuts/sf"
 
 # Output locations
-shellrc="$ZDOTDIR/.zshrc"
-shell_shortcuts="$ZDOTDIR/.auto_aliases"
-ranger_shortcuts="$XDG_CONFIG_HOME/ranger/shortcuts.conf"
+shellrc="$ZSH_PATH/.zshrc"
+shell_shortcuts="$ZSH_PATH/.auto_aliases"
+ranger_shortcuts="$CONF_PATH/ranger/shortcuts.conf"
 
 # Remove
 rm -f "$shell_shortcuts" "$ranger_shortcuts"
@@ -15,8 +18,8 @@ rm -f "$shell_shortcuts" "$ranger_shortcuts"
 (grep "\. \$ZDOTDIR/.auto_aliases"  $shellrc)>/dev/null \
     || echo '. $ZDOTDIR/.auto_aliases' >> $shellrc
 
-(grep "source $ranger_shortcuts" $XDG_CONFIG_HOME/ranger/rc.conf)>/dev/null \
-    || echo "source $ranger_shortcuts" >> $XDG_CONFIG_HOME/ranger/rc.conf
+(grep "source $ranger_shortcuts" $CONF_PATH/ranger/rc.conf)>/dev/null \
+    || echo "source $ranger_shortcuts" >> $CONF_PATH/ranger/rc.conf
 
 # directory shortcuts
 sed "/^#/d; /^$/d" $folders | tee \
