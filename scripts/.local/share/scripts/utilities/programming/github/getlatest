@@ -1,0 +1,6 @@
+#!/bin/bash
+
+repo="$1"
+repo_name="${$repo##*/}"
+wget  $(latest $1 $2)
+
