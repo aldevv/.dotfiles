@@ -10,6 +10,7 @@
 .x      ~/.xprofile
 .t      ~/.config/tmux/tmux.conf
 .v     ~/.config/nvim/init.lua
+.l      .vscode/launch.json
 .vv     ~/.config/nvim/init.lua
 .va     ~/.config/nvim/lua/config/automation/init.lua
 .vs     ~/.config/nvim/lua/config/settings.lua
@@ -24,11 +25,13 @@
 .vf     ~/.config/nvim/lua/lsp/formatters.lua
 .X      ~/.config/sxhkd/sxhkdrc
 .xm     ~/.config/xmonad/xmonad.hs
+.xmm     ~/.config/xmonad/xmonad.hs
 .xmb    ~/.config/xmobar/xmobarrc
 .n      ~/.config/newsboat/urls
 .dwm    $SUCKLESS/dwm/config.h
 .st     $SUCKLESS/st/config.h
 .a      ~/.config/.aliases
+.aa      ~/.config/.aliases
 # old aliases
 .ao     ~/.config/zsh/.aliases
 .K      $SCRIPTS/apps/qmk/lily58/keymap.c

@@ -10,7 +10,8 @@ M.load_mappings = function()
     map(
         "n",
         "<a-p>",
-        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>',
+        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>'
+        ,
         nor_s
     )
     map(
@@ -50,15 +51,13 @@ M.load_mappings = function()
     map("n", "<localleader>gd", ':lua require("utils.lua.telescope").dotfiles()<cr>', nor_s)
     map("n", "<localleader>gs", ':lua require("utils.lua.telescope").scripts()<cr>', nor_s)
     map("n", "<localleader>gu", ':lua require("utils.lua.telescope").utilities()<cr>', nor_s)
-    map("n", "<localleader>v.", ':lua require("utils.lua.telescope").nvim()<cr>', nor_s)
+    map("n", "<localleader>V.", ':lua require("utils.lua.telescope").nvim()<cr>', nor_s)
     map(
         "n",
         "<localleader>Vk",
         ':lua require("utils.lua.telescope").nvim({path = "lua/config/keybindings"})<cr>',
         nor_s
     )
-    map("n", "<localleader>V.", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
-    map("n", "<localleader>Vv", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
     map("n", "<localleader>Vc", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
     map("n", "<localleader>VC", ':lua require("utils.lua.telescope").nvim({path = "lua/config/"})<cr>', nor_s)
     map("n", "<localleader>Vu", ':lua require("utils.lua.telescope").nvim({path = "lua/utils/"})<cr>', nor_s)

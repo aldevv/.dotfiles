@@ -1,36 +1,41 @@
 #!/bin/zsh
 
 # Config locations
-CONF_PATH="${DOTFILES:-~/.dotfiles}/general/.config"
+GENERAL_PATH="${DOTFILES:-~/.dotfiles}/general/.config"
+NVIM_PATH="${DOTFILES:-~/.dotfiles}/nvim/.config/nvim"
 ZSH_PATH="${DOTFILES:-~/.dotfiles}/zsh/.config/zsh"
-folders="$CONF_PATH/shortcuts/sd"
-files="$CONF_PATH/shortcuts/sf"
+folders="$GENERAL_PATH/shortcuts/sd"
+files="$GENERAL_PATH/shortcuts/sf"
 
 # Output locations
 shellrc="$ZSH_PATH/.zshrc"
 shell_shortcuts="$ZSH_PATH/.auto_aliases"
-ranger_shortcuts="$CONF_PATH/ranger/shortcuts.conf"
+ranger_shortcuts="$GENERAL_PATH/ranger/shortcuts.conf"
+nvim_shortcuts="$NVIM_PATH/lua/shortcuts.lua"
 
 # Remove
-rm -f "$shell_shortcuts" "$ranger_shortcuts"
+rm -f "$shell_shortcuts" "$ranger_shortcuts" "$nvim_shortcuts"
 
 #source them if not sourced
 (grep "\. \$ZDOTDIR/.auto_aliases"  $shellrc)>/dev/null \
     || echo '. $ZDOTDIR/.auto_aliases' >> $shellrc
 
-(grep "source $ranger_shortcuts" $CONF_PATH/ranger/rc.conf)>/dev/null \
-    || echo "source $ranger_shortcuts" >> $CONF_PATH/ranger/rc.conf
+(grep "source $ranger_shortcuts" $GENERAL_PATH/ranger/rc.conf)>/dev/null \
+    || echo "source $ranger_shortcuts" >> $GENERAL_PATH/ranger/rc.conf
 
 # directory shortcuts
 sed "/^#/d; /^$/d" $folders | tee \
     >(awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "alias "$1"='\''cd "shortcut" && ls -a'\''"}' >> $shell_shortcuts) \
-    >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut" "$i; else shortcut=$i}; {print "map <backspace>"$1" cd "shortcut"\nmap t"$1" tab_new "shortcut"\nmap m"$1" shell mv -v %s "shortcut"\nmap Y"$1" shell cp -rv %s "shortcut}' >> $ranger_shortcuts) >/dev/null
+    >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut" "$i; else shortcut=$i}; {print "map <backspace>"$1" cd "shortcut"\nmap t"$1" tab_new "shortcut"\nmap m"$1" shell mv -v %s "shortcut"\nmap Y"$1" shell cp -rv %s "shortcut}' >> $ranger_shortcuts) \
+    >(awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "vim.keymap.set(\"n\", \"<localleader>"$1"\", \"<cmd>cd "shortcut" <cr> | <cmd>e .<cr>\", {silent=true, noremap=true})"}' >> "$nvim_shortcuts") >/dev/null
 
 # tmux
 sed "/^#/d; /^$/d" $folders | tee >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut" "$i; else shortcut=$i}; {print "map <backspace2>"$1" cd "shortcut"\nmap t"$1" tab_new "shortcut"\nmap m"$1" shell mv -v %s "shortcut"\nmap Y"$1" shell cp -rv %s "shortcut}' >> $ranger_shortcuts) >/dev/null
 # envsubst changes $HOME -> /home/myuser
 
+
 # dotfile shortcuts
 sed "/^#/d; /^$/d" $files |tee \
     >(awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "alias "$1"=\"$EDITOR "shortcut"\""}' >> $shell_shortcuts) \
-    >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "map <backspace>"$1" shell $EDITOR "shortcut}' >> $ranger_shortcuts) >/dev/null
+    >(envsubst | awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "map <backspace>"$1" shell $EDITOR "shortcut}' >> $ranger_shortcuts) \
+    >(awk '{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print "vim.keymap.set(\"n\", \"<localleader>"$1"\", \"<cmd>e "shortcut" <cr>\", {silent=true, noremap=true})"}' >> "$nvim_shortcuts") >/dev/null

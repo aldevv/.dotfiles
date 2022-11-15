@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# download version found
+versions="$(latest "$@")"
+wget -q "$(head -n 1 <<< "$versions")"
+
+
+types_array=( tar.gz tar.xz zip 7z tar.bz2 bz2 rar gz tar tbz2 tgz Z tar.zst)
+for t in "${types_array[@]}"; do
+    _file=$(ls *.$t 2>/dev/null | grep "$repo" 2>/dev/null | head -n 1)
+    if [ -n "$_file" ]; then
+        extract "$_file"
+        rm -rf "$_file"
+        extracted_folder="$(ls | grep "$repo" | head -n 1)"
+        mv "$extracted_folder" "$PROGRAMS"
+        cd "$PROGRAMS/$extracted_folder" || return
+        break
+    fi
+done
+

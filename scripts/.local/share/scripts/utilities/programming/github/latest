@@ -1,25 +1,27 @@
-#!/bin/sh
+#!/bin/bash
 
-# $1 is repo link, example: https://github.com/Gnurou/tagainijisho
+platform="linux.*amd64"
+if [[ "$1" == "all" ]]; then
+    platform=".*"
+    shift
+fi
 
-# optional
-# $2 extension
+if [[ -n "$2" ]]; then
+    platform="$1"
+    shift
+fi
 
-info=$(echo "$1" | cut -d / -f 4,5 )
+types="(tar.gz|tar.xz|deb|7z|zip|tar.bz2|bz2|rar|gz|tar|tbz2|tgz|Z|tar.zst)"
+
+
+info=$(echo "$1" | cut -d / -f 4,5)
 author=$(echo "$info" | cut -d / -f 1)
 repo=$(echo "$info" | cut -d / -f 2)
 
-if [ -z "$2" ]; then
-    curl -s "https://api.github.com/repos/$author/$repo/releases/latest" \
-    | grep ".*tarball.*" \
-    | grep "$author" \
-    | grep "$repo" \
-    | cut -d : -f 2,3 \
-    | tr -d \" \
-    | tr -d ','
-else
-    curl -s "https://api.github.com/repos/$author/$repo/releases/latest" \
-    | grep "browser_download_url.*$3" \
-    | cut -d : -f 2,3 \
-    | tr -d \"
-fi
+versions=$(wget -q https://api.github.com/repos/${author}/${repo}/releases/latest -O - |
+	awk -F \" -v RS="," '/browser_download_url/ {print $(NF-1)}' |
+    grep "$platform" | grep -E "$types")
+
+
+echo "$versions"
+
