@@ -1,5 +1,7 @@
 #!/bin/sh
-# $1 is repo link, ex: https://github.com/Gnurou/tagainijisho
+
+# $1 is repo link, example: https://github.com/Gnurou/tagainijisho
+
 # optional
 # $2 extension
 
@@ -21,4 +23,3 @@ else
     | cut -d : -f 2,3 \
     | tr -d \"
 fi
-

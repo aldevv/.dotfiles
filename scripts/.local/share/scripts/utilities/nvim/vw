@@ -1,2 +1,2 @@
 #!/bin/bash
-nvim $(which $1)
+nvim "$(which "$1")"

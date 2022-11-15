@@ -43,6 +43,7 @@ ca      ~/.cache
 lo      ~/.local
 los     ~/.local/share
 lon     ~/.local/share/nvim
+lop     ~/.local/share/nvim/site/pack/packer
 lob     ~/.local/bin
 re      /etc
 rU      /usr

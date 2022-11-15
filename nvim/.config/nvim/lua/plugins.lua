@@ -598,6 +598,11 @@ return require("packer").startup({
                 vim.fn["mkdp#util#install"]()
             end,
         })
+        use({
+            "rest-nvim/rest.nvim",
+            requires = "nvim-lua/plenary.nvim",
+            config = req("core.rest"),
+        })
         -- https://github.com/nvim-neorg/neorg
 
         -- https://github.com/nvim-telescope/telescope-media-files.nvim

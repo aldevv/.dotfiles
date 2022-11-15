@@ -10,8 +10,7 @@ M.load_mappings = function()
     map(
         "n",
         "<a-p>",
-        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>'
-        ,
+        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>',
         nor_s
     )
     map(
@@ -58,12 +57,12 @@ M.load_mappings = function()
         ':lua require("utils.lua.telescope").nvim({path = "lua/config/keybindings"})<cr>',
         nor_s
     )
-    map("n", "<localleader>vc", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
-    map("n", "<localleader>vC", ':lua require("utils.lua.telescope").nvim({path = "lua/config/"})<cr>', nor_s)
-    map("n", "<localleader>vu", ':lua require("utils.lua.telescope").nvim({path = "lua/utils/"})<cr>', nor_s)
-    map("n", "<localleader>vl", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/"})<cr>', nor_s)
-    map("n", "<localleader>vd", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/dap"})<cr>', nor_s)
-    map("n", "<localleader>vp", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
+    map("n", "<localleader>Vc", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
+    map("n", "<localleader>VC", ':lua require("utils.lua.telescope").nvim({path = "lua/config/"})<cr>', nor_s)
+    map("n", "<localleader>Vu", ':lua require("utils.lua.telescope").nvim({path = "lua/utils/"})<cr>', nor_s)
+    map("n", "<localleader>Vl", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/"})<cr>', nor_s)
+    map("n", "<localleader>Vd", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/dap"})<cr>', nor_s)
+    map("n", "<localleader>Vp", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
     map("n", "<localleader>gm", ':lua require("utils.lua.telescope").main()<cr>', nor_s)
     map("n", "<localleader>gM", ':lua require("utils.lua.telescope").micro()<cr>', nor_s)
     -- map("n", "<localleader>cc", ':lua require("utils.lua.telescope").classes()<cr>', nor_s)

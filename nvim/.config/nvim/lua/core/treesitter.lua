@@ -23,6 +23,7 @@ require("nvim-treesitter.configs").setup({
         "make",
         "yaml",
         "org",
+        "http",
     },
 
     -- Install languages synchronously (only applied to `ensure_installed`)

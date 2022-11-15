@@ -109,16 +109,16 @@ map("t", "<a-'>", "<c-\\><c-n>", nor_s)
 -- folders
 map("n", "<F1>", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
 
-map("n", "<localleader>Vcl", ":e .vscode/launch.json<cr>", nor_s)
-map("n", "<localleader>V.", ":e " .. h .. "/init.lua<cr>", nor_s)
-map("n", "<localleader>Vs", ":e " .. h .. "/lua/config/settings.lua<cr>", nor_s)
-map("n", "<localleader>Vp", ":e " .. h .. "/lua/plugins.lua<cr>", nor_s)
-map("n", "<localleader>Va", ":e " .. h .. "/lua/config/automation/init.lua<cr>", nor_s)
-map("n", "<localleader>Vk", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
-map("n", "<localleader>Vl", ":e " .. h .. "/lua/lsp/lsp.lua<cr>", nor_s)
-map("n", "<localleader>Vf", ":e " .. h .. "/lua/lsp/formatters.lua<cr>", nor_s)
-map("n", "<localleader>Vd", ":e " .. h .. "/lua/lsp/dap/dap.lua<cr>", nor_s)
-map("n", "<localleader>VP", ":e " .. h .. "/modules/plugins.vim<cr>", nor_s)
+map("n", "<localleader>vcl", ":e .vscode/launch.json<cr>", nor_s)
+map("n", "<localleader>v.", ":e " .. h .. "/init.lua<cr>", nor_s)
+map("n", "<localleader>vs", ":e " .. h .. "/lua/config/settings.lua<cr>", nor_s)
+map("n", "<localleader>vp", ":e " .. h .. "/lua/plugins.lua<cr>", nor_s)
+map("n", "<localleader>va", ":e " .. h .. "/lua/config/automation/init.lua<cr>", nor_s)
+map("n", "<localleader>vk", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
+map("n", "<localleader>vl", ":e " .. h .. "/lua/lsp/lsp.lua<cr>", nor_s)
+map("n", "<localleader>vf", ":e " .. h .. "/lua/lsp/formatters.lua<cr>", nor_s)
+map("n", "<localleader>vd", ":e " .. h .. "/lua/lsp/dap/dap.lua<cr>", nor_s)
+map("n", "<localleader>vP", ":e " .. h .. "/modules/plugins.vim<cr>", nor_s)
 
 -- defaults override
 map("", "gh", ":h <c-r><c-w>|resize 15<cr>", nor) -- select mode, not used
@@ -310,8 +310,13 @@ map("n", "<leader>sl", "<cmd>IndentBlanklineToggle<cr>", nor)
 -- map("n", "<leader>g", "<cmd>MindOpenProject")
 
 -- curl
-map("n", "<leader>.cc", "vip:w !bash<cr>", nor)
+map("n", "<leader>.cb", "vip:w !bash<cr>", nor)
 map("n", "<a-c>", "vip:w !bash<cr>", nor)
 
 -- markdown
 map("n", "<leader>.mp", "<cmd>MarkdownPreviewToggle<cr>", nor)
+
+-- rest.nvim
+map("n", "<localleader>rr", "<Plug>RestNvim<cr>", nor)
+map("n", "<localleader>rp", "<Plug>RestNvimPreview<cr>", nor)
+map("n", "<localleader>rl", "<Plug>RestNvimLast<cr>", nor)
