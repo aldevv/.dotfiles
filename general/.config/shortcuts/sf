@@ -11,9 +11,9 @@
 .t      ~/.config/tmux/tmux.conf
 .v     ~/.config/nvim/init.lua
 .vv     ~/.config/nvim/init.lua
-.vv     ~/.config/nvim/init.lua
 .va     ~/.config/nvim/lua/config/automation/init.lua
 .vs     ~/.config/nvim/lua/config/settings.lua
+.vu     ~/.config/nvim/lua/utils/lua/telescope.lua
 .vk     ~/.config/nvim/lua/config/keybindings/init.lua
 .vK     ~/.config/nvim/lua/config/keybindings/dap.lua
 .vd     ~/.config/nvim/lua/lsp/dap/dap.lua

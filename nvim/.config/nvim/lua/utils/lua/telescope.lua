@@ -135,24 +135,10 @@ M.utilities = function()
     })
 end
 
-M.main = function()
+M.projects = function()
     t.find_files({
         prompt_title = "<AL's PROJECTS>",
         cwd = "$PROJECTS/",
-    })
-end
-
-M.main = function()
-    t.find_files({
-        prompt_title = "<AL's MAIN>",
-        cwd = "$MAIN/",
-    })
-end
-
-M.micro = function()
-    t.find_files({
-        prompt_title = "<AL's MICRO>",
-        cwd = "$MICRO/",
     })
 end
 
@@ -188,6 +174,52 @@ M.exploits = function()
     t.find_files({
         prompt_title = "<AL's EXPLOITS>",
         cwd = "$EXP/",
+    })
+end
+
+M.code = function()
+    t.find_files({
+        prompt_title = "<AL's CODE>",
+        cwd = "$PLAYGROUND/code/",
+    })
+end
+
+M.notes = function()
+    t.find_files({
+        prompt_title = "<AL's NOTES>",
+        cwd = "$NOTES/",
+    })
+end
+
+-- live_grep
+
+M.notes_grep = function()
+    t.live_grep({
+        cwd = "$NOTES/",
+    })
+end
+
+M.projects_grep = function()
+    t.live_grep({
+        cwd = "$PROJECTS/",
+    })
+end
+
+M.playground_grep = function()
+    t.live_grep({
+        cwd = "$PLAYGROUND/",
+    })
+end
+
+M.code_grep = function()
+    t.live_grep({
+        cwd = "$PLAYGROUND/code/",
+    })
+end
+
+M.work_grep = function()
+    t.live_grep({
+        cwd = "$WORK",
     })
 end
 

@@ -23,8 +23,8 @@ local servers = {
 
 require("mason").setup()
 require("mason-lspconfig").setup({
-    automatic_installation = true,
     ensure_installed = servers,
+    automatic_installation = true,
 })
 
 local get_opts = function()

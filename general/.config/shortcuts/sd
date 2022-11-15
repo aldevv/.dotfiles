@@ -2,6 +2,7 @@
 H       ~
 d.      ~/.dotfiles
 uu      $REMOTES
+n.      $NOTES
 wo      $WORK
 bk      $BOOKS
 bK      $BOOKS/ln
@@ -14,13 +15,13 @@ t.       $HOME/Downloads/torrents
 sk      $SUCKLESS
 f.      $XDG_CONFIG_HOME
 v.      $XDG_CONFIG_HOME/nvim
+v      $XDG_CONFIG_HOME/nvim
 vl      $XDG_CONFIG_HOME/nvim/lua/lsp
 va      $XDG_CONFIG_HOME/nvim/lua/config/automation
 vc      $XDG_CONFIG_HOME/nvim/lua/core
 vC      $XDG_CONFIG_HOME/nvim/lua/config
 vu      $XDG_CONFIG_HOME/nvim/lua/utils
 vk      $XDG_CONFIG_HOME/nvim/lua/config/keybindings
-vc      $XDG_CONFIG_HOME/nvim/lua/core
 sp      ~/.config/nvim/my_snippets
 
 m.      $SCRIPTS
@@ -67,14 +68,11 @@ vo.     $VOLUMES
 r.      $REMOTES
 an.     ~/.local/share/ansible/
 P       $PROGRAMS/
+P.      $PROGRAMS/
 p       $PROJECTS/
+p.      $PROJECTS/
+c.      $PLAYGROUND/code/
+tdg     work/tdg/
 pp      ~/Pictures
 pl      $PLAYGROUND
-c.      $PLAYGROUND/code/
-P..     $PROJECTS/
-p..     $PROJECTS/
-p.r     $PROJECTS/rust/
-p.g     $PROJECTS/go/
-p.h     $PROJECTS/haskell/
-tdg     work/tdg/
 # temp shortcuts
