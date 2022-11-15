@@ -16,10 +16,12 @@
 .vs     ~/.config/nvim/lua/config/settings.lua
 .vk     ~/.config/nvim/lua/config/keybindings/init.lua
 .vK     ~/.config/nvim/lua/config/keybindings/dap.lua
+.vd     ~/.config/nvim/lua/lsp/dap/dap.lua
 .vl     ~/.config/nvim/lua/lsp/lsp.lua
 .vC     ~/.config/nvim/lua/config/
 .vc     ~/.config/nvim/lua/core/
 .vp     ~/.config/nvim/lua/plugins.lua
+.vf     ~/.config/nvim/lua/lsp/formatters.lua
 .X      ~/.config/sxhkd/sxhkdrc
 .xm     ~/.config/xmonad/xmonad.hs
 .xmb    ~/.config/xmobar/xmobarrc
