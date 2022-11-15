@@ -16,7 +16,7 @@
 .vs     ~/.config/nvim/lua/config/settings.lua
 .vk     ~/.config/nvim/lua/config/keybindings/init.lua
 .vK     ~/.config/nvim/lua/config/keybindings/dap.lua
-.vl     ~/.config/nvim/lua/lsp/init.lua
+.vl     ~/.config/nvim/lua/lsp/lsp.lua
 .vC     ~/.config/nvim/lua/config/
 .vc     ~/.config/nvim/lua/core/
 .vp     ~/.config/nvim/lua/plugins.lua
