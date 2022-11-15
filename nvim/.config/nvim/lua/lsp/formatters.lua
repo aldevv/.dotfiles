@@ -21,7 +21,7 @@ local opts = {
     debug = false,
 
     log = {
-        enable = true,
+        enable = false,
         level = "warn",
         use_console = "async",
     },
@@ -71,13 +71,13 @@ require("mason-null-ls").setup_handlers({
         require("mason-null-ls.automatic_setup")(source_name, methods)
     end,
     stylua = function(source_name, methods)
-        null_ls.register(null_ls.builtins.formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }))
+        null_ls.register(formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }))
     end,
     black = function(source_name, methods)
-        null_ls.register(null_ls.builtins.formatting.black.with({ extra_args = { "--fast" } }))
+        null_ls.register(formatting.black.with({ extra_args = { "--fast" } }))
     end,
     isort = function(source_name, methods)
-        null_ls.register(null_ls.builtins.formatting.isort)
+        null_ls.register(formatting.isort)
     end,
 })
 

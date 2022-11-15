@@ -11,8 +11,8 @@
 -- TODO check https://github.com/mfussenegger/nvim-dap-python
 
 local dap = require("dap")
-local level = "trace" -- error, debug, info, warn?
-dap.set_log_level(level)
+-- local level = "trace" -- error, debug, info, warn?
+-- dap.set_log_level(level)
 
 require("mason-nvim-dap").setup({
     ensure_installed = { "python", "delve" },
