@@ -15,7 +15,7 @@ local code_actions = null_ls.builtins.code_actions
 --https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/SOURCES.md
 --here are the individual files
 -- ~/.local/share/nvim/site/pack/packer/start/null-ls.nvim/lua/null-ls/builtins/formatting
-null_ls.setup({
+local opts = {
     -- Displays all possible log messages and writes them to the null-ls log, which you can view with the command :NullLsLog. This option can slow down Neovim, so it's strongly recommended to disable it for normal use.
     -- debug = false,
     debug = false,
@@ -29,9 +29,9 @@ null_ls.setup({
     -- conf options
     -- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
     sources = {
-        formatting.black.with({ extra_args = { "--fast" } }),
-        formatting.isort,
-        formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }),
+        -- formatting.isort,
+        -- formatting.black.with({ extra_args = { "--fast" } }),
+        -- formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }),
         formatting.shfmt.with({
             extra_filetypes = { "zsh", "bash" },
         }),
@@ -59,4 +59,26 @@ null_ls.setup({
         -- code_actions.gitsigns,
         code_actions.gitsigns,
     },
+}
+
+require("mason-null-ls").setup({
+    ensure_installed = { "stylua", "black" },
+    automatic_setup = true,
 })
+
+require("mason-null-ls").setup_handlers({
+    function(source_name, methods)
+        require("mason-null-ls.automatic_setup")(source_name, methods)
+    end,
+    stylua = function(source_name, methods)
+        null_ls.register(null_ls.builtins.formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }))
+    end,
+    black = function(source_name, methods)
+        null_ls.register(null_ls.builtins.formatting.black.with({ extra_args = { "--fast" } }))
+    end,
+    isort = function(source_name, methods)
+        null_ls.register(null_ls.builtins.formatting.isort)
+    end,
+})
+
+null_ls.setup(opts)

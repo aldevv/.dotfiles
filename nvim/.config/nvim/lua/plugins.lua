@@ -142,6 +142,8 @@ return require("packer").startup({
             config = req("lsp.formatters"),
         })
 
+        use("jayp0521/mason-null-ls.nvim")
+
         use({
             "nvim-treesitter/playground",
             requires = "nvim-treesitter/nvim-treesitter",
@@ -205,6 +207,8 @@ return require("packer").startup({
             -- module = "dap",
             config = req("lsp.dap.dap"),
         })
+
+        use("jayp0521/mason-nvim-dap.nvim")
 
         use({
             "jbyuki/one-small-step-for-vimkind",
