@@ -53,3 +53,7 @@ cmd([[
             autocmd BufReadPre *.{lua} :set nospell
     augroup END
 ]])
+
+cmd([[
+autocmd FileType org nnoremap <leader>ll :VimtexCompile<cr>
+]])

@@ -53,22 +53,33 @@ M.load_mappings = function()
     map("n", "<localleader>v.", ':lua require("utils.lua.telescope").nvim()<cr>', nor_s)
     map(
         "n",
-        "<localleader>vk",
+        "<localleader>Vk",
         ':lua require("utils.lua.telescope").nvim({path = "lua/config/keybindings"})<cr>',
         nor_s
     )
+    map("n", "<localleader>V.", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
+    map("n", "<localleader>Vv", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
     map("n", "<localleader>Vc", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
     map("n", "<localleader>VC", ':lua require("utils.lua.telescope").nvim({path = "lua/config/"})<cr>', nor_s)
     map("n", "<localleader>Vu", ':lua require("utils.lua.telescope").nvim({path = "lua/utils/"})<cr>', nor_s)
     map("n", "<localleader>Vl", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/"})<cr>', nor_s)
     map("n", "<localleader>Vd", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/dap"})<cr>', nor_s)
     map("n", "<localleader>Vp", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
-    map("n", "<localleader>gm", ':lua require("utils.lua.telescope").main()<cr>', nor_s)
-    map("n", "<localleader>gM", ':lua require("utils.lua.telescope").micro()<cr>', nor_s)
-    -- map("n", "<localleader>cc", ':lua require("utils.lua.telescope").classes()<cr>', nor_s)
-    map("n", "<localleader>ll", ':lua require("utils.lua.telescope").learn()<cr>', nor_s)
-    map("n", "<localleader>gp", ':lua require("utils.lua.telescope").playground()<cr>', nor_s)
-    map("n", "<localleader>.ex", ':lua require("utils.lua.telescope").exploits()<cr>', nor_s)
+    map("n", "<localleader>P.", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
+
+    map("n", "<localleader>Ll", ':lua require("utils.lua.telescope").learn()<cr>', nor_s)
+    map("n", "<localleader>Pl", ':lua require("utils.lua.telescope").playground()<cr>', nor_s)
+    map("n", "<localleader>Ex.", ':lua require("utils.lua.telescope").exploits()<cr>', nor_s)
+    map("n", "<localleader>C.", ':lua require("utils.lua.telescope").code()<cr>', nor_s)
+    map("n", "<localleader>N.", ':lua require("utils.lua.telescope").notes()<cr>', nor_s)
+
+    -- live_grep
+    map("n", "<localleader>gn.", ':lua require("utils.lua.telescope").notes_grep()<cr>', nor_s)
+    map("n", "<localleader>gc.", ':lua require("utils.lua.telescope").code_grep()<cr>', nor_s)
+    map("n", "<localleader>gpl", ':lua require("utils.lua.telescope").playground_grep()<cr>', nor_s)
+    map("n", "<localleader>gp.", ':lua require("utils.lua.telescope").projects_grep()<cr>', nor_s)
+    map("n", "<localleader>gwo", ':lua require("utils.lua.telescope").work_grep()<cr>', nor_s)
+    -- map("n", "<localleader>Wo", ':lua require("utils.lua.telescope").notes_grep()<cr>', nor_s)
 
     -- deprecated 05/01/2022
     -- map('n', '<a-f>', ':lua require("telescope.builtin").file_browser()<cr>',nor_s) https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/3

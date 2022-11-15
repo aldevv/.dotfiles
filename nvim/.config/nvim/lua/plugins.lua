@@ -482,10 +482,7 @@ return require("packer").startup({
             -- https://nvim-orgmode.github.io/demo.html
             "nvim-orgmode/orgmode",
             ft = { "org" },
-            config = function()
-                require("orgmode").setup_ts_grammar()
-                require("orgmode").setup()
-            end,
+            config = req("core.org"),
         })
         use("nanotee/sqls.nvim")
         -- overseer tutorial, (save tasks, watch tasks etc)
