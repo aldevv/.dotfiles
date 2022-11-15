@@ -1,0 +1,43 @@
+#!/bin/bash
+
+message="${2:-Choose a name for your file}"
+echo -e "\e[34m$message"
+read -r name
+folder_chosen="${1:-$UTILITIES}"
+
+first_time=1
+while [[ $folder_chosen != "here" && -n ${folder_chosen} && $folder_chosen != "new" ]]; do
+	if [[ $first_time == 1 ]]; then
+		folder_chosen=$(find "${folder_chosen}/" -mindepth 1 -maxdepth 1 -type d -name "*" -printf "%T+\t%p\n" | sort -r | awk '{print $2}' |
+			fzf --prompt "folder: " -d / --with-nth -1 --preview="ls {} --color=always")
+		first_time=0
+	else
+		inner_folders="$(find "${folder_chosen}/" -mindepth 1 -maxdepth 1 -type d -name "*" -printf "%T+\t%p\n" | sort -r | awk '{print $2}')"
+		if [[ -z $inner_folders ]]; then
+			break
+		fi
+        # save previous since folder_chosen becomes "here"
+		prev_folder="$folder_chosen"
+		folder_chosen=$(echo -en "here\n$inner_folders\nnew" | fzf --prompt "folder: " -d / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || bat $FILES/fun/loading_image")
+	fi
+done
+
+if [[ -z "$folder_chosen" ]]; then
+	exit
+fi
+
+if [[ "$folder_chosen" == "here" ]]; then
+	folder_chosen="$prev_folder"
+fi
+
+if [[ "$folder_chosen" == "new" ]]; then
+    echo -en "\e[31mEnter the folder name you monster\n"
+    read -r new_folder_name
+    if [[ -z "$new_folder_name" ]]; then
+        exit
+    fi
+	folder_chosen="$prev_folder/$new_folder_name"
+    mkdir "$folder_chosen"
+fi
+
+nvim "$folder_chosen/$name"

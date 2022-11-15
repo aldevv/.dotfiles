@@ -1,0 +1,3 @@
+#!/bin/bash
+
+mkfile "$FILES/virtual/docker-compose/" "why you trying to be cool with all these dumb files?\nChoose a name already!"
