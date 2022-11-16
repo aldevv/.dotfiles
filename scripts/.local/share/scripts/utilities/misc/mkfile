@@ -18,7 +18,7 @@ while [[ $folder_chosen != "here" && -n ${folder_chosen} && $folder_chosen != "n
 		fi
         # save previous since folder_chosen becomes "here"
 		prev_folder="$folder_chosen"
-		folder_chosen=$(echo -en "here\n$inner_folders\nnew" | fzf --prompt "folder: " -d / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || bat $FILES/fun/loading_image")
+		folder_chosen=$(echo -en "here\n$inner_folders\nnew" | fzf --prompt "folder: " -d / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || bat $FILES/fun/loading_image --color=always")
 	fi
 done
 
