@@ -333,9 +333,9 @@ return require("packer").startup({
         use({
             "tpope/vim-dotenv",
             requires = "neovim/nvim-lspconfig",
-            -- cond = function()
-            --     return require("lspconfig.util").root_pattern(".env*")(vim.fn.getcwd()) ~= nil
-            -- end,
+            cond = function()
+                return require("lspconfig.util").root_pattern(".env*")(vim.fn.getcwd()) ~= nil
+            end,
         })
 
         use({

@@ -46,7 +46,7 @@ export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 
 # path
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+export PATH="/usr/local/bin:$PATH"
 export CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com/:$PROJECTS"
 
 

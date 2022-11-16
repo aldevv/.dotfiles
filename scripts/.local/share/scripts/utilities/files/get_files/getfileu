@@ -1,0 +1,19 @@
+#!/bin/bash
+
+folder=$1
+destination="${2:-.}"
+destination_env="${3:-.}"
+
+options=$(find "$folder" -mindepth 1 -not -name '.*' -type f)
+chosen=$(fzf -d / --with-nth -1 --preview="bat {} --color=always" <<< "$options")
+folder_chosen="${chosen%/*}"
+
+if [[ ! -f "$chosen" ]]; then
+    exit
+fi
+
+cp "$chosen" "$destination"
+if [[ ! -f "$folder_chosen/.env" ]]; then
+    exit
+fi
+cp "$folder_chosen/.env" "$destination_env"

@@ -267,6 +267,7 @@ if test -d .fnm; then
     export PATH=/home/kanon/.fnm:$PATH
     eval "`fnm env`"
 fi
+export PATH=$HOME/.local/bin:$PATH
 
 CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 # shellcheck source=/dev/null
