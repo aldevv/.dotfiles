@@ -1,7 +1,11 @@
 #!/bin/bash
 
-folder=$FILES
-file=$(find $folder -type f | fzf --delimiter / --with-nth -3,-2,-1)
+folder=${1:-$FILES}
+if [[ -n $(command -v fdi) ]]; then
+    file=$(fd '.' $folder -t f | fzf --delimiter / --with-nth -3,-2,-1)
+else
+    file=$(find $folder -type f  | fzf --delimiter / --with-nth -3,-2,-1)
+fi
 
 [[ -f "$file"  ]] \
     &&  cp "$file" . 

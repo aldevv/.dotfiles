@@ -24,7 +24,7 @@ vu      $XDG_CONFIG_HOME/nvim/lua/utils
 vk      $XDG_CONFIG_HOME/nvim/lua/config/keybindings
 sp      ~/.config/nvim/my_snippets
 m.      $SCRIPTS
-F.      $FILES
+ff      $FILES
 u.      $UTILITIES
 a.      $AUTOMATION
 A.      $APPS
@@ -61,8 +61,6 @@ Ro      /opt
 Rmn     /mnt
 sc      ~/Pictures/screenshots
 vo      $VOLUMES
-vo.     $VOLUMES
-u.      $REMOTES
 an.     ~/.local/share/ansible/
 P       $PROGRAMS/
 P.      $PROGRAMS/
