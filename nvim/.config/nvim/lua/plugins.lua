@@ -333,9 +333,15 @@ return require("packer").startup({
         use({
             "tpope/vim-dotenv",
             requires = "neovim/nvim-lspconfig",
-            cond = function()
-                return require("lspconfig.util").root_pattern(".env*")(vim.fn.getcwd()) ~= nil
-            end,
+            -- cond = function()
+            --     return require("lspconfig.util").root_pattern(".env*")(vim.fn.getcwd()) ~= nil
+            -- end,
+        })
+
+        use({
+            "kristijanhusak/vim-dadbod-ui",
+            requires = { "tpope/vim-dadbod", "tpope/vim-dotenv", "kristijanhusak/vim-dadbod-completion" },
+            config = req("core.dadbod"),
         })
         -- fun
         use({ "ThePrimeagen/vim-apm", cmd = { "VimApm" } })

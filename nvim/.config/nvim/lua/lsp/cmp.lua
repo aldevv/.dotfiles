@@ -64,6 +64,7 @@ cmp.setup({
                 ultisnips = "🔥",
                 -- spell = "暈",
                 spell = "暈",
+                ["vim-dadbod-completion"] = "[DB]",
             })[entry.source.name]
 
             return vim_item

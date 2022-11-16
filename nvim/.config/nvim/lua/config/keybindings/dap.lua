@@ -14,7 +14,7 @@ M.load_mappings = function()
     map("n", "<localleader>dBh", ":lua require'dap'.set_breakpoint(nil, vim.fn.input('Hit count: '))<cr>", nor_s)
     map(
         "n",
-        "<leader>dBl",
+        "<localleader>dBl",
         ":lua require'dap'.set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<cr>",
         nor_s
     )
