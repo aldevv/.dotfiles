@@ -6,7 +6,7 @@ if [[ $1 != "list" ]]; then
 fi
 
 if [[ -z "$subject" ]]; then
-    subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d)\nnew" | fzf --delimiter / --with-nth -1 --preview="ls {} --color")
+    subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d)\nnew" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || bat $FILES/fun/loading_image")
 fi
 
 if [[ $subject == "dmenu" ]]; then
@@ -19,7 +19,7 @@ fi
 
 if [[ $1 == "list" ]]; then
     [[ -z "$subject" ]] && exit
-    chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' | fzf --preview="bat {}")
+    chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' | fzf --preview="bat $subject/{} --color=always")
     if [[ -n "$chosen_file" ]]; then
         nvim "$subject/$chosen_file"
     fi
