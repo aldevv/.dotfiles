@@ -33,11 +33,11 @@ if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
 fi
 
 if ! tmux has-session -t "$prefix-$selected_name" 2> /dev/null; then
-    # echo "second"
+    echo "second"
     tmux -f ~/.config/tmux/tmux.conf new-session -ds "$prefix-$selected_name" -c "$selected"
 fi
 #
 if ! tmux switch-client -t "$prefix-$selected_name" 2> /dev/null; then
-    # echo "third"
+    echo "third"
     tmux attach -t "$prefix-$selected_name"
 fi
