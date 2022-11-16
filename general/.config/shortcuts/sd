@@ -29,7 +29,7 @@ u.      $UTILITIES
 a.      $AUTOMATION
 A.      $APPS
 ml.     $MLIBS
-D       ~/Downloads
+O       ~/Downloads
 o       ~/Documents
 vv      ~/Videos
 wa      $WALL

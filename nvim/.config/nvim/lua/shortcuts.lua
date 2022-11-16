@@ -28,7 +28,7 @@ vim.keymap.set("n", "<localleader>u.", "<cmd>cd $UTILITIES <cr> | <cmd>e .<cr>",
 vim.keymap.set("n", "<localleader>a.", "<cmd>cd $AUTOMATION <cr> | <cmd>e .<cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>A.", "<cmd>cd $APPS <cr> | <cmd>e .<cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>ml.", "<cmd>cd $MLIBS <cr> | <cmd>e .<cr>", {silent=true, noremap=true})
-vim.keymap.set("n", "<localleader>D", "<cmd>cd ~/Downloads <cr> | <cmd>e .<cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>O", "<cmd>cd ~/Downloads <cr> | <cmd>e .<cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>o", "<cmd>cd ~/Documents <cr> | <cmd>e .<cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>vv", "<cmd>cd ~/Videos <cr> | <cmd>e .<cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>wa", "<cmd>cd $WALL <cr> | <cmd>e .<cr>", {silent=true, noremap=true})

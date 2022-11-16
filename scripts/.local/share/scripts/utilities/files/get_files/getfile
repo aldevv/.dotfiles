@@ -33,7 +33,7 @@ else
     echo -e "\e[35mcopied $file_name"
 fi
 
-if [[ -f "$env_file" ]]; then
+if [[ "$file_name" != ".env" && -f "$env_file" ]]; then
     echo -e "\e[35mcopied .env file"
     cp "$env_file" .
 fi

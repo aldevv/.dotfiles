@@ -56,16 +56,9 @@ vw() {
 	nvim "$(which $1)"
 }
 
-.e() {
-	# load .env file or any other file
-	file=$1
-	[ -z $file ] && file=".env"
-	[ -f $file ] && zsh -c "set -o allexport; source $file; echo 'loaded'; set +o allexport; zsh -i"
-}
 
-.ec() {
-	bat .env
-}
+
+
 
 vman() {
 	nvim -c "Man $1" -c "silent only"
@@ -1346,7 +1339,7 @@ alias dkcb='docker-compose build '
 alias dkcB='docker-compose build --no-cache '
 alias dkcd='docker-compose down '
 alias dkcD='docker-compose down --volumes '
-alias dkce='docker-compose exec -e COLUMNS=`tput cols` -e LINES=`tput lines` '
+alias dkce='docker-compose exec'
 alias dkck='docker-compose kill '
 alias dkclg='docker-compose logs --follow '
 alias dkclG='docker-compose logs -f '
@@ -1393,19 +1386,19 @@ dkcUe() {
 }
 
 dkceb() {
-	docker-compose exec -e COLUMNS=$(tput cols) -e LINES=$(tput lines) "$1" bash
+	docker-compose exec "$1" bash
 }
 
 #=======
 # OPENVPN
 #=======
-alias ovpn='_ openvpn'
-alias ovpnj='_ openvpn --config /etc/openvpn/ProtonVPN_server_configs/jp-free-01.protonvpn.com.udp.ovpn --auth-user-pass /etc/openvpn/protonvpn --daemon'
-alias ovpnu='_ openvpn --config /etc/openvpn/ProtonVPN_server_configs/us-free-02.protonvpn.com.udp.ovpn --auth-user-pass /etc/openvpn/protonvpn --daemon'
-alias ovpnd='_ killall openvpn'
-alias openconn="_ cat $WORK/vpn/pass | _ openconnect --config=$WORK/vpn/config --passwd-on-stdin -b vpn.unal.edu.co > $WORK/vpn/vpn-output.log 2>&1"
-alias ofv='_ openfortivpn'
-alias ofvc='ofv -c $WORK/local/covidalert-back/.vpn/config > $WORK/local/covidalert-back/.vpn/vpn.log 2>&1 &'
+# alias ovpn='_ openvpn'
+# alias ovpnj='_ openvpn --config /etc/openvpn/ProtonVPN_server_configs/jp-free-01.protonvpn.com.udp.ovpn --auth-user-pass /etc/openvpn/protonvpn --daemon'
+# alias ovpnu='_ openvpn --config /etc/openvpn/ProtonVPN_server_configs/us-free-02.protonvpn.com.udp.ovpn --auth-user-pass /etc/openvpn/protonvpn --daemon'
+# alias ovpnd='_ killall openvpn'
+# alias openconn="_ cat $WORK/vpn/pass | _ openconnect --config=$WORK/vpn/config --passwd-on-stdin -b vpn.unal.edu.co > $WORK/vpn/vpn-output.log 2>&1"
+# alias ofv='_ openfortivpn'
+# alias ofvc='ofv -c $WORK/local/covidalert-back/.vpn/config > $WORK/local/covidalert-back/.vpn/vpn.log 2>&1 &'
 
 #============
 # OPENCONNECT

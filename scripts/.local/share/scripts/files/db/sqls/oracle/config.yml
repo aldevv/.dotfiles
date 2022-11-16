@@ -1,0 +1,6 @@
+lowercaseKeywords: false
+connections:
+  - alias: name
+    driver: oracle
+    passwd: some
+    dataSourceName: db/user@host

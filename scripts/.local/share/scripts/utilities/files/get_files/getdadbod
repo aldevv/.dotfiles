@@ -1,0 +1,6 @@
+#!/bin/bash
+
+file_name=".env"
+folder=$FILES/db/dadbod/
+
+getfile "$file_name" "$folder"
