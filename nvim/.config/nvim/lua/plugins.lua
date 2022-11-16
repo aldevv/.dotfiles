@@ -43,6 +43,13 @@ return require("packer").startup({
         --     config = req("config.appearance.themes.gruvbox"),
         -- })
         use({
+            "lewis6991/impatient.nvim",
+            -- config = function()
+            -- require("impatient").enable_profile()
+            -- require("impatient")
+            -- end,
+        })
+        use({
             "ellisonleao/gruvbox.nvim",
             config = req("config.appearance.themes.gruvbox"),
         })
@@ -206,24 +213,25 @@ return require("packer").startup({
             },
             -- module = "dap",
             config = req("lsp.dap.dap"),
+            module = "dap",
         })
 
         use("jayp0521/mason-nvim-dap.nvim")
 
         use({
             "jbyuki/one-small-step-for-vimkind",
-            requires = "mfussenegger/nvim-dap",
+            requires = { "mfussenegger/nvim-dap", module = "dap" },
             module = "osv",
         }) -- debug lua files
 
         use({
             "github/copilot.vim",
             config = function()
-                vim.g.copilot_enabled = false
-                vim.g.copilot_filetypes = { xml = false }
+                vim.g.copilot_enabled = true
+                vim.g.copilot_filetypes = { ts = true, js = true, jsx = true }
                 vim.g.copilot_no_tab_map = true
             end,
-            cmd = "Copilot",
+            -- cmd = "Copilot",
         })
 
         use({
@@ -342,6 +350,7 @@ return require("packer").startup({
             "kristijanhusak/vim-dadbod-ui",
             requires = { "tpope/vim-dadbod", "tpope/vim-dotenv", "kristijanhusak/vim-dadbod-completion" },
             config = req("core.dadbod"),
+            cmd = "DBUI",
         })
         -- fun
         use({ "ThePrimeagen/vim-apm", cmd = { "VimApm" } })
@@ -455,6 +464,7 @@ return require("packer").startup({
                 "nvim-neotest/neotest-vim-test",
             },
             config = req("core.neotest"),
+            module = "neotest",
         })
         use({ "brooth/far.vim", cmd = { "Far", "Fardo", "Farr" } })
 
@@ -465,6 +475,7 @@ return require("packer").startup({
                 { "nvim-treesitter/nvim-treesitter" },
             },
             config = req("core.refactoring"),
+            module = "refactoring",
         })
 
         -- TODO: migrate to this?
@@ -501,6 +512,7 @@ return require("packer").startup({
                 "nvim-telescope/telescope.nvim",
                 "rcarriga/nvim-notify",
             },
+            cmd = "OverseerRun",
         })
         -- check arpeggio https://github.com/kana/vim-arpeggio
         -- check sideways https://github.com/AndrewRadev/sideways.vim
@@ -597,6 +609,7 @@ return require("packer").startup({
             config = function()
                 require("toggleterm").setup()
             end,
+            cmd = "ToggleTerm",
         })
         -- install without yarn or npm
         use({
@@ -616,7 +629,6 @@ return require("packer").startup({
         -- for better go experience
         -- https://github.com/ray-x/go.nvim
         -- this is for faster startup!
-        --https://github.com/lewis6991/impatient.nvim
     end,
     config = {
         display = {
