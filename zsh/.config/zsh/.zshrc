@@ -192,7 +192,7 @@ doge() {
 
 
 bindkey -s "^n" "stn^M"
-bindkey -s 'f' '$UTILITIES/tmux/tmux-sessionizer^M' # projects and work
+bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
 bindkey -s 'F' '$UTILITIES/misc/np^M' # projects and work
 bindkey -s 'p' 'vf ^M'
 bindkey -s 'P' '. cf ^M'
