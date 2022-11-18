@@ -1,4 +1,10 @@
 #!/bin/bash
 
-file="$1"
-while read l; do export "$l"; done < "${file:-.env}"
+file=$(sed -E 's/^\s*#.*//g;/^$/d;s/\s+#.*//g;s/\s*$//g' "${1:-.env}" )
+
+while read -r l; do
+    if [[ "$l" =~ ^#.* || -z "$l" ]]; then
+        continue
+    fi
+    eval "export $l"
+done <<< "$file"

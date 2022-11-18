@@ -52,3 +52,5 @@ vim.opt.statusline = "%t"
 -- uncomment this in a future version, is buggy as of version 0.9 dev 15-11-22
 -- vim.opt.cmdheight = 0
 vim.opt.spell = true
+vim.opt.spell = true
+vim.g.netrw_keepdir = 0

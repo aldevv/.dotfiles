@@ -19,8 +19,6 @@
 .vK     ~/.config/nvim/lua/config/keybindings/dap.lua
 .vd     ~/.config/nvim/lua/lsp/dap/dap.lua
 .vl     ~/.config/nvim/lua/lsp/lsp.lua
-.vC     ~/.config/nvim/lua/config/
-.vc     ~/.config/nvim/lua/core/
 .vp     ~/.config/nvim/lua/plugins.lua
 .vf     ~/.config/nvim/lua/lsp/formatters.lua
 .X      ~/.config/sxhkd/sxhkdrc
@@ -39,6 +37,6 @@
 .pr     $FILES/projections/global/.projections.json
 .s      $HOME/.ssh/config
 .an      ~/.local/share/ansible/local.yml
-.anc      ~/.local/share/ansible/roles/core/tasks/
-.ant     ~/.local/share/ansible/tasks/
+.anc      ~/.local/share/ansible/roles/core/tasks
+.ant     ~/.local/share/ansible/tasks
 .anT     ~/.local/share/ansible/TODO

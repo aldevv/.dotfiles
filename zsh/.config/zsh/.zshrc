@@ -192,8 +192,11 @@ doge() {
 
 
 bindkey -s "^n" "stn^M"
+bindkey -s 'w' 'browseWiki^M' # projects and work
 bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
-bindkey -s 'F' '$UTILITIES/misc/np^M' # projects and work
+# bindkey -s 'F' '$UTILITIES/tmux/nf force^M' 
+bindkey -s 's' '$UTILITIES/tmux/ns^M' # projects and work
+bindkey -s 't' '$UTILITIES/misc/nt^M' # projects and work
 bindkey -s 'p' 'vf ^M'
 bindkey -s 'P' '. cf ^M'
 bindkey -s 'a' 'vf $HOME/.config ^M'
@@ -202,9 +205,7 @@ bindkey -s 'A' '. cf $HOME/.config ^M'
 # bindkey -s 'z' '. cf  "$LEARN"^M'
 bindkey -s 'm' 'vf  "$SCRIPTS"^M'
 bindkey -s 'M' '. cf  "$SCRIPTS"^M'
-bindkey -s 'o' '!\$^M'
-bindkey -s 'O' '!*^M'
-bindkey -s 't' '**	'
+bindkey -s 'o' '**	'
 # tested, this shows stderr correctly on new terminal window
 
 # this is used for previous command
@@ -281,6 +282,7 @@ load_pyenv() {
 }
 
 [ -n $(command -v pyenv) ] && load_pyenv
+alias srcdirenv='eval "$(direnv hook zsh)"'
 
 . $ZDOTDIR/.auto_aliases
 

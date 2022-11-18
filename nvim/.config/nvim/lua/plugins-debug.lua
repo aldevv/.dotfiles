@@ -42,14 +42,14 @@ return require("packer").startup({
         --     "gruvbox-community/gruvbox",
         --     config = req("config.appearance.themes.gruvbox"),
         -- })
-        -- use({
-        --     "nvim-telescope/telescope.nvim",
-        --     requires = {
-        --         "nvim-lua/plenary.nvim",
-        --         { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
-        --     },
-        --     config = req("core.telescope"),
-        -- })
+        use({
+            "nvim-telescope/telescope.nvim",
+            requires = {
+                "nvim-lua/plenary.nvim",
+                { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+            },
+            config = req("core.telescope"),
+        })
         -- -- use({
         -- --     "folke/tokyonight.nvim",
         -- --      branch = "main",
@@ -451,14 +451,14 @@ return require("packer").startup({
         -- })
         --
         -- use({ "Vimjas/vim-python-pep8-indent" }) -- for indentation, treesitter not functional yet 23/01/2022
-        use({
-            "nvim-orgmode/orgmode",
-            ft = { "org" },
-            config = function()
-                require("orgmode").setup({})
-                require("orgmode").setup_ts_grammar()
-            end,
-        })
+        -- use({
+        --     "nvim-orgmode/orgmode",
+        -- ft = { "org" },
+        -- config = function()
+        -- require("orgmode").setup({})
+        -- require("orgmode").setup_ts_grammar()
+        --     end,
+        -- })
         -- use("nanotee/sqls.nvim")
         -- -- check arpeggio https://github.com/kana/vim-arpeggio
         -- -- check sideways https://github.com/AndrewRadev/sideways.vim

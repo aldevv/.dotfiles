@@ -61,12 +61,12 @@ Ro      /opt
 Rmn     /mnt
 sc      ~/Pictures/screenshots
 vo      $VOLUMES
-an.     ~/.local/share/ansible/
+an.     ~/.local/share/ansible
 P       $PROGRAMS/
 P.      $PROGRAMS/
 p       $PROJECTS/
 p.      $PROJECTS/
-c.      $PLAYGROUND/code/
+c.      $PLAYGROUND/code
 pp      ~/Pictures
 pl      $PLAYGROUND
 # temp shortcuts

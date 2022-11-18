@@ -1,4 +1,10 @@
-require("harpoon").setup({})
+require("harpoon").setup({
+    global_settings = {
+        enter_on_sendcmd = true,
+        -- set marks specific to each git branch inside git repository
+        -- mark_branch = false,
+    },
+})
 -- require("harpoon").setup({
 --     -- sets harpoon to run the command immediately as it's passed to the terminal when calling `sendCommand`.
 --     global_settings = {

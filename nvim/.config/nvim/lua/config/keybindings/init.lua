@@ -289,7 +289,8 @@ vmap <leader>csr <Plug>SnipRun
 map("n", "<leader>,li", ":LspInfo<cr>", nor_s)
 map("n", "<leader>,lI", ":LspInstallInfo<cr>", nor_s)
 
-map("n", "<leader>,ps", ":PackerStatus<cr>", nor)
+map("n", "<leader>,ps", ":PackerSync<cr>", nor)
+map("n", "<leader>,pS", ":PackerStatus<cr>", nor)
 map("n", "<leader>,pi", ":PackerInstall<cr>", nor)
 map("n", "<leader>,pC", ":PackerClean<cr>", nor)
 map("n", "<leader>,pu", ":PackerUpdate<cr>", nor)
@@ -317,3 +318,9 @@ map("n", "<leader>.mp", "<cmd>MarkdownPreviewToggle<cr>", nor)
 map("n", "<localleader>rr", "<Plug>RestNvim<cr>", nor)
 map("n", "<localleader>rp", "<Plug>RestNvimPreview<cr>", nor)
 map("n", "<localleader>rl", "<Plug>RestNvimLast<cr>", nor)
+
+-- dadbod
+-- opening it in a new tab
+map("n", "<localleader>Dd", ":tab DBUI<cr>", {})
+
+map("n", "<leader>,,", "<cmd>tabedit<cr>", nor)

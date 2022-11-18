@@ -38,10 +38,6 @@ end
 return require("packer").startup({
     function(use)
         use({ "wbthomason/packer.nvim" })
-        -- use({
-        --     "gruvbox-community/gruvbox",
-        --     config = req("config.appearance.themes.gruvbox"),
-        -- })
         use({
             "lewis6991/impatient.nvim",
             -- config = function()
@@ -185,7 +181,7 @@ return require("packer").startup({
 
         use({
             "ThePrimeagen/harpoon",
-            requires = { "nvim-lua/plenary.nvim", module_pattern = "plenary" },
+            requires = { "nvim-lua/plenary.nvim" },
             config = req("core.harpoon"),
             module = "harpoon",
         })
@@ -534,7 +530,7 @@ return require("packer").startup({
 
         -- colors
         -- use("dracula/vim")
-        -- use("crusoexia/vim-monokai")
+        use("crusoexia/vim-monokai")
         use({
             "folke/todo-comments.nvim",
             requires = "nvim-lua/plenary.nvim",
@@ -629,6 +625,7 @@ return require("packer").startup({
         -- for better go experience
         -- https://github.com/ray-x/go.nvim
         -- this is for faster startup!
+        use("navarasu/onedark.nvim")
     end,
     config = {
         display = {
