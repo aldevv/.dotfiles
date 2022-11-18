@@ -4,5 +4,5 @@
 # the filename needs to be changed to mongosh when it becomes supported in the future
 # 16-11-22
 
-docker-compose exec -T $SERVICE_NAME mongosh "$@"
+docker-compose exec -T $SERVICE_NAME "$@"
 

@@ -6,7 +6,7 @@ if [[ $1 != "list" ]]; then
 fi
 
 if [[ -z "$subject" ]]; then
-    subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d)\nnew" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || bat $FILES/fun/loading_image")
+    subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d)\nnew" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
 fi
 
 if [[ $subject == "dmenu" ]]; then
@@ -33,11 +33,11 @@ fi
 
 [[ -z "$subject" ]] && exit
 
-if [[ ! -d "$subject" ]]; then
+if [[ ! -d "$NOTES/$subject" ]]; then
     mkdir -p "$NOTES/$subject"
-    nvim "$NOTES/$subject/$name"
-    exit
 fi
-nvim "$subject/$name"
+
+# echo $NOTES/$subject/$name
+nvim $NOTES/$subject/$name
 
 

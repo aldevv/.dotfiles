@@ -10,8 +10,7 @@ M.load_mappings = function()
     map(
         "n",
         "<a-p>",
-        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>'
-        ,
+        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>',
         nor_s
     )
     map(
@@ -20,7 +19,12 @@ M.load_mappings = function()
         ':lua require("telescope.builtin").live_grep({cwd = vim.fn.expand("%:p:h"), hidden = true })<cr>',
         nor_s
     )
-    map("n", "<a-b>", ':lua require("telescope.builtin").buffers()<cr>', nor_s)
+    map(
+        "n",
+        "<a-b>",
+        ':lua require("telescope.builtin").buffers(require("telescope.themes").get_dropdown({cwd_only=false}))<cr>',
+        nor_s
+    )
     map("n", "<a-s-r>", ':lua require("telescope.builtin").grep_string()<cr>', nor_s)
     map("n", "<leader>sz", ':lua require("utils.lua.telescope").zenmode()<cr>', nor_s)
 
@@ -49,7 +53,14 @@ M.load_mappings = function()
     map("n", "<localleader>gf", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
     map("n", "<localleader>gF", ':lua require("utils.lua.telescope").files()<cr>', nor_s)
     map("n", "<localleader>gd", ':lua require("utils.lua.telescope").dotfiles()<cr>', nor_s)
-    map("n", "<localleader>gs", ':lua require("utils.lua.telescope").scripts()<cr>', nor_s)
+    -- map("n", "<localleader>gs", ':lua require("utils.lua.telescope").scripts()<cr>', nor_s)
+    -- map(
+    --     "n",
+    -- "<localleader>gs",
+    -- ":lua require('telescope.builtin').find_files({prompt_title = '<AL\\'s SCRIPTS>', cwd = '$SCRIPTS/'})<cr>",
+    --     { noremap = true, silent = true }
+    -- )
+
     map("n", "<localleader>gu", ':lua require("utils.lua.telescope").utilities()<cr>', nor_s)
     map("n", "<localleader>V.", ':lua require("utils.lua.telescope").nvim()<cr>', nor_s)
     map(
@@ -63,14 +74,15 @@ M.load_mappings = function()
     map("n", "<localleader>Vu", ':lua require("utils.lua.telescope").nvim({path = "lua/utils/"})<cr>', nor_s)
     map("n", "<localleader>Vl", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/"})<cr>', nor_s)
     map("n", "<localleader>Vd", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/dap"})<cr>', nor_s)
+
     map("n", "<localleader>Vp", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
     map("n", "<localleader>P.", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
 
-    map("n", "<localleader>Ll", ':lua require("utils.lua.telescope").learn()<cr>', nor_s)
-    map("n", "<localleader>Pl", ':lua require("utils.lua.telescope").playground()<cr>', nor_s)
-    map("n", "<localleader>Ex.", ':lua require("utils.lua.telescope").exploits()<cr>', nor_s)
-    map("n", "<localleader>C.", ':lua require("utils.lua.telescope").code()<cr>', nor_s)
-    map("n", "<localleader>N.", ':lua require("utils.lua.telescope").notes()<cr>', nor_s)
+    map("n", "<localleader><localleader>ll", ':lua require("utils.lua.telescope").learn()<cr>', nor_s)
+    map("n", "<localleader><localleader>pl", ':lua require("utils.lua.telescope").playground()<cr>', nor_s)
+    map("n", "<localleader><localleader>ex.", ':lua require("utils.lua.telescope").exploits()<cr>', nor_s)
+    map("n", "<localleader><localleader>c.", ':lua require("utils.lua.telescope").code()<cr>', nor_s)
+    map("n", "<localleader><localleader>n.", ':lua require("utils.lua.telescope").notes()<cr>', nor_s)
 
     -- live_grep
     map("n", "<localleader>gn.", ':lua require("utils.lua.telescope").notes_grep()<cr>', nor_s)
@@ -109,6 +121,8 @@ M.load_mappings = function()
     map("n", "<leader>tgs", ':lua require("telescope.builtin").git_status()<cr>', nor_s)
     map("n", "<leader>tgS", ':lua require("telescope.builtin").git_stash()<cr>', nor_s)
 
-    map("n", "<leader>tp", ":Telescope projects<cr>", nor) -- recently opened porjects!!
+    map("n", "<leader>tp", ":Telescope projects<cr>", nor) -- recently opened projects!!
+
+    map("n", "<leader>,c", "<cmd>lua require('utils.lua.color_picker').choose_colors()<cr>", nor) -- recently opened porjects!!
 end
 return M

@@ -21,23 +21,30 @@ for key in "${!types[@]}"; do
     fi
     prefix=${key:0:1}
 done
+# TODO: generalize this script so this func can be used in other scripts
 
 if [[ -z $TMUX ]] &&  tmux has-session -t "$prefix-$selected_name" ; then
+    # attach to session if it exists
     tmux attach -t "$prefix-$selected_name"
 fi
 
+# change it so it checks if current directory inside tmux session
+# is a child of $selected session
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
+    # no tmux running start and create session
     echo "no tmux running"
     tmux -f ~/.config/tmux/tmux.conf new-session -s "$prefix-$selected_name" -c "$selected"
     exit 0
 fi
 
 if ! tmux has-session -t "$prefix-$selected_name" 2> /dev/null; then
+    # tmux running but no session with this name, create it
     echo "second"
     tmux -f ~/.config/tmux/tmux.conf new-session -ds "$prefix-$selected_name" -c "$selected"
 fi
 #
 if ! tmux switch-client -t "$prefix-$selected_name" 2> /dev/null; then
+    # switch to correct session, if can't switch, then attach
     echo "third"
     tmux attach -t "$prefix-$selected_name"
 fi
