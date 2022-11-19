@@ -20,7 +20,8 @@ alias \?r="noglob ?r"
 alias \?s="noglob ?s"
 
 # scripts
-alias sz="tmux-sessionizer"
+alias lg="live_grep"
+alias getlatest=". _getlatest"
 
 # builtin
 alias c="cd"
@@ -113,8 +114,7 @@ nord() {
 dgp() {
     # argument is the path
     clear
-    current_folder="$(pwd)"
-    cd "$1" || return
+    pushd "$1" || return
     echo "\e[35mIN $(basename $1 | tr a-z A-Z)"
     changes=$(git status -s)
     if [ -z "$(tr -d '\n' <<< "$changes")" ]; then 
@@ -135,18 +135,33 @@ dgp() {
     fi
     git commit -m "$message"
     git push origin HEAD
-    cd "$current_folder" || return
 }
 
 dgpa() {
+    sleep 0.001
     dgp "$WIKI"
     dgp "$DOTFILES"
+    popd -q || return
+    popd -q || return
 }
 
 dgpd() {
     dgp "$DOTFILES"
+    popd -q || return
 }
 
 dgpw() {
     dgp "$WIKI"
+    popd -q || return
+}
+
+e.() {
+	bat .env
+}
+
+source_env() {
+	# load .env file or any other file
+	file=$1
+	[ -z $file ] && file=".env"
+	[ -f $file ] && zsh -c "set -o allexport; source $file; echo 'loaded'; set +o allexport; zsh -i"
 }

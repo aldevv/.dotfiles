@@ -27,7 +27,7 @@ HOOK_READY_OLD = ranger.api.hook_ready
 
 def hook_ready(fm):
     def drive_toggle():
-        """ changes viewmode when entering the remotes folder """
+        """changes viewmode when entering the remotes folder"""
 
         history = fm.thistab.history.history
         prev_dir = None
@@ -39,8 +39,10 @@ def hook_ready(fm):
         remotes_path = os.getenv("REMOTES")
         playground_path = os.getenv("PLAYGROUND")
 
-        sub_folders = ['SSH']
-        paths_creator = lambda main_folder: [ f'{main_folder}/{sub_folder}' for sub_folder in sub_folders ]
+        sub_folders = ["SSH"]
+        paths_creator = lambda main_folder: [
+            f"{main_folder}/{sub_folder}" for sub_folder in sub_folders
+        ]
         path_check = lambda x, y: x in y
 
         if not remotes_path and not playground_path:
@@ -50,13 +52,13 @@ def hook_ready(fm):
         # paths = [remotes_path, *paths_creator(playground_path)]
         paths = [remotes_path]
 
-        paths_exist = [path_check(path, cur_path) for path in paths ]
-        if any(paths_exist) :
+        paths_exist = [path_check(path, cur_path) for path in paths]
+        if any(paths_exist):
             if viewmode == "miller":
                 fm.execute_console("set viewmode multipane")
         else:
             if prev_dir:
-                prev_dir_exists = [path_check(path, str(prev_dir)) for path in paths ]
+                prev_dir_exists = [path_check(path, str(prev_dir)) for path in paths]
                 if any(prev_dir_exists):
                     if viewmode != "miller":
                         fm.execute_console("set viewmode miller")
@@ -91,7 +93,9 @@ class fzf_select(Command):
             # command = "find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune \
             # -o -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
             command = "fzf +m"
-        fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
+        fzf = self.fm.execute_command(
+            command, universal_newlines=True, stdout=subprocess.PIPE
+        )
         stdout, stderr = fzf.communicate()
         if fzf.returncode == 0:
             fzf_file = os.path.abspath(stdout.rstrip("\n"))
@@ -99,6 +103,37 @@ class fzf_select(Command):
                 self.fm.cd(fzf_file)
             else:
                 self.fm.select_file(fzf_file)
+
+
+class fzf_select_file(Command):
+    """
+    :fzf_select
+
+    Find a file using fzf.
+
+    With a prefix argument select only directories.
+
+    See: https://github.com/junegunn/fzf
+    """
+
+    def execute(self):
+
+        if self.quantifier:
+            # match only directories
+            command = "find -L . -mindepth 1 -o -type f > /dev/null | sed 1d | fzf +m"
+        else:
+            # match files and directories
+            # command = "find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune \
+            # -o -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
+            command = "fzf +m"
+        fzf = self.fm.execute_command(
+            command, universal_newlines=True, stdout=subprocess.PIPE
+        )
+        stdout, stderr = fzf.communicate()
+        if fzf.returncode == 0:
+            fzf_file = os.path.abspath(stdout.rstrip("\n"))
+            self.fm.select_file(fzf_file)
+            self.fm.execute_command("nvim " + fzf_file)
 
 
 class rga_select(Command):
@@ -138,7 +173,9 @@ class rga_select(Command):
         # echo "opening $file" &&
         # xdg-open "$file" """
 
-        fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
+        fzf = self.fm.execute_command(
+            command, universal_newlines=True, stdout=subprocess.PIPE
+        )
         stdout, stderr = fzf.communicate()
         if fzf.returncode == 0:
             fzf_file = os.path.abspath(stdout.rstrip("\n"))
@@ -184,7 +221,9 @@ class rg_select(Command):
         # echo "opening $file" &&
         # xdg-open "$file" """
 
-        fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
+        fzf = self.fm.execute_command(
+            command, universal_newlines=True, stdout=subprocess.PIPE
+        )
         stdout, stderr = fzf.communicate()
         if fzf.returncode == 0:
             fzf_file = os.path.abspath(stdout.rstrip("\n"))
@@ -222,9 +261,13 @@ class YankContent(Command):
         elif file.image:
             cmd += ["-t", file.mimetype, file.path]
             subprocess.check_call(cmd)
-            self.fm.notify("Content of {} is copied to x clipboard".format(relative_path))
+            self.fm.notify(
+                "Content of {} is copied to x clipboard".format(relative_path)
+            )
         else:
-            self.fm.notify("{} is not an image file or a text file.".format(relative_path))
+            self.fm.notify(
+                "{} is not an image file or a text file.".format(relative_path)
+            )
 
     def tab(self, tabnum):
         return self._tab_directory_content()
@@ -254,7 +297,9 @@ class fzf_rga_documents_search(Command):
             "rga '%s' . --rga-adapters=pandoc,poppler | fzf +m | awk -F':' '{print $1}'"
             % search_string
         )
-        fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
+        fzf = self.fm.execute_command(
+            command, universal_newlines=True, stdout=subprocess.PIPE
+        )
         stdout, stderr = fzf.communicate()
         if fzf.returncode == 0:
             fzf_file = os.path.abspath(stdout.rstrip("\n"))

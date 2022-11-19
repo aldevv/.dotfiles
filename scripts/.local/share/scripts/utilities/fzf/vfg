@@ -1,0 +1,9 @@
+#!/bin/bash
+
+files_=$(git --git-dir "`git rev-parse --git-dir`" -C "`git config core.worktree || pwd`" ls-files)
+# show only text files
+if [[ -z $1 ]]; then
+    name=$(fzf -d / --with-nth -3,-2,-1 --preview-window=60%:wrap <<< "$files_")
+	[ -n "$name" ] && exec nvim "$name"
+    exit
+fi
