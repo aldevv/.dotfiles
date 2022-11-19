@@ -180,6 +180,7 @@ map("n", "<leader>.vd", ":lua require('osv').launch({port=3333})<cr>", nor_s)
 map("n", "<leader>.vD", ":lua require('osv').run_this()<cr>", nor_s)
 map("n", "<leader>.sb", "ggO#!/bin/bash<escape>", nor_s)
 map("n", "<leader>.sB", "ggO#!/bin/bash<escape>", nor_s)
+map("n", "<leader>.sf", ":luafile %<cr>", nor)
 
 require("config.keybindings.text-objs")
 
@@ -196,7 +197,7 @@ map("n", "<leader>cfa", ":VimApm<cr>", nor)
 map("n", "<leader>cfA", ":VimApmShutdown<cr>", nor)
 
 map("i", "€", "<plug>(emmet-expand-abbr)", {})
-map("n", "<leader>su", ":UndotreeToggle<cr>", nor_s)
+map("n", "<leader>u", ":UndotreeToggle<cr>", nor_s)
 map("n", "<leader>sv", ":IndentLinesToggle<cr>", nor_s)
 
 -- map('n', "gp", "<Plug>(ReplaceWithRegisterOperator)", nor_s)

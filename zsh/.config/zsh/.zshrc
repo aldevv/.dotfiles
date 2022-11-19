@@ -195,12 +195,12 @@ bindkey -s "^n" "stn^M"
 bindkey -s 'w' 'browseWiki^M' # projects and work
 bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
 # bindkey -s 'F' '$UTILITIES/tmux/nf force^M' 
-bindkey -s 'n' '$UTILITIES/tmux/nn^M' # projects and work
+bindkey -s 'd' '$UTILITIES/tmux/nd^M' # projects and work
 bindkey -s 't' '$UTILITIES/misc/nt^M' # projects and work
 bindkey -s 'p' 'vf ^M'
 bindkey -s 'P' 'vfg ^M'
 bindkey -s 'a' '. cf ^M'
-bindkey -s 'd' 'vf $HOME/.config ^M'
+bindkey -s 'D' 'vf $HOME/.config ^M'
 # bindkey -s 'z' 'vf  "$LEARN"^M'
 # bindkey -s 'z' '. cf  "$LEARN"^M'
 bindkey -s 'm' 'vf  "$SCRIPTS"^M'

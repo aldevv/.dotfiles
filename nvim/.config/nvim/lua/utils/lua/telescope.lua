@@ -114,6 +114,37 @@ M.nvim = function(opts)
     })
 end
 
+function enter_find_folders_git(prompt_bufnr)
+    local selected = s.get_selected_entry()
+    local cmd = ":e " .. selected[1]
+    vim.cmd(cmd)
+    a.close(prompt_bufnr)
+end
+
+M.find_folders = function(opt)
+    local opt = opt or {}
+    if opt.git then
+        local cmd =
+        "git ls-files --full-name $(git rev-parse --show-toplevel) | xargs -n 1 dirname | sort --version-sort | uniq | grep --invert-match '^.$'"
+        local files = vim.fn.system(cmd)
+        t = vim.split(files, "\n")
+
+        opt.finder = finders.new_table({ results = t })
+        opt.prompt_title = "<AL's Folders Git>"
+        opt.sorter = conf.generic_sorter(opts)
+        opt.attach_mapping = function(prompt_bufnr, map)
+            map("i", "<CR>", enter_find_folders_git)
+        end
+
+        local folders_git = pickers.new(opt)
+        folders_git:find()
+    else
+        opt.prompt_title = "<AL's Folders>"
+        opt.find_command = { "fd", "-t", "d", "--hidden", "-L" }
+        t.find_files(opt)
+    end
+end
+
 M.scripts = function()
     t.find_files({
         prompt_title = "<AL's SCRIPTS>",

@@ -20,14 +20,14 @@ fi
 
 fzfd=0
 if [[ -z "$subject" ]]; then
-    subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d)\nnew" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+    subject=$(echo -e "$(fd . "$NOTES" -t d)\nnew" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
     fzfd=1
 fi
 
 if [[ $subject == "dmenu" ]]; then
-    subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d -printf '%f\n')\nnew" | dmenu 2>/dev/null )
+    subject=$(echo -e "$(fd . "$NOTES" -t d -x basename )\nnew" | dmenu 2>/dev/null )
     if [[ $subject == "new" ]]; then
-        st -e nvim "$NOTES" 
+        setsid st -e nvim "$NOTES" 
         exit
     fi
 fi
@@ -50,7 +50,7 @@ fi
 
 
 retrieve_notes_from_archive() { 
-    find "$NOTES/.archive" -name "$1" -type d
+    find "$NOTES/.archive" -wholename "$1" -type d
 }
 # check if subject is in archive
 notes_in_archive="$(retrieve_notes_from_archive "$subject")"

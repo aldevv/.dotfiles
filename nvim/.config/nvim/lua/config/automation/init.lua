@@ -57,3 +57,7 @@ cmd([[
 cmd([[
 autocmd FileType org nnoremap <leader>ll :VimtexCompile<cr>
 ]])
+
+cmd([[
+    autocmd BufWritePost *.lua :luafile %
+]])
