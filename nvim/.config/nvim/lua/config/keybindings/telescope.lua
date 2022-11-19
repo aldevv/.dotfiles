@@ -10,8 +10,7 @@ M.load_mappings = function()
     map(
         "n",
         "<a-p>",
-        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>'
-        ,
+        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>',
         nor_s
     )
     map(
@@ -68,6 +67,9 @@ M.load_mappings = function()
     map("n", "<localleader>Vu", ':lua require("utils.lua.telescope").nvim({path = "lua/utils/"})<cr>', nor_s)
     map("n", "<localleader>Vl", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/"})<cr>', nor_s)
     map("n", "<localleader>Vd", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/dap"})<cr>', nor_s)
+
+    map("n", "<a-a>", ':lua require("utils.lua.telescope").find_folders({})<cr>', nor_s)
+    map("n", "<a-A>", ':lua require("utils.lua.telescope").find_folders({git=true})<cr>', nor_s)
 
     map("n", "<localleader>Vp", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
     map("n", "<localleader>P.", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
