@@ -10,7 +10,8 @@ M.load_mappings = function()
     map(
         "n",
         "<a-p>",
-        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>',
+        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>'
+        ,
         nor_s
     )
     map(
@@ -50,18 +51,11 @@ M.load_mappings = function()
     -- folders
     map("n", "<leader>tb", ':lua require("utils.lua.telescope").select_bg()<cr>', nor_s)
     map("n", "<a-s-p>", '<cmd>lua require("utils.lua.telescope").git_files_or_cwd()<cr>', nor_s)
-    map("n", "<localleader>gf", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
-    map("n", "<localleader>gF", ':lua require("utils.lua.telescope").files()<cr>', nor_s)
-    map("n", "<localleader>gd", ':lua require("utils.lua.telescope").dotfiles()<cr>', nor_s)
-    -- map("n", "<localleader>gs", ':lua require("utils.lua.telescope").scripts()<cr>', nor_s)
-    -- map(
-    --     "n",
-    -- "<localleader>gs",
-    -- ":lua require('telescope.builtin').find_files({prompt_title = '<AL\\'s SCRIPTS>', cwd = '$SCRIPTS/'})<cr>",
-    --     { noremap = true, silent = true }
-    -- )
+    -- map("n", "<localleader>gf", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
+    -- map("n", "<localleader>gF", ':lua require("utils.lua.telescope").files()<cr>', nor_s)
+    -- map("n", "<localleader>gd", ':lua require("utils.lua.telescope").dotfiles()<cr>', nor_s)
 
-    map("n", "<localleader>gu", ':lua require("utils.lua.telescope").utilities()<cr>', nor_s)
+    -- map("n", "<localleader>gu", ':lua require("utils.lua.telescope").utilities()<cr>', nor_s)
     map("n", "<localleader>V.", ':lua require("utils.lua.telescope").nvim()<cr>', nor_s)
     map(
         "n",
@@ -78,18 +72,13 @@ M.load_mappings = function()
     map("n", "<localleader>Vp", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
     map("n", "<localleader>P.", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
 
-    map("n", "<localleader><localleader>ll", ':lua require("utils.lua.telescope").learn()<cr>', nor_s)
-    map("n", "<localleader><localleader>pl", ':lua require("utils.lua.telescope").playground()<cr>', nor_s)
-    map("n", "<localleader><localleader>ex.", ':lua require("utils.lua.telescope").exploits()<cr>', nor_s)
-    map("n", "<localleader><localleader>c.", ':lua require("utils.lua.telescope").code()<cr>', nor_s)
-    map("n", "<localleader><localleader>n.", ':lua require("utils.lua.telescope").notes()<cr>', nor_s)
-
     -- live_grep
-    map("n", "<localleader>gn.", ':lua require("utils.lua.telescope").notes_grep()<cr>', nor_s)
-    map("n", "<localleader>gc.", ':lua require("utils.lua.telescope").code_grep()<cr>', nor_s)
-    map("n", "<localleader>gpl", ':lua require("utils.lua.telescope").playground_grep()<cr>', nor_s)
-    map("n", "<localleader>gp.", ':lua require("utils.lua.telescope").projects_grep()<cr>', nor_s)
-    map("n", "<localleader>gwo", ':lua require("utils.lua.telescope").work_grep()<cr>', nor_s)
+    -- map("n", "<localleader>gn.", ':lua require("utils.lua.telescope").notes_grep()<cr>', nor_s)
+    -- map("n", "<localleader>gc.", ':lua require("utils.lua.telescope").code_grep()<cr>', nor_s)
+    -- map("n", "<localleader>gpl", ':lua require("utils.lua.telescope").playground_grep()<cr>', nor_s)
+    -- map("n", "<localleader>gp.", ':lua require("utils.lua.telescope").projects_grep()<cr>', nor_s)
+    -- map("n", "<localleader>gwo", ':lua require("utils.lua.telescope").work_grep()<cr>', nor_s)
+
     -- map("n", "<localleader>Wo", ':lua require("utils.lua.telescope").notes_grep()<cr>', nor_s)
 
     -- deprecated 05/01/2022

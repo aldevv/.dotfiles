@@ -1,6 +1,6 @@
 #!/bin/bash
 
-platform="linux.*amd64"
+platform="linux"
 if [[ "$1" == "all" ]]; then
     platform=".*"
     shift
@@ -22,6 +22,9 @@ versions=$(wget -q https://api.github.com/repos/${author}/${repo}/releases/lates
 	awk -F \" -v RS="," '/browser_download_url/ {print $(NF-1)}' |
     grep "$platform" | grep -E "$types")
 
-
+if [[ $(wc -l <<< "$versions") -gt 1  ]]; then
+    chosen=$(fzf --no-preview -d / --with-nth -1 <<< "$versions")
+    echo "$chosen"
+    exit
+fi
 echo "$versions"
-
