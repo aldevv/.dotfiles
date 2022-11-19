@@ -94,7 +94,7 @@ require("telescope").setup({
         },
         -- Example: { "^scratch/" } -- ignore all files in scratch directory
         -- Example: { "%.npz" } -- ignore all npz files
-        file_ignore_patterns = { "node_modules" },
+        -- file_ignore_patterns = { "node_modules" },
         buffer_previewer_maker = new_maker,
         -- rg is needed for live_grep to work
         vimgrep_arguments = {

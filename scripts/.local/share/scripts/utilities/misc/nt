@@ -1,12 +1,27 @@
 #!/bin/bash
 NOTES="${NOTES:-$HOME/notes}"
 name="$(date +%d%m%Y).md"
+# more than 20 days, save to archive
+time_limit_to_archive="+20"
+
+save_in_archive_old_notes() {
+    find "$NOTES" -mindepth 1 -not -path '*/.archive/*' -type d -mtime "$time_limit_to_archive" | xargs -n1 -I{} mv {} "$NOTES/.archive/"
+}
+
+if [[ ! -d "$NOTES/.archive" ]]; then
+    mkdir -p "$NOTES/.archive"
+fi
+
+save_in_archive_old_notes
+
 if [[ $1 != "list" ]]; then
     subject="$1"
 fi
 
+fzfd=0
 if [[ -z "$subject" ]]; then
     subject=$(echo -e "$(find "$NOTES" -mindepth 1 -type d)\nnew" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+    fzfd=1
 fi
 
 if [[ $subject == "dmenu" ]]; then
@@ -33,11 +48,26 @@ fi
 
 [[ -z "$subject" ]] && exit
 
-if [[ ! -d "$NOTES/$subject" ]]; then
-    mkdir -p "$NOTES/$subject"
+
+retrieve_notes_from_archive() { 
+    find "$NOTES/.archive" -name "$1" -type d
+}
+# check if subject is in archive
+notes_in_archive="$(retrieve_notes_from_archive "$subject")"
+if [[ -n $notes_in_archive ]]; then
+    mv "$notes_in_archive" "$NOTES"
 fi
 
-# echo $NOTES/$subject/$name
-nvim $NOTES/$subject/$name
+if [[ $fzfd == 1 ]]; then
+    path="$subject"
+else
+    path="$NOTES/$subject"
+fi
+
+if [[ ! -d "$path" ]]; then
+    mkdir -p "$path"
+fi
+
+nvim "$path/$name"
 
 

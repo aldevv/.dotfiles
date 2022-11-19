@@ -195,7 +195,7 @@ bindkey -s "^n" "stn^M"
 bindkey -s 'w' 'browseWiki^M' # projects and work
 bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
 # bindkey -s 'F' '$UTILITIES/tmux/nf force^M' 
-bindkey -s 's' '$UTILITIES/tmux/ns^M' # projects and work
+bindkey -s 'n' '$UTILITIES/tmux/nn^M' # projects and work
 bindkey -s 't' '$UTILITIES/misc/nt^M' # projects and work
 bindkey -s 'p' 'vf ^M'
 bindkey -s 'P' '. cf ^M'
@@ -210,7 +210,8 @@ bindkey -s 'o' '**	'
 
 # this is used for previous command
 # bindkey -s '.' 'setsid st &>/dev/null^M'
-bindkey -s 'r' 'setsid st ranger &>/dev/null^M'
+bindkey -s 'r' 'live_grep^M'
+bindkey -s 'R' 'setsid st ranger &>/dev/null^M'
 bindkey '^R' history-incremental-search-backward
 
 _fzf_compgen_path() {

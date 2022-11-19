@@ -4,17 +4,42 @@
 versions="$(latest "$@")"
 wget -q "$(head -n 1 <<< "$versions")"
 
-
+pushd -q "$(pwd)"
 types_array=( tar.gz tar.xz zip 7z tar.bz2 bz2 rar gz tar tbz2 tgz Z tar.zst)
+extracted_folder=""
 for t in "${types_array[@]}"; do
     _file=$(ls *.$t 2>/dev/null | grep "$repo" 2>/dev/null | head -n 1)
     if [ -n "$_file" ]; then
         extract "$_file"
+        echo -e "\e[35mExtracted $_file successfully\n\e[0m"
         rm -rf "$_file"
-        extracted_folder="$(ls | grep "$repo" | head -n 1)"
+        extracted_folder="$(ls | grep "$repo"| head -n 1)"
+        echo "$PROGRAMS/$extracted_folder"
+        echo "$(pwd)"
+        if [[ -d $PROGRAMS/$extracted_folder ]]; then
+            [[ -d "$PROGRAMS/.old_$extracted_folder" ]] && rm -r "$PROGRAMS/.old_$extracted_folder"
+
+            echo -e "\e[34m$extracted_folder folder already existed, moved to .old_$extracted_folder\n\e[0m"
+            mv "$PROGRAMS/$extracted_folder" "$PROGRAMS/.old_$extracted_folder"
+        fi
         mv "$extracted_folder" "$PROGRAMS"
-        cd "$PROGRAMS/$extracted_folder" || return
+        pushd -q "$PROGRAMS/$extracted_folder" || return
         break
     fi
 done
+
+binary=$(fzf --no-preview)
+if [[ -z "$binary" ]]; then
+    echo -e "(」°ロ°)」\n"
+    echo "\e[34mstay in extracted folder? [Y/n]\e[0m"
+    read -r ans
+    if [[ "$ans" == 'n' || -z "$ans" ]]; then
+        popd
+    fi
+    return
+fi
+cp "$PROGRAMS/$extracted_folder/$binary" "$HOME/.local/bin/$binary" 
+echo -e "\e[35mInstalled $binary successfully\n\e[0m"
+echo -e "٩(◕‿◕｡)۶\n"
+popd -q || return
 
