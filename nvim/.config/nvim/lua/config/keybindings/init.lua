@@ -325,3 +325,17 @@ map("n", "<localleader>rl", "<Plug>RestNvimLast<cr>", nor)
 map("n", "<localleader>Dd", ":tab DBUI<cr>", {})
 
 map("n", "<leader>,,", "<cmd>tabedit<cr>", nor)
+
+function toggle_transparency()
+    local normal = vim.api.nvim_command_output("hi Normal")
+    -- if nil, then is transparent
+    if string.find(normal, "guibg") == nil then
+        local cur_theme = vim.api.nvim_command_output("colorscheme")
+        vim.cmd("colorscheme " .. cur_theme)
+        return
+    end
+
+    vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
+end
+
+map("n", "<leader>,st", toggle_transparency, nor)

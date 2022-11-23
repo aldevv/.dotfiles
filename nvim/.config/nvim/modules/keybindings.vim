@@ -209,10 +209,6 @@ vnoremap <silent><leader>lgr :B !sortListR.py <cr>t]xT[
 
 
 nnoremap gñ :SyntaxQuery<CR>
-nnoremap <silent><leader>.T :silent call Toggle_transparent()<CR>
-function! Toggle_transparent()
-  exec ':!toggleTrans'
-endfunction
 
 " general insert commands
 inoremap <a-m> <++>
@@ -260,7 +256,6 @@ noremap  <Left> 5<c-w><
 map <a-o> :w<CR>
 map <a-O> :w !sudo tee %<CR>
 
-map  <silent><leader>O :silent w !sudo tee %<CR>
 " map  <leader>ss :wq<CR>
 " map <leader><F1> :e ~/.config/nvim/init.vim<cr>
 nnoremap <F6> :e $HOME/.config/nvim/init.vim<cr>

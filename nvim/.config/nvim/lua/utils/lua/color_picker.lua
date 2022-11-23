@@ -28,6 +28,7 @@ M.choose_colors = function()
 
     function enter(prompt_bufnr)
         local selected = actions_state.get_selected_entry()
+        vim.cmd("colorscheme")
         local cmd = "colorscheme " .. selected[1]
         vim.cmd(cmd)
         actions.close(prompt_bufnr)
@@ -51,7 +52,7 @@ M.choose_colors = function()
 
     local opts = {
 
-        finder = finders.new_table({ "gruvbox", "monokai", "tokyonight", "onedark", "nordfox", "nightfox" }),
+        finder = finders.new_table({ "gruvbox", "kanagawa", "monokai", "tokyonight", "onedark", "nordfox", "nightfox" }),
         -- finder = finders.new_table(colors),
         sorter = sorters.get_generic_fuzzy_sorter({}),
 

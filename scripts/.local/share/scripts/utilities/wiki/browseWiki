@@ -14,7 +14,7 @@ fi
 # chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} .org | dmenu -n)
 
 if [[  $chosen_file == "new" ]]; then
-    st -e nvim $WIKI/notes/
+    setsid st -e nvim $WIKI/notes/
     exit 0
 fi
 
@@ -24,7 +24,7 @@ if [[  -n $chosen_filepath ]]; then
     if [[ $flag == '?' ]]; then
         nvim $chosen_filepath
     else
-        st -e nvim $chosen_filepath 2>/dev/null
+        setsid st -e nvim $chosen_filepath 2>/dev/null
     fi
     
 fi
