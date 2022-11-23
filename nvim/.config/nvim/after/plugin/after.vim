@@ -1,2 +1,4 @@
 autocmd FileType * set formatoptions-=ro
-autocmd FileType conf set syntax=sh
+
+" transparency
+hi Normal guibg=NONE ctermbg=NONE

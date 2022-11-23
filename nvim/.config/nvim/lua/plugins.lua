@@ -508,7 +508,7 @@ return require("packer").startup({
                 "nvim-telescope/telescope.nvim",
                 "rcarriga/nvim-notify",
             },
-            cmd = "OverseerRun",
+            cmd = { "OverseerRun", "OverseerRunCmd", "OverseerToggle", "OverseerQuickAction" },
         })
         -- check arpeggio https://github.com/kana/vim-arpeggio
         -- check sideways https://github.com/AndrewRadev/sideways.vim
@@ -531,6 +531,7 @@ return require("packer").startup({
         -- colors
         -- use("dracula/vim")
         use("crusoexia/vim-monokai")
+        use("rebelot/kanagawa.nvim")
         use({
             "folke/todo-comments.nvim",
             requires = "nvim-lua/plenary.nvim",

@@ -82,3 +82,6 @@ async = vim.loop.new_async(vim.schedule_wrap(function()
     async:close()
 end))
 vim.opt.shadafile = "" -- optimization
+
+-- transparency
+vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+folder_chosen="${1:-$UTILITIES}"
+destination="${2:-.}"
+
+files_chosen=""
+while [[ 1 ]]; do
+    content=$(find "$folder_chosen" -mindepth 1 -maxdepth 1)
+    files_chosen="$(fzf -m --prompt "file: " -d / --with-nth -1 --preview="ls {} --color=always" <<< "$content")"
+    # TODO: multi for folders too
+    if [[ -z "$files_chosen" ]]; then
+        break
+    fi
+    if [[ ! -d $files_chosen ]]; then
+        break
+    fi
+    folder_chosen="$files_chosen"
+done
+cp "$files_chosen" "$destination"

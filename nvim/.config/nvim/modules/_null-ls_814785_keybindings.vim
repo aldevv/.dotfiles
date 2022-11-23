@@ -260,8 +260,6 @@ noremap  <Left> 5<c-w><
 " map <leader>I :setlocal noautoindent<cr>
 map <a-o> :w<CR>
 map <a-O> :w !sudo tee %<CR>
-
-map  <silent><leader>O :silent w !sudo tee %<CR>
 " map  <leader>ss :wq<CR>
 " map <leader><F1> :e ~/.config/nvim/init.vim<cr>
 nnoremap <F6> :e $HOME/.config/nvim/init.vim<cr>
