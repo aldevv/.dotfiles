@@ -31,7 +31,7 @@ M.load_mappings = function() -- use these on_attach
     map("n", "<leader>ldd", ":lua vim.lsp.buf.declaration()<cr>", nor)
     map("n", "<leader>lt", ":lua vim.lsp.buf.type_definition()<cr>", nor)
     map("n", "<leader>la", ":lua vim.lsp.buf.code_action()<cr>", nor)
-    map("v", "<leader>la", ":lua vim.lsp.buf.range_code_action()<cr>", nor)
+    map("v", "<leader>la", ":lua vim.lsp.buf.code_action()<cr>", nor)
 
     map("n", "<leader>lh", ":lua vim.lsp.buf.document_highlight()<cr>", nor) -- for highlighting text
     map("n", "<leader>ll", ":lua vim.lsp.buf.clear_references()<cr>", nor)
@@ -64,8 +64,13 @@ M.load_mappings = function() -- use these on_attach
 
     -- prefix o --> diagnostics
 
-    -- map("n", "go", ":lua vim.diagnostic.open_float()<cr>", nor)
-    map("n", "go", "<cmd>Lspsaga show_line_diagnostics<cr>", nor)
+    map("n", "go", ":lua vim.diagnostic.open_float()<cr>", nor)
+
+    -- lsp saga truncating output agressively (showing only part of diagnostic) as of 23/11/22
+    -- https://github.com/glepnir/lspsaga.nvim/issues/527
+    -- map("n", "go", "<cmd>Lspsaga show_line_diagnostics<cr>", nor)
+
+    map("n", "<leader>ldD", "<cmd>Lspsaga lsp_finder<cr>", nor)
     map("n", "<leader>oo", ":lua  require('telescope.builtin').diagnostics({bufnr=0})<cr>", nor)
     map("n", "<leader>oO", ":lua  require('telescope.builtin').diagnostics()<cr>", nor)
     map("n", "<leader>owo", ":lua  require('telescope.builtin').diagnostics()<cr>", nor)

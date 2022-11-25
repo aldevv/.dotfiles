@@ -2,10 +2,13 @@
 NOTES="${NOTES:-$HOME/notes}"
 name="$(date +%d%m%Y).md"
 # more than 20 days, save to archive
-time_limit_to_archive="+20"
+time_limit_to_archive="20"
 
+# TODO: add subfolders, think about the best logic for that
+# if there are folders inside, then is in subfolder mode
+# to create a subfolder mode then you have to give it the sub option
 save_in_archive_old_notes() {
-    find "$NOTES" -mindepth 1 -not -path '*/.archive/*' -type d -mtime "$time_limit_to_archive" | xargs -n1 -I{} mv {} "$NOTES/.archive/"
+    find "$NOTES" -mindepth 1 -not -path '*/.archive/*' -type d -mtime "+$time_limit_to_archive" | xargs -n1 -I{} mv {} "$NOTES/.archive/"
 }
 
 if [[ ! -d "$NOTES/.archive" ]]; then

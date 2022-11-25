@@ -365,15 +365,16 @@ return require("packer").startup({
         })
 
         use("bkad/CamelCaseMotion")
-        use({
-            "editorconfig/editorconfig-vim",
-            config = function()
-                vim.g.EditorConfig_exclude_patterns = { "fugitive://.*" }
-            end,
-            cond = function()
-                return require("lspconfig.util").root_pattern(".editorconfig")(vim.fn.getcwd()) ~= nil
-            end,
-        })
+        use("gpanders/editorconfig.nvim")
+        -- use({
+        --     "editorconfig/editorconfig-vim",
+        --     config = function()
+        --         vim.g.EditorConfig_exclude_patterns = { "fugitive://.*" }
+        --     end,
+        --     cond = function()
+        --         return require("lspconfig.util").root_pattern(".editorconfig")(vim.fn.getcwd()) ~= nil
+        --     end,
+        -- })
         use({ "bps/vim-textobj-python", ft = "python" })
         use("glts/vim-textobj-comment")
 
@@ -555,7 +556,7 @@ return require("packer").startup({
         -- needs a lot of other plugins so big no no
         -- use({ "anuvyklack/hydra.nvim", config = req("core.hydra") })
         -- prettier lsp
-        if not vim.fn.getenv("WORKENV") then
+        if vim.fn.getenv("WORKENV") == vim.NIL then
             use({
                 "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
                 config = function()
@@ -617,6 +618,7 @@ return require("packer").startup({
         })
         use({
             "rest-nvim/rest.nvim",
+            branch = "main",
             requires = "nvim-lua/plenary.nvim",
             config = req("core.rest"),
         })

@@ -245,8 +245,20 @@ _fzf_compgen_dir() {
 
 bindkey "^ " autosuggest-execute
 # bindkey "^" autosuggest-toggle
-#TODO find alternative to lesskey (deprecated)
-lesskey $HOME/.config/colemak-less
+
+# -- less 
+# New less versions will read this file directly
+export LESSKEYIN="$HOME/.config/colemak-less"
+# Only run lesskey if less version is older than v582
+less_ver=$(less --version | awk '{print $2;exit}')
+autoload -Uz is-at-least
+if ! is-at-least 582 $less_ver; then
+  # Old less versions will read this transformed file
+  export LESSKEY="${0:h:A}/.less"
+  lesskey "$LESSKEYIN" 2>/dev/null
+fi
+unset less_ver
+
 # aliases
 
 # old aliases
@@ -282,7 +294,7 @@ load_pyenv() {
     eval "$(pyenv virtualenv-init -)"
 }
 
-[ -n $(command -v pyenv) ] && load_pyenv
+[ -n "$(command -v pyenv)" ] && load_pyenv
 alias srcdirenv='eval "$(direnv hook zsh)"'
 
 . $ZDOTDIR/.auto_aliases

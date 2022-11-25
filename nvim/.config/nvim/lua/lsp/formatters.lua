@@ -43,11 +43,22 @@ local opts = {
         diagnostics.vint, --> for vim
         -- formatting.eslint_d,
         diagnostics.shellcheck.with({ extra_filetypes = { "zsh", "bash" } }),
-        diagnostics.eslint_d.with({
-            condition = function(utils)
-                return utils.root_has_file({ ".eslintrc.json" })
-            end,
-        }),
+        -- it looks for node_modules automatically, if you prefer a local in a different place,
+        -- then set it using prefer_local
+        diagnostics.eslint,
+        -- prefer_local = "node_modules/.bin",
+        -- prefer_local = true,
+        -- }),
+        --     condition = function(utils)
+        --     return utils.root_has_file_matches(".eslintrc*")
+        -- end,
+        -- }),
+        -- diagnostics.eslint_d,
+        -- diagnostics.eslint_d.with({
+        --     condition = function(utils)
+        -- return utils.root_has_file({ ".eslintrc.json" })
+        --     end,
+        -- }),
         -- diagnostics.selene,
         -- formatting.eslint,
         -- diagnostics.eslint,
@@ -56,8 +67,10 @@ local opts = {
         -- diagnostics.flake8.with({ extra_args = { "--ignore", "E203", "--max-line-length", "88" } }), -- extra args for black
         diagnostics.flake8,
         -- completion.spell,
-        -- code_actions.gitsigns,
         code_actions.gitsigns,
+        -- code_actions.eslint_d,
+        code_actions.refactoring,
+        code_actions.shellcheck,
     },
 }
 

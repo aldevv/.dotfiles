@@ -36,8 +36,6 @@ set expandtab "always use spaces and not tabs
 set noerrorbells
 set ignorecase
 set smartcase
-set tabstop=4 softtabstop=4
-set shiftwidth=4
 set nowrap
 set noswapfile
 set incsearch
