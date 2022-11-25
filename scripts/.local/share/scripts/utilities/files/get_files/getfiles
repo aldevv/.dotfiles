@@ -17,7 +17,7 @@ while true; do
         fi
         files_chosen=""
         content=$(find "$folder" -mindepth 1 -maxdepth 1 -name "*" -printf "%T+\t%p\n" | sort -r | awk '{print $2}')
-        files_chosen="$(fzf -m --prompt "file: " -d / --with-nth -1 --preview="ls {} --color=always" <<< "$content")"
+        files_chosen="$(fzf -m --prompt "file: " -d / --with-nth -1 --preview="[[ -d {} ]] && ls {} --color=always || bat {} --color=always" <<< "$content")"
 
         if [[ -z "$files_chosen" ]]; then
             exit 1

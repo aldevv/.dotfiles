@@ -54,3 +54,16 @@ vim.opt.statusline = "%t"
 vim.opt.spell = true
 vim.opt.spell = true
 vim.g.netrw_keepdir = 0
+
+-- auto indent on enter
+vim.opt.autoindent = true
+vim.opt.smartindent = true
+
+-- use spaces instead of tabs
+vim.opt.expandtab = true
+
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
+
+-- size of indent and << and >>
+vim.opt.shiftwidth = 4

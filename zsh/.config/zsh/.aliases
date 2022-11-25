@@ -1176,6 +1176,7 @@ function dkmd {
 # Docker
 alias dk='docker '
 alias dk.='bat Dockerfile'
+alias dk..='nvim Dockerfile'
 alias dka='docker attach '
 alias dkb='docker build '
 alias dkd='docker diff '
@@ -1357,7 +1358,7 @@ alias dkcsc='docker-compose scale '
 alias dkcx='docker-compose restart '
 alias dkcu='docker-compose up '
 alias dkcU='docker-compose up -d '
-alias dkcv='nvim docker-compose.yml '
+alias dkc..='nvim docker-compose.yml '
 alias dkcS='docker-compose stop '
 
 alias dkcz='docker-compose down && docker compose up -d '

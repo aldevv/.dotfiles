@@ -96,7 +96,7 @@ map("n", "<a-down>", ":m .+1<cr>==", nor)
 
 map("i", "<c-y>", "copilot#Accept('<CR>')", vim.tbl_extend("keep", s_e, { script = true }))
 map("", "<leader>C", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
-map("", "<leader>cO", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
+map("", "<leader>,O", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
 
 -- terminal
 map("n", "<leader>sñ", ":botright terminal<cr>", nor)
@@ -192,9 +192,9 @@ map("n", "gww", ":Telescope git_worktree git_worktrees<cr>", nor)
 -- <c-f> - toggles forcing of the next deletion
 
 -- fun
-map("n", "<leader>cfv", ":VimBeGood<cr>", nor)
-map("n", "<leader>cfa", ":VimApm<cr>", nor)
-map("n", "<leader>cfA", ":VimApmShutdown<cr>", nor)
+map("n", "<leader>,fv", ":VimBeGood<cr>", nor)
+map("n", "<leader>,fa", ":VimApm<cr>", nor)
+map("n", "<leader>,fA", ":VimApmShutdown<cr>", nor)
 
 map("i", "€", "<plug>(emmet-expand-abbr)", {})
 map("n", "<leader>u", ":UndotreeToggle<cr>", nor_s)
@@ -244,8 +244,8 @@ map("n", "<leader>sr", ":RainbowToggle<cr>", nor_s)
 require("config.keybindings.fugitive")
 
 -- obsession
-map("n", "<leader>col", ":source %:h/Session.vim<bar> :Obsession<cr>", nor_s)
-map("n", "<leader>cos", ":Obsession<CR>", nor_s)
+map("n", "<leader>,ol", ":source %:h/Session.vim<bar> :Obsession<cr>", nor_s)
+map("n", "<leader>,os", ":Obsession<CR>", nor_s)
 
 -- vim-test
 
@@ -281,14 +281,15 @@ map("x", "@", ":<C-u>call ExecuteMacroOverVisualRange()<cr>", nor_s)
 -- map('n', '<leader>cso', '<Plug>SnipRunOperator', s)
 -- map('n', '<leader>csr', '<Plug>SnipRun', s)
 vim.cmd([[
-nmap <leader>csr <Plug>SnipRun
-nmap <leader>cso <Plug>SnipRunOperator
-vmap <leader>csr <Plug>SnipRun
+nmap <leader>,Sr <Plug>SnipRun
+nmap <leader>,So <Plug>SnipRunOperator
+vmap <leader>,Sr <Plug>SnipRun
 ]])
 
 -- , configuration
 map("n", "<leader>,li", ":LspInfo<cr>", nor_s)
 map("n", "<leader>,lI", ":LspInstallInfo<cr>", nor_s)
+map("n", "<leader>,ln", ":NullLsInfo<cr>", nor_s)
 
 map("n", "<leader>,ps", ":PackerSync<cr>", nor)
 map("n", "<leader>,pS", ":PackerStatus<cr>", nor)
@@ -298,7 +299,7 @@ map("n", "<leader>,pu", ":PackerUpdate<cr>", nor)
 map("n", "<leader>,pc", ":PackerCompile<cr>", nor)
 
 require("config.keybindings.refactoring")
-require("config.keybindings.lspsaga").load_mappings()
+-- require("config.keybindings.lspsaga").load_mappings()
 require("config.keybindings.overseer").load_mappings()
 
 map("n", "<leader><leader>g", "<cmd>MindOpenMain<cr>", nor)
