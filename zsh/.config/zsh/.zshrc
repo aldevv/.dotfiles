@@ -1,5 +1,5 @@
 # work
- [ -f ~/.config/.aliases_work ] && . ~/.config/.aliases_work
+[[ -f ~/.config/.aliases_work ]] && . ~/.config/.aliases_work
 
 #==============
 # setopt KSH_GLOB
@@ -263,12 +263,12 @@ unset less_ver
 
 # old aliases
 # shellcheck source=/dev/null
- [ -f "$ZDOTDIR/.aliases" ] && . "$ZDOTDIR/.aliases" # old aliases
+[[ -f "$ZDOTDIR/.aliases" ]] && . "$ZDOTDIR/.aliases" # old aliases
 # shellcheck source=/dev/null
-[ -f "$ZDOTDIR/.auto_aliases" ] && . "$ZDOTDIR/.auto_aliases"
+[[ -f "$ZDOTDIR/.auto_aliases" ]] && . "$ZDOTDIR/.auto_aliases"
 # new aliases
 # shellcheck source=/dev/null
- [ -f ~/.config/.aliases ] && . ~/.config/.aliases # new aliases
+[[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
 
 # install https://github.com/relastle/pmy
 # config
@@ -285,8 +285,8 @@ export PATH=$HOME/.local/bin:$PATH
 
 CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 # shellcheck source=/dev/null
-[ -f  "$CARGO_HOME/env" ] && . "$CARGO_HOME/env"
-[ -f "/home/kanon/.ghcup/env" ] && source "/home/kanon/.ghcup/env" # ghcup-env
+[[ -f  "$CARGO_HOME/env" ]] && . "$CARGO_HOME/env"
+[[ -f "/home/kanon/.ghcup/env" ]] && source "/home/kanon/.ghcup/env" # ghcup-env
 
 load_pyenv() {
     eval "$(pyenv init -)"
@@ -294,10 +294,8 @@ load_pyenv() {
     eval "$(pyenv virtualenv-init -)"
 }
 
-[ -n "$(command -v pyenv)" ] && load_pyenv
+[[ -n "$(command -v pyenv)" ]] && load_pyenv
 alias srcdirenv='eval "$(direnv hook zsh)"'
 
-. $ZDOTDIR/.auto_aliases
-
 # fzf keybindings
-[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ] && . /usr/share/doc/fzf/examples/key-bindings.zsh
+[[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && . /usr/share/doc/fzf/examples/key-bindings.zsh
