@@ -12,8 +12,10 @@ export READER=zathura
 # export MANPAGER="less"
 # export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 # export MANPAGER="nvim -c ' set ft=man' -"
-export TERMINAL=st
-export TERM=st
+if [[ -n $(command -v st) ]]; then
+    export TERMINAL=st
+    export TERM=st
+fi 
 export DEFAULT_DMENU_FONT="Cascadia:style=Italic"
 export COLORTERM=truecolor
 export BAT_PAGER='less -R'
