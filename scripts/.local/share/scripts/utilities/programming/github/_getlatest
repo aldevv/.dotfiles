@@ -2,9 +2,28 @@
 
 # download version found
 versions="$(latest "$@")"
+if [[ -z "$versions" ]]; then
+    echo "no releases found: $versions"
+    return
+fi
 wget -q "$(head -n 1 <<< "$versions")"
 
-pushd -q "$(pwd)"
+# TODO: test the new way with tags (commented code)
+# echo "entered program"
+# echo "$version"
+# echo "=========================="
+# if [[ "$(awk '{print $1}' <<< "$version")" == "tag:" ]]; then
+#     version="$(awk '{print $2}' <<< "$version")"
+#     info=$(echo "$1" | cut -d / -f 4,5)
+#     author=$(echo "$info" | cut -d / -f 1)
+#     repo=$(echo "$info" | cut -d / -f 2)
+#     wget -q "https://github.com/$author/$repo/refs/tags/$version"
+#     echo "entered here"
+# else
+#     wget -q "$(head -n 1 <<< "$version")"
+# fi
+
+pushd -q "$(pwd)" || exit
 types_array=( tar.gz tar.xz zip 7z tar.bz2 bz2 rar gz tar tbz2 tgz Z tar.zst)
 extracted_folder=""
 for t in "${types_array[@]}"; do
