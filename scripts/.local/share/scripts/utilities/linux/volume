@@ -8,6 +8,8 @@
 # $./volume.sh down
 # $./volume.sh mute
 
+
+
 function get_volume {
     amixer get Master | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
 }
@@ -17,6 +19,10 @@ function is_mute {
 }
 
 function send_notification {
+    if [[ -z "$(command -v dunstify)" ]]; then
+        echo "install dunstify to get notifications"
+        return
+    fi
     volume=`get_volume`
     # Make the bar with the special character ─ (it's not dash -)
     # https://en.wikipedia.org/wiki/Box-drawing_character
@@ -25,29 +31,26 @@ function send_notification {
     dunstify -i audio-volume-muted-blocking -t 700 -r 2593 -u normal "    $bar"
 }
 
-cur_vol=$(pactl get-sink-volume @DEFAULT_SINK@ | awk 'NR==1{print $5}' | tr -d '%')
 case $1 in
     up)
 		# Set the volume on (if it was muted)
         echo "up"
-		pactl set-sink-mute @DEFAULT_SINK@ 0
-		[[ $cur_vol -lt 100 ]] && pactl set-sink-volume @DEFAULT_SINK@ +5%
+        amixer set Master 5+ &>/dev/null
 		send_notification
 	;;
     down)
-		pactl set-sink-mute @DEFAULT_SINK@ 0
-		[[ $cur_vol -gt 0 ]] && pactl set-sink-volume @DEFAULT_SINK@ -5%
+        amixer set Master 5- &>/dev/null
 		send_notification
 	;;
     mute)
-		pactl set-sink-mute @DEFAULT_SINK@ toggle
 
-	if is_mute ; then
-	    dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "Mute"
-        echo "is mute"
-	else
-	    send_notification
-	fi
+        if is_mute ; then
+            amixer set Master unmute &>/dev/null
+            dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "Mute"
+        else
+            amixer set Master mute &>/dev/null
+            send_notification
+        fi
 	;;
 esac
 
