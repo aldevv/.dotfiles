@@ -1,2 +1,6 @@
 #!/bin/bash
+if [[ -z "$(command -v "$1")" ]]; then
+    echo "$1 is not a script"
+    exit
+fi
 nvim "$(which "$1")"

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+get_service() {
+# returns service name, like github.com
+
+# remove author and repo from link
+service="${link/\/$info}"
+# remove https://
+echo "${service##*/}"
+}
+
+[[ -z "$1" ]] && return
+
+link="$1"
+info=$(cut -d / -f 4,5 <<< "$link")
+author=$(cut -d / -f 1 <<< "$info")
+repo=$(cut -d / -f 2 <<< "$info")
+service="$(get_service)"
+
+_path="$REPOS/$service/$author/$repo"
+if [[ ! -d "$_path" ]]; then
+    mkdir -p "$_path"
+else
+    echo -e "\e[31m the $author/$repo repo already exists, overwrite? [y,N]\e[0m"
+    read -r ans
+    if [[ -n "$ans" && "$ans" != "n" && "$ans" != "no" && "$ans" != "N" && "$ans" != "NO" ]]; then
+        rm -rf "$_path"
+        echo -e "\e[31m Removed old repo\e[0m"
+    else
+        cd "$_path" || return 
+        return
+    fi
+fi
+
+if [[ "$(pwd)" == "$_path" ]]; then
+    cd || return
+fi
+
+git clone --depth 1 --recurse-submodules "$link" "$_path"
+
+cd "$_path" || return

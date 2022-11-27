@@ -1,62 +1,71 @@
 #!/bin/bash
 
 # download version found
-versions="$(latest "$@")"
-if [[ -z "$versions" ]]; then
-    echo "no releases found: $versions"
+version="$(latest "$@")"
+if [[ -z "$version" ]]; then
+    echo "no releases found: $version"
     return
 fi
-wget -q "$(head -n 1 <<< "$versions")"
 
-# TODO: test the new way with tags (commented code)
-# echo "entered program"
-# echo "$version"
-# echo "=========================="
-# if [[ "$(awk '{print $1}' <<< "$version")" == "tag:" ]]; then
-#     version="$(awk '{print $2}' <<< "$version")"
-#     info=$(echo "$1" | cut -d / -f 4,5)
-#     author=$(echo "$info" | cut -d / -f 1)
-#     repo=$(echo "$info" | cut -d / -f 2)
-#     wget -q "https://github.com/$author/$repo/refs/tags/$version"
-#     echo "entered here"
-# else
-#     wget -q "$(head -n 1 <<< "$version")"
-# fi
+is_tag=0
+if [[ "$(awk '{print $1}' <<< "$version")" == "tag:" ]]; then
+    version="$(awk '{print $2}' <<< "$version")"
+    info=$(echo "$1" | cut -d / -f 4,5)
+    author=$(echo "$info" | cut -d / -f 1)
+    repo=$(echo "$info" | cut -d / -f 2)
+    wget -q "https://github.com/$author/$repo/archive/refs/tags/$version"
+    is_tag=1
+else
+    wget -q "$(head -n 1 <<< "$version")"
+fi
 
-pushd -q "$(pwd)" || exit
+pushd -q "$(pwd)" || return
 types_array=( tar.gz tar.xz zip 7z tar.bz2 bz2 rar gz tar tbz2 tgz Z tar.zst)
 extracted_folder=""
 for t in "${types_array[@]}"; do
-    _file=$(ls *.$t 2>/dev/null | grep "$repo" 2>/dev/null | head -n 1)
-    if [ -n "$_file" ]; then
-        extract "$_file"
-        echo -e "\e[35mExtracted $_file successfully\n\e[0m"
-        rm -rf "$_file"
-        extracted_folder="$(ls | grep "$repo"| head -n 1)"
-        echo "$PROGRAMS/$extracted_folder"
-        echo "$(pwd)"
-        if [[ -d $PROGRAMS/$extracted_folder ]]; then
-            [[ -d "$PROGRAMS/.old_$extracted_folder" ]] && rm -r "$PROGRAMS/.old_$extracted_folder"
-
-            echo -e "\e[34m$extracted_folder folder already existed, moved to .old_$extracted_folder\n\e[0m"
-            mv "$PROGRAMS/$extracted_folder" "$PROGRAMS/.old_$extracted_folder"
-        fi
-        mv "$extracted_folder" "$PROGRAMS"
-        pushd -q "$PROGRAMS/$extracted_folder" || return
-        break
+    if [[ $is_tag == 1 ]]; then
+        _file=$(ls *.$t 2>/dev/null | grep "$version" 2>/dev/null | head -n 1 2>/dev/null)
+    else
+        _file=$(ls *.$t 2>/dev/null | grep "$repo" 2>/dev/null | head -n 1 2>/dev/null)
     fi
+
+    if [[ -z "$_file" ]]; then
+        continue
+    fi
+
+    extract "$_file"
+    echo -e "\e[35mExtracted $_file successfully\n\e[0m"
+    rm -rf "$_file"
+
+    extracted_folder="$(ls | grep "$repo"| head -n 1)"
+
+    echo "extracted folder: $extracted_folder"
+    if [[ -d $PROGRAMS/$extracted_folder ]]; then
+        [[ -d "$PROGRAMS/.old_$extracted_folder" ]] && rm -r "$PROGRAMS/.old_$extracted_folder"
+
+        echo -e "\e[34m$extracted_folder folder already existed, moved to .old_$extracted_folder\n\e[0m"
+        mv "$PROGRAMS/$extracted_folder" "$PROGRAMS/.old_$extracted_folder"
+    fi
+    mv "$extracted_folder" "$PROGRAMS"
+    pushd -q "$PROGRAMS/$extracted_folder" || return
+    break
 done
 
-binary=$(fzf --no-preview)
+if [[ $is_tag == 0 ]]; then
+    echo -e "\e[35mChoose the binary: "
+    binary=$(fzf --no-preview)
+fi
+
 if [[ -z "$binary" ]]; then
     echo -e "(」°ロ°)」\n"
     echo "\e[34mstay in extracted folder? [Y/n]\e[0m"
     read -r ans
-    if [[ "$ans" == 'n' || -z "$ans" ]]; then
-        popd
+    if [[ "$ans" == 'n' || "$ans" == "no" || "$ans" == "N" ]]; then
+        popd -q || return
     fi
     return
 fi
+
 cp "$PROGRAMS/$extracted_folder/$binary" "$HOME/.local/bin/$binary" 
 echo -e "\e[35mInstalled $binary successfully\n\e[0m"
 echo -e "٩(◕‿◕｡)۶\n"

@@ -52,10 +52,6 @@ getpid() {
 	pidof $1 | cut -d' ' -f1
 }
 
-vw() {
-	nvim "$(which $1)"
-}
-
 
 
 
