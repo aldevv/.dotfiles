@@ -26,7 +26,11 @@ source_code_tag=$(wget -q https://api.github.com/repos/${author}/${repo}/release
 	awk -F \" -v RS="," '/tag_name/ {print $(NF-1)}')
 
 if [[ "$versions" != "" || "$source_code_tag" != "" ]]; then
-    chosen="$(fzf --no-preview -d / --with-nth -1 <<< "$(echo -e "${versions}\ntag: $source_code_tag.zip\ntag: $source_code_tag.tar.gz" | sed 's/^$//g' )")"
+    if [[ -z "$versions" ]]; then
+        chosen="$(fzf --no-preview -d / --with-nth -1 <<< "$(echo -e "tag: $source_code_tag.zip\ntag: $source_code_tag.tar.gz" | sed 's/^$//g' )")"
+    else
+        chosen="$(fzf --no-preview -d / --with-nth -1 <<< "$(echo -e "${versions}\ntag: $source_code_tag.zip\ntag: $source_code_tag.tar.gz" | sed 's/^$//g' )")"
+    fi
     echo "$chosen"
     exit
 fi

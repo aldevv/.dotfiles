@@ -156,13 +156,13 @@ retrieve_notes_from_archive() {
 retrieve_notes_from_archive "$sub" "$subject"
 
 if [[ -z "$sub" ]]; then
-    path="$subject"
+    _path="$subject"
 else
-    path="$sub/$subject"
+    _path="$sub/$subject"
 fi
 
-if [[ ! -d "$path" ]]; then
-    mkdir -p "$path"
+if [[ ! -d "$_path" ]]; then
+    mkdir -p "$_path"
 fi
 
-nvim "$path/$name"
+nvim "$_path/$name"
