@@ -1,21 +1,41 @@
 #!/bin/bash
 
+[[ -z "$1" ]] && return
+
+
 get_service() {
 # returns service name, like github.com
 
-# remove author and repo from link
-service="${link/\/$info}"
-# remove https://
-echo "${service##*/}"
+if [[ "$1" == "ssh" ]]; then
+    # remove author and repo from link
+    service="${link/:$info}"
+    # remove git@
+    echo "${service##*@}"
+fi
+
+if [[ "$1" == "https" ]]; then
+
+    # remove author and repo from link
+    service="${link/\/$info}"
+    # remove https://
+    echo "${service##*/}"
+fi
 }
 
-[[ -z "$1" ]] && return
-
 link="$1"
-info=$(cut -d / -f 4,5 <<< "$link")
-author=$(cut -d / -f 1 <<< "$info")
-repo=$(cut -d / -f 2 <<< "$info")
-service="$(get_service)"
+if ! grep "@" <<< "$link"; then
+    info=$(cut -d / -f 4,5 <<< "$link")
+    author=$(cut -d / -f 1 <<< "$info")
+    repo=$(cut -d / -f 2 <<< "$info")
+    service="$(get_service "https")"
+else
+    info=$(cut -d : -f 2 <<< "$link")
+    author=$(cut -d / -f 1 <<< "$info")
+    repo=$(cut -d / -f 2 <<< "$info")
+    repo="${repo%.*}"
+    service="$(get_service "ssh")"
+fi
+
 
 _path="$REPOS/$service/$author/$repo"
 if [[ ! -d "$_path" ]]; then
