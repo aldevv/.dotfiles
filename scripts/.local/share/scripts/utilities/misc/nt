@@ -4,12 +4,15 @@ name="$(date +%d%m%Y).md"
 # more than 20 days, save to archive
 time_limit_to_archive="20"
 
-# TODO: add subfolders, think about the best logic for that
-# if there are folders inside, then is in subfolder mode
-# to create a subfolder mode then you have to give it the sub option
+# you can add subfolders of any depth like this
+# sub: math/calculus/2022
+# and then giving the subject
+# subject: integrals
+
 save_in_archive_old_notes() {
     find "$NOTES" -mindepth 1 -not -path '*/.archive/*' -type d -mtime "+$time_limit_to_archive" | xargs -n1 -I{} mv {} "$NOTES/.archive/"
 }
+
 
 if [[ ! -d "$NOTES/.archive" ]]; then
     mkdir -p "$NOTES/.archive"
@@ -17,54 +20,145 @@ fi
 
 save_in_archive_old_notes
 
-if [[ $1 != "list" ]]; then
-    subject="$1"
-fi
+is_new=0
+is_list=0
+is_dmenu=0
+[[ "$1" == "new" ]] && is_new=1 && shift
+[[ "$1" == "list" ]] && is_list=1 && shift
+[[ "$1" == "dmenu" ]] && is_dmenu=1 && shift
 
-fzfd=0
-if [[ -z "$subject" ]]; then
-    subject=$(echo -e "$(fd . "$NOTES" -t d)\nnew" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
-    fzfd=1
-fi
-
-if [[ $subject == "dmenu" ]]; then
-    subject=$(echo -e "$(fd . "$NOTES" -t d -x basename )\nnew" | dmenu 2>/dev/null )
-    if [[ $subject == "new" ]]; then
-        setsid st -e nvim "$NOTES" 
-        exit
-    fi
-fi
-
-if [[ $1 == "list" ]]; then
-    [[ -z "$subject" ]] && exit
-    chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' | fzf --preview="bat $subject/{} --color=always")
-    if [[ -n "$chosen_file" ]]; then
-        nvim "$subject/$chosen_file"
-    fi
+if [[ $is_new == 1 && $is_list == 1 ]]; then
+    echo -e "\e[31mThese 2 options are exclusive bro"
     exit
 fi
 
-if [[ $subject == "new" ]]; then
-    echo -e "\e[35mEnter new subject"
-    read -r subject
+# sub-dir logic
+sub=""
+if [[ -n "$1" ]]; then
+    if [[ -z "$2" ]]; then
+        subject="$NOTES/$1"
+    else
+        sub="$NOTES/$1"
+        subject="$2"
+    fi
+fi
+
+if [[ $is_dmenu == 1 ]]; then
+    if [[ -z "$subject" ]]; then
+        subject="$(echo -e "$(fd . "$NOTES" -t d -x basename )\nnew" | dmenu 2>/dev/null )"
+    fi
+
+    if [[ $subject == "new" ]]; then
+        is_new_sub="$(dmenu -p "is it a sub-dir?" 2>/dev/null <<< "$(echo -e "yes\nno")")"
+        if [[ "$is_new_sub" == "yes" ]]; then
+            sub="$NOTES/$(dmenu -p "Enter new sub-dir: " 2>/dev/null <<< "$(echo -e "")")"
+            if [[ ! -d $sub ]]; then
+                mkdir "$sub"
+            fi
+            subject="$(dmenu -p "Enter subject name: " 2>/dev/null <<< "$(echo -e "")")"
+            setsid st -e nvim "$sub/$subject/$name" 
+        else
+            subject="$(dmenu -p "Enter subject name: " 2>/dev/null <<< "$(echo -e "")")"
+            setsid st -e nvim "$NOTES/$subject/$name" 
+        fi
+        exit
+    fi
+
+    subject="$NOTES/$subject"
+    is_sub=0
+    if [[ -n "$(find "$subject" -mindepth 1 -type d)" ]]; then
+        is_sub=1
+        sub=$subject
+        subject=$(echo -e "$(fd . "$subject" -t d -x basename)" | dmenu 2>/dev/null)
+    fi
+
+    if [[ $is_sub == 1 ]]; then
+        setsid st -e nvim "$sub/$subject/$name" 
+    else
+        setsid st -e nvim "$subject/$name" 
+    fi
+    exit
+
+fi
+
+if [[ -z "$subject" ]]; then
+    subject=$(echo -e "$(fd . "$NOTES" -t d)\nnew\nlist" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
 fi
 
 [[ -z "$subject" ]] && exit
 
+[[ "$subject" == "list" ]] && is_list=1 && subject=""
+[[ "$subject" == "new" ]] && is_new=1 && subject=""
 
-retrieve_notes_from_archive() { 
-    find "$NOTES/.archive" -wholename "$1" -type d
-}
-# check if subject is in archive
-notes_in_archive="$(retrieve_notes_from_archive "$subject")"
-if [[ -n $notes_in_archive ]]; then
-    mv "$notes_in_archive" "$NOTES"
+if [[ $is_list == 1 ]]; then
+    if [[ -z "$subject" ]]; then
+        subject=$(echo -e "$(fd . "$NOTES" -t d)" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+    fi
+
+    is_sub=0
+    if [[ -n "$(find "$subject" -mindepth 1 -type d)" ]]; then
+        is_sub=1
+        subject=$(echo -e "$(fd . "$subject" -t d)" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+    fi
+
+    if [[ $is_sub == 1 ]]; then
+        chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' | fzf --preview="bat $subject/{} --color=always")
+    else
+        chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' | fzf --preview="bat $subject/{} --color=always")
+    fi
+
+    [[ -z "$chosen_file" ]] && exit
+    nvim "$subject/$chosen_file"
+    exit
 fi
 
-if [[ $fzfd == 1 ]]; then
+if [[ $is_new == 1 ]]; then
+    is_new_sub="$(fzf --no-preview --prompt="is it a sub-dir?" <<< "$(echo -e "yes\nno")")"
+    if [[ "$is_new_sub" == "yes" ]]; then
+        echo -e "\e[35mEnter new sub-dir"
+        read -r sub
+        sub="$NOTES/$sub"
+    fi
+
+    if [[ -z "$subject" ]]; then
+        echo -e "\e[35mEnter new subject"
+        read -r subject
+    fi
+fi
+
+retrieve_notes_from_archive() { 
+    if [[ -z "$1" && -z "$2" ]]; then
+        return 
+    fi
+
+    if [[ -z "$1" ]]; then
+        subject="$2"
+        notes_in_archive=$(find "$NOTES/.archive" -wholename "$NOTES/.archive/${subject/$NOTES\//}" -type d)
+    else
+        sub="$1"
+        subject="$2"
+        notes_in_archive=$(find "$NOTES/.archive" -wholename "$NOTES/.archive/${sub/$NOTES\//}/$subject" -type d)
+    fi
+
+    if [[ -n $notes_in_archive ]]; then
+        if [[ -z "$sub" ]]; then
+            mv "$notes_in_archive" "$NOTES/"
+        else
+            mkdir -p "$sub"
+            mv "$notes_in_archive" "$sub"
+            if [[ -z $(find "${notes_in_archive%/*}" -mindepth 1 -type f) ]]; then
+                rm -r "$NOTES/.archive/${sub/$NOTES\//}"
+            fi
+        fi
+    fi
+}
+
+retrieve_notes_from_archive "$sub" "$subject"
+
+if [[ -z "$sub" ]]; then
     path="$subject"
 else
-    path="$NOTES/$subject"
+    path="$sub/$subject"
 fi
 
 if [[ ! -d "$path" ]]; then
@@ -72,5 +166,3 @@ if [[ ! -d "$path" ]]; then
 fi
 
 nvim "$path/$name"
-
-
