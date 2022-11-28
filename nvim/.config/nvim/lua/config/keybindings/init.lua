@@ -323,7 +323,15 @@ map("n", "<localleader>rl", "<Plug>RestNvimLast<cr>", nor)
 
 -- dadbod
 -- opening it in a new tab
-map("n", "<localleader>Dd", ":tab DBUI<cr>", {})
+map("n", "<localleader>Dd", ":tabedit | DBUI<cr>", {})
+map("n", "<localleader>DD", ":DBUIToggle<cr>", {})
+map("n", "<localleader>Da", ":DBUIAddConnection<cr>", {})
+map("n", "<localleader>Df", ":DBUIFindBuffer<cr>", {})
+map("n", "<localleader>Dq", ":DBUILastQueryInfo<cr>", {})
+-- For queries, filetype is automatically set to sql. Also, two mappings is added for the sql filetype:
+--
+-- W - Permanently save query for later use (<Plug>(DBUI_SaveQuery))
+-- E - Edit bind parameters (<Plug>(DBUI_EditBindParameters))
 
 map("n", "<leader>,,", "<cmd>tabedit<cr>", nor)
 

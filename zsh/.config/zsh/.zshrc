@@ -249,13 +249,13 @@ bindkey "^ " autosuggest-execute
 # -- less 
 # New less versions will read this file directly
 export LESSKEYIN="$HOME/.config/colemak-less"
+
 # Only run lesskey if less version is older than v582
 less_ver=$(less --version | awk '{print $2;exit}')
 autoload -Uz is-at-least
 if ! is-at-least 582 $less_ver; then
   # Old less versions will read this transformed file
-  export LESSKEY="${0:h:A}/.less"
-  lesskey "$LESSKEYIN" 2>/dev/null
+  lesskey $LESSKEYIN
 fi
 unset less_ver
 

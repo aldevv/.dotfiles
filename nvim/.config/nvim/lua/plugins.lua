@@ -346,7 +346,7 @@ return require("packer").startup({
             "kristijanhusak/vim-dadbod-ui",
             requires = { "tpope/vim-dadbod", "tpope/vim-dotenv", "kristijanhusak/vim-dadbod-completion" },
             config = req("core.dadbod"),
-            cmd = "DBUI",
+            cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer", "DBUILastQueryInfo" },
         })
         -- fun
         use({ "ThePrimeagen/vim-apm", cmd = { "VimApm" } })
