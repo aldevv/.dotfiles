@@ -140,6 +140,7 @@ cmp.setup({
         { name = "buffer", keyword_length = 5 },
         { name = "dap" },
         { name = "orgmode" },
+        { name = "vim-dadbod-completion" },
         -- { name = 'snippy' }, -- For snippy users.
         -- { name = 'treesitter' },
     },
