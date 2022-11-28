@@ -366,15 +366,6 @@ return require("packer").startup({
 
         use("bkad/CamelCaseMotion")
         use("gpanders/editorconfig.nvim")
-        -- use({
-        --     "editorconfig/editorconfig-vim",
-        --     config = function()
-        --         vim.g.EditorConfig_exclude_patterns = { "fugitive://.*" }
-        --     end,
-        --     cond = function()
-        --         return require("lspconfig.util").root_pattern(".editorconfig")(vim.fn.getcwd()) ~= nil
-        --     end,
-        -- })
         use({ "bps/vim-textobj-python", ft = "python" })
         use("glts/vim-textobj-comment")
 
@@ -498,7 +489,10 @@ return require("packer").startup({
             ft = { "org" },
             config = req("core.org"),
         })
-        use("nanotee/sqls.nvim")
+
+        -- enable when dadbod completion stops working
+        -- use("nanotee/sqls.nvim")
+
         -- overseer tutorial, (save tasks, watch tasks etc)
         -- https://www.youtube.com/watch?v=aq3mU_Oqd6Q
         use({

@@ -48,3 +48,7 @@ if ! tmux switch-client -t "$prefix-$selected_name" 2> /dev/null; then
     echo "third"
     tmux attach -t "$prefix-$selected_name"
 fi
+
+# if [[ -z "$TMUX" ]]; then
+#     tmux attach -t "$prefix-$selected_name"
+# fi

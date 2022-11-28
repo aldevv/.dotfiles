@@ -16,7 +16,7 @@ local servers = {
     "jsonls",
     "rust_analyzer",
     "volar",
-    "sqls",
+    -- "sqls",
     "hls",
     "emmet_ls",
 }
