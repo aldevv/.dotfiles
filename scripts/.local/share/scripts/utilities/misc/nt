@@ -1,6 +1,6 @@
 #!/bin/bash
 NOTES="${NOTES:-$HOME/notes}"
-name="$(date +%d%m%Y).md"
+name="$(date +%d%m%y).md"
 # more than 20 days, save to archive
 time_limit_to_archive="20"
 
@@ -8,6 +8,12 @@ time_limit_to_archive="20"
 # sub: math/calculus/2022
 # and then giving the subject
 # subject: integrals
+
+# you can also do multiple levels, like
+# nt work complexity a1
+# and it will create $NOTES/work/complexity/a1/28112022.md
+
+# TODO: add a way to go to .data fast
 
 save_in_archive_old_notes() {
     find "$NOTES" -mindepth 1 -not -path '*/.archive/*' -type d -mtime "+$time_limit_to_archive" | xargs -n1 -I{} mv {} "$NOTES/.archive/"
@@ -40,6 +46,12 @@ if [[ -n "$1" ]]; then
     else
         sub="$NOTES/$1"
         subject="$2"
+        shift
+        while [[ -n $2 ]]; do
+           sub="$sub/$subject"
+           subject="$2"
+           shift
+       done
     fi
 fi
 
@@ -66,7 +78,7 @@ if [[ $is_dmenu == 1 ]]; then
 
     subject="$NOTES/$subject"
     is_sub=0
-    if [[ -n "$(find "$subject" -mindepth 1 -type d)" ]]; then
+    if [[ -n "$(find "$subject" -mindepth 1 -type d -not -path '*/.*')" ]]; then
         is_sub=1
         sub=$subject
         subject=$(echo -e "$(fd . "$subject" -t d -x basename)" | dmenu 2>/dev/null)
@@ -91,21 +103,16 @@ fi
 [[ "$subject" == "new" ]] && is_new=1 && subject=""
 
 if [[ $is_list == 1 ]]; then
-    if [[ -z "$subject" ]]; then
-        subject=$(echo -e "$(fd . "$NOTES" -t d)" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
-    fi
 
-    is_sub=0
-    if [[ -n "$(find "$subject" -mindepth 1 -type d)" ]]; then
-        is_sub=1
-        subject=$(echo -e "$(fd . "$subject" -t d)" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
-    fi
+    # if it has folders, is a sub
+    while [[ -n $(find "$subject" -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' 2>/dev/null) ]]; do
+        subject=$(echo -e "$(fd . "$subject" -t d -d 1)" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+    done
 
-    if [[ $is_sub == 1 ]]; then
-        chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' | fzf --preview="bat $subject/{} --color=always")
-    else
-        chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' | fzf --preview="bat $subject/{} --color=always")
-    fi
+    [[ -z "$subject" ]] && exit
+
+    # list files content
+    chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' 2>/dev/null | fzf --preview="[[ -f $subject/{} ]] && bat $subject/{} || bat $subject/.files/{} --color=always")
 
     [[ -z "$chosen_file" ]] && exit
     nvim "$subject/$chosen_file"
@@ -164,5 +171,11 @@ fi
 if [[ ! -d "$_path" ]]; then
     mkdir -p "$_path"
 fi
+
+# if it has sub-dir, keep querying until you get exact sub-dir you want
+while [[ -n $(find "$_path" -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' 2>/dev/null) ]]; do
+    _path=$(fd . "$_path" -t d -d 1  | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+done
+[[ -z "$_path" ]] && exit
 
 nvim "$_path/$name"
