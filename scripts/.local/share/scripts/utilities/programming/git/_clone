@@ -56,6 +56,6 @@ if [[ "$(pwd)" == "$_path" ]]; then
     cd || return
 fi
 
-git clone --depth 1 --recurse-submodules "$link" "$_path"
+git clone --depth 1 --recursive "$link" "$_path"
 
 cd "$_path" || return

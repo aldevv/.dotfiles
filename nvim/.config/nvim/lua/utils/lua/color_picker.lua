@@ -52,7 +52,16 @@ M.choose_colors = function()
 
     local opts = {
 
-        finder = finders.new_table({ "gruvbox", "kanagawa", "monokai", "tokyonight", "onedark", "nordfox", "nightfox" }),
+        finder = finders.new_table({
+            "gruvbox",
+            "kanagawa",
+            "catppuccin",
+            "monokai",
+            "tokyonight",
+            "onedark",
+            "nordfox",
+            "nightfox",
+        }),
         -- finder = finders.new_table(colors),
         sorter = sorters.get_generic_fuzzy_sorter({}),
 

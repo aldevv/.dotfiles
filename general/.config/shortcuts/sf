@@ -13,6 +13,7 @@
 .l      .vscode/launch.json
 .vv     ~/.config/nvim/init.lua
 .va     ~/.config/nvim/lua/config/automation/init.lua
+.vt     ~/.config/nvim/lua/config/appearance/themes/catppuccin.lua
 .vs     ~/.config/nvim/lua/config/settings.lua
 .vu     ~/.config/nvim/lua/utils/lua/telescope.lua
 .vk     ~/.config/nvim/lua/config/keybindings/init.lua

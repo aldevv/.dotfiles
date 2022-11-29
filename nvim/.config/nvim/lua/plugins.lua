@@ -35,6 +35,9 @@ local function req(module)
     return string.format('require("%s")', module)
 end
 
+-- theme
+local current_theme = "gruvbox"
+
 return require("packer").startup({
     function(use)
         use({ "wbthomason/packer.nvim" })
@@ -75,6 +78,11 @@ return require("packer").startup({
             branch = "main",
             -- config = req("config.appearance.themes.tokyonight"),
         })
+        use({ "catppuccin/nvim", as = "catppuccin", config = req("config.appearance.themes.catppuccin") })
+
+        -- set theme
+        vim.cmd("colorscheme " .. current_theme)
+
         use({
             "nvim-lualine/lualine.nvim",
             requires = { "kyazdani42/nvim-web-devicons", opt = true },
