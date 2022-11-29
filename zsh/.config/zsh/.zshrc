@@ -299,3 +299,4 @@ alias srcdirenv='eval "$(direnv hook zsh)"'
 
 # fzf keybindings
 [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && . /usr/share/doc/fzf/examples/key-bindings.zsh
+. $ZDOTDIR/.auto_aliases

@@ -35,12 +35,12 @@ local border = "rounded"
 -- LSP settings (for overriding per client)
 local handlers = {}
 local lsp_handlers = {
-    ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = border }),
-    ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = border }),
-    ["textDocument/completion"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = border }),
+  ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = border }),
+  ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = border }),
+  ["textDocument/completion"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = border }),
 }
 for k, v in pairs(lsp_handlers) do
-    handlers[k] = v
+  handlers[k] = v
 end
 
 -- =====
@@ -50,23 +50,21 @@ end
 --
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 
-
 if is_work_env() then
-    capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
+  capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
 else
-    capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
+  capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 end
-
 
 ------------------------------
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 ------------------------------
 local on_attach = function(client, bufnr)
-    require("config.keybindings.lsp").load_mappings()
-    require("config.automation.lsp").diagnostics_in_loclist()
-    client.server_capabilities.document_formatting = false
-    client.server_capabilities.document_range_formatting = false
+  require("config.keybindings.lsp").load_mappings()
+  require("config.automation.lsp").diagnostics_in_loclist()
+  client.server_capabilities.document_formatting = false
+  client.server_capabilities.document_range_formatting = false
 end
 
 M.capabilities = capabilities

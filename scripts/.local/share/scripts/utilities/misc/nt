@@ -29,9 +29,11 @@ save_in_archive_old_notes
 is_new=0
 is_list=0
 is_dmenu=0
+is_files=0
 [[ "$1" == "new" ]] && is_new=1 && shift
 [[ "$1" == "list" ]] && is_list=1 && shift
 [[ "$1" == "dmenu" ]] && is_dmenu=1 && shift
+[[ "$1" == "files" ]] && is_files=1 && shift
 
 if [[ $is_new == 1 && $is_list == 1 ]]; then
     echo -e "\e[31mThese 2 options are exclusive bro"
@@ -68,11 +70,13 @@ if [[ $is_dmenu == 1 ]]; then
                 mkdir "$sub"
             fi
             subject="$(dmenu -p "Enter subject name: " 2>/dev/null <<< "$(echo -e "")")"
-            setsid st -e nvim "$sub/$subject/$name" 
+            _path="$sub/$subject"
         else
             subject="$(dmenu -p "Enter subject name: " 2>/dev/null <<< "$(echo -e "")")"
-            setsid st -e nvim "$NOTES/$subject/$name" 
+            _path="$NOTES/$subject"
         fi
+        session_name="$(basename "$_path")"
+        tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name"  "new_window"
         exit
     fi
 
@@ -85,51 +89,73 @@ if [[ $is_dmenu == 1 ]]; then
     fi
 
     if [[ $is_sub == 1 ]]; then
-        setsid st -e nvim "$sub/$subject/$name" 
+        _path="$sub/$subject"
     else
-        setsid st -e nvim "$subject/$name" 
+        _path="$subject"
     fi
+    session_name="$(basename "$_path")"
+    tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name" "new_window"
     exit
 
 fi
 
 if [[ -z "$subject" ]]; then
-    subject=$(echo -e "$(fd . "$NOTES" -t d)\nnew\nlist" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+    # put space because it wasn't picking up the preview
+    subject=$(echo -e "$(fd . "$NOTES" -t d)\nnew \nlist\nfiles" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
 fi
 
 [[ -z "$subject" ]] && exit
 
-[[ "$subject" == "list" ]] && is_list=1 && subject=""
-[[ "$subject" == "new" ]] && is_new=1 && subject=""
+# put space because it wasn't picking up the preview
+[[ "$subject" == "new " ]] && is_new=1 && subject=""
+[[ "$subject" == "list" ]] && is_list=1 && subject="$NOTES"
+[[ "$subject" == "files" ]] && is_files=1 && subject="$NOTES"
+
+if [[ $is_files == 1 ]]; then
+    while [[ -n $(find "$subject" -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' 2>/dev/null) ]]; do
+        subject=$(echo -e "$(fd . "$subject" -t d -d 1)" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+    done
+    _path="$subject"
+    tmux-sessionizer-cmd "$_path" "cd $_path/.files" "$(basename "$_path")-files"
+    exit 0
+fi
 
 if [[ $is_list == 1 ]]; then
 
     # if it has folders, is a sub
     while [[ -n $(find "$subject" -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' 2>/dev/null) ]]; do
-        subject=$(echo -e "$(fd . "$subject" -t d -d 1)" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+        subject=$(echo -e "$(fd . "$subject" -t d -d 1)" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
     done
 
     [[ -z "$subject" ]] && exit
 
     # list files content
-    chosen_file=$(find "$subject" -mindepth 1 -type f -printf '%f\n' 2>/dev/null | fzf --preview="[[ -f $subject/{} ]] && bat $subject/{} || bat $subject/.files/{} --color=always")
+    chosen_file=$(find "$subject" -mindepth 1 -maxdepth 1 -not -path '*/.*' -printf '%f\n' 2>/dev/null | fzf --preview="[[ -f $subject/{} ]] && bat $subject/{} || bat $subject/.files/{} --color=always")
 
     [[ -z "$chosen_file" ]] && exit
-    nvim "$subject/$chosen_file"
+    _path="$subject"
+    tmux-sessionizer-cmd "$_path" "nvim $_path/$chosen_file" "$(basename "$_path")" 
     exit
 fi
 
 if [[ $is_new == 1 ]]; then
     is_new_sub="$(fzf --no-preview --prompt="is it a sub-dir?" <<< "$(echo -e "yes\nno")")"
+    [[ -z "$is_new_sub" ]] && exit 0
+
     if [[ "$is_new_sub" == "yes" ]]; then
         echo -e "\e[35mEnter new sub-dir"
         read -r sub
+        [[ -z "$sub" ]] && exit 0
         sub="$NOTES/$sub"
     fi
 
     if [[ -z "$subject" ]]; then
         echo -e "\e[35mEnter new subject"
         read -r subject
+        [[ -z "$subject" ]] && exit 0
+        if [[ "$is_new_sub" != "yes" ]]; then
+            subject="$NOTES/$subject"
+        fi
     fi
 fi
 
@@ -174,8 +200,7 @@ fi
 
 # if it has sub-dir, keep querying until you get exact sub-dir you want
 while [[ -n $(find "$_path" -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' 2>/dev/null) ]]; do
-    _path=$(fd . "$_path" -t d -d 1  | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
+    _path=$(fd . "$_path" -t d -d 1  | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
 done
 [[ -z "$_path" ]] && exit
-
-nvim "$_path/$name"
+tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$(basename "$_path")"

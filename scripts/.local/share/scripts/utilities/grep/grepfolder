@@ -1,12 +1,26 @@
 #!/bin/bash
 
-folder="${2:-$(pwd)}"
+nofzf=0
+if [[ "$1" == "nofzf" ]]; then
+    nofzf=1
+    shift
+fi
 
 if [ -z "$1" ]; then
     echo -e "\e[31mno pattern given..."
     exit 1
 fi
+
+if [ -z "$2" ]; then
+    echo -e "\e[31mno folder given..."
+    exit 1
+fi
+
+folder="$2"
 rg "$1" "$folder"
+if [[ $nofzf == 1 ]]; then
+    exit 0
+fi
 file_="$(rg -l "$1" "$folder" | fzf --with-nth -2,-1 --delimiter / --no-preview --no-preview --layout=default --height='1%' --margin='0%')"
 if [ -z "$file_" ]; then
     exit 1

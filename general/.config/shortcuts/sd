@@ -18,6 +18,7 @@ f.      $XDG_CONFIG_HOME
 v.      $XDG_CONFIG_HOME/nvim
 vl      $XDG_CONFIG_HOME/nvim/lua/lsp
 va      $XDG_CONFIG_HOME/nvim/lua/config/automation
+vt      $XDG_CONFIG_HOME/nvim/lua/config/appearance/themes
 vc      $XDG_CONFIG_HOME/nvim/lua/core
 vC      $XDG_CONFIG_HOME/nvim/lua/config
 vu      $XDG_CONFIG_HOME/nvim/lua/utils

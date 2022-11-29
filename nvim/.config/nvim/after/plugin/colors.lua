@@ -4,7 +4,6 @@ vim.cmd([[
     hi clear SpellBad
     hi link SpellBad GruvboxRed
 ]])
--- vim.cmd([[
---     execute 'hi NormalFloat guibg=0'
---     " execute 'hi PmenuSel guifg=white'
--- ]])
+
+-- transparency
+vim.cmd("hi Normal guibg=NONE ctermbg=NONE")

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+prefix="n"
+folder="${1:-$(pwd)}"
+command="${2:-nvim .}"
+session_name="$prefix-${3:-"$(basename "$(pwd)")"}"
+new_window="${4:-0}"
+
+tmux_attach() {
+    if [[ $new_window == 0 ]]; then
+        exec tmux attach -t "$session_name"
+    else
+        setsid "$TERMINAL" -e bash -c "tmux attach -t "$session_name"; $SHELL" &
+    fi
+}
+
+if_cmd_run_cmd() {
+    if [[ -n "$command" ]]; then
+	    tmux send-keys -t "$session_name" "$command" Enter
+    fi
+}
+
+if tmux has-session -t "$session_name" 2>/dev/null; then
+
+    # check if program running in tmux is nvim, and save and exit document if it is
+    if grep "$session_name" <<< $(tmux list-sessions -F '#{session_name}') &>/dev/null && grep "nvim" <<< $(tmux list-sessions -F '#{pane_current_command}') &>/dev/null; then
+	    tmux send-keys -t "$session_name" ":wq" Enter
+        sleep 0.15
+    fi
+    if_cmd_run_cmd
+    if [[ -z $TMUX ]]; then
+        tmux_attach
+    else
+        tmux switch-client -t "$session_name" 2>/dev/null
+    fi
+    exit 0
+fi
+
+tmux -f ~/.config/tmux/tmux.conf new -ds "$session_name" -c "$folder"
+if_cmd_run_cmd
+
+if [[ -z $TMUX ]]; then
+    tmux_attach
+else
+    tmux switch-client -t "$session_name" 2>/dev/null
+fi

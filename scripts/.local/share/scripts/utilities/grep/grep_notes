@@ -1,4 +1,0 @@
-#!/bin/bash
-folder="$NOTES"
-pattern="$1"
-grep_folder "$1" "$folder" 
