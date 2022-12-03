@@ -4,6 +4,10 @@ xset r rate 300 80
 
 remove_dead_keys
 
+sleep 0.1
+
+xmodmap ~/.Xmodmap
+
 #=========================
 # GET ESCAPE ON CAPS PRESS
 #=========================

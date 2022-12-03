@@ -192,11 +192,11 @@ doge() {
 
 
 bindkey -s "^n" "stn^M"
-bindkey -s 'w' 'browseWiki^M' # projects and work
+bindkey -s 'w' 'nw^M' # wiki
 bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
-# bindkey -s 'F' '$UTILITIES/tmux/nf force^M' 
-bindkey -s 'd' '$UTILITIES/tmux/nd^M' # projects and work
-bindkey -s 't' '$UTILITIES/misc/nt^M' # projects and work
+bindkey -s 'd' '$UTILITIES/tmux/nd^M' # start something new
+bindkey -s 't' '$UTILITIES/tmux/nt^M' # notes
+bindkey -s 'g' '$UTILITIES/tmux/nf ~/repos 3^M' # projects and work
 bindkey -s 'p' 'vf ^M'
 bindkey -s 'P' 'vfg ^M'
 bindkey -s 'a' '. cf ^M'
@@ -295,7 +295,6 @@ load_pyenv() {
 }
 
 [[ -n "$(command -v pyenv)" ]] && load_pyenv
-alias srcdirenv='eval "$(direnv hook zsh)"'
 
 # fzf keybindings
 [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && . /usr/share/doc/fzf/examples/key-bindings.zsh

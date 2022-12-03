@@ -1,0 +1,17 @@
+#!/bin/bash
+
+files="${@:-}"
+
+[[ -z "$files" ]] && exit 0
+
+_path="$NOTES"
+while [[ -n $(find "$_path" -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' 2>/dev/null) ]]; do
+    _path=$(fd . "$_path" -t d -d 1  | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+done
+
+[[ -z "$_path" ]] && exit
+
+_path="$_path/.files"
+[[ ! -d "$_path" ]] && mkdir "$_path"
+cp $files "$_path"
+echo -e "copied to: $_path"

@@ -1,12 +1,38 @@
 #!/usr/bin/env bash
 
 selected="${1:-}"
+depth="${2:-1}"
+manual=0
+
+fzf_with_nth() {
+    [[ -z $depth ]] && echo "-2,-1" && return
+
+    value=""
+    for i in $(seq "$depth" -1 1); do
+        if [[ $i != 1 ]]; then 
+            value+="-$i,"
+        else
+            value+="-$i"
+        fi
+    done
+    echo "$value"
+}
+
 if [[ -z "$selected" ]]; then
     # the -not -path is to ignore hidden folders 
     selected=$(find -L $WORK $PROJECTS $PLAYGROUND/code $LEARN -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d | fzf --preview="ls {} --color=always" --delimiter / --with-nth -2,-1 --preview-window=60%:wrap)
+else
+    manual=1
+    with_nth=$(fzf_with_nth)
+    selected=$(find -L $selected -mindepth $depth -maxdepth $depth -not -path '*/\.*' -type d | fzf --preview="ls {} --color=always" --delimiter / --with-nth $with_nth --preview-window=60%:wrap)
 fi
 
 [[ -z $selected ]] && exit 0
+
+if [[ $manual == 1 ]]; then
+    tmux-sessionizer "$selected" "$(basename $selected)" 
+    exit 0
+fi
 
 declare -A types=(["work"]="$WORK" ["project"]="$PROJECTS" ["code"]="$PLAYGROUND/code"  ["learn"]="$LEARN")
 selected_name=$(basename "$selected" | tr . _)
@@ -16,6 +42,5 @@ for key in "${!types[@]}"; do
     fi
     prefix=${key:0:1}
 done
-
 
 tmux-sessionizer "$selected" "$prefix-$selected_name" 
