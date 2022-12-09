@@ -6,6 +6,10 @@ command="${2:-nvim .}"
 session_name="$prefix-${3:-"$(basename "$(pwd)")"}"
 new_window="${4:-0}"
 
+if [[ "$session_name" =~ ^. ]]; then
+    session_name="${session_name/./}"
+fi
+
 tmux_attach() {
     if [[ $new_window == 0 ]]; then
         exec tmux attach -t "$session_name"
