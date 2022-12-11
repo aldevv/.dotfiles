@@ -125,7 +125,7 @@ M.find_folders = function(opt)
     local opt = opt or {}
     if opt.git then
         local cmd =
-        "git ls-files --full-name $(git rev-parse --show-toplevel) | xargs -n 1 dirname | sort --version-sort | uniq | grep --invert-match '^.$'"
+            "git ls-files --full-name $(git rev-parse --show-toplevel) | xargs -n 1 dirname | sort --version-sort | uniq | grep --invert-match '^.$'"
         local files = vim.fn.system(cmd)
         t = vim.split(files, "\n")
 

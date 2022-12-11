@@ -173,11 +173,9 @@ return require("packer").startup({
 
         -- Lazy loading:
         -- Load on specific commands
-        -- use({
-        --     "tpope/vim-dispatch",
-        --     cmd = { "Dispatch", "Make", "Focus", "Start" },
-        --     ft = { "sh", "python", "c", "cpp", "js", "ts", "rs", "go" }, -- test for no filetype
-        -- })
+        use({
+            "tpope/vim-dispatch",
+        })
 
         -- TODO: remove this
         -- use({

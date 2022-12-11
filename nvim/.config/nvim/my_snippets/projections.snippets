@@ -1,33 +1,23 @@
-snippet _proj_java "Description" b
-{
-	"src/main/java/*.java": {
-		"alternate": "src/test/java/{}.java",
-			"type": "source"
-	},
-		"src/test/java/*.java": {
-			"alternate": "src/main/java/{}.java",
-			"type": "test"
-		},
-		"*.java": {
-			"dispatch": "javac -classpath \".:sqlite-jdbc-3.32.3.2.jar\" *.java && java -classpath \".:sqlite-jdbc-3.32.3.2.jar\" {}"
-		},
-		"*": { "make": "mvn" }
-}
-endsnippet
-
 snippet _skel "Description" b
 {
-	"src/*.py": {
-		"alternate": "src/test/{}.py",
-		"type": "source"
-	},
-		"src/test/*.py": {
-			"alternate": "src/main/java/{}.java",
-			"type": "test"
-		},
-		"*.py": {
-			"dispatch": "javac -classpath \".:sqlite-jdbc-3.32.3.2.jar\" *.java && java -classpath \".:sqlite-jdbc-3.32.3.2.jar\" {}"
-		},
-		"*": { "make": "mvn" }
+    "main.py": {
+        "type": "main",
+        "dispatch": "python {}",
+        "template": [
+            "def main():\n\tpass\n\n\nif __name__ == '__main__':\n\tmain()"
+        ]
+    },
+    "src/*.py": {
+        "alternate": "test/{}.py",
+        "type": "src"
+    },
+    "*": {
+        "make": "python {}"
+    },
+	"requirements.txt": {
+        "type": "req"
+    },
+	"doc/*.txt": {"type": "doc"},
+	"README.md": {"type": "doc"}
 }
 endsnippet

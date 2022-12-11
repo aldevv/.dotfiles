@@ -1,6 +1,6 @@
 #!/bin/bash
 
-file_name="config.toml"
-folder=$FILES/db/gobang/projections
+file_name=".projections.json"
+folder=$FILES/projections
 
 getfile "$file_name" "$folder"
