@@ -79,7 +79,7 @@ vnoremap - /
 nnoremap <leader>Z zMzvzz
 
 nnoremap <silent><leader>,n  :w !npm start 2>/dev/null<cr>
-nnoremap <silent><leader>,ri  :w ! [ ! -e '.env' ] && python3 -m venv .venv 2>/dev/null; .venv/bin/pip3 install -r requirements.txt 2>/dev/null<cr>
+nnoremap <silent><leader>.ri  :w ! [ ! -e '.env' ] && python3 -m venv .venv 2>/dev/null; .venv/bin/pip3 install -r requirements.txt 2>/dev/null<cr>
 
 
 
@@ -265,7 +265,7 @@ map <leader><F2> :e ~/.zshrc<cr>
 noremap  <F7> :set spell! \| set wrap<CR>
 noremap  <leader>Ts :set spell! \| set wrap<CR>
 
-map ñ :
+map ñ :%
 
 " Ctrl-O lets you do just one command in insert mode
 
@@ -395,8 +395,8 @@ vnoremap <silent><leader>S y:execute @@<cr>
 nnoremap <silent><leader>S ^vg_y:execute @@<cr>
 noremap <leader>0 :Colors<cr>
 
-vnoremap <silent><leader>ss y:lua <c-r>+<cr>
-nnoremap <silent><leader>ss ^vg_y:lua <c-r>+<cr>
+vnoremap <silent><leader>.ss y:lua <c-r>+<cr>
+nnoremap <silent><leader>.ss ^vg_y:lua <c-r>+<cr>
 
 " help current word
 " nnoremap gw :h <c-r>=expand('<cword>')<cr><bar>resize 15<cr>

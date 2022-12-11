@@ -16,6 +16,10 @@ local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 local map = vim.keymap.set
 local h = "~/.config/nvim"
 
+local desc = function(desc)
+    return vim.tbl_extend("keep", nor_s, { desc = desc })
+end
+
 -- backlog
 -- <a-?>
 -- <a-i>
@@ -72,7 +76,7 @@ map("n", "sd", "<cmd>bd<cr>", nor_s)
 map("n", "si", "<Plug>(InsertSkeleton)", s)
 -- 'cd' towards the directory in which the current file is edited
 -- but only change the path for the current window
-map("n", "sc", "<cmd>lcd %:h<cr>", nor_s)
+map("n", "sc", "<cmd>lcd %:h<cr>", desc("'cd' towards the directory in which the current file is edited"))
 
 -- for pasting (no replacing of the register when pasting in visual mode)
 map("x", "p", "pgvy", nor_s)
@@ -239,7 +243,7 @@ map("n", "<leader>,b", ":BrightestToggle<cr>", nor)
 map("n", "<leader>gv", ":GVcr>", nor)
 
 -- rainbow
-map("n", "<leader>sr", ":RainbowToggle<cr>", nor_s)
+map("n", "<leader>,r", ":RainbowToggle<cr>", nor_s)
 
 require("config.keybindings.fugitive")
 
@@ -347,4 +351,29 @@ function toggle_transparency()
     vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
 end
 
-map("n", "<leader>,st", toggle_transparency, nor)
+map("n", "sT", toggle_transparency, nor)
+
+-- projectionist
+
+-- map("n", "<leader>ss", ":e .projections.json<cr>", {})
+
+map(
+    "n",
+    "<leader>sp",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('package.json')<cr>",
+    desc("Open package.json file in a floating window")
+)
+
+map(
+    "n",
+    "<leader>sP",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('.projections.json')<cr>",
+    desc("Open .projections.json file in a floating window")
+)
+
+map(
+    "n",
+    "<leader>sr",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('requirements.txt')<cr>",
+    desc("Open requirements.txt file in a floating window")
+)
