@@ -3,6 +3,7 @@ H       ~
 d.      ~/.dotfiles
 uu      $REMOTES
 n.      $NOTES
+N.      $ATOMIC
 wo      $WORK
 bk      $BOOKS
 bK      $BOOKS/ln

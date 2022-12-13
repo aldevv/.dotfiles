@@ -318,6 +318,7 @@ alias \
 	mk='make' \
 	mkc='make clean' \
 	mki='make install' \
+	mka='make && sudo make install' \
 	smk='sudo make' \
 	smkc='sudo make clean' \
 	smk='sudo make' \

@@ -25,6 +25,7 @@ vim.g.netrw_banner = 0
 -- for the help menu
 vim.o.wildmenu = true
 vim.o.wildmode = "full"
+-- " set wildmode=longest,list,full
 
 vim.o.backup = true
 vim.o.undofile = true

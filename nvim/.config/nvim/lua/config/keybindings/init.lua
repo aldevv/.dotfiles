@@ -100,7 +100,10 @@ map("n", "<a-down>", ":m .+1<cr>==", nor)
 
 map("i", "<c-y>", "copilot#Accept('<CR>')", vim.tbl_extend("keep", s_e, { script = true }))
 map("", "<leader>C", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
-map("", "<leader>,O", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
+map("", "<leader>,cc", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
+map("", "<leader>,cC", ":Copilot<cr>", nor)
+map("", "<leader>,cs", ":Copilot status<cr>", nor)
+map("", "<leader>,cS", ":Copilot setup<cr>", nor)
 
 -- terminal
 map("n", "<leader>sñ", ":botright terminal<cr>", nor)
@@ -236,14 +239,13 @@ map("n", "<leader>sm", ":MaximizerToggle<CR>", nor_s)
 map("v", "<leader>sm", ":MaximizerToggle<CR>gv", nor_s)
 
 -- brightest
-map("n", "<leader>sb", ":buffers<cr>", nor)
-map("n", "<leader>,b", ":BrightestToggle<cr>", nor)
+map("n", "sb", ":BrightestToggle<cr>", nor)
 
 -- gv
 map("n", "<leader>gv", ":GVcr>", nor)
 
 -- rainbow
-map("n", "<leader>,r", ":RainbowToggle<cr>", nor_s)
+map("n", "sr", ":RainbowToggle<cr>", nor_s)
 
 require("config.keybindings.fugitive")
 
@@ -353,7 +355,7 @@ end
 
 map("n", "sT", toggle_transparency, nor)
 
--- projectionist
+-- float
 
 -- map("n", "<leader>ss", ":e .projections.json<cr>", {})
 
@@ -376,4 +378,11 @@ map(
     "<leader>sr",
     "<cmd>lua require('utils.lua.misc').toggle_float_file('requirements.txt')<cr>",
     desc("Open requirements.txt file in a floating window")
+)
+
+map(
+    "n",
+    "<leader>sr",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('Cargo.toml')<cr>",
+    desc("Open Cargo.toml file in a floating window")
 )

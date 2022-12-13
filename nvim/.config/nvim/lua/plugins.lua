@@ -136,11 +136,14 @@ return require("packer").startup({
         use({
             "hrsh7th/nvim-cmp",
             requires = {
+                "nvim-lua/plenary.nvim",
                 "onsails/lspkind-nvim",
                 "hrsh7th/cmp-nvim-lsp",
                 { "hrsh7th/cmp-nvim-lua", ft = "lua" },
                 "hrsh7th/cmp-path",
                 "hrsh7th/cmp-buffer",
+                "hrsh7th/cmp-cmdline",
+                "petertriho/cmp-git",
                 -- "saadparwaiz1/cmp_luasnip",
                 { "quangnguyen30192/cmp-nvim-ultisnips" },
             },
@@ -229,9 +232,7 @@ return require("packer").startup({
         use({
             "github/copilot.vim",
             config = function()
-                vim.g.copilot_enabled = true
-                vim.g.copilot_filetypes = { ts = true, js = true, jsx = true }
-                vim.g.copilot_no_tab_map = true
+                vim.g.copilot_filetypes = { ["*"] = false, js = true, jsx = true, python = true }
             end,
             -- cmd = "Copilot",
         })
@@ -483,8 +484,9 @@ return require("packer").startup({
                 "nvim-telescope/telescope.nvim",
                 "kyazdani42/nvim-web-devicons",
             },
-            cmd = "Octo",
-            config = req("core.octo"),
+            config = function()
+                require("octo").setup({ default_remote = { "origin", "upstream" } })
+            end,
         })
 
         use({ "Vimjas/vim-python-pep8-indent" }) -- for indentation, treesitter not functional yet 23/01/2022

@@ -1,0 +1,4 @@
+#!/bin/bash
+ATOMIC="${ATOMIC:-$HOME/notes/atomic}"
+NOTES=$ATOMIC ARCHIVE=1 ATOMIC_SEARCH=1 $UTILITIES/tmux/nt "$@"
+

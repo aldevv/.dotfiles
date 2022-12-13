@@ -122,6 +122,6 @@ M.load_mappings = function()
 
     map("n", "<leader>tp", ":Telescope projects<cr>", nor) -- recently opened projects!!
 
-    map("n", "<leader>,c", "<cmd>lua require('utils.lua.color_picker').choose_colors()<cr>", nor) -- recently opened porjects!!
+    map("n", "<leader>tc", "<cmd>lua require('utils.lua.color_picker').choose_colors()<cr>", nor) -- recently opened porjects!!
 end
 return M

@@ -197,8 +197,9 @@ bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
 bindkey -s 'd' '$UTILITIES/tmux/nd^M' # start something new
 bindkey -s 't' '$UTILITIES/tmux/nt^M' # notes
 bindkey -s 'l' '$UTILITIES/tmux/nt learn^M' # notes
-bindkey -s 'T' '$UTILITIES/tmux/nt todo^M' # notes
-bindkey -s 'I' '$UTILITIES/tmux/nt ideas^M' # notes
+bindkey -s 'A' '$UTILITIES/tmux/ant^M' # notes
+bindkey -s 'T' '$UTILITIES/tmux/ant todo^M' # notes
+bindkey -s 'I' '$UTILITIES/tmux/ant ideas^M' # notes
 bindkey -s 'g' '$UTILITIES/tmux/nf ~/repos 3^M' # projects and work
 bindkey -s 'p' 'vf ^M'
 bindkey -s 'P' 'vfg ^M'

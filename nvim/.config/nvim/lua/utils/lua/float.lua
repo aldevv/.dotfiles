@@ -37,7 +37,6 @@ local function create_window(file)
 
     local current_id = vim.api.nvim_get_current_buf()
     vim.api.nvim_command(":e " .. file)
-    -- vim.api.nvim_command(":badd " .. file)
     float_bufnr = vim.api.nvim_get_current_buf()
 
     if ft ~= "netrw" then
