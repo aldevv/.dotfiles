@@ -9,10 +9,14 @@ snippet _skel "Description" b
     },
     "src/*.py": {
         "alternate": "test/{}.py",
+        "related": "default.py",
         "type": "src"
     },
-    "*": {
-        "make": "python {}"
+    "*.py": {
+        "make": "python main.py",
+        "console": "python",
+        "start": "python main.py",
+        "path": ["src"]
     },
 	"requirements.txt": {
         "type": "req"

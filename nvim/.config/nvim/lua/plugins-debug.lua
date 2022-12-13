@@ -42,14 +42,14 @@ return require("packer").startup({
         --     "gruvbox-community/gruvbox",
         --     config = req("config.appearance.themes.gruvbox"),
         -- })
-        use({
-            "nvim-telescope/telescope.nvim",
-            requires = {
-                "nvim-lua/plenary.nvim",
-                { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
-            },
-            config = req("core.telescope"),
-        })
+        -- use({
+        --     "nvim-telescope/telescope.nvim",
+        --     requires = {
+        --         "nvim-lua/plenary.nvim",
+        --         { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+        --     },
+        --     config = req("core.telescope"),
+        -- })
         -- -- use({
         -- --     "folke/tokyonight.nvim",
         -- --      branch = "main",
@@ -84,6 +84,17 @@ return require("packer").startup({
         --     },
         -- })
         --
+        use({
+            "pwntester/octo.nvim",
+            requires = {
+                "nvim-lua/plenary.nvim",
+                "nvim-telescope/telescope.nvim",
+                "kyazdani42/nvim-web-devicons",
+            },
+            config = function()
+                require("octo").setup({ default_remote = { "origin", "upstream" } })
+            end,
+        })
         -- use({
         --     "SirVer/ultisnips",
         --     config = req("lsp.ultisnips"),

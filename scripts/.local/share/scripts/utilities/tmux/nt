@@ -1,5 +1,7 @@
 #!/bin/bash
 NOTES="${NOTES:-$HOME/notes}"
+ARCHIVE="${ARCHIVE:-0}"
+ATOMIC_SEARCH="${ATOMIC_SEARCH:-0}"
 name="$(date +%d%m%y).md"
 # more than 20 days, save to archive
 time_limit_to_archive="20"
@@ -16,37 +18,76 @@ time_limit_to_archive="20"
 # ntf to send files to subject/.files/
 
 find_notes() {
-    find "$1" -mindepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -type d 2>/dev/null
+    if [[ $ATOMIC_SEARCH == "1" ]]; then
+        find "$1" -mindepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -type d 2>/dev/null
+    else
+        find "$1" -mindepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -not -path '*/atomic*' -type d 2>/dev/null
+    fi
 }
 
 find_notes_depth() {
-    find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -type d 2>/dev/null
+    if [[ $ATOMIC_SEARCH == "1" ]]; then
+        find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -type d 2>/dev/null
+    else
+        find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -not -path '*/atomic*' -type d 2>/dev/null
+    fi
 }
 
 find_include_archive() {
-    find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -type d 2>/dev/null
+    if [[ $ATOMIC_SEARCH == "1" ]]; then
+        find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -type d 2>/dev/null
+    else
+        find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/atomic*' -type d 2>/dev/null
+    fi
 }
 
 save_in_archive_old_notes() {
-    files_to_archive="$(find "$NOTES" -mindepth 1 -not -path '*/.archive*' -not -path '*/.git*' -not -path '*/.files*' -type d -mtime "+$time_limit_to_archive")"
+    files_to_archive="$(find "$NOTES" -mindepth 1 -not -path '*/.archive*' -not -path '*/.git*' -not -path '*/.files*' -not -path '*/todo*' -type d -mtime "+$time_limit_to_archive")"
     for f in $files_to_archive; do
         local sub=${f%/*}
         local sub_no_path="${sub/$NOTES/}"
         sub=$NOTES/.archive
         if [[ -n "$sub_no_path" ]]; then
-            sub+="$sub_not_path"
+            sub+="$sub_no_path"
         fi
         mkdir -p "$sub"
         mv "$f" "$sub/"
     done
 }
 
+retrieve_notes_from_archive() { 
+    [[ -z "$1" && -z "$2" ]] && return 
 
-if [[ ! -d "$NOTES/.archive" ]]; then
+
+    local sub="$1"
+    local subject="$2"
+    local archive_sub="$NOTES/.archive"
+
+    local sub_no_path="${sub/$NOTES/}"
+    if [[ -n "$sub_no_path" ]]; then
+        archive_sub+="/$sub_no_path"
+    fi
+
+    # if chose an archived file, then make it into a normal path, so it moves it correctly
+    notes_in_archive=$(find "$NOTES/.archive" -wholename "$archive_sub/$subject" -type d)
+
+    [[ -z $notes_in_archive ]] && return 1
+
+    mkdir -p "$sub"
+    mv "$notes_in_archive" "$sub"
+    if [[ -z $(find "$archive_sub" -mindepth 1 -maxdepth 1) ]]; then
+        rm -r "$archive_sub" 
+    fi
+    return 0
+}
+
+if [[ $ARCHIVE == "1" && ! -d "$NOTES/.archive" ]]; then
     mkdir -p "$NOTES/.archive"
 fi
 
-save_in_archive_old_notes
+if [[ $ARCHIVE == "1" ]]; then
+    save_in_archive_old_notes
+fi
 
 is_new=0
 is_list=0
@@ -126,7 +167,7 @@ fi
 
 if [[ -z "$subject" ]]; then
     # put space because it wasn't picking up the preview
-    subject=$(echo -e "$(find_notes $NOTES)\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+    subject=$(echo -e "$(find_notes $NOTES)\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -2,-1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
 
     [[ -z "$subject" ]] && exit
     [[ "$subject" == "new " ]] && is_new=1 && subject="$NOTES"
@@ -209,32 +250,6 @@ if [[ $is_new == 1 ]]; then
     fi
 fi
 
-retrieve_notes_from_archive() { 
-    [[ -z "$1" && -z "$2" ]] && return 
-
-
-    local sub="$1"
-    local subject="$2"
-    local archive_sub="$NOTES/.archive"
-
-    local sub_no_path="${sub/$NOTES/}"
-    if [[ -n "$sub_no_path" ]]; then
-        archive_sub+="/$sub_no_path"
-    fi
-
-    # if chose an archived file, then make it into a normal path, so it moves it correctly
-    notes_in_archive=$(find "$NOTES/.archive" -wholename "$archive_sub/$subject" -type d)
-
-    [[ -z $notes_in_archive ]] && return 1
-
-    mkdir -p "$sub"
-    mv "$notes_in_archive" "$sub"
-    if [[ -z $(find "$archive_sub" -mindepth 1 -maxdepth 1) ]]; then
-        rm -r "$archive_sub" 
-    fi
-    return 0
-}
-
 if [[ -z "$sub" ]]; then
     sub="${subject%/*}"
     subject="$(basename "$subject")"
@@ -247,7 +262,10 @@ fi
 if grep ".archive" <<< "$sub"; then
     sub="${sub/$NOTES\/.archive/$NOTES}"
 fi
-retrieve_notes_from_archive "$sub" "$subject"
+
+if [[ $ARCHIVE == "1" ]]; then
+    retrieve_notes_from_archive "$sub" "$subject"
+fi
 
 
 _path="$sub/$subject"

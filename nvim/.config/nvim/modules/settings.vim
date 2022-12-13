@@ -31,7 +31,6 @@ set listchars+=precedes:«             " LEFT-POINTING DOUBLE ANGLE QUOTATION MA
 set listchars+=trail:•
 set listchars+=eol:↲
 
-set wildmode=longest,list,full
 set expandtab "always use spaces and not tabs
 set noerrorbells
 set ignorecase
