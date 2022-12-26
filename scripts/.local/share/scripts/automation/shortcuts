@@ -18,7 +18,7 @@ rm -f "$shell_shortcuts" "$ranger_shortcuts" "$nvim_shortcuts"
 
 #source them if not sourced
 (grep "\. \$ZDOTDIR/.auto_aliases"  $shellrc)>/dev/null \
-    || echo '. $ZDOTDIR/.auto_aliases' >> $shellrc
+    || echo '[[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases' >> $shellrc
 
 (grep "source $ranger_shortcuts" $GENERAL_PATH/ranger/rc.conf)>/dev/null \
     || echo "source $ranger_shortcuts" >> $GENERAL_PATH/ranger/rc.conf

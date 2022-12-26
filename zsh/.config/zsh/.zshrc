@@ -263,17 +263,6 @@ if ! is-at-least 582 $less_ver; then
 fi
 unset less_ver
 
-# aliases
-
-# old aliases
-# shellcheck source=/dev/null
-[[ -f "$ZDOTDIR/.aliases" ]] && . "$ZDOTDIR/.aliases" # old aliases
-# shellcheck source=/dev/null
-[[ -f "$ZDOTDIR/.auto_aliases" ]] && . "$ZDOTDIR/.auto_aliases"
-# new aliases
-# shellcheck source=/dev/null
-[[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
-
 # install https://github.com/relastle/pmy
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
@@ -302,4 +291,9 @@ load_pyenv() {
 
 # fzf keybindings
 [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && . /usr/share/doc/fzf/examples/key-bindings.zsh
-. $ZDOTDIR/.auto_aliases
+
+# shellcheck source=/dev/null
+[[ -f "$ZDOTDIR/.aliases" ]] && . "$ZDOTDIR/.aliases" # old aliases
+# shellcheck source=/dev/null
+[[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
+[[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases
