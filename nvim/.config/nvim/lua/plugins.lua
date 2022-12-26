@@ -104,6 +104,7 @@ return require("packer").startup({
             run = ":TSUpdate",
             config = req("core.treesitter"),
         })
+
         use("nvim-treesitter/nvim-treesitter-context")
         use({
             "glepnir/lspsaga.nvim",
@@ -263,7 +264,7 @@ return require("packer").startup({
                 vim.g.textobj_entire_no_default_key_mappings = 1
             end,
         })
-        -- TODO: check in the future to see if is working 22-08-22
+        use("nvim-treesitter/nvim-treesitter-textobjects")
         -- use({
         --     -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
         --     "nvim-treesitter/nvim-treesitter-textobjects",
@@ -273,9 +274,8 @@ return require("packer").startup({
 
         -- meh
         use({
-            "plasticboy/vim-markdown",
+            "preservim/vim-markdown",
             requires = "godlygeek/tabular",
-            ft = "md",
         })
         --
 
@@ -305,7 +305,15 @@ return require("packer").startup({
 
         -- use("inkarkat/vim-ReplaceWithRegister")
 
-        use({ "preservim/tagbar", cmd = { "TagbarToggle" } })
+        use({
+            "preservim/tagbar",
+            config = function()
+                vim.g.tagbar_map_closefold = "zc"
+                vim.g.tagbar_map_openfold = "zo"
+                vim.g.tagbar_show_linenumbers = 2
+            end,
+            cmd = { "TagbarToggle" },
+        })
         -- --------------------
         use({
             "mattn/emmet-vim",

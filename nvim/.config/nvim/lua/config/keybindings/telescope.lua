@@ -14,7 +14,8 @@ M.load_mappings = function()
     map(
         "n",
         "<a-p>",
-        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>',
+        ':lua require("telescope.builtin").find_files( {cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true } )<cr>'
+        ,
         nor_s
     )
 
@@ -37,6 +38,7 @@ M.load_mappings = function()
     map("n", "sz", ':lua require("utils.lua.telescope").zenmode()<cr>', nor_s)
 
     -- t misc
+    map("n", "<a-g>", ':lua require("telescope.builtin").oldfiles()<cr>', nor_s)
     map("n", "<leader>to", ':lua require("telescope.builtin").oldfiles()<cr>', nor_s)
     map("n", "<leader>tj", ':lua require("telescope.builtin").jumplist()<cr>', nor_s)
     map("n", "<leader>tL", ':lua require("telescope.builtin").loclist()<cr>', nor_s)

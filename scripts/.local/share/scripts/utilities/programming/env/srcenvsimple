@@ -1,0 +1,5 @@
+#!/bin/bash
+
+file="$1"
+while read l; do export "$l"; done < "${file:-.env}"
+

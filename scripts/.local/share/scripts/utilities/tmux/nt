@@ -17,32 +17,32 @@ time_limit_to_archive="20"
 
 # ntf to send files to subject/.files/
 
+sort_and_format() {
+    # sort by most recent
+    sort -r <<< "$1" | awk -F "|" '{print $2}'
+}
+
 find_notes() {
-    if [[ $ATOMIC_SEARCH == "1" ]]; then
-        find "$1" -mindepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -type d 2>/dev/null
-    else
-        find "$1" -mindepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -not -path '*/atomic*' -type d 2>/dev/null
-    fi
+    flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
+    [[ $ATOMIC_SEARCH != "1" ]] && flags+=(-not -path '*/atomic*')
+    sort_and_format "$(find "$1" -mindepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 find_notes_depth() {
-    if [[ $ATOMIC_SEARCH == "1" ]]; then
-        find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -type d 2>/dev/null
-    else
-        find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -not -path '*/atomic*' -type d 2>/dev/null
-    fi
+    flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
+    [[ $ATOMIC_SEARCH != "1" ]] && flags+=(-not -path '*/atomic*')
+    sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 find_include_archive() {
-    if [[ $ATOMIC_SEARCH == "1" ]]; then
-        find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -type d 2>/dev/null
-    else
-        find "$1" -mindepth 1 -maxdepth 1 -not -path '*/.git*' -not -path '*/.files*' -not -path '*/atomic*' -type d 2>/dev/null
-    fi
+    flags=(-not -path '*/.git*' -not -path '*/.files*')
+    [[ $ATOMIC_SEARCH != "1" ]] && flags+=(-not -path '*/atomic*')
+    sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 save_in_archive_old_notes() {
-    files_to_archive="$(find "$NOTES" -mindepth 1 -not -path '*/.archive*' -not -path '*/.git*' -not -path '*/.files*' -not -path '*/todo*' -type d -mtime "+$time_limit_to_archive")"
+    flags=(-not -path '*/.archive*' -not -path '*/.git*' -not -path '*/.files*' -not -path '*/todo*')
+    files_to_archive="$(find "$NOTES" -mindepth 1 "${flags[@]}" -type d -mtime "+$time_limit_to_archive")"
     for f in $files_to_archive; do
         local sub=${f%/*}
         local sub_no_path="${sub/$NOTES/}"
@@ -63,20 +63,38 @@ retrieve_notes_from_archive() {
     local subject="$2"
     local archive_sub="$NOTES/.archive"
 
-    local sub_no_path="${sub/$NOTES/}"
+    # this if sub --> $NOTES/atomic/programs
+    local sub_no_path="${sub/$NOTES\/}"
+    # this if not sub --> $NOTES/atomic
+    local sub_no_path="${sub_no_path/$NOTES}"
+
     if [[ -n "$sub_no_path" ]]; then
         archive_sub+="/$sub_no_path"
     fi
 
     # if chose an archived file, then make it into a normal path, so it moves it correctly
     notes_in_archive=$(find "$NOTES/.archive" -wholename "$archive_sub/$subject" -type d)
+    files_in_archive_sub=$(find "$NOTES/.archive" -wholename "$archive_sub/.files" -type d)
 
+
+    [[ -z $notes_in_archive && -z $files_to_archive && -z $files_in_archive_sub ]] && return 1
+
+    # create folder 
+    mkdir -p "$sub"
+
+    # move files from sub dir
+    [[ -n $files_in_archive_sub ]] && mv "$files_in_archive_sub" "$sub/.files"
+    
+    # if no notes, return
     [[ -z $notes_in_archive ]] && return 1
 
-    mkdir -p "$sub"
+    # move notes
     mv "$notes_in_archive" "$sub"
-    if [[ -z $(find "$archive_sub" -mindepth 1 -maxdepth 1) ]]; then
-        rm -r "$archive_sub" 
+
+    # TODO: if only ant programs, then should not open note, should fire fzf!!!
+
+    if [[ -z $(find "$archive_sub/$subject" -mindepth 1 -maxdepth 1 2>/dev/null) ]]; then
+        notify-send "retrieved from archive 📑"
     fi
     return 0
 }
@@ -89,14 +107,20 @@ if [[ $ARCHIVE == "1" ]]; then
     save_in_archive_old_notes
 fi
 
+# handle options
 is_new=0
 is_list=0
 is_dmenu=0
 is_files=0
-[[ "$1" == "new" ]] && is_new=1 && shift
-[[ "$1" == "list" ]] && is_list=1 && shift
-[[ "$1" == "dmenu" ]] && is_dmenu=1 && shift
-[[ "$1" == "files" ]] && is_files=1 && shift
+while true; do
+    case "$1" in
+        new) shift; is_new=1;;
+        list) shift; is_list=1;;
+        dmenu) shift; is_dmenu=1;;
+        files) shift; is_files=1;;
+        *) break;;
+    esac
+done
 
 if [[ $is_new == 1 && $is_list == 1 ]]; then
     echo -e "\e[31mThese 2 options are exclusive bro"
@@ -162,7 +186,6 @@ if [[ $is_dmenu == 1 ]]; then
     exit
 
 fi
-
 
 
 if [[ -z "$subject" ]]; then
@@ -263,15 +286,20 @@ if grep ".archive" <<< "$sub"; then
     sub="${sub/$NOTES\/.archive/$NOTES}"
 fi
 
+_path="$sub/$subject"
+
 if [[ $ARCHIVE == "1" ]]; then
     retrieve_notes_from_archive "$sub" "$subject"
+    while [[ -n $(find_include_archive "$_path") ]]; do
+        _path=$(echo -e "$(find_notes "$sub/$subject")\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -2,-1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+    done
 fi
 
+[[ -z "$_path" ]] && exit
 
-_path="$sub/$subject"
+
 if [[ ! -d "$_path" ]]; then
     mkdir -p "$_path"
 fi
 
-[[ -z "$_path" ]] && exit
 tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$(basename "$_path")"

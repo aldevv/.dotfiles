@@ -7,7 +7,6 @@ N.      $ATOMIC
 wo      $WORK
 bk      $BOOKS
 bK      $BOOKS/ln
-ln      $BOOKS/ln
 ba      $BACKUPS
 ll      $LEARN
 l.      $LEARN

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+in=/dev/stdin
+file="$1"
+[[ -n "$file" ]] && in="$file"
+
+sed -E 's/^\* /• /g' < "$in"
+

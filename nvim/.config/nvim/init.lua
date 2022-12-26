@@ -1,7 +1,19 @@
--- checkout:
 -- telescope.nvim
 -- refactor.lua
 -- navigator.lua
+function loadrequire(module)
+    local function requiref(module)
+        -- require(module).enable_profile()
+        require(module)
+    end
+
+    res = pcall(requiref, module)
+    if not res then
+        -- Do Stuff when no module
+    end
+end
+
+loadrequire("impatient")
 vim.opt.shadafile = "NONE" -- optimization
 vim.cmd("set t_Co=256")
 vim.cmd("let IS_MINE=isdirectory($SUCKLESS)")
@@ -82,6 +94,3 @@ async = vim.loop.new_async(vim.schedule_wrap(function()
     async:close()
 end))
 vim.opt.shadafile = "" -- optimization
-
--- transparency
-vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
