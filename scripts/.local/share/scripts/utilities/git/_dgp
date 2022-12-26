@@ -1,5 +1,12 @@
 #!/bin/bash
 # argument is the path
+message=""
+default_message=0
+if [[ -n "$2" ]]; then
+    message="$2"
+    default_message=1
+fi
+
 clear
 pushd "$1" &>/dev/null || return
 echo -e "\e[35mIN $(basename $1 | tr a-z A-Z)"
@@ -11,17 +18,24 @@ if [ -z "$(tr -d '\n' <<< "$changes")" ]; then
     return
 fi
 git status -s
-printf "\nmessage: \n"
-read -r message
+
+if [[ -z "$message" ]]; then
+    printf "\nmessage: \n"
+    read -r message
+fi
 git add -u
 # if there are untracked files, choose to add them
 if [[ -n $(git ls-files --other --directory --exclude-standard | sed q1) ]]; then
-    echo -e "\nadd untracked files? [y/N]"
-    read -r untracked
-    if [[ "$untracked" == "y" || "$untracked" == "Y" ]]; then
+    if [[ "$default_message" == "0" ]]; then
+        echo -e "\nadd untracked files? [y/N]"
+        read -r untracked
+    fi
+
+    if [[ "$untracked" == "y" || "$untracked" == "Y" || $default_message == "1" ]]; then
         git add -A
     fi
 fi
+
 git commit -m "$message"
 git push origin HEAD
 popd &>/dev/null || return
