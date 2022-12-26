@@ -79,7 +79,6 @@ vim.api.nvim_create_autocmd({ "Filetype" }, {
 
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
     pattern = "*.md",
-    callback = function()
-        os.execute("dgpa")
-    end,
+    command = "Start! . _dgp $NOTES $(stamp)",
+    -- Start without bang, focuses the new window
 })

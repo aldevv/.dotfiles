@@ -385,3 +385,5 @@ map(
     "<cmd>lua require('utils.lua.misc').toggle_float_file('Cargo.toml')<cr>",
     desc("Open Cargo.toml file in a floating window")
 )
+
+map("n", "<leader>.dgpa", "<cmd>Start . _dgpa<cr>", desc("push all my stuff"))
