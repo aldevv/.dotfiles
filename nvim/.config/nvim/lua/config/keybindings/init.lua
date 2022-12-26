@@ -387,3 +387,6 @@ map(
 )
 
 map("n", "<leader>.dgpa", "<cmd>Start . _dgpa<cr>", desc("push all my stuff"))
+map("n", "<leader>.dgpn", "<cmd>Start . _dgp $NOTES<cr>", desc("push notes"))
+map("n", "<leader>.dgpd", "<cmd>Start . _dgp $DOTFILES<cr>", desc("push dotfiles"))
+map("n", "<leader>.dgpw", "<cmd>Start . _dgp $WIKI<cr>", desc("push wiki"))
