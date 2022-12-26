@@ -76,3 +76,14 @@ vim.api.nvim_create_autocmd({ "Filetype" }, {
         vim.api.nvim_set_hl(0, "FloatBorder", { link = "Normal" })
     end,
 })
+
+-- obsession
+vim.api.nvim_create_autocmd("DirChanged", {
+    pattern = "*",
+    callback = function(ev)
+        local exists = vim.fn.glob("Session.vim")
+        if exists ~= "" then
+            vim.cmd("source Session.vim")
+        end
+    end,
+})

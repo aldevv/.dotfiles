@@ -91,8 +91,6 @@ retrieve_notes_from_archive() {
     # move notes
     mv "$notes_in_archive" "$sub"
 
-    # TODO: if only ant programs, then should not open note, should fire fzf!!!
-
     if [[ -z $(find "$archive_sub/$subject" -mindepth 1 -maxdepth 1 2>/dev/null) ]]; then
         notify-send "retrieved from archive 📑"
     fi
@@ -145,52 +143,10 @@ if [[ -n "$1" ]]; then
 fi
 
 
-if [[ $is_dmenu == 1 ]]; then
-    if [[ -z "$subject" ]]; then
-        subject="$(echo -e "$(fd . "$NOTES" -t d -x basename )\nnew" | dmenu 2>/dev/null )"
-    fi
-
-    if [[ $subject == "new" ]]; then
-        is_new_sub="$(dmenu -p "is it a sub-dir?" 2>/dev/null <<< "$(echo -e "yes\nno")")"
-        if [[ "$is_new_sub" == "yes" ]]; then
-            sub="$NOTES/$(dmenu -p "Enter new sub-dir: " 2>/dev/null <<< "$(echo -e "")")"
-            if [[ ! -d $sub ]]; then
-                mkdir "$sub"
-            fi
-            subject="$(dmenu -p "Enter subject name: " 2>/dev/null <<< "$(echo -e "")")"
-            _path="$sub/$subject"
-        else
-            subject="$(dmenu -p "Enter subject name: " 2>/dev/null <<< "$(echo -e "")")"
-            _path="$NOTES/$subject"
-        fi
-        session_name="$(basename "$_path")"
-        tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name"  "new_window"
-        exit
-    fi
-
-    subject="$NOTES/$subject"
-    is_sub=0
-    if [[ -n "$(find_notes "$subject")" ]]; then
-        is_sub=1
-        sub=$subject
-        subject=$(echo -e "$(fd . "$subject" -t d -x basename)" | dmenu 2>/dev/null)
-    fi
-
-    if [[ $is_sub == 1 ]]; then
-        _path="$sub/$subject"
-    else
-        _path="$subject"
-    fi
-    session_name="$(basename "$_path")"
-    tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name" "new_window"
-    exit
-
-fi
-
-
-if [[ -z "$subject" ]]; then
+# for shell
+if [[ -z "$subject" && $is_dmenu != "1" ]]; then
     # put space because it wasn't picking up the preview
-    subject=$(echo -e "$(find_notes $NOTES)\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -2,-1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+    subject=$(echo -e "$(find_notes "$NOTES")\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -2,-1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
 
     [[ -z "$subject" ]] && exit
     [[ "$subject" == "new " ]] && is_new=1 && subject="$NOTES"
@@ -218,6 +174,30 @@ if [[ $ARCHIVE == "1" ]]; then
 fi
 
 _path="$sub/$subject"
+
+if [[ $is_dmenu == 1 ]]; then
+    if [[ "$_path" = "/" ]]; then
+        _path="$NOTES"
+    fi
+
+    while [[ -n $(find_notes "$_path") ]]; do
+        _path="$(echo -e "$(find_notes "$_path")\nnew" | dmenu 2>/dev/null )"
+    done
+
+    [[ -z "$_path" ]] && exit
+
+    if [[ $_path == "new" ]]; then
+        _path="$NOTES/$(dmenu -p "Enter subject name: " 2>/dev/null <<< "$(echo -e "")")"
+        [[ ! -d $_path ]] && mkdir -p "$_path"
+        session_name="$(basename "$_path")"
+        tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name"  "new_window"
+        exit
+    fi
+
+    session_name="$(basename "$_path")"
+    tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name" "new_window"
+    exit
+fi
 
 # this is for cases when you do "nt something"  and then want to list, new or files
 if [[ $is_new == 0 && $is_list == 0 && $is_files == 0 && -n "$(find_include_archive "$sub/$subject")" ]]; then
