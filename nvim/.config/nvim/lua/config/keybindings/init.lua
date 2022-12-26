@@ -248,7 +248,8 @@ map("n", "sr", ":RainbowToggle<cr>", nor_s)
 
 require("config.keybindings.fugitive")
 
-map("n", "sol", ":source %:h/Session.vim<bar> :Obsession<cr>", nor_s)
+map("n", "soL", ":silent source %:h/Session.vim<cr>", nor_s)
+map("n", "sol", ":silent source Session.vim<cr>", nor_s)
 map("n", "soo", ":Obsession<CR>", desc("obsession: add session"))
 map("n", "soO", ":Obsession!<CR>", desc("obsession: remove session"))
 -- vim-test
