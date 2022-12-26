@@ -77,13 +77,9 @@ vim.api.nvim_create_autocmd({ "Filetype" }, {
     end,
 })
 
--- obsession
-vim.api.nvim_create_autocmd("DirChanged", {
-    pattern = "*",
-    callback = function(ev)
-        local exists = vim.fn.glob("Session.vim")
-        if exists ~= "" then
-            vim.cmd("source Session.vim")
-        end
+vim.api.nvim_create_autocmd({ "BufWritePost" }, {
+    pattern = "*.md",
+    callback = function()
+        os.execute("dgpa")
     end,
 })
