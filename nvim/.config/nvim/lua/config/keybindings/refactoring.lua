@@ -72,6 +72,14 @@ vim.api.nvim_set_keymap("v", "<leader>rpv", ":lua require('refactoring').debug.p
 vim.api.nvim_set_keymap("n", "<leader>rc", ":lua require('refactoring').debug.cleanup({})<CR>", { noremap = true })
 
 -- remap to open the Telescope refactoring menu in visual mode
+
+vim.api.nvim_set_keymap(
+    "n",
+    "<leader>rr",
+    "<Esc><cmd>lua require('telescope').extensions.refactoring.refactors()<CR>",
+    { noremap = true }
+)
+
 vim.api.nvim_set_keymap(
     "v",
     "<leader>rr",
