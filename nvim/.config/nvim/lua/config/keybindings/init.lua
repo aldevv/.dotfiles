@@ -17,9 +17,8 @@ local map = vim.keymap.set
 local h = "~/.config/nvim"
 
 local desc = function(desc)
-  return vim.tbl_extend("keep", nor_s, { desc = desc })
+    return vim.tbl_extend("keep", nor_s, { desc = desc })
 end
-
 
 -- backlog
 -- <a-?>
@@ -249,10 +248,9 @@ map("n", "sr", ":RainbowToggle<cr>", nor_s)
 
 require("config.keybindings.fugitive")
 
--- obsession
-map("n", "<leader>,ol", ":source %:h/Session.vim<bar> :Obsession<cr>", nor_s)
-map("n", "<leader>,os", ":Obsession<CR>", nor_s)
-
+map("n", "sol", ":source %:h/Session.vim<bar> :Obsession<cr>", nor_s)
+map("n", "soo", ":Obsession<CR>", desc("obsession: add session"))
+map("n", "soO", ":Obsession!<CR>", desc("obsession: remove session"))
 -- vim-test
 
 map("n", "<localleader>tn", ":lua require('neotest').run.run()<cr>", nor_s) -- run nearest
@@ -342,15 +340,15 @@ map("n", "<localleader>Dq", ":DBUILastQueryInfo<cr>", {})
 map("n", "<leader>,,", "<cmd>tabedit<cr>", nor)
 
 function toggle_transparency()
-  local normal = vim.api.nvim_command_output("hi Normal")
-  -- if nil, then is transparent
-  if string.find(normal, "guibg") == nil then
-    local cur_theme = vim.api.nvim_command_output("colorscheme")
-    vim.cmd("colorscheme " .. cur_theme)
-    return
-  end
+    local normal = vim.api.nvim_command_output("hi Normal")
+    -- if nil, then is transparent
+    if string.find(normal, "guibg") == nil then
+        local cur_theme = vim.api.nvim_command_output("colorscheme")
+        vim.cmd("colorscheme " .. cur_theme)
+        return
+    end
 
-  vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
+    vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
 end
 
 map("n", "sT", toggle_transparency, nor)
@@ -360,29 +358,29 @@ map("n", "sT", toggle_transparency, nor)
 -- map("n", "<leader>ss", ":e .projections.json<cr>", {})
 
 map(
-  "n",
-  "<leader>sp",
-  "<cmd>lua require('utils.lua.misc').toggle_float_file('package.json')<cr>",
-  desc("Open package.json file in a floating window")
+    "n",
+    "<leader>sp",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('package.json')<cr>",
+    desc("Open package.json file in a floating window")
 )
 
 map(
-  "n",
-  "<leader>sP",
-  "<cmd>lua require('utils.lua.misc').toggle_float_file('.projections.json')<cr>",
-  desc("Open .projections.json file in a floating window")
+    "n",
+    "<leader>sP",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('.projections.json')<cr>",
+    desc("Open .projections.json file in a floating window")
 )
 
 map(
-  "n",
-  "<leader>sr",
-  "<cmd>lua require('utils.lua.misc').toggle_float_file('requirements.txt')<cr>",
-  desc("Open requirements.txt file in a floating window")
+    "n",
+    "<leader>sr",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('requirements.txt')<cr>",
+    desc("Open requirements.txt file in a floating window")
 )
 
 map(
-  "n",
-  "<leader>sr",
-  "<cmd>lua require('utils.lua.misc').toggle_float_file('Cargo.toml')<cr>",
-  desc("Open Cargo.toml file in a floating window")
+    "n",
+    "<leader>sr",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('Cargo.toml')<cr>",
+    desc("Open Cargo.toml file in a floating window")
 )

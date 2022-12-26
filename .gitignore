@@ -1,5 +1,6 @@
 ilovepdfkey*
 .zcompdump*
 .auto_aliases
+Session.vim
 packer_compiled*
 __pycache__
