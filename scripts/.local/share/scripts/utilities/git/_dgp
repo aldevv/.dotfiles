@@ -7,6 +7,7 @@ changes=$(git status -s)
 if [ -z "$(tr -d '\n' <<< "$changes")" ]; then 
     clear
     printf "\e[31mno changes\n"
+    popd &>/dev/null || return
     return
 fi
 git status -s
