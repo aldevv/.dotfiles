@@ -5,6 +5,7 @@ pushd "$1" &>/dev/null || return
 echo -e "\e[35mIN $(basename $1 | tr a-z A-Z)"
 changes=$(git status -s)
 if [ -z "$(tr -d '\n' <<< "$changes")" ]; then 
+    clear
     printf "\e[31mno changes\n"
     return
 fi
