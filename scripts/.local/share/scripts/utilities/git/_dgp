@@ -1,8 +1,8 @@
 #!/bin/bash
 # argument is the path
 clear
-pushd "$1" || return
-echo "\e[35mIN $(basename $1 | tr a-z A-Z)"
+pushd "$1" &>/dev/null || return
+echo -e "\e[35mIN $(basename $1 | tr a-z A-Z)"
 changes=$(git status -s)
 if [ -z "$(tr -d '\n' <<< "$changes")" ]; then 
     printf "\e[31mno changes\n"
@@ -22,3 +22,4 @@ if [[ -n $(git ls-files --other --directory --exclude-standard | sed q1) ]]; the
 fi
 git commit -m "$message"
 git push origin HEAD
+popd &>/dev/null || return
