@@ -1,0 +1,24 @@
+#!/bin/bash
+# argument is the path
+clear
+pushd "$1" || return
+echo "\e[35mIN $(basename $1 | tr a-z A-Z)"
+changes=$(git status -s)
+if [ -z "$(tr -d '\n' <<< "$changes")" ]; then 
+    printf "\e[31mno changes\n"
+    return
+fi
+git status -s
+printf "\nmessage: \n"
+read -r message
+git add -u
+# if there are untracked files, choose to add them
+if [[ -n $(git ls-files --other --directory --exclude-standard | sed q1) ]]; then
+    echo -e "\nadd untracked files? [y/N]"
+    read -r untracked
+    if [[ "$untracked" == "y" || "$untracked" == "Y" ]]; then
+        git add -A
+    fi
+fi
+git commit -m "$message"
+git push origin HEAD
