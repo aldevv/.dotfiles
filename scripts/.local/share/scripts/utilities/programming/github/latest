@@ -1,19 +1,18 @@
 #!/bin/bash
 
 platform="linux"
-if [[ "$1" == "all" ]]; then
-    platform=".*"
-    shift
-fi
+is_first=0
 
-if [[ -n "$2" ]]; then
-    platform="$1"
-    shift
-fi
+while true; do
+    case "$1" in
+        first) shift; is_first=1;;
+        all) shift; platform=".*";;
+        *) 
+            if [[ -n "$2" ]]; then shift; platform="$1"; fi; break;;
+    esac
+done
 
 types="(tar.gz|tar.xz|deb|7z|zip|tar.bz2|bz2|rar|gz|tar|tbz2|tgz|Z|tar.zst)"
-
-
 info=$(echo "$1" | cut -d / -f 4,5)
 author=$(echo "$info" | cut -d / -f 1)
 repo=$(echo "$info" | cut -d / -f 2)
@@ -25,6 +24,15 @@ versions=$(wget -q https://api.github.com/repos/${author}/${repo}/releases/lates
 source_code_tag=$(wget -q https://api.github.com/repos/${author}/${repo}/releases/latest -O - |
 	awk -F \" -v RS="," '/tag_name/ {print $(NF-1)}')
 
+if [[ $is_first == 1 ]]; then
+    if [[ -z "$versions" ]]; then
+        head <<< "$source_code_tag"
+    else
+        head <<< "$versions"
+    fi
+    exit 0
+fi
+
 if [[ "$versions" != "" || "$source_code_tag" != "" ]]; then
     if [[ -z "$versions" ]]; then
         chosen="$(fzf --no-preview -d / --with-nth -1 <<< "$(echo -e "tag: $source_code_tag.zip\ntag: $source_code_tag.tar.gz" | sed 's/^$//g' )")"
@@ -32,7 +40,7 @@ if [[ "$versions" != "" || "$source_code_tag" != "" ]]; then
         chosen="$(fzf --no-preview -d / --with-nth -1 <<< "$(echo -e "${versions}\ntag: $source_code_tag.zip\ntag: $source_code_tag.tar.gz" | sed 's/^$//g' )")"
     fi
     echo "$chosen"
-    exit
+    exit 0
 fi
 
 echo "$versions"
