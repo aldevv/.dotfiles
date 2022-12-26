@@ -198,81 +198,7 @@ if [[ -z "$subject" ]]; then
     [[ "$subject" == "files" ]] && is_files=1 && subject="$NOTES"
 fi
 
-
-# this is for cases when you do "nt something"  and then want to list, new or files
-if [[ $is_new == 0 && $is_list == 0 && $is_files == 0 && -n "$(find_include_archive "$sub/$subject")" ]]; then
-    original="$sub/$subject"
-    subject=$(echo -e "$(find_include_archive "$sub/$subject")\n\e[35mnew \n\e[35mlist\n\e[35mfiles"  | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
-
-    mode_chosen=0
-    [[ -z "$subject" ]] && exit
-    [[ "$subject" == "new " ]] && is_new=1 && subject="$NOTES" && mode_chosen=1
-    [[ "$subject" == "list" ]] && is_list=1 && subject="$NOTES" && mode_chosen=1
-    [[ "$subject" == "files" ]] && is_files=1 && subject="$NOTES" && mode_chosen=1
-
-    if [[ $mode_chosen == 1 ]]; then
-        subject="$original"
-    else
-        while [[ -n $(find_include_archive "$subject") ]]; do
-            subject=$(echo -e "$(find_include_archive "$subject")" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
-        done
-    fi
-fi
-
-
-if [[ $is_files == 1 ]]; then
-    while [[ -n $(find_include_archive "$subject") && ! -d "$subject/.files" ]]; do
-        pattern="$(echo -e "$(fd . "$subject" -t d -x bash -c "if [[ -f {} ]]; then echo {}; else if [[ -d {}/.files ]]; then echo {}; fi; fi")")"
-        [[ -z $pattern ]] && echo -e "\e[35m \"$(basename "$subject")\" or it's subfolders have no .files folder" && exit 1
-        subject=$(echo -e "$pattern" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {}/.files --color=always || chafa $FILES/fun/kaguya.jpg")
-    done
-    [[ -z "$subject" ]] && exit
-    _path="$subject"
-    [[ ! -d $_path/.files ]] && echo -e "\e[35m $(basename "$_path") has no .files folder" && exit 1
-    tmux-sessionizer-cmd "$_path" "cd $_path/.files" "$(basename "$_path")-files"
-    exit 0
-fi
-
-if [[ $is_list == 1 ]]; then
-
-    # if it has folders, is a sub
-    while [[ -n $(find_include_archive "$subject") ]]; do
-        subject=$(echo -e "$(find_notes_depth "$subject")" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
-    done
-
-    [[ -z "$subject" ]] && exit
-
-    # list files content
-    chosen_file=$(find "$subject" -mindepth 1 -maxdepth 1 -not -path '*/.*' -printf '%f\n' 2>/dev/null | fzf --preview="[[ -f $subject/{} ]] && bat $subject/{} || bat $subject/.files/{} --color=always")
-
-    [[ -z "$chosen_file" ]] && exit
-    _path="$subject"
-    tmux-sessionizer-cmd "$_path" "nvim $_path/$chosen_file" "$(basename "$_path")" 
-    exit
-fi
-
-if [[ $is_new == 1 ]]; then
-    base="$subject"
-    is_new_sub="$(fzf --no-preview --prompt="is it a sub-dir?" <<< "$(echo -e "yes\nno")")"
-    [[ -z "$is_new_sub" ]] && exit 0
-
-    if [[ "$is_new_sub" == "yes" ]]; then
-        echo -e "\e[35mEnter new sub-dir"
-        read -r sub
-        [[ -z "$sub" ]] && exit 0
-
-        sub="$base/$sub"
-    fi
-
-    subject=""
-    echo -e "\e[35mEnter new subject"
-    read -r subject
-    [[ -z "$subject" ]] && exit 0
-    if [[ "$is_new_sub" != "yes" ]]; then
-        subject="$base/$subject"
-    fi
-fi
-
+# add sub if no sub
 if [[ -z "$sub" ]]; then
     sub="${subject%/*}"
     subject="$(basename "$subject")"
@@ -282,21 +208,77 @@ if [[ -z "$sub" ]]; then
     fi
 fi
 
+# get normal name instead of .archive
 if grep ".archive" <<< "$sub"; then
     sub="${sub/$NOTES\/.archive/$NOTES}"
 fi
 
-_path="$sub/$subject"
-
 if [[ $ARCHIVE == "1" ]]; then
     retrieve_notes_from_archive "$sub" "$subject"
-    while [[ -n $(find_include_archive "$_path") ]]; do
-        _path=$(echo -e "$(find_notes "$sub/$subject")\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -2,-1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+fi
+
+_path="$sub/$subject"
+
+# this is for cases when you do "nt something"  and then want to list, new or files
+if [[ $is_new == 0 && $is_list == 0 && $is_files == 0 && -n "$(find_include_archive "$sub/$subject")" ]]; then
+    original="$_path"
+    _path=$(echo -e "$(find_include_archive "$original")\n\e[35mnew \n\e[35mlist\n\e[35mfiles"  | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+
+    mode_chosen=0
+    [[ -z "$_path" ]] && exit
+    [[ "$_path" == "new " ]] && is_new=1 && _path="$NOTES" && mode_chosen=1
+    [[ "$_path" == "list" ]] && is_list=1 && _path="$NOTES" && mode_chosen=1
+    [[ "$_path" == "files" ]] && is_files=1 && _path="$NOTES" && mode_chosen=1
+
+    if [[ $mode_chosen == 1 ]]; then
+        _path="$original"
+    else
+        while [[ -n $(find_include_archive "$_path") ]]; do
+            _path=$(echo -e "$(find_include_archive "$_path")" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+        done
+    fi
+fi
+
+if [[ $is_files == 1 ]]; then
+    while [[ -n $(find_include_archive "$_path") && ! -d "$_path/.files" ]]; do
+        pattern="$(echo -e "$(fd . "$_path" -t d -x bash -c "if [[ -f {} ]]; then echo {}; else if [[ -d {}/.files ]]; then echo {}; fi; fi")")"
+        [[ -z $pattern ]] && echo -e "\e[35m \"$(basename "$_path")\" or it's subfolders have no .files folder" && exit 1
+        _path=$(echo -e "$pattern" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {}/.files --color=always || chafa $FILES/fun/kaguya.jpg")
     done
+    [[ -z "$_path" ]] && exit
+    [[ ! -d $_path/.files ]] && echo -e "\e[35m $(basename "$_path") has no .files folder" && exit 1
+    tmux-sessionizer-cmd "$_path" "cd $_path/.files" "$(basename "$_path")-files"
+    exit 0
+fi
+
+if [[ $is_list == 1 ]]; then
+
+    # if it has folders, is a sub
+    while [[ -n $(find_include_archive "$_path") ]]; do
+        _path=$(echo -e "$(find_notes_depth "$_path")" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+    done
+
+    [[ -z "$_path" ]] && exit
+
+    # list files content
+    chosen_file=$(find "$_path" -mindepth 1 -maxdepth 1 -not -path '*/.*' -printf '%f\n' 2>/dev/null | fzf --preview="[[ -f $_path/{} ]] && bat $_path/{} || bat $_path/.files/{} --color=always")
+
+    [[ -z "$chosen_file" ]] && exit
+    tmux-sessionizer-cmd "$_path" "nvim $_path/$chosen_file" "$(basename "$_path")" 
+    exit
+fi
+
+if [[ $is_new == 1 ]]; then
+    sub="$_path"
+    subject=""
+    echo -e "\e[35mEnter new subject"
+    read -r subject
+    [[ -z "$subject" ]] && exit 0
+    _path="$sub/$subject"
+    echo "$_path"
 fi
 
 [[ -z "$_path" ]] && exit
-
 
 if [[ ! -d "$_path" ]]; then
     mkdir -p "$_path"
