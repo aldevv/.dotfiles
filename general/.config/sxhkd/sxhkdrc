@@ -1,8 +1,21 @@
+super + w
+   firefox
+
 super + space
    st 2>/dev/null
     
 super + p
     dmenu_run
+
+# bug with npm
+super + r
+    st -e bash -c "ranger 2>/dev/null; $SHELL"
+
+super + alt + n
+    nt dmenu
+
+super + alt + shift + n
+    ant dmenu
 
 super + shift + o
 	~/.config/sxhkd/dm_p 2>/dev/null
@@ -13,12 +26,15 @@ Print + shift
 mode_switch + c
 	copyq toggle
 
+mode_switch + e
+	emoji
+
 # lsp not working
 super + shift + x
 	st -e nvim ~/.config/xmonad/xmonad.hs
 
 super + Escape
-    browseWiki -d 
+    nw dmenu 
 
 super + shift + Escape
     bookpractice -d 
@@ -35,16 +51,27 @@ super + F1
 control + shift + Escape
     pskill
 
+super + F9
+    mountDrive
+
+super + F10
+    unmountDrive
+
 XF86AudioMute
-     $SCRIPTS/shared/volume mute; $APPS/dwm/refreshVolume
+     volume mute; $APPS/dwm/refreshVolume
+     # volume2 mute; $APPS/dwm/refreshVolume
      # pactl set-sink-mute 0 toggle
 
 XF86AudioRaiseVolume
-     $SCRIPTS/shared/volume up; $APPS/dwm/refreshVolume
+     volume up; $APPS/dwm/refreshVolume
+     # volume2 up; $APPS/dwm/refreshVolume
+     # volume up; $APPS/dwm/refreshVolume
      # pactl set-sink-volume 0 +5%
 
 XF86AudioLowerVolume
-     $SCRIPTS/shared/volume down; $APPS/dwm/refreshVolume
+     volume down; $APPS/dwm/refreshVolume
+     # volume2 down; $APPS/dwm/refreshVolume
+     # volume down; $APPS/dwm/refreshVolume
      # pactl set-sink-volume 0 -5%
 
 XF86MonBrightnessUp

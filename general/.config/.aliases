@@ -18,22 +18,42 @@ alias \?="noglob ?"
 alias \?g="noglob ?g"
 alias \?r="noglob ?r"
 alias \?s="noglob ?s"
+alias dummypsql="docker run -e POSTGRES_PASSWORD=lol --name=pg -d -p 5432:5432 --rm aldevv/omdb"
+
+# docker
+alias dkrit="docker run -it"
+alias dkritr="docker run -it --rm"
+
+# programs
+alias srcdirenv='eval "$(direnv hook zsh)"'
+alias srcenv='. _srcenv'
+
+alias extract_install='. _extract_install'
 
 # scripts
 alias lg="live_grep"
 alias getlatest=". _getlatest"
+alias clone=". _clone"
 
 # builtin
-alias c="cd"
+alias c="cat"
 alias f="find"
 
 # git
-alias gcA="git commit --amend"
-alias gcAn="git commit --amend --no-edit"
+# alias gcA="git commit -a"
+alias gca="git commit --amend"
+alias gce="git commit --amend --no-edit"
 alias gR="git reset"
+alias gRh="git reset --hard"
 alias grs="git remote set-url"
 alias grso="git remote set-url origin"
 alias grg="git remote get-url origin"
+
+alias dgp=". _dgp"
+alias dgpa=". _dgpa"
+alias dgpd='. _dgp $DOTFILES'
+alias dgpw='. _dgp $WIKI'
+alias dgpn='. _dgp $NOTES'
 
 # tmux
 alias tms="tmux-sessionizer"
@@ -59,109 +79,18 @@ alias toasc="ascii-image-converter"
 
 # functions
 
-clone() {
-    local repo="$1" "$USER" ;
-    local repo="${repo#https://github.com/}"
-    local repo="${repo#git@github.com:}";
-    if [[ $repo =~ / ]]; then
-        user="${repo%%/*}"
-    else
-        user="$GITUSER"
-        [[ -z "$user" ]] && user="$USER";
-    fi;
-    local name="${repo##*/}";
-    local userd="${REPOS:-$HOME/repos}/github.com/$user";
-    local _path="$userd/$name";
-    [[ -d "$_path" ]] && cd "$_path" && return;
-    mkdir -p "$userd";
-    cd "$userd";
-    echo gh repo clone "$user/$name" -- --depth 1 --recurse-submodules;
-    gh repo clone  "$user/$name" -- --depth 1 --recurse-submodules;
-    cd "$name"
-}
-
-program() {
-    local _file="$1";
-    local ext="${_file##*.}";
-    local name="${${_file%.*}##*/}";
-    local name="${name%.tar}";
-    local programs="${PROGRAMS:-$HOME/programs/}"
-    local _path="$programs/$name";
-    [[ -d "$_path" ]] && cd "$_path" && return;
-    mv "$_file" "$programs";
-    cd "$programs"
-    declare -A methods=([gz]="tar xfv $_file");
-    eval "${methods[$ext]}";
-    local named;
-    named=$(find "$programs" -maxdepth 1 -iname "*${name%%-*}*" -type d);
-    echo "$named"
-    [[ -d "$named" ]] \
-        && cd "$named" \
-        && mv "../$_file" "/tmp/" \
-        && return;
-    mv "$_file" "/tmp/"
-    local RED='\033[0;31m'
-    echo "${RED}couldn't find folder extracted from file"
-}
-
-# vpn
 nord() {
     sudo nordvpn set meshnet on
     sudo nordvpn connect japan
-}
-
-# dotfiles
-dgp() {
-    # argument is the path
-    clear
-    pushd "$1" || return
-    echo "\e[35mIN $(basename $1 | tr a-z A-Z)"
-    changes=$(git status -s)
-    if [ -z "$(tr -d '\n' <<< "$changes")" ]; then 
-        printf "\e[31mno changes\n"
-        return
-    fi
-    git status -s
-    printf "\nmessage: \n"
-    read -r message
-    git add -u
-    # if there are untracked files, choose to add them
-    if [[ -n $(git ls-files --other --directory --exclude-standard | sed q1) ]]; then
-        echo -e "\nadd untracked files? [y/N]"
-        read -r untracked
-        if [[ "$untracked" == "y" || "$untracked" == "Y" ]]; then
-            git add -A
-        fi
-    fi
-    git commit -m "$message"
-    git push origin HEAD
-}
-
-dgpa() {
-    sleep 0.001
-    dgp "$WIKI"
-    dgp "$DOTFILES"
-    popd -q || return
-    popd -q || return
-}
-
-dgpd() {
-    dgp "$DOTFILES"
-    popd -q || return
-}
-
-dgpw() {
-    dgp "$WIKI"
-    popd -q || return
 }
 
 e.() {
 	bat .env
 }
 
-source_env() {
-	# load .env file or any other file
-	file=$1
-	[ -z $file ] && file=".env"
-	[ -f $file ] && zsh -c "set -o allexport; source $file; echo 'loaded'; set +o allexport; zsh -i"
-}
+# source_env() {
+# 	# load .env file or any other file
+# 	file=$1
+# 	[ -z $file ] && file=".env"
+# 	[ -f $file ] && zsh -c "set -o allexport; source $file; echo 'loaded'; set +o allexport; zsh -i"
+# }
