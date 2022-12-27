@@ -168,7 +168,7 @@ vim.keymap.set("n", "<localleader>.xm", "<cmd>e ~/.config/xmonad/xmonad.hs <cr>"
 vim.keymap.set("n", "<localleader>.xmm", "<cmd>e ~/.config/xmonad/xmonad.hs <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.xmb", "<cmd>e ~/.config/xmobar/xmobarrc <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.n", "<cmd>e ~/.config/newsboat/urls <cr>", {silent=true, noremap=true})
-vim.keymap.set("n", "<localleader>.dwm", "<cmd>e $SUCKLESS/dwm/config.h <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>.dwm", "<cmd>e $PROGRAMS/dwm-flexipatch/config.h <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.st", "<cmd>e $SUCKLESS/st/config.h <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.a", "<cmd>e ~/.config/.aliases <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.aa", "<cmd>e ~/.config/.aliases <cr>", {silent=true, noremap=true})

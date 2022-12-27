@@ -341,6 +341,7 @@ return require("packer").startup({
         use({
             "tpope/vim-projectionist",
             requires = "neovim/nvim-lspconfig",
+            config = req("core.projectionist"),
             -- breaks <leader>si
             -- needs to start for skel files
             -- cond = function()

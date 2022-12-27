@@ -26,17 +26,18 @@ local map = vim.api.nvim_set_keymap
 map("n", "<leader>gdi", ":diffget //3<CR>", nor)
 map("n", "<leader>gdh", ":diffget //2<CR>", nor)
 map("n", "<leader>gdi", ":diffget //3<CR>", nor)
-map("n", "<leader>gdd", ":G! difftool<CR>", nor)
-map("n", "<leader>gdD", ":G! difftool @~", nor)
+map("n", "<leader>gdd", ":Gdiff<CR>", nor)
+map("n", "<leader>gdD", ":Gdiff!<CR>", nor) -- vertical
+map("n", "<leader>gdt", ":G! difftool<CR>", nor)
+map("n", "<leader>gdT", ":G! difftool @~", nor)
 map("n", "<leader>gdm", ":G diff @~", nor)
 map("n", "<leader>gds", ":Gdiffsplit! @~", nor)
 map("n", "<leader>gdv", ":Gvdiffsplit! @~", nor)
-map("n", "<leader>gM", ":mergetool<CR>", nor)
 
 map("n", "<leader>gs", ":G<CR>", nor)
 map("n", "<leader>gS", ":Telescope git_stash<CR>", nor)
 map("n", "<leader>gi", ":G init<CR>", nor)
-map("n", "<leader>gm", ":G merge<CR>", nor)
+map("n", "<leader>gm", ":G mergetool<CR>", nor)
 
 map("n", "<leader>gl0", ":0Gclog!<cr>", nor)
 map("n", "<leader>gl=", ":0Gclog! ", nor)
@@ -84,7 +85,9 @@ wk.register({
     },
     gd = {
         name = "git diff",
-        d = { "git diff <G difftool>" },
+        d = { "git diff split <Gdiff>" },
+        D = { "git diff 3 split<Gdiff!>" },
+        t = { "git diff <G difftool>" },
         D = { "git diff custom commit <G difftool @~>" },
         m = { "git diff manual <G diff @~>" },
         v = { "git diff vertical custom commit <Gvdiffsplit>" },
