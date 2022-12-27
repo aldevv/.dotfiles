@@ -1,4 +1,5 @@
--- weird menmonics
+require("config.keybindings.legacy")
+-- weired menmonics
 
 -- <leader>o --> open diagnostics
 -- <leader>, --> config
@@ -47,6 +48,8 @@ end
 map("", "N", "mzJ`z", nor) -- lines
 map("n", "E", "i<cr><esc>k$", nor) -- lines
 map("v", "E", ":s/\\n/ /g<cr>$x", nor) -- lines
+
+map("n", "ñ", ":G ", nor)
 
 -- map("n", "!!", ":.!", nor)
 -- map("n", "!.", ".!bash", nor)
@@ -106,7 +109,7 @@ map("", "<leader>,cs", ":Copilot status<cr>", nor)
 map("", "<leader>,cS", ":Copilot setup<cr>", nor)
 
 -- terminal
-map("n", "<leader>sñ", ":botright terminal<cr>", nor)
+map("n", "sñ", ":botright terminal<cr>", nor)
 map("n", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
 map("t", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
 
@@ -168,8 +171,8 @@ require("config.keybindings.telescope").load_mappings()
 map("n", "<leader>se", ":NvimTreeToggle<cr>", nor_s)
 
 -- treesitter
-map("n", "<leader>stt", ":TSPlaygroundToggle<cr>", nor_s)
-map("n", "<leader>sth", ":TSHighlightCapturesUnderCursor<cr>", nor_s)
+map("n", "<leader>,tt", ":TSPlaygroundToggle<cr>", nor_s)
+map("n", "<leader>,th", ":TSHighlightCapturesUnderCursor<cr>", nor_s)
 
 -- harpoon
 require("config.keybindings.harpoon").load_mappings()

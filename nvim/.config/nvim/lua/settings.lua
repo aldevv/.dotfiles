@@ -9,6 +9,7 @@ filetype plugin on
 
 set updatetime=1500 " this is for autosave in tex files(every cursorhold event)
 set encoding=utf-8
+scriptencoding utf-8
 set splitright
 set splitbelow
 set title
@@ -118,7 +119,6 @@ function MyTabLine()
 :
 set tabline=%!MyTabLine()
 ]])
-
 vim.o.guifont = "DaddyTimeMono Nerd Font,JoyPixels:h12"
 vim.opt.exrc = true
 -- https://vonheikemen.github.io/devlog/tools/configuring-neovim-using-lua/

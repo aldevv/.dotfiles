@@ -1,4 +1,9 @@
 -- telescope.nvim
+if os.getenv("DEBUG") then
+    require("plugins-debug")
+    return
+end
+
 -- refactor.lua
 -- navigator.lua
 function loadrequire(module)
@@ -18,51 +23,23 @@ vim.opt.shadafile = "NONE" -- optimization
 vim.cmd("set t_Co=256")
 vim.cmd("let IS_MINE=isdirectory($SUCKLESS)")
 CONFIG_HOME = "~/.config"
---==================
--- SETTINGS
---==================
-if os.getenv("DEBUG") then
-    -- require("plugins")
-    require("plugins-debug")
-    return
-end
+
 require("utils.lua.globals")
 require("config.pre-settings")
-vim.cmd("source ~/.config/nvim/modules/settings.vim")
 
 --==================
 -- KEYBINDINGS
 --==================
 vim.cmd("source ~/.config/nvim/modules/keybindings.vim")
 if os.getenv("USER") == "root" then
-    vim.cmd("source ~/.config/nvim/modules/appearance.vim")
-    vim.cmd("source ~/.config/nvim/modules/automation.vim")
+    require("config.appearance")
+    require("config.automation")
     return
 end
 --===================
 -- DEPENDENCIES
 --===================
 -- vim.cmd("source ~/.config/nvim/modules/dependencies.vim")
---==================
--- PLUGINS
---==================
-vim.cmd([[
-    source ~/.config/nvim/modules/plugins-settings.vim
-  ]])
---==================
--- APPEARANCE
---==================
-vim.cmd("source ~/.config/nvim/modules/appearance.vim")
-
---==================
--- AUTOMATION
---==================
-vim.cmd("source ~/.config/nvim/modules/automation.vim")
---====================================================
--- require("plugins")
--- require("lsp")
--- require("core")
--- require("config")
 
 local init_modules = {
     "plugins",

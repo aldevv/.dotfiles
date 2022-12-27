@@ -61,12 +61,3 @@ if filereadable($FILES . "/projections/global/.projections.json")
   autocmd User ProjectionistDetect :call SetProjections()
 endif
 
-"==========
-"DOTENV
-"==========
-function! s:env(var) abort
-  return exists('*DotenvGet') ? DotenvGet(a:var) : eval('$'.a:var)
-endfunction
-
-let db_url = s:env('DATABASE_URL')
-

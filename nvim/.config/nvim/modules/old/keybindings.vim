@@ -265,7 +265,6 @@ map <leader><F2> :e ~/.zshrc<cr>
 noremap  <F7> :set spell! \| set wrap<CR>
 noremap  <leader>Ts :set spell! \| set wrap<CR>
 
-map ñ :%
 
 " Ctrl-O lets you do just one command in insert mode
 

@@ -27,7 +27,7 @@
 .xmm     ~/.config/xmonad/xmonad.hs
 .xmb    ~/.config/xmobar/xmobarrc
 .n      ~/.config/newsboat/urls
-.dwm    $SUCKLESS/dwm/config.h
+.dwm    $PROGRAMS/dwm-flexipatch/config.h
 .st     $SUCKLESS/st/config.h
 .a      ~/.config/.aliases
 .aa      ~/.config/.aliases

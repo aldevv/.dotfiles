@@ -1,3 +1,4 @@
+vim.cmd([[
 "===================
 "for transparent vim
 "===================
@@ -83,3 +84,4 @@ function FoldText()
 endfunction
 set foldtext=FoldText()
 set fillchars=fold:\  " removes trailing dots. Mind that there is a whitespace after the \!
+]])
