@@ -26,21 +26,13 @@ vim.api.nvim_create_autocmd("BufWinLeave", {
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = { "sh", "zsh", "bash" },
-    command = "autocmd BufWinEnter * silent! loadview",
+    command = "silent! loadview",
     group = "remember_folds",
 })
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = { "sh", "zsh", "bash" },
-    callback = function()
-        -- when opening telescope from .zshrc and exiting, it fails if only using
-        -- command = "autocmd BufWinLeave * mkview"
-        for _, ft in ipairs({ "sh", "zsh", "bash" }) do
-            if vim.bo.filetype == ft then
-                vim.cmd("autocmd BufWinLeave * mkview")
-            end
-        end
-    end,
+    command = "mkview",
     group = "remember_folds",
 })
 

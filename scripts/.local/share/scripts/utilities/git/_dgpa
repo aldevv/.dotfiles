@@ -1,7 +1,8 @@
 #!/bin/bash
 
 sleep 0.001
-. _dgp "$NOTES"
-. _dgp "$WIKI"
+# . _dgp "$NOTES"
+# . _dgp "$WIKI"
 . _dgp "$DOTFILES"
-. _dgp ~/.local/share/ansible
+echo "return value: $?"
+# . _dgp ~/.local/share/ansible
