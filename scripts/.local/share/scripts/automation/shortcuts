@@ -33,7 +33,7 @@ ranger_dir='{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortc
 basic='{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print"'
 change_dir='vim.keymap.set(\"n\", \"<localleader>"$1"\", \"<cmd>e "shortcut"<cr>\", {silent=true, noremap=true})\n'
 telescope='vim.keymap.set(\"n\",\"<localleader>,"$1"\", \":lua require('\''telescope.builtin'\'').find_files({prompt_title = '\''<"shortcut">'\'', cwd = '\''"shortcut"'\''})<cr>\", { noremap = true, silent = true })'
-telescope_grep='vim.keymap.set(\"n\",\"<localleader>;"$1"\", \":lua require('\''telescope.builtin'\'').live_grep({prompt_title = '\''<"shortcut">'\'', cwd = '\''"shortcut"'\''})<cr>\", { noremap = true, silent = true })'
+telescope_grep='vim.keymap.set(\"n\",\"<localleader>g"$1"\", \":lua require('\''telescope.builtin'\'').live_grep({prompt_title = '\''<"shortcut">'\'', cwd = '\''"shortcut"'\''})<cr>\", { noremap = true, silent = true })'
 end='"}'
 
 # directory shortcuts
