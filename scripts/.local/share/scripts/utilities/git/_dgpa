@@ -1,8 +1,14 @@
 #!/bin/bash
 
 sleep 0.001
-# . _dgp "$NOTES"
-# . _dgp "$WIKI"
-. _dgp "$DOTFILES"
-echo "return value: $?"
-# . _dgp ~/.local/share/ansible
+. _dgp "$NOTES" || f_notes=1
+. _dgp "$WIKI" || f_wiki=1
+. _dgp "$DOTFILES" || f_dotfiles=1
+. _dgp ~/.local/share/ansible || f_ansible=1
+
+clear
+
+[[ -z $f_notes ]] && echo "updated notes" || echo "no changes for notes"
+[[ -z $f_wiki ]] && echo "updated wiki" || echo "no changes for wiki"
+[[ -z $f_dotfiles ]] && echo "updated dotfiles" || echo "no changes for dotfiles"
+[[ -z $f_ansible ]] && echo "updated ansible" || echo "no changes for ansible"
