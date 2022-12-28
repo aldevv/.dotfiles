@@ -8,7 +8,7 @@ sleep 0.001
 
 clear
 echo -e "\e[0m"
-[[ -z $f_notes ]] && echo "updated notes" || echo "no changes for notes"
-[[ -z $f_wiki ]] && echo "updated wiki" || echo "no changes for wiki"
-[[ -z $f_dotfiles ]] && echo "updated dotfiles" || echo "no changes for dotfiles"
-[[ -z $f_ansible ]] && echo "updated ansible" || echo "no changes for ansible"
+[[ -z $f_notes ]] && echo -e "\e[35mupdated notes" || echo -e "\e[31mno changes for notes"
+[[ -z $f_wiki ]] && echo -e "\e[35mupdated wiki" || echo -e "\e[31mno changes for wiki"
+[[ -z $f_dotfiles ]] && echo -e "\e[35mupdated dotfiles" || echo -e "\e[31mno changes for dotfiles"
+[[ -z $f_ansible ]] && echo -e "\e[35mupdated ansible" || echo -e "\e[31mno changes for ansible"
