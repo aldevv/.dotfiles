@@ -156,9 +156,6 @@ function! CreateDir()
 
 endfunction
 
-" 'cd' towards the directory in which the current file is edited
-" but only change the path for the current window
-nnoremap <leader>sc :lcd %:h<CR>
 
 " close buffers
 " noremap <leader>sD :bd<cr>

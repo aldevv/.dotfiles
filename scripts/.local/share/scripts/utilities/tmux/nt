@@ -24,19 +24,19 @@ sort_and_format() {
 
 find_notes() {
     flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
-    [[ $ATOMIC_SEARCH != "1" ]] && flags+=(-not -path '*/atomic*')
+    [[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
     sort_and_format "$(find "$1" -mindepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 find_notes_depth() {
     flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
-    [[ $ATOMIC_SEARCH != "1" ]] && flags+=(-not -path '*/atomic*')
+    [[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
     sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 find_include_archive() {
     flags=(-not -path '*/.git*' -not -path '*/.files*')
-    [[ $ATOMIC_SEARCH != "1" ]] && flags+=(-not -path '*/atomic*')
+    [[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
     sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
@@ -90,6 +90,11 @@ retrieve_notes_from_archive() {
 
     # move notes
     mv "$notes_in_archive" "$sub"
+
+    if [[ $? != 0 ]]; then
+        echo "failed command: "
+        echo "mv $notes_in_archive $sub"
+    fi
 
     if [[ -z $(find "$archive_sub/$subject" -mindepth 1 -maxdepth 1 2>/dev/null) ]]; then
         notify-send "retrieved from archive 📑"

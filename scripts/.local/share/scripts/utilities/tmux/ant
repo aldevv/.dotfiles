@@ -1,4 +1,8 @@
 #!/bin/bash
 ATOMIC="${ATOMIC:-$HOME/notes/atomic}"
+if [[ -z "$1" ]]; then
+    NOTES=$ATOMIC ARCHIVE=1 ATOMIC_SEARCH=1 $UTILITIES/tmux/nt inbox
+    exit
+fi
 NOTES=$ATOMIC ARCHIVE=1 ATOMIC_SEARCH=1 $UTILITIES/tmux/nt "$@"
 

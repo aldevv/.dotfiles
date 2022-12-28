@@ -21,6 +21,10 @@ local desc = function(desc)
     return vim.tbl_extend("keep", nor_s, { desc = desc })
 end
 
+local descv = function(desc)
+    return vim.tbl_extend("keep", nor, { desc = desc })
+end
+
 -- backlog
 -- <a-?>
 -- <a-i>
@@ -237,8 +241,8 @@ vmap <right> <Plug>MoveBlockRight
 ]])
 
 -- maximizer
-map("n", "<leader>sm", ":MaximizerToggle<CR>", nor_s)
-map("v", "<leader>sm", ":MaximizerToggle<CR>gv", nor_s)
+map("n", "sm", ":MaximizerToggle<CR>", nor_s)
+map("v", "sm", ":MaximizerToggle<CR>gv", nor_s)
 
 -- brightest
 map("n", "sb", ":BrightestToggle<cr>", nor)
@@ -384,12 +388,50 @@ map(
 
 map(
     "n",
-    "<leader>sr",
+    "<leader>sc",
     "<cmd>lua require('utils.lua.misc').toggle_float_file('Cargo.toml')<cr>",
     desc("Open Cargo.toml file in a floating window")
+)
+
+-- commands
+
+map(
+    "n",
+    "<leader><leader>tw",
+    ':topleft 40vs $ATOMIC/todo/work/<c-r>=system("stamp")<cr><cr>',
+    desc("create work todo")
+)
+map(
+    "n",
+    "<leader><leader>tp",
+    ':topleft 40vs $ATOMIC/todo/projects/<c-r>=system("stamp")<cr><cr>',
+    desc("create work todo")
+)
+map(
+    "n",
+    "<leader><leader>tl",
+    ':topleft 40vs $ATOMIC/todo/learn/<c-r>=system("stamp")<cr><cr>',
+    desc("create work todo")
 )
 
 map("n", "<leader>.dgpa", "<cmd>Start . _dgpa<cr>", desc("push all my stuff"))
 map("n", "<leader>.dgpn", "<cmd>Start . _dgp $NOTES<cr>", desc("push notes"))
 map("n", "<leader>.dgpd", "<cmd>Start . _dgp $DOTFILES<cr>", desc("push dotfiles"))
 map("n", "<leader>.dgpw", "<cmd>Start . _dgp $WIKI<cr>", desc("push wiki"))
+
+map("n", "<leader>.ant", "<cmd>Spawn st -e bash -c ant<cr>", desc("create inbox note in new terminal"))
+map("n", "<leader>.anT", ":Spawn st -e bash -c 'ant '<left>", descv("create custom note in new terminal"))
+
+map(
+    "n",
+    "<leader>.st",
+    "<cmd>Spawn st -e bash -c 'cd $(dirname %); zsh'<cr>",
+    desc("terminal instance in current folder")
+)
+
+map(
+    "n",
+    "<leader>.r",
+    "<cmd>Spawn st -e bash -c 'ranger $(dirname %); zsh'<cr>",
+    desc("create ranger instance in current folder")
+)

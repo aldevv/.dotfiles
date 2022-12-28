@@ -325,16 +325,6 @@ function! RunnerTerminal()
   " execute "normal! \<c-w>k"
 endfunction
 
-" open browser in current file folder
-map <silent> <leader>.rs :silent call jobstart('setsid st')<cr>
-map <silent> <leader>.rS :silent call jobstart('setsid st -e sudo nvim ' . expand('%:p') . ' "+normal ' . line('.') . 'G' . col('.') . '\|" 2>&1')<cr>
-
-map <silent> <leader>.rr :silent call jobstart('setsid st -e ranger $(dirname %) 2>&1')<cr>
-map <silent> <leader>.rR :silent call jobstart('setsid st -e sudo ranger $(dirname %) 2>&1')<cr>
-"old
-" map <leader>ra :silent !setsid st -e ranger $(dirname %) 2>&1 &<cr>
-
-
 "debugging python, needs pip install ipdb
 func! s:SetBreakpoint()
   cal append('.', repeat(' ', strlen(matchstr(getline('.'), '^\s*'))) . 'import ipdb; ipdb.set_trace()')
