@@ -134,6 +134,8 @@ return require("packer").startup({
             "ray-x/lsp_signature.nvim",
             config = req("lsp.lsp-signature"),
         })
+        -- TODO: remove this dependency
+        -- nvim-cmp depends on dap
         use({
             "hrsh7th/nvim-cmp",
             requires = {
@@ -250,7 +252,6 @@ return require("packer").startup({
         })
         use("tpope/vim-repeat")
         use("tommcdo/vim-exchange")
-        -- use("tpope/vim-surround")
         use("kana/vim-textobj-user")
         use({
             "kana/vim-textobj-line",
@@ -503,7 +504,6 @@ return require("packer").startup({
             -- this is what you can do
             -- https://nvim-orgmode.github.io/demo.html
             "nvim-orgmode/orgmode",
-            ft = { "org" },
             config = req("core.org"),
         })
 
@@ -558,9 +558,8 @@ return require("packer").startup({
         use({
             "kylechui/nvim-surround",
             tag = "*", -- Use for stability; omit to use `main` branch for the latest features
-            config = req("core.nvim-surround"),
-            -- after = { "nvim-treesitter", "nvim-treesitter-textobjects" },
             after = { "nvim-treesitter" },
+            config = req("core.nvim-surround"),
         })
 
         -- https://github.com/anuvyklack/hydra.nvim/wiki/Windows-and-buffers-management
@@ -633,7 +632,6 @@ return require("packer").startup({
             requires = "nvim-lua/plenary.nvim",
             config = req("core.rest"),
         })
-        -- https://github.com/nvim-neorg/neorg
 
         -- https://github.com/nvim-telescope/telescope-media-files.nvim
         -- for better go experience

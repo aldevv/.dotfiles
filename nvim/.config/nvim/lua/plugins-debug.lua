@@ -41,63 +41,64 @@ local current_theme = "gruvbox"
 return require("packer").startup({
     function(use)
         use({ "wbthomason/packer.nvim" })
-        use({
-            "lewis6991/impatient.nvim",
-            -- config = function()
-            -- require("impatient").enable_profile()
-            -- require("impatient")
-            -- end,
-        })
+        -- use({
+        --     "lewis6991/impatient.nvim",
+        --     -- config = function()
+        --     -- require("impatient").enable_profile()
+        --     -- require("impatient")
+        --     -- end,
+        -- })
         -- use({
         --     "ellisonleao/gruvbox.nvim",
         --     config = req("config.appearance.themes.gruvbox"),
         -- })
-
-        use({
-            "sainnhe/gruvbox-material",
-            config = req("config.appearance.themes.gruvbox"),
-        })
-        vim.cmd("colorscheme " .. current_theme)
-
-        use({ "stevearc/dressing.nvim", config = req("config.appearance.dressing") })
-        use({
-            "rcarriga/nvim-notify",
-            config = function()
-                require("core.notify")
-                vim.notify = require("notify")
-            end,
-        })
-        use({
-            "nvim-telescope/telescope.nvim",
-            requires = {
-                "nvim-lua/plenary.nvim",
-                { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
-            },
-            config = req("core.telescope"),
-        })
-        use({
-            "folke/tokyonight.nvim",
-            branch = "main",
-            -- config = req("config.appearance.themes.tokyonight"),
-        })
-        use({ "catppuccin/nvim", as = "catppuccin", config = req("config.appearance.themes.catppuccin") })
-
-        use({
-            "nvim-lualine/lualine.nvim",
-            requires = { "kyazdani42/nvim-web-devicons", opt = true },
-            config = req("config.appearance.lualine"),
-        })
-
-        use("williamboman/mason.nvim")
-        use({ "williamboman/mason-lspconfig.nvim" })
-        use({
-            "neovim/nvim-lspconfig",
-            config = req("lsp.lsp"),
-            -- to auto install the ones I use
-            -- "WhoIsSethDaniel/mason-tool-installer.nvim",
-        })
-
-        use("simrat39/rust-tools.nvim")
+        --
+        -- -- use({
+        -- --     "sainnhe/gruvbox-material",
+        -- --     config = req("config.appearance.themes.gruvbox"),
+        -- -- })
+        -- use({ "stevearc/dressing.nvim", config = req("config.appearance.dressing") })
+        -- use({
+        --     "rcarriga/nvim-notify",
+        --     config = function()
+        --         require("core.notify")
+        --         vim.notify = require("notify")
+        --     end,
+        -- })
+        -- use({
+        --     "nvim-telescope/telescope.nvim",
+        --     requires = {
+        --         "nvim-lua/plenary.nvim",
+        --         { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+        --     },
+        --     config = req("core.telescope"),
+        -- })
+        -- use({
+        --     "folke/tokyonight.nvim",
+        --     branch = "main",
+        --     -- config = req("config.appearance.themes.tokyonight"),
+        -- })
+        -- use({ "catppuccin/nvim", as = "catppuccin", config = req("config.appearance.themes.catppuccin") })
+        --
+        -- -- set theme
+        -- vim.cmd("colorscheme " .. current_theme)
+        --
+        -- use({
+        --     "nvim-lualine/lualine.nvim",
+        --     requires = { "kyazdani42/nvim-web-devicons", opt = true },
+        --     config = req("config.appearance.lualine"),
+        -- })
+        --
+        -- use("williamboman/mason.nvim")
+        -- use({ "williamboman/mason-lspconfig.nvim" })
+        -- use({
+        --     "neovim/nvim-lspconfig",
+        --     config = req("lsp.lsp"),
+        --     -- to auto install the ones I use
+        --     -- "WhoIsSethDaniel/mason-tool-installer.nvim",
+        -- })
+        --
+        -- use("simrat39/rust-tools.nvim")
         -- use({
         --     "nvim-treesitter/nvim-treesitter",
         --     run = ":TSUpdate",
@@ -110,29 +111,25 @@ return require("packer").startup({
         --     branch = "main",
         --     config = req("lsp.lspsaga"),
         -- })
-
-        -- convert to luasnip using
-        -- - https://github.com/smjonas/snippet-converter.nvim
-        -- and
-        -- - https://cj.rs/blog/ultisnips-to-luasnip/
-
-        use({
-            "SirVer/ultisnips",
-            config = req("lsp.ultisnips"),
-            requires = "quangnguyen30192/cmp-nvim-ultisnips",
-        })
-        use("honza/vim-snippets")
-
-        -- use({
-        --     "L3MON4D3/LuaSnip"
-        -- })
         --
-        -- use({ "windwp/nvim-autopairs", config = req("core.autopairs") }) -- no one key
-        -- fastwrap
-        use({
-            "ray-x/lsp_signature.nvim",
-            config = req("lsp.lsp-signature"),
-        })
+        -- -- convert to luasnip using
+        -- -- - https://github.com/smjonas/snippet-converter.nvim
+        -- -- and
+        -- -- - https://cj.rs/blog/ultisnips-to-luasnip/
+        --
+        -- -- use({
+        -- --     "L3MON4D3/LuaSnip"
+        -- -- })
+        -- --
+        -- -- use({ "windwp/nvim-autopairs", config = req("core.autopairs") }) -- no one key
+        -- -- fastwrap
+        -- use({
+        --     "ray-x/lsp_signature.nvim",
+        --     config = req("lsp.lsp-signature"),
+        -- })
+
+        -- TODO: remove this dependency
+        -- nvim-cmp depends on dap
         use({
             "hrsh7th/nvim-cmp",
             requires = {
@@ -147,64 +144,72 @@ return require("packer").startup({
                 -- "saadparwaiz1/cmp_luasnip",
                 { "quangnguyen30192/cmp-nvim-ultisnips" },
             },
+            -- config = req("lsp.cmp"),
             config = req("lsp.cmp"),
         })
-
-        use({
-            "jose-elias-alvarez/null-ls.nvim",
-            requires = { "nvim-lua/plenary.nvim", module_pattern = "plenary" },
-            config = req("lsp.formatters"),
-        })
-
-        use("jayp0521/mason-null-ls.nvim")
-
+        --
+        -- use({
+        --     "SirVer/ultisnips",
+        --     config = req("lsp.ultisnips"),
+        --     requires = "quangnguyen30192/cmp-nvim-ultisnips",
+        -- })
+        -- use("honza/vim-snippets")
+        --
+        -- use({
+        --     "jose-elias-alvarez/null-ls.nvim",
+        --     requires = { "nvim-lua/plenary.nvim", module_pattern = "plenary" },
+        --     config = req("lsp.formatters"),
+        -- })
+        --
+        -- use("jayp0521/mason-null-ls.nvim")
+        --
         -- use({
         --     "nvim-treesitter/playground",
         --     requires = "nvim-treesitter/nvim-treesitter",
         --     cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
         -- })
-
-        use({
-            "ahmedkhalf/project.nvim",
-            requires = "nvim-telescope/telescope.nvim",
-            config = req("lsp.project"),
-        })
-        use({
-            "numToStr/Comment.nvim",
-            config = req("core.comment"),
-        })
-
-        -- Lazy loading:
-        -- Load on specific commands
-        use({
-            "tpope/vim-dispatch",
-        })
-
-        -- TODO: remove this
+        --
         -- use({
-        --     "kyazdani42/nvim-tree.lua",
-        --     requires = { "kyazdani42/nvim-web-devicons", opt = true }, -- optional, for file icons
-        --     config = req("core.nvim-tree"),
-        --     cmd = { "NvimTreeToggle", "NvimTreeOpen" },
+        --     "ahmedkhalf/project.nvim",
+        --     requires = "nvim-telescope/telescope.nvim",
+        --     config = req("lsp.project"),
         -- })
-
-        use({
-            "ThePrimeagen/harpoon",
-            requires = { "nvim-lua/plenary.nvim" },
-            config = req("core.harpoon"),
-            module = "harpoon",
-        })
-
-        -- TODO: delete this
         -- use({
-        --     "phaazon/hop.nvim",
-        --     branch = "v1", -- optional but strongly recommended
-        --     config = function()
-        --         require("hop").setup({ keys = "etovxqpdygfblzhckisuran" })
-        --     end,
-        --     cmd = { "HopChar1" },
+        --     "numToStr/Comment.nvim",
+        --     config = req("core.comment"),
         -- })
-
+        --
+        -- -- Lazy loading:
+        -- -- Load on specific commands
+        -- use({
+        --     "tpope/vim-dispatch",
+        -- })
+        --
+        -- -- TODO: remove this
+        -- -- use({
+        -- --     "kyazdani42/nvim-tree.lua",
+        -- --     requires = { "kyazdani42/nvim-web-devicons", opt = true }, -- optional, for file icons
+        -- --     config = req("core.nvim-tree"),
+        -- --     cmd = { "NvimTreeToggle", "NvimTreeOpen" },
+        -- -- })
+        --
+        -- use({
+        --     "ThePrimeagen/harpoon",
+        --     requires = { "nvim-lua/plenary.nvim" },
+        --     config = req("core.harpoon"),
+        --     module = "harpoon",
+        -- })
+        --
+        -- -- TODO: delete this
+        -- -- use({
+        -- --     "phaazon/hop.nvim",
+        -- --     branch = "v1", -- optional but strongly recommended
+        -- --     config = function()
+        -- --         require("hop").setup({ keys = "etovxqpdygfblzhckisuran" })
+        -- --     end,
+        -- --     cmd = { "HopChar1" },
+        -- -- })
+        --
         use({
             "mfussenegger/nvim-dap",
             requires = {
@@ -220,83 +225,83 @@ return require("packer").startup({
             config = req("lsp.dap.dap"),
             module = "dap",
         })
-
-        use("jayp0521/mason-nvim-dap.nvim")
-
-        use({
-            "jbyuki/one-small-step-for-vimkind",
-            requires = { "mfussenegger/nvim-dap", module = "dap" },
-            module = "osv",
-        }) -- debug lua files
-
-        use({
-            "github/copilot.vim",
-            config = function()
-                vim.g.copilot_filetypes = { ["*"] = false, js = true, jsx = true, python = true }
-            end,
-            -- cmd = "Copilot",
-        })
-
-        use({
-            "wellle/targets.vim",
-            config = function()
-                vim.g.targets_aiAI = { "a", "l", "A", "L" }
-                vim.g.targets_mapped_aiAI = { "a", "i", "A", "I" }
-                vim.g.targets_nl = { "n", "N" }
-                -- this script lets you apply macros to multiple lines
-                vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
-            end,
-        })
-        use("tpope/vim-repeat")
-        use("tommcdo/vim-exchange")
-        -- use("tpope/vim-surround")
-        use("kana/vim-textobj-user")
-        use({
-            "kana/vim-textobj-line",
-            config = function()
-                vim.g.textobj_line_no_default_key_mappings = 1
-            end,
-        })
-        use({
-            "kana/vim-textobj-entire",
-            config = function()
-                vim.g.textobj_entire_no_default_key_mappings = 1
-            end,
-        })
-        -- use("nvim-treesitter/nvim-treesitter-textobjects")
-        -- use({
-        --     -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
-        --     "nvim-treesitter/nvim-treesitter-textobjects",
-        --     requires = { "nvim-treesitter/nvim-treesitter" },
-        --     config = req("core.nvim-treesitter-textobjects"),
-        -- })
-
-        -- meh
-        use({
-            "preservim/vim-markdown",
-            requires = "godlygeek/tabular",
-        })
         --
-
-        use({
-            "folke/which-key.nvim",
-            config = req("config.appearance.whichkey"),
-        })
+        -- use("jayp0521/mason-nvim-dap.nvim")
+        --
         -- use({
-        --     "yggdroot/indentLine",
+        --     "jbyuki/one-small-step-for-vimkind",
+        --     requires = { "mfussenegger/nvim-dap", module = "dap" },
+        --     module = "osv",
+        -- }) -- debug lua files
+        --
+        -- use({
+        --     "github/copilot.vim",
         --     config = function()
-        --         vim.g.indentLine_char = "┆"
-        --         vim.g.indentLine_enabled = 0
-        --         -- show double quotes in json
-        --         -- vim.o.concealLevel = 0
+        --         vim.g.copilot_filetypes = { ["*"] = false, js = true, jsx = true, python = true }
+        --     end,
+        --     -- cmd = "Copilot",
+        -- })
+        --
+        -- use({
+        --     "wellle/targets.vim",
+        --     config = function()
+        --         vim.g.targets_aiAI = { "a", "l", "A", "L" }
+        --         vim.g.targets_mapped_aiAI = { "a", "i", "A", "I" }
+        --         vim.g.targets_nl = { "n", "N" }
+        --         -- this script lets you apply macros to multiple lines
+        --         vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
         --     end,
         -- })
-        use({
-            "Pocco81/TrueZen.nvim",
-            config = req("core.truezen"),
-            cmd = { "TZMinimalist", "TZFocus", "TZAtaraxis" },
-        })
-
+        -- use("tpope/vim-repeat")
+        -- use("tommcdo/vim-exchange")
+        -- -- use("tpope/vim-surround")
+        -- use("kana/vim-textobj-user")
+        -- use({
+        --     "kana/vim-textobj-line",
+        --     config = function()
+        --         vim.g.textobj_line_no_default_key_mappings = 1
+        --     end,
+        -- })
+        -- use({
+        --     "kana/vim-textobj-entire",
+        --     config = function()
+        --         vim.g.textobj_entire_no_default_key_mappings = 1
+        --     end,
+        -- })
+        -- use("nvim-treesitter/nvim-treesitter-textobjects")
+        -- -- use({
+        -- --     -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+        -- --     "nvim-treesitter/nvim-treesitter-textobjects",
+        -- --     requires = { "nvim-treesitter/nvim-treesitter" },
+        -- --     config = req("core.nvim-treesitter-textobjects"),
+        -- -- })
+        --
+        -- -- meh
+        -- use({
+        --     "preservim/vim-markdown",
+        --     requires = "godlygeek/tabular",
+        -- })
+        -- --
+        --
+        -- use({
+        --     "folke/which-key.nvim",
+        --     config = req("config.appearance.whichkey"),
+        -- })
+        -- -- use({
+        -- --     "yggdroot/indentLine",
+        -- --     config = function()
+        -- --         vim.g.indentLine_char = "┆"
+        -- --         vim.g.indentLine_enabled = 0
+        -- --         -- show double quotes in json
+        -- --         -- vim.o.concealLevel = 0
+        -- --     end,
+        -- -- })
+        -- use({
+        --     "Pocco81/TrueZen.nvim",
+        --     config = req("core.truezen"),
+        --     cmd = { "TZMinimalist", "TZFocus", "TZAtaraxis" },
+        -- })
+        --
         -- use({
         --     "mbbill/undotree",
         --     cmd = { "UndotreeToggle" },
@@ -340,6 +345,7 @@ return require("packer").startup({
         -- use({
         --     "tpope/vim-projectionist",
         --     requires = "neovim/nvim-lspconfig",
+        --     config = req("core.projectionist"),
         --     -- breaks <leader>si
         --     -- needs to start for skel files
         --     -- cond = function()
@@ -455,30 +461,30 @@ return require("packer").startup({
         -- -- "TestVisit",
         -- -- 	},
         -- -- })
-        -- -- use({
-        -- --     "nvim-neotest/neotest",
-        -- --     requires = {
-        -- --         "nvim-lua/plenary.nvim",
-        -- --         "nvim-treesitter/nvim-treesitter",
-        -- --         "antoinemadec/FixCursorHold.nvim",
-        -- --         -- "nvim-neotest/neotest-python", -- doesn't let me choose the pytest binary,
-        -- --         "vim-test/vim-test",
-        -- --         "nvim-neotest/neotest-vim-test",
-        -- --     },
-        -- --     config = req("core.neotest"),
-        -- --     module = "neotest",
-        -- -- })
+        -- use({
+        --     "nvim-neotest/neotest",
+        --     requires = {
+        --         "nvim-lua/plenary.nvim",
+        --         "nvim-treesitter/nvim-treesitter",
+        --         "antoinemadec/FixCursorHold.nvim",
+        --         -- "nvim-neotest/neotest-python", -- doesn't let me choose the pytest binary,
+        --         "vim-test/vim-test",
+        --         "nvim-neotest/neotest-vim-test",
+        --     },
+        --     config = req("core.neotest"),
+        --     module = "neotest",
+        -- })
         -- use({ "brooth/far.vim", cmd = { "Far", "Fardo", "Farr" } })
         --
-        -- -- use({
-        -- --     "ThePrimeagen/refactoring.nvim",
-        -- --     requires = {
-        -- --         { "nvim-lua/plenary.nvim" },
-        -- --         { "nvim-treesitter/nvim-treesitter" },
-        -- --     },
-        -- --     config = req("core.refactoring"),
-        -- --     module = "refactoring",
-        -- -- })
+        -- use({
+        --     "ThePrimeagen/refactoring.nvim",
+        --     requires = {
+        --         { "nvim-lua/plenary.nvim" },
+        --         { "nvim-treesitter/nvim-treesitter" },
+        --     },
+        --     config = req("core.refactoring"),
+        --     module = "refactoring",
+        -- })
         --
         -- -- TODO: migrate to this?
         -- -- use({ "michaelb/sniprun", run = "bash ./install.sh", config = req("core.sniprun"), cmd = "SnipRun" })
@@ -497,19 +503,12 @@ return require("packer").startup({
         -- })
         --
         -- use({ "Vimjas/vim-python-pep8-indent" }) -- for indentation, treesitter not functional yet 23/01/2022
-        -- use({
-        --     -- this is what you can do
-        --     -- https://nvim-orgmode.github.io/demo.html
-        --     "nvim-orgmode/orgmode",
-        --     ft = { "org" },
-        --     config = req("core.org"),
-        -- })
-        --
-        -- -- enable when dadbod completion stops working
-        -- -- use("nanotee/sqls.nvim")
-        --
-        -- -- overseer tutorial, (save tasks, watch tasks etc)
-        -- -- https://www.youtube.com/watch?v=aq3mU_Oqd6Q
+
+        -- enable when dadbod completion stops working
+        -- use("nanotee/sqls.nvim")
+
+        -- overseer tutorial, (save tasks, watch tasks etc)
+        -- https://www.youtube.com/watch?v=aq3mU_Oqd6Q
         -- use({
         --     "stevearc/overseer.nvim",
         --     config = req("core.overseer"),
@@ -557,8 +556,6 @@ return require("packer").startup({
         -- --     "kylechui/nvim-surround",
         -- --     tag = "*", -- Use for stability; omit to use `main` branch for the latest features
         -- --     config = req("core.nvim-surround"),
-        -- --     -- after = { "nvim-treesitter", "nvim-treesitter-textobjects" },
-        -- --     after = { "nvim-treesitter" },
         -- -- })
         --
         -- -- https://github.com/anuvyklack/hydra.nvim/wiki/Windows-and-buffers-management
@@ -638,6 +635,14 @@ return require("packer").startup({
         -- -- https://github.com/ray-x/go.nvim
         -- -- this is for faster startup!
         -- use("navarasu/onedark.nvim")
+
+        use({
+            -- this is what you can do
+            -- https://nvim-orgmode.github.io/demo.html
+            "nvim-orgmode/orgmode",
+            ft = { "org" },
+            config = req("core.org"),
+        })
     end,
     config = {
         display = {
