@@ -7,7 +7,7 @@ sleep 0.001
 . _dgp ~/.local/share/ansible || f_ansible=1
 
 clear
-echo -e "\[0m"
+echo -e "\e[0m"
 [[ -z $f_notes ]] && echo "updated notes" || echo "no changes for notes"
 [[ -z $f_wiki ]] && echo "updated wiki" || echo "no changes for wiki"
 [[ -z $f_dotfiles ]] && echo "updated dotfiles" || echo "no changes for dotfiles"
