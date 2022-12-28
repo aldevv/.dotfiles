@@ -24,7 +24,7 @@ fi
 
 
 if [[  $chosen_file == "new" ]]; then
-    setsid st -e nvim $WIKI/notes/
+    setsid st -e nvim $WIKI/notes/ 2>/dev/null
     exit 0
 fi
 

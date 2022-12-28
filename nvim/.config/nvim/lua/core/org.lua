@@ -4,6 +4,7 @@ require("orgmode").setup({
         org = {
             -- done because original mapping was NOT SILENT
             org_global_cycle = "<ignore>",
+            -- org_agenda_switch_to = "<ignore>",
         },
     },
 })

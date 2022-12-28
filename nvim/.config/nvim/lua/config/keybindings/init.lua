@@ -421,6 +421,7 @@ map("n", "<leader>.dgpw", "<cmd>Start . _dgp $WIKI<cr>", desc("push wiki"))
 
 map("n", "<leader>.ant", "<cmd>Spawn st -e bash -c ant<cr>", desc("create inbox note in new terminal"))
 map("n", "<leader>.anT", ":Spawn st -e bash -c 'ant '<left>", descv("create custom note in new terminal"))
+map("n", "<leader>.br", ":e README.md<cr>", descv("open README.md"))
 
 map(
     "n",
