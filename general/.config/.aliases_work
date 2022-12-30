@@ -1,0 +1,18 @@
+#!/bin/zsh
+
+# [ -f "$ZDOTDIR/.zprofile" ] && . $ZDOTDIR/.zprofile
+#
+# [[ -d "$UTILITIES" ]] && export PATH="$(find $UTILITIES -type d | tr '\n' ':')$PATH"
+# [[ -d "$AUTOMATION" ]] && export PATH="$(find $AUTOMATION -type d | tr '\n' ':')$PATH"
+# [[ -d "$APPS" ]] && export PATH="$(find $APPS -type d | tr '\n' ':')$PATH"
+# [[ -d "$SHARED" ]] && export PATH="$(find $SHARED -type d | tr '\n' ':')$PATH"
+#
+# dbcli() {
+#     docker exec -it compose_py3_db_1 dbcli migrate --service-name newgaldb.devgp --migrations-version $1
+# }
+#
+# alias cvaws="ssh -t jubernal@mover 'sudo -i -u apps'"
+#
+#
+# alias ww='cd $(fd . $WORK/startup/cs/ -d 1 -t d | fzf -d / --with-nth -2 --no-preview)'
+#

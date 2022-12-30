@@ -1,0 +1,256 @@
+map <backspace2>H cd ~
+map mH $ mv -v $f ~
+map YH $ cp -rv $f ~
+map <backspace2>d. cd ~/.dotfiles
+map md. $ mv -v $f ~/.dotfiles
+map Yd. $ cp -rv $f ~/.dotfiles
+map <backspace2>uu cd /home/kanon/remotes
+map muu $ mv -v $f /home/kanon/remotes
+map Yuu $ cp -rv $f /home/kanon/remotes
+map <backspace2>n. cd /home/kanon/notes
+map mn. $ mv -v $f /home/kanon/notes
+map Yn. $ cp -rv $f /home/kanon/notes
+map <backspace2>N. cd /home/kanon/notes/atomic
+map mN. $ mv -v $f /home/kanon/notes/atomic
+map YN. $ cp -rv $f /home/kanon/notes/atomic
+map <backspace2>wo cd /home/kanon/work
+map mwo $ mv -v $f /home/kanon/work
+map Ywo $ cp -rv $f /home/kanon/work
+map <backspace2>bk cd /home/kanon/books
+map mbk $ mv -v $f /home/kanon/books
+map Ybk $ cp -rv $f /home/kanon/books
+map <backspace2>bK cd /home/kanon/books/ln
+map mbK $ mv -v $f /home/kanon/books/ln
+map YbK $ cp -rv $f /home/kanon/books/ln
+map <backspace2>ba cd /home/kanon/.local/share/.backups
+map mba $ mv -v $f /home/kanon/.local/share/.backups
+map Yba $ cp -rv $f /home/kanon/.local/share/.backups
+map <backspace2>ll cd /home/kanon/learn
+map mll $ mv -v $f /home/kanon/learn
+map Yll $ cp -rv $f /home/kanon/learn
+map <backspace2>l. cd /home/kanon/learn
+map ml. $ mv -v $f /home/kanon/learn
+map Yl. $ cp -rv $f /home/kanon/learn
+map <backspace2>T. cd /home/kanon/.local/share/Trash/files
+map mT. $ mv -v $f /home/kanon/.local/share/Trash/files
+map YT. $ cp -rv $f /home/kanon/.local/share/Trash/files
+map <backspace2>Tt cd /home/kanon/.local/share/Trash/files
+map mTt $ mv -v $f /home/kanon/.local/share/Trash/files
+map YTt $ cp -rv $f /home/kanon/.local/share/Trash/files
+map <backspace2>Tr cd /home/kanon/Downloads/torrents
+map mTr $ mv -v $f /home/kanon/Downloads/torrents
+map YTr $ cp -rv $f /home/kanon/Downloads/torrents
+map <backspace2>sk cd /home/kanon/programs/suckless
+map msk $ mv -v $f /home/kanon/programs/suckless
+map Ysk $ cp -rv $f /home/kanon/programs/suckless
+map <backspace2>f. cd /home/kanon/.config
+map mf. $ mv -v $f /home/kanon/.config
+map Yf. $ cp -rv $f /home/kanon/.config
+map <backspace2>v. cd /home/kanon/.config/nvim
+map mv. $ mv -v $f /home/kanon/.config/nvim
+map Yv. $ cp -rv $f /home/kanon/.config/nvim
+map <backspace2>vl cd /home/kanon/.config/nvim/lua/lsp
+map mvl $ mv -v $f /home/kanon/.config/nvim/lua/lsp
+map Yvl $ cp -rv $f /home/kanon/.config/nvim/lua/lsp
+map <backspace2>va cd /home/kanon/.config/nvim/lua/config/automation
+map mva $ mv -v $f /home/kanon/.config/nvim/lua/config/automation
+map Yva $ cp -rv $f /home/kanon/.config/nvim/lua/config/automation
+map <backspace2>vt cd /home/kanon/.config/nvim/lua/config/appearance/themes
+map mvt $ mv -v $f /home/kanon/.config/nvim/lua/config/appearance/themes
+map Yvt $ cp -rv $f /home/kanon/.config/nvim/lua/config/appearance/themes
+map <backspace2>vc cd /home/kanon/.config/nvim/lua/core
+map mvc $ mv -v $f /home/kanon/.config/nvim/lua/core
+map Yvc $ cp -rv $f /home/kanon/.config/nvim/lua/core
+map <backspace2>vC cd /home/kanon/.config/nvim/lua/config
+map mvC $ mv -v $f /home/kanon/.config/nvim/lua/config
+map YvC $ cp -rv $f /home/kanon/.config/nvim/lua/config
+map <backspace2>vu cd /home/kanon/.config/nvim/lua/utils
+map mvu $ mv -v $f /home/kanon/.config/nvim/lua/utils
+map Yvu $ cp -rv $f /home/kanon/.config/nvim/lua/utils
+map <backspace2>vk cd /home/kanon/.config/nvim/lua/config/keybindings
+map mvk $ mv -v $f /home/kanon/.config/nvim/lua/config/keybindings
+map Yvk $ cp -rv $f /home/kanon/.config/nvim/lua/config/keybindings
+map <backspace2>sn cd ~/.config/nvim/my_snippets
+map msn $ mv -v $f ~/.config/nvim/my_snippets
+map Ysn $ cp -rv $f ~/.config/nvim/my_snippets
+map <backspace2>m. cd /home/kanon/.local/share/scripts
+map mm. $ mv -v $f /home/kanon/.local/share/scripts
+map Ym. $ cp -rv $f /home/kanon/.local/share/scripts
+map <backspace2>ff cd /home/kanon/.local/share/scripts/files
+map mff $ mv -v $f /home/kanon/.local/share/scripts/files
+map Yff $ cp -rv $f /home/kanon/.local/share/scripts/files
+map <backspace2>u. cd /home/kanon/.local/share/scripts/utilities
+map mu. $ mv -v $f /home/kanon/.local/share/scripts/utilities
+map Yu. $ cp -rv $f /home/kanon/.local/share/scripts/utilities
+map <backspace2>a. cd /home/kanon/.local/share/scripts/automation
+map ma. $ mv -v $f /home/kanon/.local/share/scripts/automation
+map Ya. $ cp -rv $f /home/kanon/.local/share/scripts/automation
+map <backspace2>A. cd /home/kanon/.local/share/scripts/apps
+map mA. $ mv -v $f /home/kanon/.local/share/scripts/apps
+map YA. $ cp -rv $f /home/kanon/.local/share/scripts/apps
+map <backspace2>ml. cd 
+map mml. $ mv -v $f 
+map Yml. $ cp -rv $f 
+map <backspace2>O cd ~/Downloads
+map mO $ mv -v $f ~/Downloads
+map YO $ cp -rv $f ~/Downloads
+map <backspace2>o cd ~/Documents
+map mo $ mv -v $f ~/Documents
+map Yo $ cp -rv $f ~/Documents
+map <backspace2>vv cd ~/Videos
+map mvv $ mv -v $f ~/Videos
+map Yvv $ cp -rv $f ~/Videos
+map <backspace2>wa cd /home/kanon/Pictures/Wallpapers/all_time
+map mwa $ mv -v $f /home/kanon/Pictures/Wallpapers/all_time
+map Ywa $ cp -rv $f /home/kanon/Pictures/Wallpapers/all_time
+map <backspace2>wi cd /home/kanon/.dotfiles/wiki
+map mwi $ mv -v $f /home/kanon/.dotfiles/wiki
+map Ywi $ cp -rv $f /home/kanon/.dotfiles/wiki
+map <backspace2>wp cd /home/kanon/.dotfiles/wiki/personal
+map mwp $ mv -v $f /home/kanon/.dotfiles/wiki/personal
+map Ywp $ cp -rv $f /home/kanon/.dotfiles/wiki/personal
+map <backspace2>wS cd /home/kanon/.dotfiles/wiki/cheatsheets
+map mwS $ mv -v $f /home/kanon/.dotfiles/wiki/cheatsheets
+map YwS $ cp -rv $f /home/kanon/.dotfiles/wiki/cheatsheets
+map <backspace2>mm cd ~/Music
+map mmm $ mv -v $f ~/Music
+map Ymm $ cp -rv $f ~/Music
+map <backspace2>ca cd ~/.cache
+map mca $ mv -v $f ~/.cache
+map Yca $ cp -rv $f ~/.cache
+map <backspace2>loo cd ~/.local
+map mloo $ mv -v $f ~/.local
+map Yloo $ cp -rv $f ~/.local
+map <backspace2>los cd ~/.local/share
+map mlos $ mv -v $f ~/.local/share
+map Ylos $ cp -rv $f ~/.local/share
+map <backspace2>lon cd ~/.local/share/nvim
+map mlon $ mv -v $f ~/.local/share/nvim
+map Ylon $ cp -rv $f ~/.local/share/nvim
+map <backspace2>lop cd ~/.local/share/nvim/site/pack/packer
+map mlop $ mv -v $f ~/.local/share/nvim/site/pack/packer
+map Ylop $ cp -rv $f ~/.local/share/nvim/site/pack/packer
+map <backspace2>lob cd ~/.local/bin
+map mlob $ mv -v $f ~/.local/bin
+map Ylob $ cp -rv $f ~/.local/bin
+map <backspace2>Re cd /etc
+map mRe $ mv -v $f /etc
+map YRe $ cp -rv $f /etc
+map <backspace2>RU cd /usr
+map mRU $ mv -v $f /usr
+map YRU $ cp -rv $f /usr
+map <backspace2>Rus cd /usr/share
+map mRus $ mv -v $f /usr/share
+map YRus $ cp -rv $f /usr/share
+map <backspace2>Rub cd /usr/bin
+map mRub $ mv -v $f /usr/bin
+map YRub $ cp -rv $f /usr/bin
+map <backspace2>Rui cd /usr/include
+map mRui $ mv -v $f /usr/include
+map YRui $ cp -rv $f /usr/include
+map <backspace2>Rulo cd /usr/local
+map mRulo $ mv -v $f /usr/local
+map YRulo $ cp -rv $f /usr/local
+map <backspace2>Rulob cd /usr/local/bin
+map mRulob $ mv -v $f /usr/local/bin
+map YRulob $ cp -rv $f /usr/local/bin
+map <backspace2>Rulos cd /usr/local/share
+map mRulos $ mv -v $f /usr/local/share
+map YRulos $ cp -rv $f /usr/local/share
+map <backspace2>Ruloi cd /usr/local/include
+map mRuloi $ mv -v $f /usr/local/include
+map YRuloi $ cp -rv $f /usr/local/include
+map <backspace2>Ruli cd /usr/lib
+map mRuli $ mv -v $f /usr/lib
+map YRuli $ cp -rv $f /usr/lib
+map <backspace2>ex. cd /opt/exploitdb/exploits
+map mex. $ mv -v $f /opt/exploitdb/exploits
+map Yex. $ cp -rv $f /opt/exploitdb/exploits
+map <backspace2>Rv cd /var
+map mRv $ mv -v $f /var
+map YRv $ cp -rv $f /var
+map <backspace2>Rb cd /bin
+map mRb $ mv -v $f /bin
+map YRb $ cp -rv $f /bin
+map <backspace2>Rr cd /root
+map mRr $ mv -v $f /root
+map YRr $ cp -rv $f /root
+map <backspace2>Ro cd /opt
+map mRo $ mv -v $f /opt
+map YRo $ cp -rv $f /opt
+map <backspace2>Rmn cd /mnt
+map mRmn $ mv -v $f /mnt
+map YRmn $ cp -rv $f /mnt
+map <backspace2>sc cd ~/Pictures/screenshots
+map msc $ mv -v $f ~/Pictures/screenshots
+map Ysc $ cp -rv $f ~/Pictures/screenshots
+map <backspace2>vo cd /home/kanon/volumes
+map mvo $ mv -v $f /home/kanon/volumes
+map Yvo $ cp -rv $f /home/kanon/volumes
+map <backspace2>an. cd ~/.local/share/ansible
+map man. $ mv -v $f ~/.local/share/ansible
+map Yan. $ cp -rv $f ~/.local/share/ansible
+map <backspace2>P cd /home/kanon/programs/
+map mP $ mv -v $f /home/kanon/programs/
+map YP $ cp -rv $f /home/kanon/programs/
+map <backspace2>P. cd /home/kanon/programs/
+map mP. $ mv -v $f /home/kanon/programs/
+map YP. $ cp -rv $f /home/kanon/programs/
+map <backspace2>p cd /home/kanon/projects/
+map mp $ mv -v $f /home/kanon/projects/
+map Yp $ cp -rv $f /home/kanon/projects/
+map <backspace2>p. cd /home/kanon/projects/
+map mp. $ mv -v $f /home/kanon/projects/
+map Yp. $ cp -rv $f /home/kanon/projects/
+map <backspace2>c. cd /home/kanon/playground/code
+map mc. $ mv -v $f /home/kanon/playground/code
+map Yc. $ cp -rv $f /home/kanon/playground/code
+map <backspace2>pp cd ~/Pictures
+map mpp $ mv -v $f ~/Pictures
+map Ypp $ cp -rv $f ~/Pictures
+map <backspace2>pl cd /home/kanon/playground
+map mpl $ mv -v $f /home/kanon/playground
+map Ypl $ cp -rv $f /home/kanon/playground
+map <backspace2>.sf $ $EDITOR ~/.config/shortcuts/sf
+map <backspace2>.sd $ $EDITOR ~/.config/shortcuts/sd
+map <backspace2>.z $ $EDITOR ~/.config/zsh/.zshrc
+map <backspace2>.zp $ $EDITOR ~/.config/zsh/.zprofile
+map <backspace2>.p $ $EDITOR ~/.config/picom/picom.conf
+map <backspace2>.r $ $EDITOR ~/.config/ranger/rc.conf
+map <backspace2>.lf $ $EDITOR ~/.config/lf/lfrc
+map <backspace2>.b $ $EDITOR ~/.bashrc
+map <backspace2>.xr $ $EDITOR ~/.Xresources
+map <backspace2>.x $ $EDITOR ~/.xprofile
+map <backspace2>.t $ $EDITOR ~/.config/tmux/tmux.conf
+map <backspace2>.v $ $EDITOR ~/.config/nvim/init.lua
+map <backspace2>.la $ $EDITOR .vscode/launch.json
+map <backspace2>.vv $ $EDITOR ~/.config/nvim/init.lua
+map <backspace2>.va $ $EDITOR ~/.config/nvim/lua/config/automation/init.lua
+map <backspace2>.vt $ $EDITOR ~/.config/nvim/lua/config/appearance/themes/catppuccin.lua
+map <backspace2>.vs $ $EDITOR ~/.config/nvim/lua/config/settings.lua
+map <backspace2>.vu $ $EDITOR ~/.config/nvim/lua/utils/lua/telescope.lua
+map <backspace2>.vk $ $EDITOR ~/.config/nvim/lua/config/keybindings/init.lua
+map <backspace2>.vK $ $EDITOR ~/.config/nvim/lua/config/keybindings/dap.lua
+map <backspace2>.vd $ $EDITOR ~/.config/nvim/lua/lsp/dap/dap.lua
+map <backspace2>.vl $ $EDITOR ~/.config/nvim/lua/lsp/lsp.lua
+map <backspace2>.vp $ $EDITOR ~/.config/nvim/lua/plugins.lua
+map <backspace2>.vf $ $EDITOR ~/.config/nvim/lua/lsp/formatters.lua
+map <backspace2>.X $ $EDITOR ~/.config/sxhkd/sxhkdrc
+map <backspace2>.xm $ $EDITOR ~/.config/xmonad/xmonad.hs
+map <backspace2>.xmm $ $EDITOR ~/.config/xmonad/xmonad.hs
+map <backspace2>.xmb $ $EDITOR ~/.config/xmobar/xmobarrc
+map <backspace2>.n $ $EDITOR ~/.config/newsboat/urls
+map <backspace2>.dwm $ $EDITOR /home/kanon/programs/dwm-flexipatch/config.h
+map <backspace2>.st $ $EDITOR /home/kanon/programs/suckless/st/config.h
+map <backspace2>.a $ $EDITOR ~/.config/.aliases
+map <backspace2>.aa $ $EDITOR ~/.config/.aliases
+map <backspace2>.aw $ $EDITOR ~/.config/.aliases_work
+map <backspace2>.ao $ $EDITOR ~/.config/zsh/.aliases
+map <backspace2>.K $ $EDITOR /home/kanon/.local/share/scripts/apps/qmk/lily58/keymap.c
+map <backspace2>.Z $ $EDITOR /root/.config/zsh/.zshrc
+map <backspace2>.pr $ $EDITOR /home/kanon/.local/share/scripts/files/projections/global/.projections.json
+map <backspace2>.s $ $EDITOR /home/kanon/.ssh/config
+map <backspace2>.an $ $EDITOR ~/.local/share/ansible/local.yml
+map <backspace2>.anc $ $EDITOR ~/.local/share/ansible/roles/core/tasks
+map <backspace2>.ant $ $EDITOR ~/.local/share/ansible/tasks
+map <backspace2>.anT $ $EDITOR ~/.local/share/ansible/TODO
