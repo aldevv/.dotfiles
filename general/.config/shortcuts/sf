@@ -5,12 +5,13 @@
 .zp     ~/.config/zsh/.zprofile
 .p      ~/.config/picom/picom.conf
 .r      ~/.config/ranger/rc.conf
+.lf      ~/.config/lf/lfrc
 .b      ~/.bashrc
 .xr     ~/.Xresources
 .x      ~/.xprofile
 .t      ~/.config/tmux/tmux.conf
 .v     ~/.config/nvim/init.lua
-.l      .vscode/launch.json
+.la      .vscode/launch.json
 .vv     ~/.config/nvim/init.lua
 .va     ~/.config/nvim/lua/config/automation/init.lua
 .vt     ~/.config/nvim/lua/config/appearance/themes/catppuccin.lua
@@ -31,6 +32,7 @@
 .st     $SUCKLESS/st/config.h
 .a      ~/.config/.aliases
 .aa      ~/.config/.aliases
+.aw      ~/.config/.aliases_work
 # old aliases
 .ao     ~/.config/zsh/.aliases
 .K      $SCRIPTS/apps/qmk/lily58/keymap.c

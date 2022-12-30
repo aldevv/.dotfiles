@@ -20,6 +20,10 @@ alias \?r="noglob ?r"
 alias \?s="noglob ?s"
 alias dummypsql="docker run -e POSTGRES_PASSWORD=lol --name=pg -d -p 5432:5432 --rm aldevv/omdb"
 
+alias cr="bb README.md"
+alias br="bb README.md"
+alias Br="b README.md"
+
 # docker
 alias dkrit="docker run -it"
 alias dkritr="docker run -it --rm"
@@ -86,6 +90,20 @@ nord() {
 
 e.() {
 	bat .env
+}
+
+nixs() {
+    # run with --cache to refresh cache
+    local cache_file=~/.cache/nix/nix-env-qaP
+
+    if [[ "$1" =~ ^--?c(ache)?$ ]]; then
+        mkdir -p $(dirname $cache_file)
+        echo -n "Caching packages.."
+        nix-env -qaP '*' >$cache_file
+        echo " 🏁"
+    else
+        grep -iE "$1" $cache_file
+    fi
 }
 
 # source_env() {
