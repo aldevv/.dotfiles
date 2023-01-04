@@ -27,10 +27,6 @@ CONFIG_HOME = "~/.config"
 require("utils.lua.globals")
 require("config.pre-settings")
 
---==================
--- KEYBINDINGS
---==================
-vim.cmd("source ~/.config/nvim/modules/keybindings.vim")
 if os.getenv("USER") == "root" then
     require("config.appearance")
     require("config.automation")
