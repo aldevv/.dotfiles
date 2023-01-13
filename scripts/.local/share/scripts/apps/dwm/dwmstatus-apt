@@ -29,7 +29,8 @@ while true; do
     if [[ $battery =~ ^[0-9]電 ]] && [[ $charging != "charging" ]]; then dunstify "Low Battery"; fi
 
 
-    volume="$(amixer sget Master | awk -F"[][]" '/\[[0-9]/{ print $2 }' | sed 1q | tr -d "%")音"
+    # volume=" | $(amixer sget Master | awk -F"[][]" '/\[[0-9]/{ print $2 }' | sed 1q | tr -d "%")音 | "
+    volume=""
 
     [[ -z "$packages" ]] && packages=$(updateCheck) || packages=""
 
@@ -37,6 +38,6 @@ while true; do
         && echo '上'\
         || echo '下')
 
-	xsetroot -name "${packages}| ${volume} | ${battery} | ${wifi_stat} | ${time} | ${date}"
+	xsetroot -name "${packages}${volume}${battery} | ${wifi_stat} | ${time} | ${date}"
 	sleep 1m
 done

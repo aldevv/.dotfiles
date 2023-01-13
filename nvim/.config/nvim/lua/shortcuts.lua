@@ -181,5 +181,6 @@ vim.keymap.set("n", "<localleader>.pr", "<cmd>e $FILES/projections/global/.proje
 vim.keymap.set("n", "<localleader>.s", "<cmd>e $HOME/.ssh/config <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.an", "<cmd>e ~/.local/share/ansible/local.yml <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.anc", "<cmd>e ~/.local/share/ansible/roles/core/tasks <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>.anr", "<cmd>e ~/.local/share/ansible/README.md <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.ant", "<cmd>e ~/.local/share/ansible/tasks <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.anT", "<cmd>e ~/.local/share/ansible/TODO <cr>", {silent=true, noremap=true})

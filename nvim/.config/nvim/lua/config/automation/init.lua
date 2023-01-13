@@ -138,7 +138,7 @@ vim.api.nvim_create_autocmd({ "Filetype" }, {
 })
 
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-    pattern = "*.md",
+    pattern = vim.fn.getenv("NOTES") .. "/*.md",
     command = "Start! . _dgp $NOTES $(stamp)",
     -- Start without bang, focuses the new window
 })
