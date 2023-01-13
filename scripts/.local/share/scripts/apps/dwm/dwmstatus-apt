@@ -29,8 +29,7 @@ while true; do
     if [[ $battery =~ ^[0-9]電 ]] && [[ $charging != "charging" ]]; then dunstify "Low Battery"; fi
 
 
-    # volume=" | $(amixer sget Master | awk -F"[][]" '/\[[0-9]/{ print $2 }' | sed 1q | tr -d "%")音 | "
-    volume=""
+    volume=" | $(amixer -D pulse sget Master | awk -F"[][]" '/\[[0-9]/{ print $2 }' | sed 1q | tr -d "%")音 | "
 
     [[ -z "$packages" ]] && packages=$(updateCheck) || packages=""
 
