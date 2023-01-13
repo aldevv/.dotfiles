@@ -4,4 +4,5 @@ ilovepdfkey*
 Session.vim
 packer_compiled*
 __pycache__
-copyq_*
+general/.config/copyq/*
+!general/.config/copyq/copyq.conf
