@@ -41,5 +41,6 @@
 .s      $HOME/.ssh/config
 .an      ~/.local/share/ansible/local.yml
 .anc      ~/.local/share/ansible/roles/core/tasks
+.anr      ~/.local/share/ansible/README.md
 .ant     ~/.local/share/ansible/tasks
 .anT     ~/.local/share/ansible/TODO

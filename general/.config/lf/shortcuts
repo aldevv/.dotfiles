@@ -252,5 +252,6 @@ map <backspace2>.pr $ $EDITOR /home/kanon/.local/share/scripts/files/projections
 map <backspace2>.s $ $EDITOR /home/kanon/.ssh/config
 map <backspace2>.an $ $EDITOR ~/.local/share/ansible/local.yml
 map <backspace2>.anc $ $EDITOR ~/.local/share/ansible/roles/core/tasks
+map <backspace2>.anr $ $EDITOR ~/.local/share/ansible/README.md
 map <backspace2>.ant $ $EDITOR ~/.local/share/ansible/tasks
 map <backspace2>.anT $ $EDITOR ~/.local/share/ansible/TODO
