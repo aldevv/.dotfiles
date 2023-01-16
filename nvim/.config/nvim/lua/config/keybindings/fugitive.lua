@@ -27,9 +27,8 @@ map("n", "<leader>gdi", ":diffget //3<CR>", nor)
 map("n", "<leader>gdh", ":diffget //2<CR>", nor)
 map("n", "<leader>gdi", ":diffget //3<CR>", nor)
 map("n", "<leader>gdd", ":Gdiff<CR>", nor)
-map("n", "<leader>gdD", ":Gdiff!<CR>", nor) -- vertical
+map("n", "<leader>gdD", ":G! difftool @~", nor) -- vertical
 map("n", "<leader>gdt", ":G! difftool<CR>", nor)
-map("n", "<leader>gdT", ":G! difftool @~", nor)
 map("n", "<leader>gdm", ":G diff @~", nor)
 map("n", "<leader>gds", ":Gdiffsplit! @~", nor)
 map("n", "<leader>gdv", ":Gvdiffsplit! @~", nor)
