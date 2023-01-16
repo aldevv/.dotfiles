@@ -309,3 +309,7 @@ eval "`fnm env`"
 # fnm
 export PATH="/home/kanon/.local/share/fnm:$PATH"
 eval "`fnm env`"
+
+# fnm
+export PATH="/home/kanon/.local/share/fnm:$PATH"
+eval "`fnm env`"
