@@ -92,7 +92,7 @@
 -- server_filetype_map = {},
 local saga = require("lspsaga")
 
-saga.init_lsp_saga({
+require("lspsaga").setup({
     code_action_icon = "👾",
     code_action_lightbulb = {
         enable = false,

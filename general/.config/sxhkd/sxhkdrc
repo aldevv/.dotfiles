@@ -17,14 +17,14 @@ super + alt + n
 super + alt + shift + n
     ant dmenu
 
-super + shift + o
-	~/.config/sxhkd/dm_p 2>/dev/null
-
 Print + shift
 	flameshot gui
 
 mode_switch + c
 	copyq toggle
+
+super + shift + o
+    passmenu
 
 mode_switch + e
 	emoji

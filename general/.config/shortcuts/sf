@@ -28,11 +28,13 @@
 .xmm     ~/.config/xmonad/xmonad.hs
 .xmb    ~/.config/xmobar/xmobarrc
 .n      ~/.config/newsboat/urls
-.dwm    $PROGRAMS/dwm-flexipatch/config.h
+.dwm    $PROGRAMS/dwm/config.h
 .st     $SUCKLESS/st/config.h
 .a      ~/.config/.aliases
 .aa      ~/.config/.aliases
 .aw      ~/.config/.aliases_work
+.sw      ~/.config/.startup_work
+.ss      $AUTOMATION/startup/startup
 # old aliases
 .ao     ~/.config/zsh/.aliases
 .K      $SCRIPTS/apps/qmk/lily58/keymap.c

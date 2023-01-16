@@ -46,6 +46,7 @@ export SECRETS_EXTENSION=".scr"
 export SECRETS_DIR=".local/share/.gitscr"
 export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
+export NIXPKGS_ALLOW_UNFREE=1
 
 # path
 export PATH="/usr/local/bin:$PATH"
@@ -147,10 +148,10 @@ export  LESS_TERMCAP_us=$'\e[1;32m'
 #=================================================
 alias .aw="nvim ~/.config/.aliases_work"
 
-[[ -d "$UTILITIES" ]] && export PATH="$(find $UTILITIES -type d | tr '\n' ':')$PATH"
-[[ -d "$AUTOMATION" ]] && export PATH="$(find $AUTOMATION -type d | tr '\n' ':')$PATH"
-[[ -d "$APPS" ]] && export PATH="$(find $APPS -type d | tr '\n' ':')$PATH"
-[[ -d "$SHARED" ]] && export PATH="$(find $SHARED -type d | tr '\n' ':')$PATH"
+[[ -d "$UTILITIES" ]] && export PATH="$(find -L $UTILITIES -type d | tr '\n' ':')$PATH"
+[[ -d "$AUTOMATION" ]] && export PATH="$(find -L $AUTOMATION -type d | tr '\n' ':')$PATH"
+[[ -d "$APPS" ]] && export PATH="$(find -L $APPS -type d | tr '\n' ':')$PATH"
+[[ -d "$SHARED" ]] && export PATH="$(find -L $SHARED -type d | tr '\n' ':')$PATH"
 
 # add flutter
 [[ -d "$PROGRAMS/flutter" ]] && export PATH="$(find $PROGRAMS/flutter $PROGRAMS/android-studio -maxdepth 1 -type d -iname 'bin' | tr '\n' ':')$PATH"

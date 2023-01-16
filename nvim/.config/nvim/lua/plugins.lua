@@ -84,6 +84,13 @@ return require("packer").startup({
         vim.cmd("colorscheme " .. current_theme)
 
         use({
+            "norcalli/nvim-colorizer.lua",
+            config = function()
+                require("colorizer").setup()
+            end,
+        })
+
+        use({
             "nvim-lualine/lualine.nvim",
             requires = { "kyazdani42/nvim-web-devicons", opt = true },
             config = req("config.appearance.lualine"),
