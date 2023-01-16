@@ -189,3 +189,4 @@ vim.opt.softtabstop = 4
 
 -- size of indent and << and >>
 vim.opt.shiftwidth = 4
+vim.g.netrw_localrmdir = "rm -r"

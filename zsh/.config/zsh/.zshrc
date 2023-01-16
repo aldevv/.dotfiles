@@ -297,3 +297,15 @@ load_pyenv() {
 # shellcheck source=/dev/null
 [[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
 [[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases
+
+# fnm
+export PATH="/home/kanon/.local/share/fnm:$PATH"
+eval "`fnm env`"
+
+# fnm
+export PATH="/home/kanon/.local/share/fnm:$PATH"
+eval "`fnm env`"
+
+# fnm
+export PATH="/home/kanon/.local/share/fnm:$PATH"
+eval "`fnm env`"

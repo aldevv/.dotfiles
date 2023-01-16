@@ -1,15 +1,15 @@
 #!/bin/bash
 #change to dash
 updateCheck() {
-    echo ""
-    # packages="$(sudo pacman -Qu | wc -l)更新"
-    # if [[ $packages == "0更新" ]]; then
-    #     # packages=""
-    #     printf ""
-    # else
-    #     printf "| %s" "$packages"
-    # fi
+    packages="$(( $(apt list --upgradable 2>/dev/null | wc -l) - 1 ))更新"
+    if [[ $packages == "0更新" ]]; then
+        packages=""
+        printf ""
+    else
+        printf "| %s |" "$packages"
+    fi
 }
+
 declare -A days
 days[Mon]="月"
 days[Tue]="火"

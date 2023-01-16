@@ -63,10 +63,10 @@ Rmn     /mnt
 sc      ~/Pictures/screenshots
 vo      $VOLUMES
 an.     ~/.local/share/ansible
-P       $PROGRAMS/
-P.      $PROGRAMS/
-p       $PROJECTS/
-p.      $PROJECTS/
+p       $PROGRAMS/
+p.      $PROGRAMS/
+P       $PROJECTS/
+P.      $PROJECTS/
 c.      $PLAYGROUND/code
 pp      ~/Pictures
 pl      $PLAYGROUND

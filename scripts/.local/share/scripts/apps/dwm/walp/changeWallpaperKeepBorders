@@ -12,20 +12,24 @@ if [ ! -z "$1" ]; then
         wal --saturate 0.7 -i "$1"
     fi
 fi
-walFolder="$HOME/.cache/wal/colors-wal-dwm.h"
-sleep 2
-borderColor="#770000"
-fgColor="#eeeeee"
-sed -E -i "s/sel_border.*\"#.+\";/sel_border[] = \""$borderColor"\";/g" "$walFolder"
-sed -E -i "s/sel_fg.*\"#.+\";/sel_fg[] = \""$fgColor"\";/g" "$walFolder"
 
-cd "$SUCKLESS/dmenu-4.9"
+# NOTE: this is for the include in config.h method
+# walFolder="$HOME/.cache/wal/colors-wal-dwm.h"
+# sleep 2
+# borderColor="#770000"
+# fgColor="#eeeeee"
+# sed -E -i "s/sel_border.*\"#.+\";/sel_border[] = \""$borderColor"\";/g" "$walFolder"
+# sed -E -i "s/sel_fg.*\"#.+\";/sel_fg[] = \""$fgColor"\";/g" "$walFolder"
+
+cd "$SUCKLESS/dmenu"
 sudo make clean
 sudo make  install
-cd "$SUCKLESS/dwm-6.2"
+cd "$SUCKLESS/dwm"
 sudo make clean
 # sleep 5
 sudo make install
+cp "$HOME/.cache/wal/colors.Xresources" "$HOME/.Xresources"
+xrdb --merge $HOME/.Xresources
 dunstify "Changed Wallpaper Successfully 😄"
 #😄😄😄😄😄😄😄😄😄😄
 

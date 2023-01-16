@@ -1,5 +1,5 @@
 #!/bin/bash
 # script=$(find ~/.local/share/scripts/utilities/ -type f | fzf --preview="bat --color always {}" --delimiter '/' --with-nth -1)
-script=$(find ~/.local/share/scripts/utilities/ -type f | fzf --preview="bat --color always {}" --with-nth -2,-1 --delimiter '/')
+script=$(find -L ~/.local/share/scripts/ -type f | fzf --preview="bat --color always {}" --with-nth -2,-1 --delimiter '/')
 test -n "$script" && \
     nvim "$script"
