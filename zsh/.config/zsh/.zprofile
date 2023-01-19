@@ -152,6 +152,7 @@ alias .aw="nvim ~/.config/.aliases_work"
 [[ -d "$AUTOMATION" ]] && export PATH="$(find -L $AUTOMATION -type d | tr '\n' ':')$PATH"
 [[ -d "$APPS" ]] && export PATH="$(find -L $APPS -type d | tr '\n' ':')$PATH"
 [[ -d "$SHARED" ]] && export PATH="$(find -L $SHARED -type d | tr '\n' ':')$PATH"
+[[ -d "$SCRIPTS/work" ]] && export PATH="$(find -L $SCRIPTS/work -type d | tr '\n' ':')$PATH"
 
 # add flutter
 [[ -d "$PROGRAMS/flutter" ]] && export PATH="$(find $PROGRAMS/flutter $PROGRAMS/android-studio -maxdepth 1 -type d -iname 'bin' | tr '\n' ':')$PATH"

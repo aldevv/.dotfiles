@@ -139,8 +139,7 @@ vim.api.nvim_create_autocmd({ "Filetype" }, {
 
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
     pattern = vim.fn.getenv("NOTES") .. "/*.md",
-    command = "Start! . _dgp $NOTES $(stamp)",
-    -- Start without bang, focuses the new window
+    command = "Dispatch! . _dgp $NOTES $(stamp)",
 })
 
 -- NOTE: this is because the file appears with wrong highlighting, fault of the lsp

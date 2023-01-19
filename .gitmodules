@@ -4,3 +4,6 @@
 [submodule "wiki"]
 	path = wiki
 	url = git@github.com:aldevv/wiki.git
+[submodule "epic"]
+	path = epic
+	url = git@github.com:aldevv/epic.git

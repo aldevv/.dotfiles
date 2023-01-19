@@ -1,5 +1,4 @@
 #!/bin/bash
-[ -f "$HOME/.config/.aliases_work" ]
 # programs
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
@@ -81,6 +80,7 @@ alias ssh_phone="ssh -p 8022 u0_a473@axlknight1-everest.nord"
 alias toasc="ascii-image-converter"
 
 
+
 # functions
 
 nord() {
@@ -104,6 +104,11 @@ nixs() {
     else
         grep -iE "$1" $cache_file
     fi
+}
+
+
+nixi() {
+    nix-env -iA nixpkgs.$1
 }
 
 # source_env() {
