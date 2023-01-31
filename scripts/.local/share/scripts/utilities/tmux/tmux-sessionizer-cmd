@@ -24,7 +24,7 @@ if_cmd_run_cmd() {
     fi
 }
 
-if tmux has-session -t "$session_name" 2>/dev/null; then
+if tmux has-session -t="$session_name" 2>/dev/null; then
 
     # check if program running in tmux is nvim, and save and exit document if it is
     if grep "$session_name" <<< $(tmux list-sessions -F '#{session_name}') &>/dev/null && grep "nvim" <<< $(tmux list-sessions -F '#{pane_current_command}') &>/dev/null; then

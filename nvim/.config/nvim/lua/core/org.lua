@@ -1,5 +1,7 @@
 require("orgmode").setup_ts_grammar()
 require("orgmode").setup({
+    org_indent_mode = "indent",
+    org_edit_src_content_indentation = 0,
     mappings = {
         org = {
             -- done because original mapping was NOT SILENT

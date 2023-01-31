@@ -93,8 +93,7 @@
 local saga = require("lspsaga")
 
 require("lspsaga").setup({
-    code_action_icon = "👾",
-    code_action_lightbulb = {
+    lightbulb = {
         enable = false,
     },
 })

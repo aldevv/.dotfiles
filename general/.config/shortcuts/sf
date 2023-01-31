@@ -3,7 +3,7 @@
 .sd     ~/.config/shortcuts/sd
 .z      ~/.config/zsh/.zshrc
 .zp     ~/.config/zsh/.zprofile
-.p      ~/.config/picom/picom.conf
+.pi      ~/.config/picom/picom.conf
 .r      ~/.config/ranger/rc.conf
 .lf      ~/.config/lf/lfrc
 .b      ~/.bashrc
@@ -14,6 +14,7 @@
 .la      .vscode/launch.json
 .vv     ~/.config/nvim/init.lua
 .va     ~/.config/nvim/lua/config/automation/init.lua
+.vA     ~/.config/nvim/lua/config/appearance/init.lua
 .vt     ~/.config/nvim/lua/config/appearance/themes/catppuccin.lua
 .vs     ~/.config/nvim/lua/config/settings.lua
 .vu     ~/.config/nvim/lua/utils/lua/telescope.lua

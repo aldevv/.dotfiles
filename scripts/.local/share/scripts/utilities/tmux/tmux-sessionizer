@@ -9,7 +9,7 @@ if [[ "$session_name" =~ ^. ]]; then
 fi
 
 # is running but no session with that name
-if ! tmux has-session -t "$session_name" 2> /dev/null; then
+if ! tmux has-session -t="$session_name" 2> /dev/null; then
     # tmux running but no session with this name, create it
     echo "second"
     tmux -f ~/.config/tmux/tmux.conf new-session -ds "$session_name" -c "$folder_name"
