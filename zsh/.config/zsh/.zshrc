@@ -266,34 +266,7 @@ unset less_ver
 # install https://github.com/relastle/pmy
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
-if command -v pmy &>/dev/null; then
-    eval "$(pmy init)"
-fi
-
-if test -d .fnm; then
-    export PATH=/home/kanon/.fnm:$PATH
-    eval "`fnm env`"
-fi
 export PATH=$HOME/.local/bin:$PATH
-
-CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
-# shellcheck source=/dev/null
-[[ -f  "$CARGO_HOME/env" ]] && . "$CARGO_HOME/env"
-[[ -f "/home/kanon/.ghcup/env" ]] && source "/home/kanon/.ghcup/env" # ghcup-env
-
-load_pyenv() {
-    eval "$(pyenv init -)"
-    eval "$(pyenv init --path)"
-    eval "$(pyenv virtualenv-init -)"
-}
-
-load_direnv() {
-    eval "$(direnv hook zsh)"
-}
-
-[[ -n "$(command -v pyenv)" ]] && load_pyenv
-[[ -n "$(command -v direnv)" ]] &&  load_direnv
-
 
 # fzf keybindings
 [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && . /usr/share/doc/fzf/examples/key-bindings.zsh
@@ -303,19 +276,3 @@ load_direnv() {
 # shellcheck source=/dev/null
 [[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
 [[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases
-
-# fnm
-export PATH="/home/kanon/.local/share/fnm:$PATH"
-eval "`fnm env`"
-
-# fnm
-export PATH="/home/kanon/.local/share/fnm:$PATH"
-eval "`fnm env`"
-
-# fnm
-export PATH="/home/kanon/.local/share/fnm:$PATH"
-eval "`fnm env`"
-
-# fnm
-export PATH="/home/kanon/.local/share/fnm:$PATH"
-eval "`fnm env`"
