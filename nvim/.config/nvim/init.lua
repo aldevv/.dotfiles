@@ -1,5 +1,5 @@
 -- telescope.nvim
-if os.getenv("DEBUG") then
+if os.getenv("DEBUG_NVIM") then
     require("plugins-debug")
     return
 end

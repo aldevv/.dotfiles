@@ -645,6 +645,20 @@ return require("packer").startup({
         -- https://github.com/ray-x/go.nvim
         -- this is for faster startup!
         use("navarasu/onedark.nvim")
+        -- use({
+        --     "tjdevries/sg.nvim",
+        --     require = "nvim-lua/plenary.nvim",
+        --     config = function()
+        --         require("sg").setup({
+        --             -- Pass your own custom attach function
+        --             --    If you do not pass your own attach function, then the following maps are provide:
+        --             --        - gd -> goto definition
+        --             --        - gr -> goto references
+        --             -- on_attach = your_custom_lsp_attach_function,
+        --         })
+        --     end,
+        --     run = "cargo build --workspace",
+        -- })
     end,
     config = {
         display = {
