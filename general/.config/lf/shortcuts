@@ -215,7 +215,7 @@ map <backspace2>.sf $ $EDITOR ~/.config/shortcuts/sf
 map <backspace2>.sd $ $EDITOR ~/.config/shortcuts/sd
 map <backspace2>.z $ $EDITOR ~/.config/zsh/.zshrc
 map <backspace2>.zp $ $EDITOR ~/.config/zsh/.zprofile
-map <backspace2>.p $ $EDITOR ~/.config/picom/picom.conf
+map <backspace2>.pi $ $EDITOR ~/.config/picom/picom.conf
 map <backspace2>.r $ $EDITOR ~/.config/ranger/rc.conf
 map <backspace2>.lf $ $EDITOR ~/.config/lf/lfrc
 map <backspace2>.b $ $EDITOR ~/.bashrc
@@ -226,6 +226,7 @@ map <backspace2>.v $ $EDITOR ~/.config/nvim/init.lua
 map <backspace2>.la $ $EDITOR .vscode/launch.json
 map <backspace2>.vv $ $EDITOR ~/.config/nvim/init.lua
 map <backspace2>.va $ $EDITOR ~/.config/nvim/lua/config/automation/init.lua
+map <backspace2>.vA $ $EDITOR ~/.config/nvim/lua/config/appearance/init.lua
 map <backspace2>.vt $ $EDITOR ~/.config/nvim/lua/config/appearance/themes/catppuccin.lua
 map <backspace2>.vs $ $EDITOR ~/.config/nvim/lua/config/settings.lua
 map <backspace2>.vu $ $EDITOR ~/.config/nvim/lua/utils/lua/telescope.lua

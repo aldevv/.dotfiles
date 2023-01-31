@@ -287,7 +287,13 @@ load_pyenv() {
     eval "$(pyenv virtualenv-init -)"
 }
 
+load_direnv() {
+    eval "$(direnv hook zsh)"
+}
+
 [[ -n "$(command -v pyenv)" ]] && load_pyenv
+[[ -n "$(command -v direnv)" ]] &&  load_direnv
+
 
 # fzf keybindings
 [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && . /usr/share/doc/fzf/examples/key-bindings.zsh

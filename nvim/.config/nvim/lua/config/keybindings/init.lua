@@ -74,13 +74,20 @@ map("", "<c-u>", "<c-u>zz", nor)
 -- s commands
 map("n", "sq", "<cmd>lua require('notify').dismiss()<cr>", nor_s)
 map("n", "ss", "<cmd>silent Ex<cr>", nor_s)
+map("n", "sS", "<cmd>silent Ex .<cr>", nor_s)
 map("n", "st", "<cmd>silent Texplore<cr>", nor_s)
+map("n", "sT", "<cmd>silent Texplore .<cr>", nor_s)
 map("n", "sv", "<cmd>silent Vexplore<cr>", nor_s)
+map("n", "sV", "<cmd>silent Vexplore .<cr>", nor_s)
 map("n", "sn", "<cmd>call CreateFileEnter()<cr>", nor_s)
 map("n", "sN", "<cmd>call CreateFileTouch()<cr>", nor_s)
 map("n", "sD", "<cmd>call CreateDir()<cr>", nor_s)
 map("n", "sd", "<cmd>bd<cr>", nor_s)
 map("n", "si", "<Plug>(InsertSkeleton)", s)
+map("n", "spm", "set modifiable!", s)
+map("n", "spw", "set wrap!", s)
+map("n", "sps", "set wrapscan!", s)
+
 -- 'cd' towards the directory in which the current file is edited
 -- but only change the path for the current window
 map("n", "sc", "<cmd>lcd %:h<cr>", desc("'cd' towards the directory in which the current file is edited"))

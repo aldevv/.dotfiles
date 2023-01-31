@@ -4,7 +4,7 @@ file_name=$1
 folder=$2
 destination="${3:-.}"
 
-files=$(find $folder -maxdepth 1 -type d -exec basename {} \; | tail -n +2)
+files=$(find -L $folder -maxdepth 1 -type d -exec basename {} \; | tail -n +2)
 file=$(echo "$files" | fzf --height=75% --preview="[[ ! -f $folder/{}/$file_name ]] && echo '\"{}\" has sub-directories' || (bat --color always $folder/{}/$file_name)" --preview-window="90%:wrap")
 env_file="$folder/$file/.env"
 
@@ -13,7 +13,7 @@ env_file="$folder/$file/.env"
 
 path="$folder/$file"
 while [[ ! -f "$path/$file_name" ]]; do
-    files=$(find $path -maxdepth 1 -type d -exec basename {} \; | tail -n +2)
+    files=$(find -L $path -maxdepth 1 -type d -exec basename {} \; | tail -n +2)
     file=$(echo $files | fzf --height=75% --preview="bat --color always $path/{}/$file_name" --preview-window="90%:wrap")
     if [[ -z $file ]]; then
         exit

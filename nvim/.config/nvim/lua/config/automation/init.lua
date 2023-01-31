@@ -147,3 +147,8 @@ vim.api.nvim_create_autocmd({ "LspAttach" }, {
     pattern = "*/dwm-flexipatch/config.h",
     command = "LspStop",
 })
+
+vim.api.nvim_create_autocmd({ "FileType" }, {
+    pattern = { "TelescopePrompt*", "TelescopeResults" },
+    command = "setlocal nocursorline",
+})
