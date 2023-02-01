@@ -26,6 +26,7 @@ require("mason-lspconfig").setup({
     ensure_installed = servers,
     automatic_installation = true,
 })
+require("fidget").setup()
 
 local get_opts = function()
     local lsp_defaults = require("lsp.lsp_defaults")

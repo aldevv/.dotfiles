@@ -1,5 +1,9 @@
--- TODO: put all of these in the after folder!
-vim.opt.termguicolors = true -- this variable must be enabled for colors to be applied properly
+-- put hover signature_help and cmp help transparent
+vim.cmd([[
+    hi clear SpellBad
+    hi link SpellBad GruvboxRed
+]])
+
 require("config.appearance.legacy")
 require("config.appearance.folding")
 -- leave this last

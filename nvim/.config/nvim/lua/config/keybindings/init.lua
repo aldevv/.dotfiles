@@ -258,7 +258,7 @@ map("n", "sb", ":BrightestToggle<cr>", nor)
 map("n", "<leader>gv", ":GVcr>", nor)
 
 -- rainbow
-map("n", "sr", ":RainbowToggle<cr>", nor_s)
+map("n", "sr", ":RainbowToggle<cr>", nor)
 
 require("config.keybindings.fugitive")
 

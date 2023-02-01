@@ -163,8 +163,6 @@ vim.o.undodir = vim.fn.stdpath("cache") .. "/undodir"
 vim.o.autochdir = false -- for netrw
 
 vim.opt.timeoutlen = 700
--- vim.g.mapleader = t("<Space>")
--- vim.g.maplocalleader=t("BS>")
 vim.opt.laststatus = 3
 vim.opt.pumblend = 10
 vim.opt.statusline = "%t"
