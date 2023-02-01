@@ -2,7 +2,7 @@
 	path = personal
 	url = git@github.com:aldevv/.dotfiles-personal.git
 [submodule "wiki"]
-	path = wiki
+	path = wiki/.local/share/wiki
 	url = git@github.com:aldevv/wiki.git
 [submodule "epic"]
 	path = epic
