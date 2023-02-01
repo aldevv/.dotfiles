@@ -128,6 +128,7 @@ local enhance_server_opts = {
                 },
                 workspace = {
                     library = nvim_paths,
+                    checkThirdParty = false,
                     -- library = vim.list_extend(
                     --     "keep",
                     --     vim.api.nvim_get_runtime_file("", true),

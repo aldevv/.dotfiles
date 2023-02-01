@@ -70,13 +70,13 @@ cmd([[
   augroup END
 ]])
 
-cmd([[
-    augroup ReloadNvimConfig
-        autocmd BufWritePost *.{lua,vim} source %
-    augroup END
-]])
+-- cmd([[
+--     augroup ReloadNvimConfig
+--         autocmd BufWritePost *.{lua,vim} source %
+--     augroup END
+--a]])
 
-require("config.automation.packer")
+-- require("config.automation.packer")
 
 require("config.automation.lsp").diagnostics_in_loclist() --
 
@@ -118,9 +118,10 @@ cmd([[
 autocmd FileType org nnoremap <leader>ll :VimtexCompile<cr>
 ]])
 
-cmd([[
-    autocmd BufWritePost *.lua :luafile %
-]])
+-- NOTE: source file after save if is lua
+-- cmd([[
+--     autocmd BufWritePost *.lua :luafile %
+-- ]])
 
 cmd([[
      autocmd BufReadPre *.{org,md,js,jsx,ts,tsx,svelte,vue} :set shiftwidth=2 tabstop=2 softtabstop=2
