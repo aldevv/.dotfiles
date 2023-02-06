@@ -103,15 +103,15 @@ map Yvv $ cp -rv $f ~/Videos
 map <backspace2>wa cd /home/kanon/Pictures/Wallpapers/all_time
 map mwa $ mv -v $f /home/kanon/Pictures/Wallpapers/all_time
 map Ywa $ cp -rv $f /home/kanon/Pictures/Wallpapers/all_time
-map <backspace2>wi cd /home/kanon/.dotfiles/wiki
-map mwi $ mv -v $f /home/kanon/.dotfiles/wiki
-map Ywi $ cp -rv $f /home/kanon/.dotfiles/wiki
-map <backspace2>wp cd /home/kanon/.dotfiles/wiki/personal
-map mwp $ mv -v $f /home/kanon/.dotfiles/wiki/personal
-map Ywp $ cp -rv $f /home/kanon/.dotfiles/wiki/personal
-map <backspace2>wS cd /home/kanon/.dotfiles/wiki/cheatsheets
-map mwS $ mv -v $f /home/kanon/.dotfiles/wiki/cheatsheets
-map YwS $ cp -rv $f /home/kanon/.dotfiles/wiki/cheatsheets
+map <backspace2>wi cd /home/kanon/.local/share/wiki
+map mwi $ mv -v $f /home/kanon/.local/share/wiki
+map Ywi $ cp -rv $f /home/kanon/.local/share/wiki
+map <backspace2>wp cd /home/kanon/.local/share/wiki/personal
+map mwp $ mv -v $f /home/kanon/.local/share/wiki/personal
+map Ywp $ cp -rv $f /home/kanon/.local/share/wiki/personal
+map <backspace2>wS cd /home/kanon/.local/share/wiki/cheatsheets
+map mwS $ mv -v $f /home/kanon/.local/share/wiki/cheatsheets
+map YwS $ cp -rv $f /home/kanon/.local/share/wiki/cheatsheets
 map <backspace2>mm cd ~/Music
 map mmm $ mv -v $f ~/Music
 map Ymm $ cp -rv $f ~/Music
@@ -223,6 +223,7 @@ map <backspace2>.xr $ $EDITOR ~/.Xresources
 map <backspace2>.x $ $EDITOR ~/.xprofile
 map <backspace2>.t $ $EDITOR ~/.config/tmux/tmux.conf
 map <backspace2>.v $ $EDITOR ~/.config/nvim/init.lua
+map <backspace2>.vw $ $EDITOR ~/.config/nvim/lua/work.lua
 map <backspace2>.la $ $EDITOR .vscode/launch.json
 map <backspace2>.vv $ $EDITOR ~/.config/nvim/init.lua
 map <backspace2>.va $ $EDITOR ~/.config/nvim/lua/config/automation/init.lua

@@ -58,7 +58,6 @@ return {
             "williamboman/mason.nvim",
             "williamboman/mason-lspconfig.nvim",
             -- Useful status updates for LSP
-            "j-hui/fidget.nvim",
         },
     },
 
@@ -70,7 +69,12 @@ return {
         dependencies = { { "kylechui/nvim-surround", config = req("core.nvim-surround") } },
     },
 
-    "nvim-treesitter/nvim-treesitter-context",
+    {
+        "nvim-treesitter/nvim-treesitter-context",
+        config = function()
+            vim.cmd("hi TreesitterContextLineNumber gui=bold guifg=orange")
+        end,
+    },
     {
         "glepnir/lspsaga.nvim",
         branch = "main",
@@ -399,6 +403,9 @@ return {
     "rebelot/kanagawa.nvim",
     {
         "folke/todo-comments.nvim",
+        config = function()
+            require("todo-comments").setup({})
+        end,
         dependencies = "nvim-lua/plenary.nvim",
     },
 
@@ -464,10 +471,11 @@ return {
 
     {
         "akinsho/toggleterm.nvim",
-        config = req("core.toggleterm"),
+        config = function()
+            require("toggleterm").setup()
+        end,
         cmd = "ToggleTerm",
     },
-    -- install without yarn or npm
     {
         "iamcco/markdown-preview.nvim",
         build = function()
@@ -490,20 +498,26 @@ return {
     {
         "tjdevries/sg.nvim",
         dependencies = "nvim-lua/plenary.nvim",
-        config = function()
-            require("sg").setup({
-                -- Pass your own custom attach function
-                --    If you do not pass your own attach function, then the following maps are provide:
-                --        - gd -> goto definition
-                --        - gr -> goto references
-                -- on_attach = your_custom_lsp_attach_function,
-            })
-        end,
+        -- config = function()
+        --     require("sg").setup({
+        --         -- Pass your own custom attach function
+        --         --    If you do not pass your own attach function, then the following maps are provide:
+        --         --        - gd -> goto definition
+        --         --        - gr -> goto references
+        --         -- on_attach = your_custom_lsp_attach_function,
+        --     })
+        -- end,
         build = "cargo build --workspace",
     },
 
     "kana/vim-textobj-user",
-    { "glts/vim-textobj-comment", dependencies = "kana/vim-textobj-user" },
+    {
+        "glts/vim-textobj-comment",
+        dependencies = "kana/vim-textobj-user",
+        init = function()
+            vim.g.textobj_comment_no_default_key_mappings = 1
+        end,
+    },
     {
         "kana/vim-textobj-line",
         dependencies = "kana/vim-textobj-user",

@@ -11,6 +11,7 @@
 .x      ~/.xprofile
 .t      ~/.config/tmux/tmux.conf
 .v     ~/.config/nvim/init.lua
+.vw    ~/.config/nvim/lua/work.lua
 .la      .vscode/launch.json
 .vv     ~/.config/nvim/init.lua
 .va     ~/.config/nvim/lua/config/automation/init.lua

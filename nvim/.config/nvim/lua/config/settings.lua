@@ -172,7 +172,7 @@ vim.opt.statusline = "%t"
 -- vim.opt.cmdheight = 0
 vim.opt.spell = true
 vim.opt.spell = true
-vim.g.netrw_keepdir = 0
+vim.g.netrw_keepdir = 1
 
 -- auto indent on enter
 vim.opt.autoindent = true
