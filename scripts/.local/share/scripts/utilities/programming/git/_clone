@@ -50,6 +50,7 @@ else
     echo -e "\e[31m the $author/$repo repo already exists, overwrite? [y,N]\e[0m"
     read -r ans
     if [[ -n "$ans" && "$ans" != "n" && "$ans" != "no" && "$ans" != "N" && "$ans" != "NO" ]]; then
+        echo "removing: $_path"
         rm -rf "$_path"
         echo -e "\e[31m Removed old repo\e[0m"
     else

@@ -152,6 +152,7 @@ vim.keymap.set("n", "<localleader>.xr", "<cmd>e ~/.Xresources <cr>", {silent=tru
 vim.keymap.set("n", "<localleader>.x", "<cmd>e ~/.xprofile <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.t", "<cmd>e ~/.config/tmux/tmux.conf <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.v", "<cmd>e ~/.config/nvim/init.lua <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>.vw", "<cmd>e ~/.config/nvim/lua/work.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.la", "<cmd>e .vscode/launch.json <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.vv", "<cmd>e ~/.config/nvim/init.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.va", "<cmd>e ~/.config/nvim/lua/config/automation/init.lua <cr>", {silent=true, noremap=true})

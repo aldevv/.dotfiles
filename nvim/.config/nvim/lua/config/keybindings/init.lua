@@ -201,12 +201,27 @@ map("n", "<leader>.vD", ":lua require('osv').run_this()<cr>", nor_s)
 map("n", "<leader>.sb", "ggO#!/bin/bash<escape>", nor_s)
 map("n", "<leader>.sB", "ggO#!/bin/bash<escape>", nor_s)
 map("n", "<leader>.sf", ":luafile %<cr>", nor)
+map("v", "<leader>!", ":w !", nor)
+map("n", "Ñ", ":w !", nor)
+map("v", "Ñ", ":w !", nor)
+map("n", "!q", ":!", nor)
+map("v", "!q", ":!", nor)
 
 require("config.keybindings.text-objs")
 
 -- git worktrees
 map("n", "gwc", ":Telescope git_worktree create_git_worktree<cr>", nor)
+-- use <c-d> while in this to delete it!
 map("n", "gww", ":Telescope git_worktree git_worktrees<cr>", nor)
+local function add_slash_feature_worktree()
+    local branch = vim.fn.input("Enter branch name:")
+    local path = vim.split(branch, "/")[1]
+    require("git-worktree").create_worktree(path, branch, "origin")
+    print("Added " .. path .. "!")
+end
+
+map("n", "gwC", add_slash_feature_worktree, nor)
+
 -- <Enter> - switches to that worktree
 -- <c-d> - deletes that worktree
 -- <c-f> - toggles forcing of the next deletion

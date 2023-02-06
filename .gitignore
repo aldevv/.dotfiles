@@ -5,4 +5,5 @@ Session.vim
 packer_compiled*
 __pycache__
 general/.config/copyq/*
+nvim/.config/nvim/lua/work.lua
 !general/.config/copyq/copyq.conf
