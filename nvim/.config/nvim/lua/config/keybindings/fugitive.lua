@@ -21,17 +21,28 @@ local nor_s = vim.tbl_extend("keep", nor, s)
 local nor_e = vim.tbl_extend("keep", nor, e)
 local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 
+local desc = function(desc)
+    return vim.tbl_extend("keep", nor_s, { desc = desc })
+end
+
 local map = vim.api.nvim_set_keymap
 
-map("n", "<leader>gdi", ":diffget //3<CR>", nor)
-map("n", "<leader>gdh", ":diffget //2<CR>", nor)
-map("n", "<leader>gdi", ":diffget //3<CR>", nor)
-map("n", "<leader>gdd", ":Gdiff<CR>", nor)
-map("n", "<leader>gdD", ":G! difftool @~", nor) -- vertical
-map("n", "<leader>gdt", ":G! difftool<CR>", nor)
-map("n", "<leader>gdm", ":G diff @~", nor)
-map("n", "<leader>gds", ":Gdiffsplit! @~", nor)
-map("n", "<leader>gdv", ":Gvdiffsplit! @~", nor)
+-- use d2o and d3o
+map("n", "<leader>gdi", ":echo 'use d3o'<cr>", nor)
+map("n", "<leader>gdh", ":echo 'use d2o'<cr>", nor)
+map("v", "<leader>gdi", ":diffget //3<CR>", nor)
+map("v", "<leader>gdh", ":diffget //2<CR>", nor)
+-- map("n", "dI", ":diffget //3<CR>", nor)
+-- map("n", "dH", ":diffget //2<CR>", nor)
+-- map("v", "dI", ":diffget //3<CR>", nor)
+-- map("v", "dH", ":diffget //2<CR>", nor)
+
+map("n", "<leader>gdd", ":Gdiffsplit<CR>", desc("Gdiffsplit"))
+map("n", "<leader>gdD", ":Gdiffsplit!<CR>", desc("Gdiffsplit!"))
+
+map("n", "<leader>gdt", ":G! difftool ", desc("G! difftool (G! means only open qfx without moving to first file)"))
+map("n", "<leader>gdm", ":Gdiffsplit @~", desc("Gdiffsplit @~ (no <CR>)"))
+map("n", "<leader>gdM", ":G diff @~", desc("G diff @~ (show normal git diff in preview)"))
 
 map("n", "<leader>gs", ":G<CR>", nor)
 map("n", "<leader>gS", ":Telescope git_stash<CR>", nor)
@@ -81,15 +92,5 @@ wk.register({
         t = { "Telescope git log <Telescope git_commits>" },
         ["0"] = { "git log current file <0Gclog>" },
         ["="] = { "git log current file custom <0Gclog>" },
-    },
-    gd = {
-        name = "git diff",
-        d = { "git diff split <Gdiff>" },
-        D = { "git diff 3 split<Gdiff!>" },
-        t = { "git diff <G difftool>" },
-        D = { "git diff custom commit <G difftool @~>" },
-        m = { "git diff manual <G diff @~>" },
-        v = { "git diff vertical custom commit <Gvdiffsplit>" },
-        s = { "git diff horizontal custom commit <Gdiffsplit>" },
     },
 }, { prefix = "<leader>" })

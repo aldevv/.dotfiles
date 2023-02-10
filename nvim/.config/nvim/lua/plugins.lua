@@ -66,7 +66,6 @@ return {
         "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate",
         config = req("core.treesitter"),
-        dependencies = { { "kylechui/nvim-surround", config = req("core.nvim-surround") } },
     },
 
     {
@@ -191,6 +190,7 @@ return {
         -- cmd = "Copilot",
     },
 
+    -- breaking nvim-surround, should look for better option using nvim-treesitter
     {
         "wellle/targets.vim",
         init = function()
@@ -201,6 +201,7 @@ return {
             -- vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
         end,
     },
+    "tpope/vim-surround",
     "tpope/vim-repeat",
     "tommcdo/vim-exchange",
     {
