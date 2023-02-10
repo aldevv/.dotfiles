@@ -14,6 +14,46 @@ end
 
 require("harpoon").setup(cfg)
 
+-- projects = {
+--     ["$HOME/work/project/{}"] = {
+--         mark = {
+--             marks = {
+--                 {
+--                     col = 44,
+--                     row = 21,
+--                     filename = "folder1/file1.go",
+--                 },
+--                 {
+--                     col = 6,
+--                     row = 458,
+--                     filename = "folder2/file2.go",
+--                 },
+--                 {
+--                     col = 29,
+--                     row = 22,
+--                     filename = "folder3/file3.go",
+--                 },
+--                 {
+--                     col = 0,
+--                     row = 32,
+--                     filename = "test/folder4/file4.go",
+--                 },
+--                 {
+--                     col = 1,
+--                     row = 79,
+--                     filename = "test/folder5/file5.go",
+--                 },
+--             },
+--         },
+--         term = {
+--             cmds = {
+--                 "make",
+--                 "make install",
+--             },
+--         },
+--     },
+-- },
+
 -- require("harpoon").setup({
 --     -- sets harpoon to run the command immediately as it's passed to the terminal when calling `sendCommand`.
 --     global_settings = {

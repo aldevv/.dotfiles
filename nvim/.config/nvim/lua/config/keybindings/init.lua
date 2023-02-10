@@ -53,6 +53,8 @@ map("", "N", "mzJ`z", nor) -- lines
 map("n", "E", "i<cr><esc>k$", nor) -- lines
 map("v", "E", ":s/\\n/ /g<cr>$x", nor) -- lines
 
+map("o", "l", "i", nor) -- lines
+
 map("n", "ñ", ":G ", nor)
 
 -- map("n", "!!", ":.!", nor)
