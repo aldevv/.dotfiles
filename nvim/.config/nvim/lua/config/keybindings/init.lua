@@ -335,9 +335,9 @@ require("config.keybindings.refactoring")
 -- require("config.keybindings.lspsaga").load_mappings()
 require("config.keybindings.overseer").load_mappings()
 
-map("n", "<leader><leader>g", "<cmd>MindOpenMain<cr>", nor)
-map("n", "<leader><leader>p", "<cmd>MindOpenProject global<cr>", nor)
-map("n", "<leader><leader>P", "<cmd>MindOpenProject<cr>", nor)
+-- map("n", "<leader><leader>g", "<cmd>MindOpenMain<cr>", nor)
+-- map("n", "<leader><leader>p", "<cmd>MindOpenProject global<cr>", nor)
+-- map("n", "<leader><leader>P", "<cmd>MindOpenProject<cr>", nor)
 
 map("n", "<leader>sl", "<cmd>IndentBlanklineToggle<cr>", nor)
 -- map("n", "<leader>g", "<cmd>MindOpenProject")
@@ -457,3 +457,37 @@ map(
     "<cmd>Spawn st -e bash -c 'ranger $(dirname %); zsh'<cr>",
     desc("create ranger instance in current folder")
 )
+
+-- language specific
+-- for horizontal splits using dispatch
+vim.g.dispatch_tmux_height = "35% -v"
+map("n", "<leader><leader>d", ":Dispatch ", descv("Dispatch _"))
+map("n", "<leader><leader>D", ":Dispatch! ", descv("Dispatch! _"))
+map("n", "<leader><leader>s", ":Start ", descv("Start _"))
+map("n", "<leader><leader>S", ":Start! ", descv("Start! _"))
+
+-- run entr
+map("n", "<leader><leader>r", function()
+    local cmd = vim.fn.input("Enter the command entr will run: ")
+    vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
+end, nor_s)
+map("n", "<leader><leader>R", function()
+    local cmd = vim.fn.input("Enter the command entr will run: ")
+    vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
+end, nor_s)
+
+-- go
+map("n", "<leader><leader>g", function()
+    vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
+end, nor_s)
+map("n", "<leader><leader>G", function()
+    vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
+end, nor_s)
+
+-- python
+map("n", "<leader><leader>p", function()
+    vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
+end, nor_s)
+map("n", "<leader><leader>P", function()
+    vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
+end, nor_s)
