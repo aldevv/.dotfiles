@@ -102,10 +102,7 @@ return {
     },
     "honza/vim-snippets",
     {
-        "ray-x/lsp_signature.nvim",
-        config = req("lsp.lsp-signature"),
-    },
-    {
+
         "hrsh7th/nvim-cmp",
         dependencies = {
             "nvim-lua/plenary.nvim",
@@ -436,7 +433,7 @@ return {
     -- TODO: test this to have custom themes per project
     -- https://muniftanjim.dev/blog/neovim-project-local-config-with-exrc-nvim/
     -- use("MunifTanjim/exrc.nvim")
-    "phaazon/mind.nvim",
+    -- "phaazon/mind.nvim",
     {
         "lukas-reineke/indent-blankline.nvim",
         init = function()
@@ -539,6 +536,26 @@ return {
         "nvim-treesitter/nvim-treesitter-textobjects",
         dependencies = { "nvim-treesitter/nvim-treesitter", "kana/vim-textobj-user" },
     },
+    {
+        "ray-x/lsp_signature.nvim",
+        config = req("lsp.lsp-signature"),
+    },
+    "fatih/vim-go",
+    -- not working properly
+    -- {
+    --     "ray-x/go.nvim",
+    --     requires = { -- optional packages
+    --         "ray-x/guihua.lua",
+    --         "neovim/nvim-lspconfig",
+    --         "nvim-treesitter/nvim-treesitter",
+    --     },
+    --     config = function()
+    --         require("go").setup()
+    --     end,
+    --     event = { "CmdlineEnter" },
+    --     ft = { "go", "gomod" },
+    --     build = ':lua require("go.install").update_all_sync()',
+    -- },
 
     -- enable when dadbod completion stops working
     -- use("nanotee/sqls.nvim")
