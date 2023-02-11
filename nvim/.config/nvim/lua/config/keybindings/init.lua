@@ -271,9 +271,6 @@ map("v", "sm", ":MaximizerToggle<CR>gv", nor_s)
 -- brightest
 map("n", "sb", ":BrightestToggle<cr>", nor)
 
--- gv
-map("n", "<leader>gv", ":GVcr>", nor)
-
 -- rainbow
 map("n", "sr", ":RainbowToggle<cr>", nor)
 
@@ -438,10 +435,10 @@ map(
     desc("create work todo")
 )
 
-map("n", "<leader>.dgpa", "<cmd>Start . _dgpa<cr>", desc("push all my stuff"))
-map("n", "<leader>.dgpn", "<cmd>Start . _dgp $NOTES<cr>", desc("push notes"))
-map("n", "<leader>.dgpd", "<cmd>Start . _dgp $DOTFILES<cr>", desc("push dotfiles"))
-map("n", "<leader>.dgpw", "<cmd>Start . _dgp $WIKI<cr>", desc("push wiki"))
+map("n", "<leader>.dgpa", "<cmd>Start . _dgpa<cr>", descv("push all my stuff"))
+map("n", "<leader>.dgpn", "<cmd>Start . _dgp $NOTES<cr>", descv("push notes"))
+map("n", "<leader>.dgpd", "<cmd>Start . _dgp $DOTFILES<cr>", descv("push dotfiles"))
+map("n", "<leader>.dgpw", "<cmd>Start . _dgp $WIKI<cr>", descv("push wiki"))
 
 map("n", "<leader>.ant", "<cmd>Spawn st -e bash -c ant<cr>", desc("create inbox note in new terminal"))
 map("n", "<leader>.anT", ":Spawn st -e bash -c 'ant '<left>", descv("create custom note in new terminal"))

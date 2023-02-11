@@ -25,6 +25,10 @@ local desc = function(desc)
     return vim.tbl_extend("keep", nor_s, { desc = desc })
 end
 
+local descv = function(desc)
+    return vim.tbl_extend("keep", nor, { desc = desc })
+end
+
 local map = vim.api.nvim_set_keymap
 
 -- use d2o and d3o
@@ -32,62 +36,113 @@ map("n", "<leader>gdi", ":echo 'use d3o'<cr>", nor)
 map("n", "<leader>gdh", ":echo 'use d2o'<cr>", nor)
 map("v", "<leader>gdi", ":diffget //3<CR>", nor)
 map("v", "<leader>gdh", ":diffget //2<CR>", nor)
--- map("n", "dI", ":diffget //3<CR>", nor)
--- map("n", "dH", ":diffget //2<CR>", nor)
--- map("v", "dI", ":diffget //3<CR>", nor)
--- map("v", "dH", ":diffget //2<CR>", nor)
 
-map("n", "<leader>gdd", ":Gdiffsplit<CR>", desc("Gdiffsplit"))
-map("n", "<leader>gdD", ":Gdiffsplit!<CR>", desc("Gdiffsplit!"))
+map("n", "<leader>gd<space>", ":Gvdiffsplit @~", descv("Gdiffsplit @~_"))
+map("n", "<leader>gdm", ":Gvdiffsplit @~", desc("Gdiffsplit @~ (no <CR>)"))
+map("n", "<leader>gdM", ":G diff @~", desc("G diff @~ (show normal git diff in preview)"))
+
+map("n", "<leader>gdd", ":Gvdiffsplit<CR>", desc("Gdiffsplit"))
+map("n", "<leader>gdD", ":G! diff<CR>", desc("G! diff"))
+map("n", "<leader>gdv", ":Gvdiffsplit!<CR>", desc("Gdiffsplit!")) -- three way split
 
 map("n", "<leader>gdt", ":G! difftool ", desc("G! difftool (G! means only open qfx without moving to first file)"))
-map("n", "<leader>gdm", ":Gdiffsplit @~", desc("Gdiffsplit @~ (no <CR>)"))
-map("n", "<leader>gdM", ":G diff @~", desc("G diff @~ (show normal git diff in preview)"))
 
 map("n", "<leader>gs", ":G<CR>", nor)
 map("n", "<leader>gS", ":Telescope git_stash<CR>", nor)
 map("n", "<leader>gi", ":G init<CR>", nor)
 map("n", "<leader>gm", ":G mergetool<CR>", nor)
 
-map("n", "<leader>gl0", ":0Gclog!<cr>", nor)
-map("n", "<leader>gl=", ":0Gclog! ", nor)
+-- for this file
+map("n", "<leader>g0<space>", ":0Gclog! ", nor)
+map("n", "<leader>g0g", ":0Gclog!<cr>", nor)
+map("n", "<leader>g0G", ":G log --decorate=short --all %<cr>", nor)
+map("n", "<leader>g0m", ":0Gclog! ", nor)
+map("n", "<leader>g0M", ":G! log % ", nor)
+map("n", "<leader>g0v", ":GV!<CR>", nor) -- only list commits current file
+
+-- old way
+map("n", "<leader>gl0<space>", ":0Gclog! ", nor)
+map("n", "<leader>gl0g", ":0Gclog!<cr>", nor)
+map("n", "<leader>gl0G", ":G log --decorate=short --all %<cr>", nor)
+map("n", "<leader>gl0m", ":0Gclog! ", nor)
+map("n", "<leader>gl0M", ":G! log % ", nor)
+map("n", "<leader>gl0v", ":GV!<CR>", nor) -- only list commits current file
+
+-- while in the git log you can do:
+-- coo to checkout that commit!
+-- O to open in new tab
+-- o to open in split
+-- p to preview
+-- <cr> to enter commit
 map("n", "<leader>glt", ":Telescope git_commits<CR>", nor)
-map("n", "<leader>glg", ":Gclog!<CR>", nor)
-map("n", "<leader>glG", ":Gclog! ", nor)
-map("n", "<leader>glm", ":G! log ", nor)
-map("n", "<leader>gp", ":G push<CR>", nor)
-map("n", "<leader>gP", ":G push ", nor)
-map("n", "<leader>gll", ":G pull<CR>", nor)
-map("n", "<leader>glL", ":G pull ", nor)
+map("n", "<leader>glg", ":G log --decorate=short<CR>", nor)
+map("n", "<leader>glm", ":G log ", descv("G log _")) -- you could do % to view log of file
+map("n", "<leader>gl<space>", ":G log ", descv("G log _")) -- you could do % to view log of file
+
+map("n", "<leader>glG", ":Gclog!<CR>", nor)
+map("v", "<leader>glg", ":Gclog!<CR>", nor) -- works in visual mode
+
+map("n", "<leader>gla", ":G log --decorate=short --all<CR>", nor)
+map("n", "<leader>glo", ":G log --oneline --all<CR>", nor)
+
+map("n", "<leader>glM", ":Gclog! ", descv("Gclog! _"))
+map("v", "<leader>glm", ":Gclog! ", nor)
+map("v", "<leader>gl<space>", ":Gclog! ", descv("Gclog! _"))
+
+map("n", "<leader>gp<space>", ":G push ", descv("G push _"))
+map("n", "<leader>gpm", ":G push ", descv("G push _"))
+map("n", "<leader>gpp", ":G push -u origin HEAD<cr>", descv("G push -u origin HEAD"))
+map("n", "<leader>gpf", ":G push -f<cr>", descv("G push -f"))
+
+map("n", "<leader>gLl", ":G pull<CR>", nor)
+map("n", "<leader>gL<space>", ":G pull ", nor)
+map("n", "<leader>gf", ":G fetch", nor)
+
 map("n", "<leader>gb", ":G blame<CR>", nor)
 map("n", "<leader>gB", ":GBrowse<CR>", nor)
 map("n", "<leader>ga", ":GWrite<CR>", nor)
-map("n", "<leader>gcc", ":G! commit<CR>", nor)
-map("n", "<leader>gcC", ":G! commit ", nor)
+map("n", "<leader>gcc", ":G! commit<CR>", descv("G! commit"))
+map("n", "<leader>gc<space>", ":G! commit ", descv("G! commit _"))
 map("n", "<leader>gco", ":Telescope git_branches<CR>", nor)
 map("n", "<leader>gcO", ":G! checkout -<CR>", nor)
-map("n", "<leader>gC", ":Gread<CR>", nor)
+map("n", "<leader>gR", ":Gread<CR>", nor)
+map("n", "<leader>gW", ":Gwrite<CR>", nor)
+map("n", "<leader>gE", ":Gedit<CR>", nor)
+map("n", "<leader>gS", ":Gsplit @~", nor)
+map("n", "<leader>gV", ":Gvsplit @~", nor)
+
+-- GV
+-- o or <cr> on a commit to display the content of it
+-- o or <cr> on commits to display the diff in the range
+-- O opens a new tab instead
+-- gb for :GBrowse
+-- ]] and [[ to move between commits
+-- . to start command-line with :Git [CURSOR] SHA à la fugitive
+-- q or gq to close
+map("n", "<leader>glvv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
+map("n", "<leader>glv?", ":GV!<CR>", nor) -- location list fill
+map("v", "<leader>glvv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
+map("v", "<leader>glv0", ":GV!<CR>", nor) -- only list commits current file
+map("v", "<leader>glv?", ":GV!<CR>", nor) -- location list fill
+
+map("n", "<leader>gvv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
+map("n", "<leader>gv?", ":GV!<CR>", nor) -- location list fill
+map("v", "<leader>gvv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
+map("v", "<leader>gv0", ":GV!<CR>", nor) -- only list commits current file
+map("v", "<leader>gv?", ":GV!<CR>", nor) -- location list fill
 
 local wk = require("which-key")
 wk.register({
     gc = {
         name = "git commit and checkout ",
-        c = { "git commit <G commit>" },
-        C = { "git commit manual <G commit>" },
         o = { "Telescope git checkout<Telescope git_branches>" },
         O = { "git checkout previous<G checkout ->" },
-    },
-    gp = {
-        name = "git push",
-        p = { "git push <G push>" },
-        P = { "git push custom <G push>" },
     },
     gl = {
         name = "git log and pull",
         l = { "git pull <G pull>" },
-        L = { "git pull custom <G pull>" },
-        g = { "git log <Gclog!>" },
-        G = { "git log custom <Gclog!>" },
+        g = { "G log <normal>" },
+        G = { "Gclog <quickfix>" },
         m = { "git log manual <G! log>" },
         t = { "Telescope git log <Telescope git_commits>" },
         ["0"] = { "git log current file <0Gclog>" },

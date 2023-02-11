@@ -49,7 +49,8 @@ export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 export NIXPKGS_ALLOW_UNFREE=1
 
 # path
-export PATH="/usr/local/bin:$PATH"
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
 export CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com/:$PROJECTS"
 
 
@@ -146,13 +147,13 @@ export  LESS_TERMCAP_us=$'\e[1;32m'
 # export C_INCLUDE_PATH=.:$MLIBS
 
 #=================================================
-alias .aw="nvim ~/.config/.aliases_work"
 
-[[ -d "$UTILITIES" ]] && export PATH="$(find -L $UTILITIES -type d | tr '\n' ':')$PATH"
-[[ -d "$AUTOMATION" ]] && export PATH="$(find -L $AUTOMATION -type d | tr '\n' ':')$PATH"
-[[ -d "$APPS" ]] && export PATH="$(find -L $APPS -type d | tr '\n' ':')$PATH"
-[[ -d "$SHARED" ]] && export PATH="$(find -L $SHARED -type d | tr '\n' ':')$PATH"
-[[ -d "$SCRIPTS/work" ]] && export PATH="$(find -L $SCRIPTS/work -type d | tr '\n' ':')$PATH"
+# already sourced from xprofile
+# [[ -d "$UTILITIES" ]] && export PATH="$(find -L $UTILITIES -type d | tr '\n' ':')$PATH"
+# [[ -d "$AUTOMATION" ]] && export PATH="$(find -L $AUTOMATION -type d | tr '\n' ':')$PATH"
+# [[ -d "$APPS" ]] && export PATH="$(find -L $APPS -type d | tr '\n' ':')$PATH"
+# [[ -d "$SHARED" ]] && export PATH="$(find -L $SHARED -type d | tr '\n' ':')$PATH"
+# [[ -d "$SCRIPTS/work" ]] && export PATH="$(find -L $SCRIPTS/work -type d | tr '\n' ':')$PATH"
 
 # add flutter
 [[ -d "$PROGRAMS/flutter" ]] && export PATH="$(find $PROGRAMS/flutter $PROGRAMS/android-studio -maxdepth 1 -type d -iname 'bin' | tr '\n' ':')$PATH"
