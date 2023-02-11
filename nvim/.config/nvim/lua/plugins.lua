@@ -41,7 +41,7 @@ return {
         branch = "main",
         -- config = req("config.appearance.themes.tokyonight"),
     },
-    { "catppuccin/nvim", config = req("config.appearance.themes.catppuccin") },
+    { "catppuccin/nvim",      config = req("config.appearance.themes.catppuccin") },
 
     "norcalli/nvim-colorizer.lua",
 
@@ -108,7 +108,7 @@ return {
             "nvim-lua/plenary.nvim",
             "onsails/lspkind-nvim",
             "hrsh7th/cmp-nvim-lsp",
-            { "hrsh7th/cmp-nvim-lua", ft = "lua" },
+            { "hrsh7th/cmp-nvim-lua",               ft = "lua" },
             "hrsh7th/cmp-path",
             "hrsh7th/cmp-buffer",
             "hrsh7th/cmp-cmdline",
@@ -159,8 +159,8 @@ return {
         "mfussenegger/nvim-dap",
         dependencies = {
             -- { "Pocco81/DAPInstall.nvim", module = "dap-install" },
-            { "rcarriga/nvim-dap-ui", module = "dapui" },
-            { "theHamsta/nvim-dap-virtual-text", module = "nvim-dap-virtual-text" },
+            { "rcarriga/nvim-dap-ui",             module = "dapui" },
+            { "theHamsta/nvim-dap-virtual-text",  module = "nvim-dap-virtual-text" },
             { "nvim-telescope/telescope-dap.nvim" },
             { "rcarriga/cmp-dap" },
             { "mfussenegger/nvim-dap-python" },
@@ -288,7 +288,7 @@ return {
 
     "bkad/CamelCaseMotion",
     "gpanders/editorconfig.nvim",
-    { "bps/vim-textobj-python", ft = "python" },
+    { "bps/vim-textobj-python",   ft = "python" },
 
     {
         "AndrewRadev/splitjoin.vim",
@@ -318,7 +318,7 @@ return {
 
     { "osyo-manga/vim-brightest", cmd = "BrightestToggle" },
 
-    { "junegunn/gv.vim", cmd = "GV" },
+    { "junegunn/gv.vim",          cmd = "GV" },
 
     {
         "rbgrouleff/bclose.vim",
@@ -358,14 +358,15 @@ return {
             "nvim-lua/plenary.nvim",
             "nvim-treesitter/nvim-treesitter",
             "antoinemadec/FixCursorHold.nvim",
-            -- "nvim-neotest/neotest-python", -- doesn't let me choose the pytest binary,
             "vim-test/vim-test",
             "nvim-neotest/neotest-vim-test",
+            "nvim-neotest/neotest-go",
+            "nvim-neotest/neotest-python",
         },
         config = req("core.neotest"),
         module = "neotest",
     },
-    { "brooth/far.vim", cmd = { "Far", "Fardo", "Farr" } },
+    { "brooth/far.vim",               cmd = { "Far", "Fardo", "Farr" } },
 
     {
         "ThePrimeagen/refactoring.nvim",
@@ -540,7 +541,25 @@ return {
         "ray-x/lsp_signature.nvim",
         config = req("lsp.lsp-signature"),
     },
-    "fatih/vim-go",
+    {
+        "fatih/vim-go",
+        init = function()
+            vim.g.go_echo_command_info = 1
+            vim.g.go_statusline_duration = 60000
+            vim.g.go_echo_go_info = 0
+            vim.g.go_gopls_enabled = 0
+            vim.g.go_def_mapping_enabled = 0
+            vim.g.go_doc_keywordprg_enabled = 0
+            vim.g.go_textobj_enabled = 0
+            vim.g.go_textobj_include_function_doc = 0
+            vim.g.go_textobj_include_variable = 0
+            vim.g.go_term_enabled = 1
+            vim.g.go_term_mode = "split"
+            vim.g.go_diagnostics_enabled = 0
+            vim.g.go_fold_enable = {}
+            vim.g.go_list_type = "quickfix"
+        end,
+    },
     -- not working properly
     -- {
     --     "ray-x/go.nvim",

@@ -49,7 +49,6 @@ require("mason-lspconfig").setup_handlers({
         enhance_server(server_name, opts)
         require("lspconfig")[server_name].setup(opts)
     end,
-
     ["rust_analyzer"] = function()
         local opts = get_opts()
         enhance_server("rust_analyzer", opts)
@@ -57,7 +56,7 @@ require("mason-lspconfig").setup_handlers({
     end,
 })
 
--- diagnostics
+-- general diagnostics
 vim.diagnostic.config({
     virtual_text = {
         spacing = 2,

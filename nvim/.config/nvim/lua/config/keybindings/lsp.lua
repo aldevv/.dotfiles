@@ -42,7 +42,7 @@ M.load_mappings = function() -- use these on_attach
     -- autocmd CursorHoldI <buffer> lua vim.lsp.buf.document_highlight()
     -- autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
 
-    map("n", "gi", ":lua vim.lsp.buf.implementation()<cr>", nor)
+    map("n", "gi", ":Telescope lsp_implementations<cr>", nor)
     -- map("n", "<leader>li", ":lua vim.lsp.buf.implementation()<cr>", nor)
 
     map("n", "<leader>lci", ":lua vim.lsp.buf.incoming_calls()<cr>", nor)

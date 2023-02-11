@@ -8,7 +8,9 @@ require("config.keybindings.legacy")
 local s = { silent = true }
 local nor = { noremap = true }
 local e = { expr = true }
+local b = { buffer = true }
 local s_e = vim.tbl_extend("keep", s, e)
+local nb = vim.tbl_extend("keep", nor, b)
 
 local nor_s = vim.tbl_extend("keep", nor, s)
 local nor_e = vim.tbl_extend("keep", nor, e)
@@ -23,6 +25,10 @@ end
 
 local descv = function(desc)
     return vim.tbl_extend("keep", nor, { desc = desc })
+end
+
+local descb = function(desc)
+    return vim.tbl_extend("keep", nor, { desc = desc, buffer = true })
 end
 
 -- backlog
@@ -50,8 +56,6 @@ end
 -- map("", "gk", "gn", nor)
 -- map("", "gE", "gJ", nor) -- lines
 map("", "N", "mzJ`z", nor) -- lines
-map("n", "E", "i<cr><esc>k$", nor) -- lines
-map("v", "E", ":s/\\n/ /g<cr>$x", nor) -- lines
 
 map("o", "l", "i", nor) -- lines
 
@@ -280,29 +284,6 @@ map("n", "soL", ":silent source %:h/Session.vim<cr>", nor_s)
 map("n", "sol", ":silent source Session.vim<cr>", nor_s)
 map("n", "soo", ":Obsession<CR>", desc("obsession: add session"))
 map("n", "soO", ":Obsession!<CR>", desc("obsession: remove session"))
--- vim-test
-
-map("n", "<localleader>tn", ":lua require('neotest').run.run()<cr>", nor_s) -- run nearest
-map("n", "<localleader>tx", ":lua require('neotest').run.stop()<cr>", nor_s) -- run nearest
-map("n", "<localleader>tf", ":lua require('neotest').run.run(vim.fn.expand('%'))<cr>", nor_s)
-map("n", "<localleader>ts", ":lua require('neotest').summary.toggle()<cr>", nor_s)
-map("n", "<localleader>to", ":lua require('neotest').output.open({enter = true})<cr>", nor_s)
-map("n", "<localleader>tl", ":lua require('neotest').run.run_last()<cr>", nor_s)
-map("n", "<localleader>tk", ":lua require('neotest').jump.next({status = 'failed'})<cr>", nor_s)
-map("n", "<localleader>tK", ":lua require('neotest').jump.prev({status = 'failed'})<cr>", nor_s)
-map("n", "<localleader>tt", ":lua require('neotest').run.run({suite = true})<cr>", nor_s)
-map("n", "<localleader>tS", ":lua require('neotest').run.run({suite = true})<cr>", nor_s)
-map("n", "<localleader>tg", ":TestVisit<cr>", nor_s)
-vim.cmd([[cnoreabbrev Tn TestNearest]])
-vim.cmd([[cnoreabbrev Ts TestSuite]])
-vim.cmd([[cnoreabbrev Tf TestFile]])
-vim.cmd([[cnoreabbrev Tl TestLast]])
-
--- map("n", "<leader>Tn", ":TestNearest<cr>", nor_s)
--- map("n", "<leader>Tf", ":TestFile<cr>", nor_s)
--- map("n", "<leader>Tt", ":TestSuite<cr>", nor_s)
--- map("n", "<leader>Tl", ":TestLast<cr>", nor_s)
--- map("n", "<leader>Tg", ":TestVisit<cr>", nor_s)
 
 -- macro range
 map("x", "@", ":<C-u>call ExecuteMacroOverVisualRange()<cr>", nor_s)
@@ -321,7 +302,7 @@ vmap <leader>,Sr <Plug>SnipRun
 
 -- , configuration
 map("n", "<leader>,li", ":LspInfo<cr>", nor_s)
-map("n", "<leader>,lI", ":LspInstallInfo<cr>", nor_s)
+map("n", "<leader>,lr", ":LspRestart<cr>", nor_s)
 map("n", "<leader>,ln", ":NullLsInfo<cr>", nor_s)
 
 map("n", "<leader>,ps", ":PackerSync<cr>", nor)
@@ -484,10 +465,39 @@ map("n", "<leader><leader>G", function()
     vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
 end, nor_s)
 
--- python
 map("n", "<leader><leader>p", function()
     vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
 end, nor_s)
 map("n", "<leader><leader>P", function()
     vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
 end, nor_s)
+
+-- go keymaps
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "go",
+    callback = function()
+        map("n", "<leader>frr", "<cmd>GoRun<cr>", nb)
+        map("n", "<leader>fr<space>", ":GoRun ", descb("GoRun _"))
+        map("n", "<leader>ff", "<cmd>GoFillStruct<cr>", nb)
+        map("n", "<leader>fF", "<cmd>GoFiles<cr>", descb("GoFiles: show this package's files"))
+        map("n", "<leader>fdd", ":GoDoc <c-r>=expand('<cword>')<cr><cr>", descb("GoDoc <cword>"))
+        map("n", "E", ":GoDoc <c-r>=expand('<cword>')<cr><cr>", nb)
+        map("n", "<leader>fd<space>", ":GoDoc ", nb)
+        map("n", "<leader>fi", "<cmd>GoIfErr<cr>", nb)
+        map("n", "<leader>fta", "<cmd>GoAddTags<cr>", nb)
+        map("n", "<leader>ftr", "<cmd>GoRemoveTags<cr>", nb)
+
+        -- example: GoImpl var *Struct Interface
+        map("n", "<leader>fi", ":GoImpl<cr>", descb("GoImpl: Implement Interface")) -- example: GoImpl f *Foo io.Writer
+        map("n", "<leader>fa", ":GoAlternate<cr>", descb("GoAlternate: go to test file"))
+        map("n", "<leader>fc", ":GoCoverage<cr>", descb("GoCoverage: check cur file test coverage"))
+
+        map("n", "<leader>fTt", ":GoTest<cr>", descb("GoTest"))
+        map("n", "<leader>fTf", ":GoTestFunc<cr>", descb("GoTestFunc"))
+        map("n", "<leader>fTF", ":GoTestFile<cr>", descb("GoTestFile"))
+        map("n", "<leader>fTc", ":GoTestCompile<cr>", descb("GoTestCompile"))
+
+        map("n", "<leader>fg", ":GoGenerate<cr>", nb)
+        map("n", "<leader>fb", ":GoBuild<cr>", nb)
+    end,
+})
