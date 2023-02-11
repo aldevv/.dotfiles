@@ -9,12 +9,6 @@ local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 
 local map = vim.api.nvim_set_keymap
 
-vim.cmd([[
-nmap gp  <Plug>ReplaceWithRegisterOperator
-nmap gpp <Plug>ReplaceWithRegisterLine
-xmap gp  <Plug>ReplaceWithRegisterVisual
-]])
-
 -- it gets deleted for some reason
 map("v", "lp", "ip", nor_s)
 map("v", "lw", "iw", nor_s)

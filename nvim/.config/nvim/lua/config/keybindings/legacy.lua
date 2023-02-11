@@ -187,7 +187,8 @@ nnoremap <leader>p "+p
 nnoremap <leader>P "+P
 vnoremap <leader>p "+p
 vnoremap <leader>P "+P
-nmap <leader>gp "+gp
+" nmap <leader>gp "+gp
+
 " copy default register into the main clipboard
 " nnoremap <silent> <leader>. :let @+ = @"<cr>
 

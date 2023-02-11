@@ -210,6 +210,7 @@ bindkey -s 'D' 'vf $HOME/.config ^M'
 bindkey -s 'm' 'vf  "$SCRIPTS"^M'
 bindkey -s 'M' '. cf  "$SCRIPTS"^M'
 bindkey -s 'o' '**	'
+bindkey -s 'j' 'gwts^M' # projects and work
 # tested, this shows stderr correctly on new terminal window
 
 # this is used for previous command
@@ -250,6 +251,7 @@ _fzf_compgen_dir() {
 bindkey "^ " autosuggest-execute
 # bindkey "^" autosuggest-toggle
 
+
 # -- less 
 # New less versions will read this file directly
 export LESSKEYIN="$HOME/.config/colemak-less"
@@ -266,7 +268,6 @@ unset less_ver
 # install https://github.com/relastle/pmy
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
-export PATH=$HOME/.local/bin:$PATH
 
 # fzf keybindings
 [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && . /usr/share/doc/fzf/examples/key-bindings.zsh
@@ -276,3 +277,4 @@ export PATH=$HOME/.local/bin:$PATH
 # shellcheck source=/dev/null
 [[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
 [[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases
+
