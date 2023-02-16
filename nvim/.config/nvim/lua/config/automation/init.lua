@@ -127,6 +127,10 @@ cmd([[
      autocmd BufReadPre *.{org,md,js,jsx,ts,tsx,svelte,vue} :set shiftwidth=2 tabstop=2 softtabstop=2
 ]])
 
+-- cmd([[
+--      autocmd BufReadPre *.http :set filetype=http
+-- ]])
+
 vim.api.nvim_create_autocmd({ "Filetype" }, {
     pattern = "*",
     callback = function()

@@ -94,7 +94,7 @@ map("n", "<leader>gpm", ":G push ", descv("G push _"))
 map("n", "<leader>gpp", ":G push -u origin HEAD<cr>", descv("G push -u origin HEAD"))
 map("n", "<leader>gpf", ":G push -f<cr>", descv("G push -f"))
 
-map("n", "<leader>gLl", ":G pull<CR>", nor)
+map("n", "<leader>gLl", ":G pull<CR>", desc("G pull"))
 map("n", "<leader>gL<space>", ":G pull ", nor)
 map("n", "<leader>gf", ":G fetch", nor)
 
@@ -140,7 +140,6 @@ wk.register({
     },
     gl = {
         name = "git log and pull",
-        l = { "git pull <G pull>" },
         g = { "G log <normal>" },
         G = { "Gclog <quickfix>" },
         m = { "git log manual <G! log>" },
