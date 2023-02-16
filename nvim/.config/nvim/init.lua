@@ -45,14 +45,15 @@ if os.getenv("USER") == "root" then
     return
 end
 
-require("lazy").setup("plugins")
+-- require("lazy").setup("plugins")
+require("lazy").setup("plugins", {
+    dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
+})
 
 -- set theme
 vim.cmd("colorscheme gruvbox")
 -- transparency
 vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
-
 require("config")
 require("core")
-
 -- vim.opt.shadafile = "" -- optimization
