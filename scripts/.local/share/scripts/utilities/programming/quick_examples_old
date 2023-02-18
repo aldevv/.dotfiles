@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python "$path_script/main.py"

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+
+tmux neww bash -c "quick_examples"
+tmux swap-window -t -1

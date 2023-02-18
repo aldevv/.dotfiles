@@ -18,9 +18,10 @@ fzf_with_nth() {
     echo "$value"
 }
 
+folders=($WORK $PROJECTS $PLAYGROUND/code $LEARN $REPOS/*)
 if [[ -z "$selected" ]]; then
     # the -not -path is to ignore hidden folders 
-    selected=$(find -L $WORK $PROJECTS $PLAYGROUND/code $LEARN -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d | fzf --preview="ls {} --color=always" --delimiter / --with-nth -2,-1 --preview-window=60%:wrap)
+    selected=$(find -L ${folders[@]}  -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d | fzf --preview="ls {} --color=always" --delimiter / --with-nth -2,-1 --preview-window=60%:wrap)
 else
     manual=1
     with_nth=$(fzf_with_nth)

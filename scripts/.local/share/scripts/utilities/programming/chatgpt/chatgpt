@@ -1,0 +1,60 @@
+#!/bin/python3
+from revChatGPT.V1 import Chatbot
+import asyncio
+import os
+import json
+
+
+async def connect(config):
+    chatbot = Chatbot(config={"email": config["email"], "password": config["password"]})
+    return chatbot
+
+
+async def get_question(config):
+    return input("Ask: ")
+
+
+def get_config_env_vars():
+    return {
+        "email": os.getenv("EMAIL"),
+        "password": os.getenv("PASSWORD"),
+        "res_count": os.getenv("RES_COUNT", 10),
+    }
+
+
+def get_config_from_file():
+    config_file = os.getenv("HOME", "") + "/.config/revChatGPT/config.json"
+    with open(config_file) as f:
+        d = json.load(f)
+        return d
+    return {}
+
+
+def get_config():
+    config = get_config_env_vars()
+    if not config["email"] or not config["password"]:
+        config_file = get_config_from_file()
+        if not config_file:
+            print("no EMAIL or PASSWORD set via env variables or config.json")
+            exit()
+        config |= config_file
+    return config
+
+
+async def main():
+    config = get_config()
+    question, chatbot = await asyncio.gather(get_question(config), connect(config))
+    prev_text = ""
+    while question:
+        for data in chatbot.ask(
+            question,
+        ):
+            message = data["message"][len(prev_text) :]
+            print(message, end="", flush=True)
+            prev_text = data["message"]
+        print("\n\n")
+        question = input("Ask: ")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
