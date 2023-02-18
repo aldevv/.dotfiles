@@ -14,7 +14,7 @@ export READER=zathura
 # export MANPAGER="nvim -c ' set ft=man' -"
 if [[ -n $(command -v st) ]]; then
     export TERMINAL=st
-    export TERM=st
+    export TERM=tmux-256color
 fi 
 export DEFAULT_DMENU_FONT="Cascadia:style=Italic"
 export COLORTERM=truecolor
@@ -43,7 +43,6 @@ export DOTFILES="$HOME/.dotfiles"
 export TRASH="$HOME/.local/share/Trash/files"
 export PASSWORD_STORE_DIR="$HOME/.local/share/.pass"
 export SECRETS_EXTENSION=".scr"
-export SECRETS_DIR=".local/share/.gitscr"
 export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 export NIXPKGS_ALLOW_UNFREE=1
