@@ -48,12 +48,15 @@ async def main():
     prev_text = ""
     while question:
         print(question)
-        for data in chatbot.ask(
-            question,
-        ):
-            message = data["message"][len(prev_text) :]
-            print(message, end="", flush=True)
-            prev_text = data["message"]
+        try:
+            for data in chatbot.ask(
+                question,
+            ):
+                message = data["message"][len(prev_text) :]
+                print(message, end="", flush=True)
+                prev_text = data["message"]
+        except (KeyboardInterrupt, SystemExit):
+            pass
         print("\n\n")
         question = ""
         _continue = input("1: continue convo?\n2: ask something else\n\n")
@@ -62,7 +65,7 @@ async def main():
             question = input("continue: ")
 
         if _continue == "2":
-            question = await get_question()
+            question = await get_question(config)
 
 
 if __name__ == "__main__":

@@ -35,13 +35,18 @@ if [[ $manual == 1 ]]; then
     exit 0
 fi
 
-declare -A types=(["work"]="$WORK" ["project"]="$PROJECTS" ["code"]="$PLAYGROUND/code"  ["learn"]="$LEARN")
+declare -A types=(["work"]="$WORK" ["projects"]="$PROJECTS" ["code"]="$PLAYGROUND/code"  ["learn"]="$LEARN")
 selected_name=$(basename "$selected" | tr . _)
 for key in "${!types[@]}"; do
-    if grep -o "/$key/" <<< "$selected"; then
+    if grep -o "/$key/" <<< "$selected" &>/dev/null; then
         prefix="${key:0:1}"
     fi
-    prefix=${key:0:1}
 done
+noprefix=0
+[[ -z $prefix ]] && noprefix=1
 
-tmux-sessionizer "$selected" "$prefix-$selected_name" 
+if [[ $noprefix == 1 ]]; then
+    tmux-sessionizer "$selected" "$selected_name" 
+else 
+    tmux-sessionizer "$selected" "$prefix-$selected_name" 
+fi
