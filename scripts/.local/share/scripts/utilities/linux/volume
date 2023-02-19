@@ -34,13 +34,15 @@ function send_notification {
 case $1 in
     up)
 		# Set the volume on (if it was muted)
-        for i in Master Headphone PCM Front Surround Center LFE Side; do
+        # for i in Master Headphone PCM Front Surround Center LFE Side; do
+        for i in Master Headphone; do
             amixer -D pulse sset $i 5%+ &>/dev/null
         done
 		send_notification
 	;;
     down)
-        for i in Master Headphone PCM Front Surround Center LFE Side; do
+        # for i in Master Headphone PCM Front Surround Center LFE Side; do
+        for i in Master Headphone; do
             amixer -D pulse sset $i 5%- &>/dev/null
         done
 		send_notification
