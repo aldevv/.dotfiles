@@ -2,11 +2,14 @@
 # programs
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
+
 alias irssi="irssi --home=~/.config/irssi --config=~/.config/irssi/config"
 alias lynx="lynx -cfg=~/.config/lynx/lynx.cfg -lss=~/.config/lynx/lynx.lss"
 
 alias srcz=". ~/.config/zsh/.zshrc"
-alias srca=". ~/.config/zsh/.aliases"
+alias srcao=". ~/.config/zsh/.aliases"
+alias srca=". ~/.config/.aliases"
+
 alias .s="nvim ~/.dotfiles/scripts/.local/share/scripts/"
 alias xin='xinput map-to-output $(xinput | grep -i "pen pen"| cut -d = -f 2 | cut -d [ -f 1) DP-1'
 alias r='ranger .'
@@ -37,6 +40,7 @@ alias extract_install='. _extract_install'
 alias lg="live_grep"
 alias getlatest=". _getlatest"
 alias clone=". _clone"
+alias clone1=". _clone 1"
 
 # builtin
 alias c="cat"
@@ -51,12 +55,154 @@ alias gRh="git reset --hard"
 alias grs="git remote set-url"
 alias grso="git remote set-url origin"
 alias grg="git remote get-url origin"
+alias gcsr="git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'"
+_gwts() {
+	# this can be much easier using git worktree list --porcelain
 
+	_options="$(git worktree list)"
+	[[ -z "$_options" ]] && return 1
+
+	# this section sorts the worktree by committerdate
+	sorted="$(git branch --sort=-committerdate | grep '^[+*]' | awk '{print $2}')"
+	sorted_options=""
+	while read l; do
+		if [[ -z "$sorted_options" ]]; then
+			sorted_options="$(grep "$l" <<<"$_options")"
+		else
+			sorted_options="$sorted_options\n$(grep "$l" <<<"$_options")"
+		fi
+	done <<<"$sorted"
+	_options="$sorted_options"
+
+	isBare=0
+	top="$(git rev-parse --show-toplevel 2>/dev/null)"
+	# need the first condition in case I'm standing in the actual bare root
+	[[ "$(git rev-parse --is-bare-repository)" == "true" ]] || [[ ! -d "$top/.git" && -f "$top/../HEAD" ]] && isBare=1
+
+	_options="$(echo "$_options" | awk '{print $1}')"
+	_path="$(fzf -d / --with-nth -3,-2,-1 --preview="source $UTILITIES/programming/git/logWorktree &>/dev/null; logWorktree {} "$isBare"" --preview-window="70%:wrap" <<<"$_options")"
+	[ -z "$_path" ] && return
+	cd "$_path" || return
+}
+
+alias gwts="_gwts"
+
+gclb() {
+	repo_dirty="${1##*/}"
+	repo="${repo_dirty%.git}"
+	git clone --bare --recurse-submodules "$1" "$repo"
+}
+
+worktreeBranchCreate() {
+	git_dir="$(git rev-parse --git-dir)"
+	[[ -z "$git_dir" ]] && return 2
+
+	# cd root folder if bare, else add ../ as prefix to folder
+	if [[ "$git_dir" != "." && "$git_dir" != ".git" ]]; then
+		cd "${git_dir%/worktrees/*}" || return
+	else
+		prefix="../"
+	fi
+
+	[ -z "$2" ] && echo "no branch name given" && return 1
+	branch="$2"
+
+	folder_name="$1"
+	# if folder_name does not contain the structure of name/other_name, change to third
+	if ! grep -o '/' <<<"$branch" &>/dev/null; then
+		folder="$branch"
+		folder_name="third"
+	fi
+
+	#<folder>/some_name
+	if [[ $folder_name == "first" ]]; then
+		folder="${branch%%/*}"
+	fi
+	# some_name/<folder>
+	if [[ $folder_name == "second" ]]; then
+		folder="$(basename "$branch")"
+	fi
+
+	if [[ -n "$prefix" ]]; then
+		folder="${prefix}${folder}"
+	fi
+
+	base_branch="$3"
+	if [[ -z $base_branch ]]; then
+		git worktree add -b "$branch" "$folder"
+		cd "$folder" || return 4
+		return 0
+	fi
+	git worktree add -b "$branch" "$folder" "$base_branch"
+	cd "$folder" || return 4
+	return 0
+}
+
+alias a="worktreeBranchCreate 'second'"
+alias gwta/="worktreeBranchCreate 'second'"
+
+alias A="worktreeBranchCreate 'first'"
+alias gwtA/="worktreeBranchCreate 'first'"
+
+tobare() {
+	git_dir="$(git rev-parse --git-dir)"
+	[[ -z "$git_dir" ]] && return 2
+
+	_status=$(git status --porcelain)
+	branch=$(git branch --show-current)
+	if [[ -n "$_status" ]]; then
+		echo -e "\e[31myou have uncommitted stuff\e[0m"
+		echo -e "$_status\n"
+		echo -e -n "\e[31mare you sure you want to change to a bare repo? (Y/n) \e[0m"
+		read -r ans
+		if [[ "$ans" == "n" || "$ans" == "no" ]]; then
+			return 0
+		fi
+	fi
+
+	if [[ "$git_dir" == "." ]]; then
+		echo "already a bare repo"
+		return 0
+	fi
+
+	if [[ "$git_dir" == ".git" ]]; then
+		folder_path="$(pwd)"
+	else
+		folder_path="${git_dir%/.git}"
+	fi
+	_path="${folder_path%/*}"
+	folder_name="$(basename "$folder_path")"
+	bare_name="${folder_name}_tmp"
+
+	mv "${folder_path}/.git" "$_path/$bare_name"
+	cd ..
+	rm -fr "$folder_path"
+	mv "$_path/$bare_name" "$folder_path"
+	cd "$folder_path" || return 1
+	git config --bool core.bare true
+	def_branch="$(git config init.defaultBranch)"
+	git worktree add "$def_branch"
+	cd "$def_branch" || return 1
+}
+
+# dotfiles
 alias dgp=". _dgp"
 alias dgpa=". _dgpa"
 alias dgpd='. _dgp $DOTFILES'
 alias dgpw='. _dgp $WIKI'
 alias dgpn='. _dgp $NOTES'
+
+# development
+alias sv='. _sv' # previously sa
+alias sar='. installReq'
+alias nixfst="nix flake show templates"
+alias nixfi="nix flake init"
+alias nixfit="nix flake init -t " #templates#simpleContainer
+alias nixd="nix develop"
+alias nix-s="nix-shell -p" # nix-shell -p cowsay --command "cowsay hello"
+alias localstack="docker run --rm  -dit -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack"
+alias Q="chatgpt"
+alias q="quick_examples"
 
 # tmux
 alias tms="tmux-sessionizer"
@@ -68,24 +214,20 @@ alias curlh='curl --header "Content-Type: application/json"'
 alias an="ansible"
 alias anp="ansible-playbook"
 ashell() {
-    # a shell command
-    ansible $1 -m shell -a $2
+	# a shell command
+	ansible $1 -m shell -a $2
 }
-
-
 
 alias run_debian="~/.local/share/ansible/run_debian"
 alias run_arch="~/.local/share/ansible/run_arch"
 alias ssh_phone="ssh -p 8022 u0_a473@axlknight1-everest.nord"
 alias toasc="ascii-image-converter"
 
-
-
 # functions
 
 nord() {
-    sudo nordvpn set meshnet on
-    sudo nordvpn connect japan
+	sudo nordvpn set meshnet on
+	sudo nordvpn connect japan
 }
 
 e.() {
@@ -93,22 +235,21 @@ e.() {
 }
 
 nixs() {
-    # run with --cache to refresh cache
-    local cache_file=~/.cache/nix/nix-env-qaP
+	# run with --cache to refresh cache
+	local cache_file=~/.cache/nix/nix-env-qaP
 
-    if [[ "$1" =~ ^--?c(ache)?$ ]]; then
-        mkdir -p $(dirname $cache_file)
-        echo -n "Caching packages.."
-        nix-env -qaP '*' >$cache_file
-        echo " 🏁"
-    else
-        grep -iE "$1" $cache_file
-    fi
+	if [[ "$1" =~ ^--?c(ache)?$ ]]; then
+		mkdir -p $(dirname $cache_file)
+		echo -n "Caching packages.."
+		nix-env -qaP '*' >$cache_file
+		echo " 🏁"
+	else
+		grep -iE "$1" $cache_file
+	fi
 }
 
-
 nixi() {
-    nix-env -iA nixpkgs.$1
+	nix-env -iA nixpkgs.$1
 }
 
 # source_env() {
