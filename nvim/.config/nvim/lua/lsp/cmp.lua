@@ -48,7 +48,6 @@ cmp.setup({
         completion = cmp.config.window.bordered(),
         documentation = cmp.config.window.bordered(),
     },
-
     formatting = {
         format = function(entry, vim_item)
             vim_item.kind = string.format("%s %s", lspkind.presets.default[vim_item.kind], vim_item.kind)
@@ -56,7 +55,7 @@ cmp.setup({
                 -- nvim_lsp = "ﲳ",
                 -- nvim_lsp = "📚",
                 nvim_lsp = "[LS]",
-                nvim_lua = "[API]",
+                -- nvim_lua = "[API]",
                 -- treesitter = "",
                 treesitter = "🌲",
                 -- path = "ﱮ",
@@ -135,7 +134,7 @@ cmp.setup({
         return vim.api.nvim_buf_get_option(0, "buftype") ~= "prompt" or require("cmp_dap").is_dap_buffer()
     end,
     sources = {
-        { name = "nvim_lua" },
+        -- { name = "nvim_lua" },
         { name = "nvim_lsp" },
         -- { name = "luasnip" },
         { name = "ultisnips" }, -- For ultisnips users.

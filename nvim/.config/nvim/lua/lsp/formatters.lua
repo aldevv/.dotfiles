@@ -19,13 +19,13 @@ local opts = {
     -- Displays all possible log messages and writes them to the null-ls log, which you can view with the command :NullLsLog. This option can slow down Neovim, so it's strongly recommended to disable it for normal use.
     -- debug = false,
     debug = false,
-
     log = {
         enable = false,
         level = "warn",
         use_console = "async",
     },
-    on_attach = function(client, bufnr) end,
+    on_attach = function(client, bufnr)
+    end,
     -- conf options
     -- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
     sources = {
@@ -73,12 +73,21 @@ local opts = {
         code_actions.shellcheck,
     },
 }
+local format_servers = {
+    "shfmt",
+    "black",
+    "stylua",
+}
+local diagnostic_servers = {
+    "shellcheck",
+    "flake8",
+}
+local servers = vim.tbl_extend("force", format_servers, diagnostic_servers)
 
 require("mason-null-ls").setup({
-    ensure_installed = { "stylua", "black" },
+    ensure_installed = servers,
     automatic_setup = true,
 })
-
 require("mason-null-ls").setup_handlers({
     function(source_name, methods)
         require("mason-null-ls.automatic_setup")(source_name, methods)

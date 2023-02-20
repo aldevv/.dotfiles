@@ -10,8 +10,12 @@ async def connect(config):
     return chatbot
 
 
-async def get_question(config):
-    return input("Ask: ")
+async def get_question():
+    try:
+        question = input("Ask: ")
+    except (KeyboardInterrupt, SystemExit):
+        os._exit(0)
+    return question
 
 
 def get_config_env_vars():
@@ -43,7 +47,7 @@ def get_config():
 
 async def main():
     config = get_config()
-    question, chatbot = await asyncio.gather(get_question(config), connect(config))
+    question, chatbot = await asyncio.gather(get_question(), connect(config))
     prev_text = ""
     while question:
         try:
@@ -56,7 +60,7 @@ async def main():
         except (KeyboardInterrupt, SystemExit):
             pass
         print("\n\n")
-        question = input("Ask: ")
+        question = await get_question()
 
 
 if __name__ == "__main__":
