@@ -144,7 +144,6 @@ local enhance_server_opts = {
             },
         }
     end,
-
     ["eslintls"] = function(opts)
         opts.settings = {
             format = {

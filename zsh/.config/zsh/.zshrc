@@ -117,6 +117,9 @@ bindkey -s "^[[32;2u" " "
 bindkey -s "^[i" "^[OC"
 bindkey -s "^[h" "^[OD"
 
+
+
+
 # to delete word using ctrl and backspace
 bindkey "^[[127;5u" backward-delete-word
 

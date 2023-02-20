@@ -11,7 +11,10 @@ async def connect(config):
 
 
 async def get_question(config):
-    technology = input("enter the program you want to know about: ")
+    try:
+        technology = input("enter the program you want to know about: ")
+    except (KeyboardInterrupt, SystemExit):
+        os._exit(0)
     return f"give me {config['res_count']} examples of how to use {technology}"
 
 
@@ -61,11 +64,14 @@ async def main():
         question = ""
         _continue = input("1: continue convo?\n2: ask something else\n\n")
 
-        if _continue == "1":
-            question = input("continue: ")
+        try:
+            if _continue == "1":
+                question = input("continue: ")
 
-        if _continue == "2":
-            question = await get_question(config)
+            if _continue == "2":
+                question = await get_question(config)
+        except (KeyboardInterrupt, SystemExit):
+            os._exit(0)
 
 
 if __name__ == "__main__":
