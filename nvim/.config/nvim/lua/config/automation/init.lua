@@ -15,19 +15,15 @@ endif
     autocmd BufWritePost config.h :call CompileSuck()
 
     function CompileSuck()
-        let path = expand('%:p:h')
-        let name = system('basename '.shellescape(path))
-        " exec 'echo '.shellescape(name)
-        silent exec '!cd ' . shellescape(path)
+        let _path = expand('%:p:h')
+        let name = system('basename '.shellescape(_path))
         if name =~ "dwm"
             echo name
             :exec '!changeWallpaperKeepBorders'
         else
+            :exec 'cd '. name
             :exec '!sudo make clean install'
         endif
-
-
-
     endfunction
 " auto compile latex if no vimtex
     autocmd BufWritePost,CursorHold,CursorHoldI *.tex :silent call CompileTex()

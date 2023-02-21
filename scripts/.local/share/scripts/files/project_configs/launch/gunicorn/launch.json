@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flask App with Gunicorn",
+            "type": "python",
+            "module": "gunicorn",
+            "request": "launch",
+            "python": "${env:VIRTUAL_ENV}/bin/python",
+            "args": [
+                "core.app",
+                "-b",
+                "0.0.0.0:8000"
+            ],
+            "jinja": true,
+            "subProcess": false
+        }
+    ]
+}

@@ -1,27 +1,12 @@
 #!/bin/bash
 
 _path="$1"
-isBare="$2"
-folder="$(basename $_path)"
+worktree_data=$(git worktree list --porcelain | grep -A2 "$_path")
+commit_id="$(head -2 <<<"$worktree_data" | tail -1 | awk '{print $2}')"
+branch="$(tail -1 <<<"$worktree_data")"
 
-# if bare do it like normal
-if [[ $isBare == 1 ]]; then
-    # echo "path: $_path"
-    branch="$(awk '{print $2}' < "$_path/../worktrees/$folder/HEAD")"
-    git log --decorate --oneline --color=always "$branch"
-    exit 0
+if [[ "$branch" == "detached" ]]; then
+	echo -e "\e[31mDETACHED HEAD"
 fi
 
-# if not bare, check if is the main repo
-if [[ -d "$_path/.git" ]]; then
-    branch="$(awk '{print $2}' <$_path/.git/HEAD)"
-    git log --decorate --oneline --color=always "$branch"
-    exit 0
-fi
-
-# if not, find out the branch 
-tmp="$(awk '{print $2}' < "$_path/.git" )"
-git_dir="${tmp%%/.git/*}"
-branch="$(awk '{print $2}' < "$git_dir/.git/worktrees/$folder/HEAD")"
-
-git log --decorate --oneline --color=always "$branch"
+git log --decorate --oneline --color=always "$commit_id"

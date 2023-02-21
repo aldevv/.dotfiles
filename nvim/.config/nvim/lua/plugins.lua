@@ -41,7 +41,7 @@ return {
         branch = "main",
         -- config = req("config.appearance.themes.tokyonight"),
     },
-    { "catppuccin/nvim", config = req("config.appearance.themes.catppuccin") },
+    { "catppuccin/nvim",      config = req("config.appearance.themes.catppuccin") },
 
     "norcalli/nvim-colorizer.lua",
 
@@ -109,7 +109,7 @@ return {
             "nvim-lua/plenary.nvim",
             "onsails/lspkind-nvim",
             "hrsh7th/cmp-nvim-lsp",
-            { "hrsh7th/cmp-nvim-lua", ft = "lua" },
+            { "hrsh7th/cmp-nvim-lua",               ft = "lua" },
             "hrsh7th/cmp-path",
             "hrsh7th/cmp-buffer",
             "hrsh7th/cmp-cmdline",
@@ -122,7 +122,7 @@ return {
 
     {
         "jose-elias-alvarez/null-ls.nvim",
-        dependencies = { "nvim-lua/plenary.nvim" },
+        dependencies = { "nvim-lua/plenary.nvim", "williamboman/mason.nvim" },
         config = req("lsp.formatters"),
     },
 
@@ -160,13 +160,14 @@ return {
         "mfussenegger/nvim-dap",
         dependencies = {
             -- { "Pocco81/DAPInstall.nvim", module = "dap-install" },
-            { "rcarriga/nvim-dap-ui", module = "dapui" },
-            { "theHamsta/nvim-dap-virtual-text", module = "nvim-dap-virtual-text" },
+            { "rcarriga/nvim-dap-ui",             module = "dapui" },
+            { "theHamsta/nvim-dap-virtual-text",  module = "nvim-dap-virtual-text" },
             { "nvim-telescope/telescope-dap.nvim" },
             { "rcarriga/cmp-dap" },
             { "mfussenegger/nvim-dap-python" },
             { "mxsdev/nvim-dap-vscode-js" },
             { "leoluz/nvim-dap-go" },
+            "williamboman/mason.nvim",
         },
         -- module = "dap",
         config = req("lsp.dap.dap"),
@@ -290,7 +291,7 @@ return {
 
     "bkad/CamelCaseMotion",
     "gpanders/editorconfig.nvim",
-    { "bps/vim-textobj-python", ft = "python" },
+    { "bps/vim-textobj-python",   ft = "python" },
 
     {
         "AndrewRadev/splitjoin.vim",
@@ -320,7 +321,7 @@ return {
 
     { "osyo-manga/vim-brightest", cmd = "BrightestToggle" },
 
-    { "junegunn/gv.vim", cmd = "GV" },
+    { "junegunn/gv.vim",          cmd = "GV" },
 
     {
         "rbgrouleff/bclose.vim",
@@ -368,7 +369,7 @@ return {
         config = req("core.neotest"),
         module = "neotest",
     },
-    { "brooth/far.vim", cmd = { "Far", "Fardo", "Farr" } },
+    { "brooth/far.vim",               cmd = { "Far", "Fardo", "Farr" } },
 
     {
         "ThePrimeagen/refactoring.nvim",
