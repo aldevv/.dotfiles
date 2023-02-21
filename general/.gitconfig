@@ -3,3 +3,5 @@
 	name = Alejandro Bernal
 [init]
 	defaultBranch = main
+[push]
+	autoSetupRemote = true
