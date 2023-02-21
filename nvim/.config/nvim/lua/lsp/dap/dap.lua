@@ -11,11 +11,14 @@
 -- TODO check https://github.com/mfussenegger/nvim-dap-python
 
 local dap = require("dap")
--- local level = "trace" -- error, debug, info, warn?
--- dap.set_log_level(level)
+-- default is info
+local level = "trace" -- trace, error, debug, info, warn
+dap.set_log_level(level)
+
+local servers = { "debugpy", "delve" }
 
 require("mason-nvim-dap").setup({
-    ensure_installed = { "python", "delve" },
+    ensure_installed = servers,
     automatic_setup = true,
 })
 
@@ -27,8 +30,8 @@ require("mason-nvim-dap").setup_handlers({
         -- local my_py_adapter = require("lsp.dap.languages.python").adapter()
         require("dap-python").setup()
         require("dap-python").test_runner = "pytest"
-        local my_py_config = require("lsp.dap.languages.python").config()
-        table.insert(dap.configurations.python, unpack(my_py_config))
+        -- local my_py_config = require("lsp.dap.languages.python").config()
+        -- table.insert(dap.configurations.python, unpack(my_py_config))
         require("mason-nvim-dap.automatic_setup")(source_name)
     end,
     delve = function(source_name)
