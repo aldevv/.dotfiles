@@ -9,7 +9,7 @@ local servers = {
     "cssls",
     "tsserver",
     "svelte",
-    "sumneko_lua",
+    "lua_ls",
     "vimls",
     "gopls",
     "dockerls",
@@ -60,5 +60,9 @@ require("mason-lspconfig").setup_handlers({
 vim.diagnostic.config({
     virtual_text = {
         spacing = 2,
+    },
+    float = {
+        -- source = "if_many",
+        source = true,
     },
 })

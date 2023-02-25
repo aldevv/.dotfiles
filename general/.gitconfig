@@ -5,3 +5,9 @@
 	defaultBranch = main
 [push]
 	autoSetupRemote = true
+[checkout]
+	defaultRemote = origin
+[worktree]
+	guessRemote = true
+[rebase]
+	autosquash = true

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+git_dir="$(git rev-parse --git-dir)"
+[[ -z "$git_dir" ]] && return 2
+
+_status=$(git status --porcelain)
+branch=$(git branch --show-current)
+if [[ -n "$_status" ]]; then
+    echo -e "\e[31myou have uncommitted stuff\e[0m"
+    echo -e "$_status\n"
+    echo -e -n "\e[31mare you sure you want to change to a bare repo? (Y/n) \e[0m"
+    read -r ans
+    if [[ "$ans" == "n" || "$ans" == "no" ]]; then
+        return 0
+    fi
+fi
+
+if [[ "$git_dir" == "." ]]; then
+    echo "already a bare repo"
+    return 0
+fi
+
+if [[ "$git_dir" == ".git" ]]; then
+    folder_path="$(pwd)"
+else
+    folder_path="${git_dir%/.git}"
+fi
+_path="${folder_path%/*}"
+folder_name="$(basename "$folder_path")"
+bare_name="${folder_name}_tmp"
+
+mv "${folder_path}/.git" "$_path/$bare_name"
+cd ..
+rm -fr "$folder_path"
+mv "$_path/$bare_name" "$folder_path"
+cd "$folder_path" || return 1
+git config --bool core.bare true
+def_branch="$(git config init.defaultBranch)"
+git worktree add "$def_branch"
+cd "$def_branch" || return 1

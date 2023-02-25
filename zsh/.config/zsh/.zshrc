@@ -83,10 +83,11 @@ preexec() { echo -ne '\e[5 q'; } # Use beam shape cursor for each new prompt.
 # # in archlinux put the archlinux plugin!
 # docker adds completion for docker commands, same docker compose
 ##set history size
-export HISTSIZE=25000
 [ ! -d "$HOME/.cache/zsh" ] &&\
     mkdir "$HOME/.cache/zsh"
 export HISTFILE="$HOME/.cache/zsh/.zsh_history"
+export HISTSIZE=999999999
+export SAVEHIST=$HISTSIZE
 # plugins=(copybuffer dirhistory jsontools)
 plugins=(
 	git
