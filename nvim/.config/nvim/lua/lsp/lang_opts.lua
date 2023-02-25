@@ -108,19 +108,11 @@ local enhance_server_opts = {
     --     end
     -- end,
 
-    ["sumneko_lua"] = function(opts)
-        -- local runtime_path = vim.split(package.path, ";")
-        -- table.insert(runtime_path, "lua/?.lua")
-        -- table.insert(runtime_path, "lua/?/init.lua")
-
+    ["lua_ls"] = function(opts)
         opts.root_dir = util.root_pattern("apm.csv") or util.path.dirname(fname)
         opts.settings = {
             Lua = {
                 runtime = {
-                    -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-                    version = "LuaJIT",
-                    -- Setup your lua path
-                    -- path = runtime_path,
                     path = runtime_path,
                 },
                 diagnostics = {
@@ -129,17 +121,6 @@ local enhance_server_opts = {
                 workspace = {
                     library = nvim_paths,
                     checkThirdParty = false,
-                    -- library = vim.list_extend(
-                    --     "keep",
-                    --     vim.api.nvim_get_runtime_file("", true),
-                    --     vim.fn.expand("$VIMRUNTIME/lua/vim/lsp"),
-                    --     vim.fn.expand("$VIMRUNTIME/lua/vim/")
-                    -- Make the server aware of Neovim runtime files
-                    -- library = vim.api.nvim_get_runtime_file("", true),
-                    -- [vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
-                    -- [vim.fn.expand("$VIMRUNTIME/lua/vim/")] = true,
-
-                    -- )
                 },
             },
         }

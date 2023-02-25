@@ -60,7 +60,7 @@ cmd([[
   augroup FormatOnSave
     autocmd!
     " so when it saves it stays saved
-    autocmd BufWritePre *.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua} :lua vim.lsp.buf.format()
+    autocmd BufWritePre *.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua} :silent lua vim.lsp.buf.format()
     " add for any sh file (since might not have extension)
     autocmd FileType sh :autocmd BufWritePre * lua vim.lsp.buf.format()
   augroup END

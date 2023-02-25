@@ -1,0 +1,84 @@
+#!/bin/bash
+
+git_dir="$(git rev-parse --git-dir)"
+cur_dir="$(pwd)"
+[[ -z "$git_dir" ]] && return 2
+
+bare_path=""
+prefix=""
+if [[ "$git_dir" == "." ]]; then
+    bare_path="${git_dir%/worktrees/*}"
+    cd "$bare_path" || return
+
+fi
+
+if grep -q ".git" <<<"$git_dir"; then
+    if [[ $git_dir != ".git" ]]; then
+        bare_path=${git_dir%/.git*}
+        prefix="$bare_path/../"
+    else
+        prefix="../"
+
+    fi
+fi
+
+if grep -q "worktrees" <<<"$git_dir" && ! grep -q ".git/worktrees" <<<"$git_dir"; then
+    bare_path="${git_dir%/worktrees/*}"
+    cd "$bare_path" || return
+fi
+
+if grep -q ".git/worktrees" <<<"$git_dir"; then
+    bare_path=${git_dir%/.git/*}
+    prefix="$bare_path/../"
+fi
+
+[ -z "$2" ] && echo "no branch name given" && return 1
+branch="$2"
+exists_in_remote=0
+if grep -q "$branch" <(git branch -a); then
+    exists_in_remote=1
+fi
+
+folder_name="$1"
+# if folder_name does not contain the structure of name/other_name, change to third
+if ! grep -o '/' <<<"$branch" &>/dev/null; then
+    folder="$branch"
+    folder_name="third"
+fi
+
+#<folder>/some_name
+if [[ $folder_name == "first" ]]; then
+    folder="${branch%%/*}"
+fi
+# some_name/<folder>
+if [[ $folder_name == "second" ]]; then
+    folder="$(basename "$branch")"
+fi
+
+if [[ -z "$prefix" ]]; then
+    prefix="$bare_path/"
+fi
+folder="${prefix}${folder}"
+
+base_branch="$3"
+if [[ -z $base_branch ]]; then
+    if [[ $exists_in_remote == 1 ]]; then
+        git worktree add "$folder" || return 3
+    else
+        git worktree add -b "$branch" "$folder" || return 3
+    fi
+    # to keep history
+    cd "$cur_dir" || return 4
+    cd "$folder" || return 4
+    return 0
+fi
+
+if [[ $exists_in_remote == 1 ]]; then
+    git worktree add "$folder" "$base_branch" || return 3
+else
+    git worktree add -b "$branch" "$folder" "$base_branch" || return 3
+fi
+# to keep history
+cd "$cur_dir" || return 4
+cd "$folder" || return 4
+return 0

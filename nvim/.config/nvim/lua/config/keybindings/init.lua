@@ -303,6 +303,8 @@ vmap <leader>,Sr <Plug>SnipRun
 -- , configuration
 map("n", "<leader>,li", ":LspInfo<cr>", nor_s)
 map("n", "<leader>,lr", ":LspRestart<cr>", nor_s)
+map("n", "<leader>,ls", ":LspStart<cr>", nor_s)
+map("n", "<leader>,lS", ":LspStop<cr>", nor_s)
 map("n", "<leader>,ln", ":NullLsInfo<cr>", nor_s)
 
 map("n", "<leader>,ps", ":PackerSync<cr>", nor)
@@ -349,7 +351,7 @@ map("n", "<localleader>Dq", ":DBUILastQueryInfo<cr>", {})
 
 map("n", "<leader>,,", "<cmd>tabedit<cr>", nor)
 
-function toggle_transparency()
+local function toggle_transparency()
     local normal = vim.api.nvim_command_output("hi Normal")
     -- if nil, then is transparent
     if string.find(normal, "guibg") == nil then
@@ -361,6 +363,7 @@ function toggle_transparency()
     vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
 end
 
+-- map("n", "sT", toggle_transparency, nor)
 map("n", "sT", toggle_transparency, nor)
 
 -- float
