@@ -62,7 +62,7 @@ cmd([[
     " so when it saves it stays saved
     autocmd BufWritePre *.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua} :silent lua vim.lsp.buf.format()
     " add for any sh file (since might not have extension)
-    autocmd FileType sh :autocmd BufWritePre * lua vim.lsp.buf.format()
+    autocmd FileType sh :autocmd BufWritePre * lua vim.lsp.buf.format({async = true})
   augroup END
 ]])
 
@@ -95,12 +95,6 @@ endfunction
 --         autocmd BufWritePost  *.org :!rclone sync $WIKI gd:wiki
 --     augroup END
 --     ]])
-
-if is_work_env() then
-    vim.opt.spelllang = "en_us"
-else
-    vim.opt.spelllang = "en_us,es"
-end
 
 -- since spelling commented options is a pain
 -- disable if you ever need to build something using lua
@@ -152,4 +146,13 @@ vim.api.nvim_create_autocmd({ "LspAttach" }, {
 vim.api.nvim_create_autocmd({ "FileType" }, {
     pattern = { "TelescopePrompt*", "TelescopeResults" },
     command = "setlocal nocursorline",
+})
+
+vim.api.nvim_create_autocmd({ "TermOpen" }, {
+    pattern = "*",
+    callback = function()
+        -- pcall(vim.cmd, "set background=dark")
+        -- pcall(vim.cmd, "hi Normal guibg=NONE ctermbg=NONE")
+        pcall(vim.cmd, "setlocal nospell")
+    end,
 })

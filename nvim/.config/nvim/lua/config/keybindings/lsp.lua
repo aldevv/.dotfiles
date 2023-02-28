@@ -8,8 +8,10 @@ M.load_mappings = function() -- use these on_attach
     -- https://rishabhrd.github.io/jekyll/update/2020/09/19/nvim_lsp_config.html
 
     -- prefix , --> config
-    map("n", "<leader>lf", ":lua vim.lsp.buf.format({async = True})<cr>", nor)
-    map("v", "<leader>lf", ":lua vim.lsp.buf.range_formatting()<cr>", nor)
+    map("n", "<leader>lf", ":lua vim.lsp.buf.format({async = true})<cr>", nor)
+    -- needs to be this way for it to work (stays in visual mode, no enter)
+    map("v", "<leader>lf", vim.lsp.buf.format, nor)
+    map("v", "gq", vim.lsp.buf.format, nor)
 
     -- map("n", "gd", ":lua vim.lsp.buf.definition()<cr>", nor)
     map("n", "gd", ":Telescope lsp_definitions<cr>", nor_s)

@@ -2,71 +2,73 @@
 
 [[ -z "$1" ]] && return
 
-shallow=0
-if [[ $1 =~ [1-9] ]]; then 
-    shallow=$1
-    shift
+if ! git ls-remote "$1" 1>/dev/null; then
+    return
 fi
 
+shallow=0
+if [[ $1 =~ [1-9] ]]; then
+	shallow=$1
+	shift
+fi
 
 get_service() {
-# returns service name, like github.com
+	# returns service name, like github.com
 
-if [[ "$1" == "ssh" ]]; then
-    # remove author and repo from link
-    service="${link/:$info}"
-    # remove git@
-    echo "${service##*@}"
-fi
+	if [[ "$1" == "ssh" ]]; then
+		# remove author and repo from link
+		service="${link/:$info/}"
+		# remove git@
+		echo "${service##*@}"
+	fi
 
-if [[ "$1" == "https" ]]; then
+	if [[ "$1" == "https" ]]; then
 
-    # remove author and repo from link
-    service="${link/\/$info}"
-    # remove https://
-    echo "${service##*/}"
-fi
+		# remove author and repo from link
+		service="${link/\/$info/}"
+		# remove https://
+		echo "${service##*/}"
+	fi
 }
 
 link="$1"
-if ! grep "@" <<< "$link"; then
-    info=$(cut -d / -f 4,5 <<< "$link")
-    author=$(cut -d / -f 1 <<< "$info")
-    repo=$(cut -d / -f 2 <<< "$info")
-    service="$(get_service "https")"
+if ! grep "@" <<<"$link"; then
+	info=$(cut -d / -f 4,5 <<<"$link")
+	author=$(cut -d / -f 1 <<<"$info")
+	repo=$(cut -d / -f 2 <<<"$info")
+	service="$(get_service "https")"
 else
-    info=$(cut -d : -f 2 <<< "$link")
-    author=$(cut -d / -f 1 <<< "$info")
-    repo=$(cut -d / -f 2 <<< "$info")
-    repo="${repo%.*}"
-    service="$(get_service "ssh")"
+	info=$(cut -d : -f 2 <<<"$link")
+	author=$(cut -d / -f 1 <<<"$info")
+	repo=$(cut -d / -f 2 <<<"$info")
+	repo="${repo%.*}"
+	service="$(get_service "ssh")"
 fi
-
 
 _path="$REPOS/$service/$author/$repo"
 if [[ ! -d "$_path" ]]; then
-    mkdir -p "$_path"
+	mkdir -p "$_path"
 else
-    echo -e "\e[31m the $author/$repo repo already exists, overwrite? [y,N]\e[0m"
-    read -r ans
-    if [[ -n "$ans" && "$ans" != "n" && "$ans" != "no" && "$ans" != "N" && "$ans" != "NO" ]]; then
-        echo "removing: $_path"
-        rm -rf "$_path"
-        echo -e "\e[31m Removed old repo\e[0m"
-    else
-        cd "$_path" || return 
-        return
-    fi
+	echo -e "\e[31m the $author/$repo repo already exists, overwrite? [y,N]\e[0m"
+	read -r ans
+	if [[ -n "$ans" && "$ans" != "n" && "$ans" != "no" && "$ans" != "N" && "$ans" != "NO" ]]; then
+		echo "removing: $_path"
+		rm -rf "$_path"
+		echo -e "\e[31m Removed old repo\e[0m"
+	else
+		cd "$_path" || return
+		return
+	fi
 fi
 
 if [[ "$(pwd)" == "$_path" ]]; then
-    cd || return
+	cd || return
 fi
 
 if [[ $shallow != 0 ]]; then
-    git clone --depth "$shallow" --recursive "$link" "$_path"
+	git clone --depth "$shallow" --recursive "$link" "$_path"
 else
-    git clone --recursive "$link" "$_path"
+	git clone --recursive "$link" "$_path"
 fi
 
 cd "$_path" || return

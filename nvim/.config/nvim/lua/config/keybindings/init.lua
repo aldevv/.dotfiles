@@ -33,7 +33,6 @@ end
 
 -- backlog
 -- <a-?>
--- <a-i>
 -- <a-t>
 -- <a-h>
 -- ¿
@@ -132,6 +131,8 @@ map("t", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
 
 -- terminal
 map("t", "<a-'>", "<c-\\><c-n>", nor_s)
+map("t", "<Left>", "<c-\\><c-n>gT", nor_s)
+map("t", "<Right>", "<c-\\><c-n>gt", nor_s)
 
 -- folders
 map("n", "<F1>", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
@@ -504,3 +505,21 @@ vim.api.nvim_create_autocmd("FileType", {
         map("n", "<leader>fb", ":GoBuild<cr>", nb)
     end,
 })
+
+-- resize
+
+map("n", "<S-Down>", "5<c-w>-", nor_s)
+map("n", "<S-Up>", "5<c-w>+", nor_s)
+map("n", "<S-Right>", "5<c-w>>", nor_s)
+map("n", "<S-Left>", "5<c-w><", nor_s)
+
+-- tabs
+map("n", "<Right>", function()
+    pcall(vim.cmd, [[checktime]])
+    vim.api.nvim_feedkeys("gt", "n", true)
+end, nor_s)
+
+map("n", "<Left>", function()
+    pcall(vim.cmd, [[checktime]])
+    vim.api.nvim_feedkeys("gT", "n", true)
+end, nor_s)

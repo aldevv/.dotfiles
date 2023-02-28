@@ -55,14 +55,3 @@ require("mason-lspconfig").setup_handlers({
         require("rust-tools").setup(opts)
     end,
 })
-
--- general diagnostics
-vim.diagnostic.config({
-    virtual_text = {
-        spacing = 2,
-    },
-    float = {
-        -- source = "if_many",
-        source = true,
-    },
-})

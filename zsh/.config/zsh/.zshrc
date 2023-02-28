@@ -101,6 +101,8 @@ plugins=(
 #==============
 # KEYBINDINGS
 #==============
+# KEYTIMEOUT makes entering normal mode instant
+KEYTIMEOUT=1 
 # so you can use backspace after esc
 # Enable Ctrl-x-e to edit command line
 autoload -U edit-command-line

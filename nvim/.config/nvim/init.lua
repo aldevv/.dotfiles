@@ -56,4 +56,5 @@ vim.cmd("colorscheme gruvbox")
 vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
 require("config")
 require("core")
+
 -- vim.opt.shadafile = "" -- optimization

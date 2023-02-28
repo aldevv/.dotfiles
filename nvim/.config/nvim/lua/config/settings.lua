@@ -63,59 +63,6 @@ let g:python3_host_prog = '/bin/python3'
 let g:termdebug_popup = 0
 let g:termdebug_wide = 163
 
-" share registers between vim instances
-augroup SHADA
-  autocmd!
-  autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
-        \ if exists(':rshada') | rshada | wshada | endif
-augroup END
-
-" if quickfix or terminal window is the last window, then close vim
-aug QFClose
-  au!
-  au WinEnter * if winnr('$') == 1 && &buftype == "quickfix"|q|endif
-  au WinEnter * if winnr('$') == 1 && &buftype == "terminal"|q|endif
-aug END
-
-function MyTabLabel(n)
-  let buflist = tabpagebuflist(a:n)
-  let winnr = tabpagewinnr(a:n)
-  let path  = bufname(buflist[winnr - 1])
-  let filename = fnamemodify(path, ":t")
-  return filename
-endfunction
-
-" tabs
-function MyTabLine()
-	  let s = ''
-	  for i in range(tabpagenr('$'))
-	    " select the highlighting
-	    if i + 1 == tabpagenr()
-	      let s ..= '%#TabLineSel#'
-	    else
-	      let s ..= '%#TabLine#'
-	    endif
-
-	    " set the tab page number (for mouse clicks)
-	    let s ..= '%' .. (i + 1) .. 'T'
-
-	    " the label is made by MyTabLabel()
-	    let s ..= ' %{MyTabLabel(' .. (i + 1) .. ')} '
-	  endfor
-
-	  " after the last tab fill with TabLineFill and reset tab page nr
-	  let s ..= '%#TabLineFill#%T'
-
-	  " right-align the label to close the current tab page
-	  if tabpagenr('$') > 1
-	    let s ..= '%=%#TabLine#%999Xclose'
-	  endif
-
-	  return s
-	endfunction
-
-:
-set tabline=%!MyTabLine()
 ]])
 
 vim.o.guifont = "DaddyTimeMono Nerd Font,JoyPixels:h12"
@@ -171,7 +118,6 @@ vim.opt.statusline = "%t"
 -- uncomment this in a future version, is buggy as of version 0.9 dev 15-11-22
 -- vim.opt.cmdheight = 0
 vim.opt.spell = true
-vim.opt.spell = true
 vim.g.netrw_keepdir = 1
 
 -- auto indent on enter
@@ -187,3 +133,17 @@ vim.opt.softtabstop = 4
 -- size of indent and << and >>
 vim.opt.shiftwidth = 4
 vim.g.netrw_localrmdir = "rm -r"
+
+-- general diagnostics
+vim.diagnostic.config({
+    virtual_text = {
+        spacing = 2,
+    },
+    -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
+    -- update_in_insert = true,
+    update_in_insert = false,
+    float = {
+        -- source = "if_many",
+        source = true,
+    },
+})
