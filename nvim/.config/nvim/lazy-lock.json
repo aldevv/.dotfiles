@@ -69,6 +69,7 @@
   "rust-tools.nvim": { "branch": "master", "commit": "b297167d9e01accc9b9afe872ce91e791df2dde0" },
   "sg.nvim": { "branch": "master", "commit": "c5e4ab788efeec9453706a4489bcaeaa867aeeb3" },
   "splitjoin.vim": { "branch": "main", "commit": "956d67c88512b91c2938da3a9e0aeeea2b82cd0b" },
+  "tabline.vim": { "branch": "master", "commit": "69c9698a3240860adaba93615f44778a9ab724b4" },
   "tabular": { "branch": "master", "commit": "339091ac4dd1f17e225fe7d57b48aff55f99b23a" },
   "tagbar": { "branch": "master", "commit": "af3ce7c3cec81f2852bdb0a0651d2485fcd01214" },
   "targets.vim": { "branch": "master", "commit": "8d6ff2984cdfaebe5b7a6eee8f226a6dd1226f2d" },

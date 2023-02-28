@@ -236,10 +236,6 @@ vnoremap <leader>.vg :g//norm!<Left><Left><Left><Left><Left><Left>
 nnoremap <silent><leader>.ch  :w !sudo chmod +x %<cr>
 nnoremap <silent><leader>.co  :w !sudo chown $USER:$USER % 2>/dev/null<cr>
 map <silent> <F11> /\A\zs\a<cr>
-noremap  <Down> 5<c-w>-
-noremap  <Up> 5<c-w>+
-noremap  <Right> 5<c-w>>
-noremap  <Left> 5<c-w><
 " split movement , cant be <c-i> because that is mapped to be the opposite of <c-o>
 " noremap <tab> %
 " vnoremap <tab> %

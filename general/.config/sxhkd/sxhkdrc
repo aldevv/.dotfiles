@@ -58,21 +58,13 @@ super + F10
     unmountDrive
 
 XF86AudioMute
-     volume mute; $APPS/dwm/refreshVolume
-     # volume2 mute; $APPS/dwm/refreshVolume
-     # pactl set-sink-mute 0 toggle
+     volume toggle; $APPS/dwm/refreshVolume
 
 XF86AudioRaiseVolume
      volume up; $APPS/dwm/refreshVolume
-     # volume2 up; $APPS/dwm/refreshVolume
-     # volume up; $APPS/dwm/refreshVolume
-     # pactl set-sink-volume 0 +5%
 
 XF86AudioLowerVolume
      volume down; $APPS/dwm/refreshVolume
-     # volume2 down; $APPS/dwm/refreshVolume
-     # volume down; $APPS/dwm/refreshVolume
-     # pactl set-sink-volume 0 -5%
 
 XF86MonBrightnessUp
     xbacklight -inc 10

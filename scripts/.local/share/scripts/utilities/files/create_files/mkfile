@@ -9,7 +9,7 @@ first_time=1
 while [[ $folder_chosen != "here" && -n ${folder_chosen} && $folder_chosen != "new" ]]; do
 	if [[ $first_time == 1 ]]; then
 		prev_folder="$folder_chosen"
-        folder_chosen=$(echo -e "$(find -L "${folder_chosen}/" -mindepth 1 -maxdepth 1 -type d -printf "%T+\t%p\n" | sort -r | awk '{print $2}')\nnew" |
+		folder_chosen=$(echo -e "$(find -L "${folder_chosen}/" -mindepth 1 -maxdepth 1 -type d -printf "%T+\t%p\n" | sort -r | awk '{print $2}')\nnew" |
 			fzf --prompt "folder: " -d / --with-nth -1 --preview="ls {} --color=always")
 		first_time=0
 	else
@@ -17,7 +17,7 @@ while [[ $folder_chosen != "here" && -n ${folder_chosen} && $folder_chosen != "n
 		if [[ -z $inner_folders ]]; then
 			break
 		fi
-        # save previous since folder_chosen becomes "here"
+		# save previous since folder_chosen becomes "here"
 		prev_folder="$folder_chosen"
 		folder_chosen=$(echo -en "here\n$inner_folders\nnew" | fzf --prompt "folder: " -d / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg --stretch")
 	fi
@@ -32,17 +32,17 @@ if [[ "$folder_chosen" == "here" ]]; then
 fi
 
 if [[ "$folder_chosen" == "new" ]]; then
-    echo -en "\e[31mEnter the folder name you monster\n"
-    read -r new_folder_name
-    if [[ -z "$new_folder_name" ]]; then
-        exit
-    fi
-    if [[ -n "$prev_folder" ]]; then
-	    folder_chosen="$prev_folder/$new_folder_name"
-    else
-	    folder_chosen="$folder_chosen/$new_folder_name"
-    fi
-    mkdir "$folder_chosen"
+	echo -en "\e[31mEnter the folder name you monster\n"
+	read -r new_folder_name
+	if [[ -z "$new_folder_name" ]]; then
+		exit
+	fi
+	if [[ -n "$prev_folder" ]]; then
+		folder_chosen="$prev_folder/$new_folder_name"
+	else
+		folder_chosen="$folder_chosen/$new_folder_name"
+	fi
+	mkdir "$folder_chosen"
 fi
 
 nvim "$folder_chosen/$name"

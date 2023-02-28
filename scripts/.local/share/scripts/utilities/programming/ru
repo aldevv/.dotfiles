@@ -1,0 +1,10 @@
+#!/bin/bash
+if [[ -n "$1" ]]; then
+	name=$(basename $1 .rs)
+	rustc $@ && ./$name && rm $name
+	exit 0
+fi
+
+tmp_file="tmp_filexyz"
+read -r -d '' body
+rustc -o $tmp_file <(echo -e "$body") && ./$tmp_file && rm $tmp_file

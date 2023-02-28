@@ -96,4 +96,7 @@ require("lspsaga").setup({
     lightbulb = {
         enable = false,
     },
+    diagnostic = {
+        on_insert = false,
+    },
 })
