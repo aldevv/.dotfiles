@@ -1,0 +1,7 @@
+{
+  "codeblock": {
+    "prefix": "codeblock",
+    "body": "#+BEGIN_SRC $1\n\t$2\n#+END_SRC",
+    "description": "add a code block"
+  }
+}

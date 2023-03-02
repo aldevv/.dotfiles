@@ -1,0 +1,12 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "fn main() {\n\n}",
+    "description": "init"
+  },
+  "ppr": {
+    "prefix": "ppr",
+    "body": "println!(\"$1\"$2);",
+    "description": "println"
+  }
+}

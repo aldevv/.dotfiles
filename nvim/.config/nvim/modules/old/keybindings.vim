@@ -207,14 +207,6 @@ vnoremap <silent><leader>lgr :B !sortListR.py <cr>t]xT[
 
 nnoremap gñ :SyntaxQuery<CR>
 
-" general insert commands
-inoremap <a-m> <++>
-"" Guide navigation
-noremap <a-k> <Esc>/<++><Enter>"_c4l
-inoremap <a-k> <Esc>/<++><Enter>"_c4l
-vnoremap <a-k> <Esc>/<++><Enter>"_c4l
-
-
 "global do
 " not working in lua KEEP IT
 "-----------------------

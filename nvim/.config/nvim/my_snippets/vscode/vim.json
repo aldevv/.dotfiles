@@ -1,0 +1,12 @@
+{
+  "ffn": {
+    "prefix": "ffn",
+    "body": "function! $1()\n\t$2\nendfunction",
+    "description": "Description"
+  },
+  "iif": {
+    "prefix": "iif",
+    "body": "if $1\n\t$2\nendif\n",
+    "description": "Description"
+  }
+}

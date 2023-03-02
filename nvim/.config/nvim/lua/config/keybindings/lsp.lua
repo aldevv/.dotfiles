@@ -18,20 +18,19 @@ M.load_mappings = function() -- use these on_attach
     map("n", "gD", ":vsplit | lua vim.lsp.buf.definition()<cr>")
     map("n", "gr", ":Telescope lsp_references<cr>", nor)
     map("n", "gR", ":lua vim.lsp.buf.references()<cr>", nor)
+    map("n", "gy", ":lua vim.lsp.buf.type_definition()<cr>", nor)
+    map("n", "gY", ":lua vim.lsp.buf.declaration()<cr>", nor)
     map("n", "+", "<cmd>lua vim.lsp.buf.hover()<cr>", nor)
-    map("n", "<M-->", "<cmd>lua vim.lsp.buf.signature_help()<cr>", nor)
+    map("n", "<M-->", vim.lsp.buf.signature_help, nor)
     -- map("n", "+", "<cmd>Lspsaga hover_doc<cr>", nor)
-    -- map("n", "<M-->", "<cmd>Lspsaga signature_help<cr>", nor)
 
-    map("i", "<a-->", "<C-\\><C-O>:lua vim.lsp.buf.signature_help()<cr>", nor)
-    -- map("i", "<a-->", "<C-\\><C-O><cmd>Lspsaga signature_help<cr>", nor)
+    -- map("i", "<a-->", "<C-\\><C-O>:lua vim.lsp.buf.signature_help()<cr>", nor)
+    map("i", "<a-->", "<C-\\><C-O>:lua require('lsp_signature').signature()<cr>", nor)
     map("n", "<c-space>", ":lua vim.lsp.buf.completion()<cr>", nor)
     map("n", "<leader>ls", ":Telescope lsp_document_symbols<cr>", nor)
     map("n", "<leader>lS", ":Telescope lsp_workspace_symbols<cr>", nor)
 
     -- map("n", "<leader>lS", ":lua vim.lsp.buf.document_symbol()<cr>", nor)
-    map("n", "<leader>ldd", ":lua vim.lsp.buf.declaration()<cr>", nor)
-    map("n", "<leader>lt", ":lua vim.lsp.buf.type_definition()<cr>", nor)
     map("n", "<leader>la", ":lua vim.lsp.buf.code_action()<cr>", nor)
     map("v", "<leader>la", ":lua vim.lsp.buf.code_action()<cr>", nor)
 
@@ -39,10 +38,6 @@ M.load_mappings = function() -- use these on_attach
     map("n", "<leader>ll", ":lua vim.lsp.buf.clear_references()<cr>", nor)
     map("n", "<leader>lr", ":lua vim.lsp.buf.rename()<cr>", nor)
     map("n", "<F2>", ":lua vim.lsp.buf.rename()<cr>", nor)
-
-    -- autocmd CursorHold  <buffer> lua vim.lsp.buf.document_highlight()
-    -- autocmd CursorHoldI <buffer> lua vim.lsp.buf.document_highlight()
-    -- autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
 
     map("n", "gi", ":Telescope lsp_implementations<cr>", nor)
     -- map("n", "<leader>li", ":lua vim.lsp.buf.implementation()<cr>", nor)

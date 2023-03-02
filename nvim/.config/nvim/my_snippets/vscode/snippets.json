@@ -1,0 +1,7 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "\nsnippet _skel \"skeleton\"\n\t$1\n`echo \"endsnippet\"`",
+    "description": "default skeleton"
+  }
+}

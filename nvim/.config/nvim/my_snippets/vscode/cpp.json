@@ -1,0 +1,22 @@
+{
+  "competitive": {
+    "prefix": "competitive",
+    "body": "#include <vector>\n#include <algorithm>\n#include <iterator>\n#include <iostream>\nusing namespace std;\n\nint\nmain(void)\n{\n\tios_base::sync_with_stdio(false);\n\t$1\n}",
+    "description": "start programming c++"
+  },
+  "optim": {
+    "prefix": "optim",
+    "body": "#include <bits/stdc++.h>\nusing namespace std;\n\nint\nmain(void)\n{\n\tios_base::sync_with_stdio(false);\n\t${1}\n}",
+    "description": "start programming fast"
+  },
+  "_skel2": {
+    "prefix": "_skel2",
+    "body": "#include <stdio.h>\n\nint main(int argc, char *argv[])\n{\n\t$1\n\treturn 0;\n}",
+    "description": "Basic skel"
+  },
+  "ppr": {
+    "prefix": "ppr",
+    "body": "cout << $1;",
+    "description": "print"
+  }
+}

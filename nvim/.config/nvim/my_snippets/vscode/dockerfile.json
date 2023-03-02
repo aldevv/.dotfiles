@@ -1,0 +1,7 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "FROM $1\nRUN $2\n\nCOPY . .",
+    "description": "skeleton"
+  }
+}

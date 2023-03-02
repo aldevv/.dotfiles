@@ -5,14 +5,8 @@ vim.cmd([[
 " colemak movement
 " ---------------- -- putting this in lua, breaks targets.vim (because the order of sourcing)
 " migrate targets.vim first then this
-noremap n j
-noremap e k
-noremap j e
 noremap gj ge
 noremap gJ gE
-nnoremap l i
-nnoremap i l
-vnoremap i l
 noremap k nzzzv
 noremap K Nzzzv
 noremap ge gk
@@ -213,12 +207,6 @@ vnoremap <silent><leader>lgr :B !sortListR.py <cr>t]xT[
 nnoremap gñ :SyntaxQuery<CR>
 
 " general insert commands
-inoremap <a-m> <++>
-"" Guide navigation
-noremap <a-k> <Esc>/<++><Enter>"_c4l
-inoremap <a-k> <Esc>/<++><Enter>"_c4l
-vnoremap <a-k> <Esc>/<++><Enter>"_c4l
-
 
 "global do
 " not working in lua KEEP IT

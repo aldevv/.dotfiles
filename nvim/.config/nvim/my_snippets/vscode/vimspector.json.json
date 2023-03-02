@@ -1,0 +1,27 @@
+{
+  "node": {
+    "prefix": "node",
+    "body": "{\n  \"configurations\": {\n    \"run\": {\n      \"adapter\": \"vscode-node\",\n      \"configuration\": {\n        \"request\": \"launch\",\n        \"protocol\": \"auto\",\n        \"stopOnEntry\": true,\n        \"console\": \"integratedTerminal\",\n        \"program\": \"${workspaceRoot}/${1:myapp1.js}\",\n        \"cwd\": \"${workspaceRoot}\"\n      }\n    },\n    \"foobar\": {}\n  }\n}",
+    "description": "Description"
+  },
+  "java": {
+    "prefix": "java",
+    "body": "{\n  \"configurations\": {\n    \"Java Attach\": {\n      \"adapter\": \"vscode-java\",\n      \"configuration\": {\n        \"request\": \"attach\",\n        \"hostName\": \"${host}\",\n        \"port\": \"${port}\",\n        \"projectName\": \"${projectName}\",\n        \"sourcePaths\": [\n          \"${workspaceRoot}/src/main/java\",\n          \"${workspaceRoot}/src/test/java\"\n        ]\n      }\n    }\n  }\n}",
+    "description": "Description"
+  },
+  "cpp": {
+    "prefix": "cpp",
+    "body": "{\n  \"configurations\": {\n    \"launch\": {\n      \"adapter\": \"CodeLLDB\",\n      \"configuration\": {\n        \"request\": \"launch\",\n        \"program\": \"${workspaceRoot}/${1:myapp1.cpp}\"\n      }\n    }\n  }\n}",
+    "description": "Description"
+  },
+  "c": {
+    "prefix": "c",
+    "body": "{\n  \"configurations\": {\n    \"launch\": {\n      \"adapter\": \"CodeLLDB\",\n      \"configuration\": {\n        \"request\": \"launch\",\n        \"program\": \"${workspaceRoot}/${1:myapp1.c}\"\n      }\n    }\n  }\n}",
+    "description": "Description"
+  },
+  "rust": {
+    "prefix": "rust",
+    "body": "{\n  \"configurations\": {\n    \"launch\": {\n      \"adapter\": \"CodeLLDB\",\n      \"configuration\": {\n        \"request\": \"launch\",\n        \"program\": \"${workspaceRoot}/src/${1:myapp1.rs}\"\n      }\n    }\n  }\n}",
+    "description": "Description"
+  }
+}

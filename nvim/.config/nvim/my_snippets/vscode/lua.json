@@ -1,0 +1,12 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "local M = {}\nreturn M",
+    "description": "skeleton"
+  },
+  "ppr": {
+    "prefix": "ppr",
+    "body": "print($1)",
+    "description": "print"
+  }
+}

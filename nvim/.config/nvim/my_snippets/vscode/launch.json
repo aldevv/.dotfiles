@@ -1,0 +1,7 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "{\n    \"version\": \"0.2.0\",\n    \"configurations\": [\n        {\n            \"name\": \"Dispute Validator\",\n            \"type\": \"python\",\n            \"request\": \"launch\",\n            \"program\": \"${workspaceFolder}/{file}\",\n            \"args\": [],\n            \"env\": {\n              \"PYTHONPATH\": \"${workspaceFolder}:${env:PYTHONPATH}\"\n            }\n        },\n        {\n            \"name\": \"PyTest\",\n            \"type\": \"python\",\n            \"request\": \"launch\",\n            \"stopOnEntry\": false,\n            \"justMyCode\": false,\n            \"module\": \"pytest\",\n            \"args\": [\n                \"-x\"\n            ],\n            \"cwd\": \"${workspaceFolder}\"\n        }\n    ]\n}\n",
+    "description": "launch json config python"
+  }
+}

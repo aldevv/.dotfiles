@@ -1,0 +1,7 @@
+{
+  "setupCpp": {
+    "prefix": "setupCpp",
+    "body": "[\n  {\n    \"directory\": \"`!v expand('%:p')`\",\n    \"file\": \"`!v expand('%')`\",\n    \"arguments\": [\n      \"/usr/bin/clang-10\",\n      \"-stdlib=libstdc++\",\n      \"`!v expand('%')`.cpp\",\n      \"--target=x86_64-solus-linux\"\n    ]\n  }\n]",
+    "description": "Description"
+  }
+}
