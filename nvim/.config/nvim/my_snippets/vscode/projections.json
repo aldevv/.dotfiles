@@ -1,0 +1,7 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "{\n    \"main.py\": {\n        \"type\": \"main\",\n        \"dispatch\": \"python {}\",\n        \"template\": [\n            \"def main():\\n\\tpass\\n\\n\\nif __name__ == '__main__':\\n\\tmain()\"\n        ]\n    },\n    \"src/*.py\": {\n        \"alternate\": \"test/{}.py\",\n        \"related\": \"default.py\",\n        \"type\": \"src\"\n    },\n    \"*.py\": {\n        \"make\": \"python main.py\",\n        \"console\": \"python\",\n        \"start\": \"python main.py\",\n        \"path\": [\"src\"]\n    },\n\t\"requirements.txt\": {\n        \"type\": \"req\"\n    },\n\t\"doc/*.txt\": {\"type\": \"doc\"},\n\t\"README.md\": {\"type\": \"doc\"}\n}",
+    "description": "Description"
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "\\documentclass{article}\n%\\documentclass[titlepage]{article}\n\\usepackage[spanish]{babel}\n\\usepackage[hidelinks]{hyperref}\n% how many levels to show in table of contents\n\\setcounter{tocdepth}{1}\n% for dark links\n\\usepackage{xcolor}\n\\hypersetup{colorlinks, linkcolor={red!50!black}, citecolor={blue!50!black}, urlcolor={blue!80!black}}\n\\title{\\textbf{${1:title}}}\n\\author{Juan Alejandro Bernal}\n\\begin{document}\n\\maketitle\n\n${2:body}\n\n\n%\\bibliographystyle{ieeetr}\n%\\bibliography{mybib.bib}\n\\end{document}\n",
+    "description": "start latex file"
+  },
+  "iit": {
+    "prefix": "iit",
+    "body": "\\item $1",
+    "description": "create item"
+  },
+  "sse": {
+    "prefix": "sse",
+    "body": "\\section{$1}\\label{sec:$2}",
+    "description": "create section"
+  },
+  "ssu": {
+    "prefix": "ssu",
+    "body": "\\subsection{$1}\\label{subsec:$2}",
+    "description": "create subsection"
+  },
+  "bbg": {
+    "prefix": "bbg",
+    "body": "\\begin{$1}\n\t$0\n\\end{$1}",
+    "description": "begin{} / end{}"
+  },
+  "today": {
+    "prefix": "today",
+    "body": "`date +%F`",
+    "description": "Date using bash"
+  },
+  "box": {
+    "prefix": "box",
+    "body": "`!p snip.rv = '┌' + '─' * (len(t[1]) + 2) + '┐'`\n│ $1 │\n`!p snip.rv = '└' + '─' * (len(t[1]) + 2) + '┘'`\n$0",
+    "description": "Box"
+  },
+  "mmm": {
+    "prefix": "mmm",
+    "body": "$${1}$`!p\nif t[2] and t[2][0] not in [',', '.', '?', '-', ' ']:\n    snip.rv = ' '\nelse:\n    snip.rv = ''\n`$2",
+    "description": "Math"
+  },
+  "mmM": {
+    "prefix": "mmM",
+    "body": "\\[\n$1\n\\] $0",
+    "description": "Math"
+  },
+  "mma": {
+    "prefix": "mma",
+    "body": "% import amsmath\n% usepackage{amsmath}\n% the * toggles equation numbering\n\\begin{align*}\n\t${1:something & something} \\\\\n\t${2:something & something}\n\\end{align*}",
+    "description": "Math"
+  },
+  "mmg": {
+    "prefix": "mmg",
+    "body": "% import amsmath\n% usepackage{amsmath}\n% the * toggles equation numbering\n\\begin{gather*}\n\t${1:0} \\\\\n\t${2:1}\n\\end{gather*}",
+    "description": "Math"
+  },
+  "ssm": {
+    "prefix": "ssm",
+    "body": "\\sum_{$1}^{$2}",
+    "description": "Math sum"
+  },
+  "inn": {
+    "prefix": "inn",
+    "body": "\\int_{$1}^{$2}",
+    "description": "Math integral"
+  },
+  "ssq": {
+    "prefix": "ssq",
+    "body": "^2",
+    "description": "^2"
+  },
+  "ccb": {
+    "prefix": "ccb",
+    "body": "^3",
+    "description": "^3"
+  },
+  "ppw": {
+    "prefix": "ppw",
+    "body": "^{$1}$0",
+    "description": "superscript"
+  },
+  "ssb": {
+    "prefix": "ssb",
+    "body": "_{$1}$0",
+    "description": "superscript"
+  },
+  "uurl": {
+    "prefix": "uurl",
+    "body": "@article{$1,\nauthor = {},\ntitle = {{}},\nurl = {$2},\nyear = {}\n}",
+    "description": "url bibliography"
+  },
+  "bbib": {
+    "prefix": "bbib",
+    "body": "\\usepackage[\n    style=apa,\n    backend=biber,\n    sortcites=true,\n    sorting=nyt,\n%    isbn=false,\n%    url=false,\n%    doi=false,\n%    eprint=false,\n    % hyperref=false,\n    backref=false,\n%    firstinits=false,\n]{biblatex}\n\\addbibresource{$1}\n%\\printbibliography",
+    "description": "biblatex"
+  },
+  "ssa": {
+    "prefix": "ssa",
+    "body": "% import amsmath\n% usepackage{amsmath}\n\\begin{cases}\n\t${1:0}, & ${2:\\text{if}\\ a=1 \\\\}\n\t${3:1}, & ${3:\\text{otherwise}}\n\\end{cases}",
+    "description": "subject to"
+  },
+  "///": {
+    "prefix": "///",
+    "body": "\\\\frac{$1}{$2}$0",
+    "description": "Fraction"
+  },
+  "'((\\d+)|(\\d*)(\\\\)?([A-Za-z]+)((\\^|_)(\\{\\d+\\}|\\d))*)//'": {
+    "prefix": "'((\\d+)|(\\d*)(\\\\)?([A-Za-z]+)((\\^|_)(\\{\\d+\\}|\\d))*)//'",
+    "body": "\\\\frac{`!p snip.rv = match.group(1)`}{$1}$0",
+    "description": "Fraction"
+  },
+  "ssA": {
+    "prefix": "ssA",
+    "body": "%\\usepackage{empheq}\n\\begin{empheq}[left={$1=\\empheqlbrace}\\]{alignat*=7}\n\t$2\n    %example:\n    % - 0,1&X_{1} &- 0,1&X_{2} &- 0,1&X_{3} &+ 0,9&X_{4} &- 0,1&X_{5}& &<= 0 \\\\\n    % &X_{1} &+ &X_{2} &+ &X_{3} &+ &X_{4} &+ &X_{5}& &<= 2\\,000\\,000 \\\\\n\\end{empheq}\n\n",
+    "description": "Description"
+  },
+  "sssu": {
+    "prefix": "sssu",
+    "body": "\\subsubsection{$1}\\label{subsec:$2}",
+    "description": "Description"
+  },
+  "ggR": {
+    "prefix": "ggR",
+    "body": "\\usepackage{graphicx}\n\\graphicspath{{./imagenes/}}",
+    "description": "images in Latex"
+  },
+  "ggr": {
+    "prefix": "ggr",
+    "body": "\\begin{figure}[h]\n\t\\includegraphics[width=\\textwidth]{$1}\n\\end{figure}\n",
+    "description": "Description"
+  },
+  "llt": {
+    "prefix": "llt",
+    "body": "\\documentclass{letter}\n\\usepackage[spanish]{babel}\n\n\\signature{Juan Alejandro Bernal}\n\\address{}\n\n\\begin{document}\n\n\\begin{letter}{recipiente}\n\\opening{Señor o señora:}\nbody\n\\closing{Espero ansiosamente su respuesta}\n\n\\end{letter}\n\\end{document\n",
+    "description": "letter"
+  }
+}

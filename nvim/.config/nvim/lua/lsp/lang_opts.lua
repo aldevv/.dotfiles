@@ -102,12 +102,7 @@ local enhance_server_opts = {
         opts.capabilities.offsetEncoding = { "utf-16" }
     end,
     -- ["gopls"] = function(opts)
-    --     opts.on_attach = function(client, buffnr)
-    --         client.server_capabilities.document_formatting = false
-    --         client.server_capabilities.document_range_formatting = false
-    --     end
     -- end,
-
     ["lua_ls"] = function(opts)
         opts.root_dir = util.root_pattern("apm.csv") or util.path.dirname(fname)
         opts.settings = {

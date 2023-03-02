@@ -1,0 +1,7 @@
+{
+  "nginx": {
+    "prefix": "nginx",
+    "body": "server {\n    server_name my_domain; # managed by Certbot\n\n    root front_path;\n\n\n    location ~ ^/api(/.*)?$ {\n        include proxy_params;\n        proxy_pass back_app_path.sock;\n\n        add_header 'Access-Control-Allow-Origin' '*' always;\n        add_header 'Access-Control-Allow-Credentials' 'true' always;\n        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;\n        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;\n    }\n\n    location /media {\n        alias path/media;\n    }\n\n    location /static {\n        alias /path/static;\n    }\n\n\n    location / {\n        try_files $uri $uri/ /index.html =404;\n    }\n\n\n    listen 443 ssl; # managed by Certbot\n    ssl_certificate path/fullchain.pem; # managed by Certbot\n    ssl_certificate_key path/privkey.pem; # managed by Certbot\n    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot\n    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot\n\n\n}\n\nserver {\n    if ($host = my_domain) {\n        return 301 https://$host$request_uri;\n    } # managed by Certbot\n\n\n    server_name my_domain;\n    listen 80;\n    return 404; # managed by Certbot\n\n\n}",
+    "description": "basic config"
+  }
+}

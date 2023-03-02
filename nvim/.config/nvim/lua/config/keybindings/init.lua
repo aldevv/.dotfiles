@@ -40,23 +40,22 @@ end
 -- essential
 
 -- colemak
--- map("", "n", "j", nor)
--- map("", "e", "k", nor)
--- map("", "j", "e", nor)
--- map("", "gj", "ge", nor)
--- map("", "gJ", "gE", nor)
--- map("", "l", "i", nor)
--- map("", "i", "l", nor)
--- map("v", "i", "l", nor)
--- map("", "k", "nzzzv", nor)
--- map("", "K", "Nzzzv", nor)
--- map("", "ge", "gk", nor)
--- map("", "gn", "gj", nor)
--- map("", "gk", "gn", nor)
--- map("", "gE", "gJ", nor) -- lines
-map("", "N", "mzJ`z", nor) -- lines
+map("n", "n", "j", nor)
+map("n", "e", "k", nor)
+map("n", "j", "e", nor)
+map("n", "l", "i", nor)
+map("n", "i", "l", nor)
+map("x", "i", "l", nor)
+map("", "N", "mzJ`z", nor)
 
-map("o", "l", "i", nor) -- lines
+map("o", "e", "k", nor)
+map("o", "n", "j", nor)
+
+map("x", "e", "k", nor)
+map("x", "n", "j", nor)
+
+map("o", "l", "i", nor)
+map("o", "i", "l", nor)
 
 map("n", "ñ", ":G ", nor)
 
@@ -64,8 +63,8 @@ map("n", "ñ", ":G ", nor)
 -- map("n", "!.", ".!bash", nor)
 
 -- jumplist mutations
-map("n", "e", '(v:count > 5  ? "m\'" . v:count : "") . \'k\'', nor_e)
-map("n", "n", '(v:count > 5  ? "m\'" . v:count : "") . \'j\'', nor_e)
+-- map("n", "e", '(v:count > 5  ? "m\'" . v:count : "") . \'k\'', nor_e)
+-- map("n", "n", '(v:count > 5  ? "m\'" . v:count : "") . \'j\'', nor_e)
 
 -- generate checkpoints for undo
 map("i", ",", ",<c-g>u", nor)
@@ -88,7 +87,7 @@ map("n", "sn", "<cmd>call CreateFileEnter()<cr>", nor_s)
 map("n", "sN", "<cmd>call CreateFileTouch()<cr>", nor_s)
 map("n", "sD", "<cmd>call CreateDir()<cr>", nor_s)
 map("n", "sd", "<cmd>bd<cr>", nor_s)
-map("n", "si", "<Plug>(InsertSkeleton)", s)
+-- map("n", "si", "<Plug>(InsertSkeleton)", s) -- NOTE: need to make this work with luasnip
 map("n", "spm", "set modifiable!", s)
 map("n", "spw", "set wrap!", s)
 map("n", "sps", "set wrapscan!", s)
@@ -281,6 +280,8 @@ map("n", "sr", ":RainbowToggle<cr>", nor)
 
 require("config.keybindings.fugitive")
 
+map("n", "<leader>,sf", ":source %<cr>", nor)
+map("n", "<leader>,ss", ":source ~/.config/nvim/lua/lsp/luasnip.lua<cr>", nor)
 map("n", "soL", ":silent source %:h/Session.vim<cr>", nor_s)
 map("n", "sol", ":silent source Session.vim<cr>", nor_s)
 map("n", "soo", ":Obsession<CR>", desc("obsession: add session"))

@@ -1,0 +1,7 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "- hosts: localhost\n\n  vars:\n    somekey: \"\"\n  pre_tasks:\n    - name: some task\n      become: yes\n      apt:\n        update_cache: yes\n        force_apt_get: yes\n        state: present\n  roles:\n    - role: my_role\n      tags:\n        - test\n\n  tasks:\n    - import_tasks: tasks/some.yml\n      tags:\n",
+    "description": "skeleton"
+  }
+}

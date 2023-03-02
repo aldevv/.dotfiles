@@ -52,12 +52,65 @@ return {
     },
 
     {
+        "L3MON4D3/LuaSnip",
+        config = req("lsp.luasnip"),
+    },
+    {
+        "honza/vim-snippets",
+        config = function()
+            require("luasnip.loaders.from_snipmate").lazy_load()
+        end,
+        dependencies = "L3MON4D3/LuaSnip",
+    },
+    {
+        "honda/friendly-snippets",
+
+        config = function()
+            require("luasnip.loaders.from_vscode").lazy_load()
+            require("luasnip").filetype_extend("all", { "_" })
+        end,
+        dependencies = "L3MON4D3/LuaSnip",
+    },
+    {
         "neovim/nvim-lspconfig",
         config = req("lsp.lsp"),
         dependencies = {
             "williamboman/mason.nvim",
             "williamboman/mason-lspconfig.nvim",
             "folke/neodev.nvim",
+            {
+                "hrsh7th/nvim-cmp",
+                config = req("lsp.cmp"),
+                dependencies = {
+                    "L3MON4D3/LuaSnip",
+                    "saadparwaiz1/cmp_luasnip",
+                    "nvim-lua/plenary.nvim",
+                    "onsails/lspkind-nvim",
+                    "hrsh7th/cmp-nvim-lsp",
+                    { "hrsh7th/cmp-nvim-lua", ft = "lua" },
+                    "hrsh7th/cmp-path",
+                    "hrsh7th/cmp-buffer",
+                    "hrsh7th/cmp-cmdline",
+                    "petertriho/cmp-git",
+                    -- "saadparwaiz1/cmp_luasnip",
+                    -- { "quangnguyen30192/cmp-nvim-ultisnips" },
+                    -- {
+                    --     "SirVer/ultisnips",
+                    --     init = function()
+                    --         vim.g.UltiSnipsNoMap = true
+                    --         vim.g.UltiSnipsExpandTrigger = "ß"
+                    --         vim.g.UltiSnipsJumpForwardTrigger = "<a-k>"
+                    --         vim.g.UltiSnipsJumpBackwardTrigger = "<a-K>"
+                    --         -- vim.g.UltiSnipsListSnippets = "<c-tab>"
+                    --         vim.g.UltiSnipsSnippetDirectories = { "my_snippets", "UltiSnips" }
+                    --     end,
+                    --     config = function()
+                    --         require("cmp_nvim_ultisnips.mappings")
+                    --     end,
+                    --     dependencies = "quangnguyen30192/cmp-nvim-ultisnips",
+                    -- },
+                },
+            },
         },
     },
 
@@ -83,40 +136,6 @@ return {
     -- - https://github.com/smjonas/snippet-converter.nvim
     -- and
     -- - https://cj.rs/blog/ultisnips-to-luasnip/
-
-    {
-        "SirVer/ultisnips",
-        init = function()
-            vim.g.UltiSnipsNoMap = true
-            vim.g.UltiSnipsExpandTrigger = "<a-s>"
-            vim.g.UltiSnipsJumpForwardTrigger = "<a-k>"
-            vim.g.UltiSnipsJumpBackwardTrigger = "<a-K>"
-            -- vim.g.UltiSnipsListSnippets = "<c-tab>"
-            vim.g.UltiSnipsSnippetDirectories = { "my_snippets", "UltiSnips" }
-        end,
-        config = function()
-            require("cmp_nvim_ultisnips.mappings")
-        end,
-        dependencies = "quangnguyen30192/cmp-nvim-ultisnips",
-    },
-    "honza/vim-snippets",
-    {
-
-        "hrsh7th/nvim-cmp",
-        dependencies = {
-            "nvim-lua/plenary.nvim",
-            "onsails/lspkind-nvim",
-            "hrsh7th/cmp-nvim-lsp",
-            { "hrsh7th/cmp-nvim-lua",               ft = "lua" },
-            "hrsh7th/cmp-path",
-            "hrsh7th/cmp-buffer",
-            "hrsh7th/cmp-cmdline",
-            "petertriho/cmp-git",
-            -- "saadparwaiz1/cmp_luasnip",
-            { "quangnguyen30192/cmp-nvim-ultisnips" },
-        },
-        config = req("lsp.cmp"),
-    },
 
     {
         "jose-elias-alvarez/null-ls.nvim",
@@ -547,10 +566,6 @@ return {
         dependencies = { "nvim-treesitter/nvim-treesitter", "kana/vim-textobj-user" },
     },
     {
-        "ray-x/lsp_signature.nvim",
-        config = req("lsp.lsp-signature"),
-    },
-    {
         "fatih/vim-go",
         init = function()
             vim.g.go_echo_command_info = 1
@@ -571,6 +586,14 @@ return {
         end,
     },
     "mkitt/tabline.vim",
+    {
+        "ray-x/lsp_signature.nvim",
+        config = req("lsp.lsp-signature"),
+        dependencies = {
+            "neovim/nvim-lspconfig",
+            "hrsh7th/nvim-cmp",
+        },
+    },
     -- {
     --     "j-hui/fidget.nvim",
     --     config = function()

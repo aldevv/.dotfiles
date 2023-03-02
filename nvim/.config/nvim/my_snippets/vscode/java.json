@@ -1,0 +1,87 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "public class `!p snip.rv = snip.basename` {\n\n\tpublic static void main(String[] args) {\n\t\t$1\n\t}\n}",
+    "description": "init java file"
+  },
+  "_class": {
+    "prefix": "_class",
+    "body": "public class `!p snip.rv = snip.basename` {\n\n\tpublic static void main(String[] args) {\n\t\t$1\n\t}\n}",
+    "description": "init java file"
+  },
+  "ffn": {
+    "prefix": "ffn",
+    "body": "public static $1 ${VISUAL}${2}($3) {\n\t${4:body}\n}",
+    "description": "define a function"
+  },
+  "ppr": {
+    "prefix": "ppr",
+    "body": "System.out.println(\"${VISUAL}${1}\");",
+    "description": "enclose with print"
+  },
+  "iin": {
+    "prefix": "iin",
+    "body": "Scanner input$1 = new Scanner();",
+    "description": "testing snippets"
+  },
+  "itt": {
+    "prefix": "itt",
+    "body": "Integer ${1}",
+    "description": "testing snippets"
+  },
+  "stt": {
+    "prefix": "stt",
+    "body": "String ${1}",
+    "description": "testing snippets"
+  },
+  "dbb": {
+    "prefix": "dbb",
+    "body": "Double ${1}",
+    "description": "testing snippets"
+  },
+  "ftt": {
+    "prefix": "ftt",
+    "body": "Float ${1}",
+    "description": "testing snippets"
+  },
+  "mpp": {
+    "prefix": "mpp",
+    "body": "Map <${1},${2}> ${3} = new Map();",
+    "description": "testing snippets"
+  },
+  "lnn": {
+    "prefix": "lnn",
+    "body": "length",
+    "description": "testing snippets"
+  },
+  "sz": {
+    "prefix": "sz",
+    "body": "size()",
+    "description": "testing snippets"
+  },
+  "ffr": {
+    "prefix": "ffr",
+    "body": "for(int i=0; i<$1; ${2:i++}) {\n\t$3\n}",
+    "description": "for normal"
+  },
+  "ffi": {
+    "prefix": "ffi",
+    "body": "for(${1:type} ${2:item} : ${3:items}) {\n\t$3\n}",
+    "description": "for normal"
+  },
+  "prr": {
+    "prefix": "prr",
+    "body": "private ${1}",
+    "description": "testing snippets"
+  },
+  "pbb": {
+    "prefix": "pbb",
+    "body": "public ${1}",
+    "description": "testing snippets"
+  },
+  "ptt": {
+    "prefix": "ptt",
+    "body": "protected ${1}",
+    "description": "testing snippets"
+  }
+}

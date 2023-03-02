@@ -1,5 +1,5 @@
 vim.cmd([[
-let g:switch_mapping = "ß"
+let g:switch_mapping = "§"
 let b:switch_custom_definitions = [
             \   {
             \     '\(\k\+=\){\([[:keyword:].]\+\)}':      '\1{`${\2}`}',

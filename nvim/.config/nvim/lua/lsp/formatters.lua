@@ -31,18 +31,12 @@ local opts = {
     sources = {
         -- formatting.isort,
         -- formatting.black.with({ extra_args = { "--fast" } }),
-        -- formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }),
-        formatting.shfmt.with({
-            extra_filetypes = { "zsh", "bash" },
-        }),
         -- formatting.uncrustify,
-        -- formatting.gofmt,
         formatting.clang_format,
         -- formatting.json_tool, jsonls already has one
         -- formatting.prettier,
         diagnostics.vint, --> for vim
         -- formatting.eslint_d,
-        diagnostics.shellcheck.with({ extra_filetypes = { "zsh", "bash" } }),
         -- it looks for node_modules automatically, if you prefer a local in a different place,
         -- then set it using prefer_local
         diagnostics.eslint,
@@ -65,7 +59,6 @@ local opts = {
         -- formatting.prettier,
         -- my flake config
         -- diagnostics.flake8.with({ extra_args = { "--ignore", "E203", "--max-line-length", "88" } }), -- extra args for black
-        diagnostics.flake8,
         -- completion.spell,
         code_actions.gitsigns,
         -- code_actions.eslint_d,
@@ -77,6 +70,7 @@ local format_servers = {
     "shfmt",
     "black",
     "stylua",
+    "gofmt",
 }
 local diagnostic_servers = {
     "shellcheck",
@@ -98,8 +92,19 @@ require("mason-null-ls").setup_handlers({
     black = function(source_name, methods)
         null_ls.register(formatting.black.with({ extra_args = { "--fast" } }))
     end,
+    gofmt = function(source_name, methods)
+        null_ls.register(formatting.gofmt)
+    end,
     isort = function(source_name, methods)
         null_ls.register(formatting.isort)
+    end,
+    shfmt = function(source_name, methods)
+        null_ls.register(formatting.shfmt.with({
+            extra_filetypes = { "zsh", "bash" },
+        }))
+    end,
+    shellcheck = function(source_name, methods)
+        null_ls.register(diagnostics.shellcheck.with({ extra_filetypes = { "zsh", "bash" } }))
     end,
 })
 

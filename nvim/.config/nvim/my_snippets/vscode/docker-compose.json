@@ -1,0 +1,17 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "version: '3.8'\n\nservices:\n\t$1:\n\t\timage: $1\n\t$2:\n\t\timage: $2\nvolumes:",
+    "description": "skeleton"
+  },
+  "_skel2": {
+    "prefix": "_skel2",
+    "body": "version: \"3.8\"\n\nservices:\n\t${1:redis}:\n\t\timage: $2:$3\n\t\tports:\n\t\t  - ${4:\"8080:80\"}\n\n\t ${6:db}:\n\t\timage: ${7:postgres}:${8:9.4}\n\t\tvolumes:\n\t\t  - ${9:db-data}:${10:/var/lib/postgresql/data}\n\t\tenvironment:\n\t\t  - ${11:POSTGRES_DB=$2}\n\t\t  - ${12:POSTGRES_USER=ale}\n\t\t  - ${13:POSTGRES_PASSWORD=pass}\n\t\trestart: \"unless_stopped\"\n\t\tdepends_on:\n\t\t  - $1\n\n\tvolumes:\n\t  $9:",
+    "description": "Description"
+  },
+  "template": {
+    "prefix": "template",
+    "body": "version: \"3.9\"\nservices:\n\n  redis:\n\timage: redis:alpine\n\tports:\n\t  - \"6379\"\n\tnetworks:\n\t  - frontend\n\tdeploy:\n\t  replicas: 2\n\t  update_config:\n\t\tparallelism: 2\n\t\tdelay: 10s\n\t  restart_policy:\n\t\tcondition: on-failure\n\n  db:\n\timage: postgres:9.4\n\tvolumes:\n\t  - db-data:/var/lib/postgresql/data\n\tnetworks:\n\t  - backend\n\tdeploy:\n\t  placement:\n\t\tmax_replicas_per_node: 1\n\t\tconstraints:\n\t\t  - \"node.role==manager\"\n\n  vote:\n\timage: dockersamples/examplevotingapp_vote:before\n\tports:\n\t  - \"5000:80\"\n\tnetworks:\n\t  - frontend\n\tdepends_on:\n\t  - redis\n\tdeploy:\n\t  replicas: 2\n\t  update_config:\n\t\tparallelism: 2\n\t  restart_policy:\n\t\tcondition: on-failure\n\n  result:\n\timage: dockersamples/examplevotingapp_result:before\n\tports:\n\t  - \"5001:80\"\n\tnetworks:\n\t  - backend\n\tdepends_on:\n\t  - db\n\tdeploy:\n\t  replicas: 1\n\t  update_config:\n\t\tparallelism: 2\n\t\tdelay: 10s\n\t  restart_policy:\n\t\tcondition: on-failure\n\n  worker:\n\timage: dockersamples/examplevotingapp_worker\n\tnetworks:\n\t  - frontend\n\t  - backend\n\tdeploy:\n\t  mode: replicated\n\t  replicas: 1\n\t  labels: [APP=VOTING]\n\t  restart_policy:\n\t\tcondition: on-failure\n\t\tdelay: 10s\n\t\tmax_attempts: 3\n\t\twindow: 120s\n\t  placement:\n\t\tconstraints:\n\t\t  - \"node.role==manager\"\n\n  visualizer:\n\timage: dockersamples/visualizer:stable\n\tports:\n\t  - \"8080:8080\"\n\tstop_grace_period: 1m30s\n\tvolumes:\n\t  - \"/var/run/docker.sock:/var/run/docker.sock\"\n\tdeploy:\n\t  placement:\n\t\tconstraints:\n\t\t  - \"node.role==manager\"\n\nnetworks:\n  frontend:\n  backend:\n\nvolumes:\n  db-data:",
+    "description": "Description"
+  }
+}

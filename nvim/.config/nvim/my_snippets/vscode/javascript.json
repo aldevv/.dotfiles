@@ -1,0 +1,27 @@
+{
+  "prn": {
+    "prefix": "prn",
+    "body": "console.log(${1})",
+    "description": "print anything"
+  },
+  "prN": {
+    "prefix": "prN",
+    "body": "console.trace(${1})",
+    "description": "trace where errors come from"
+  },
+  "pRN": {
+    "prefix": "pRN",
+    "body": "console.table(${1})",
+    "description": "print a table of objects"
+  },
+  "ffn": {
+    "prefix": "ffn",
+    "body": "function $1 ($2) {\n\t$3\n}",
+    "description": "do function"
+  },
+  "ffN": {
+    "prefix": "ffN",
+    "body": "$1 = ($2) => {\n\t$3\n}",
+    "description": "Description"
+  }
+}

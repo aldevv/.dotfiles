@@ -1,0 +1,7 @@
+{
+  "_skel": {
+    "prefix": "_skel",
+    "body": "package main\nimport (\n    \"fmt\"\n)\nfunc main() {\n    fmt.Println(\"Hello World!\")$1\n}\n",
+    "description": "skeleton"
+  }
+}

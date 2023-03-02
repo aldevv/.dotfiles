@@ -1,0 +1,37 @@
+{
+  "ffi": {
+    "prefix": "ffi",
+    "body": "for ${1:item} in ${2:items}:\n\t$3",
+    "description": "for item in items"
+  },
+  "ffr": {
+    "prefix": "ffr",
+    "body": "for ${1:i} in range(${2:num}):\n\t$3",
+    "description": "for i in range"
+  },
+  "ttr": {
+    "prefix": "ttr",
+    "body": "True",
+    "description": "true"
+  },
+  "ffa": {
+    "prefix": "ffa",
+    "body": "False",
+    "description": "true"
+  },
+  "ppr": {
+    "prefix": "ppr",
+    "body": "print(f\"${VISUAL}${1}\")",
+    "description": "enclose with print"
+  },
+  "iin": {
+    "prefix": "iin",
+    "body": "input(\"${VISUAL}${1}\")",
+    "description": "enclose with input"
+  },
+  "main": {
+    "prefix": "main",
+    "body": "if __name__ == \"__main__\":\n\t$1",
+    "description": "create main"
+  }
+}
