@@ -26,6 +26,7 @@ capabilities.textDocument.completion.completionItem.snippetSupport = true
 local on_attach = function(client, bufnr)
     require("config.keybindings.lsp").load_mappings()
     require("config.automation.lsp").diagnostics_in_loclist()
+    require("config.keybindings.dap").load_mappings(client.name)
 end
 
 M.capabilities = capabilities

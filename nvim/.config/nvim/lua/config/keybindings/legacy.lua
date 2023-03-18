@@ -237,8 +237,6 @@ map <silent> <F11> /\A\zs\a<cr>
 " nnoremap <leader>ss <c-w>s
 " nnoremap <leader>sv <c-w>v
 
-" map <leader>i :setlocal autoindent<cr>
-" map <leader>I :setlocal noautoindent<cr>
 map <a-o> :w<CR>
 map <a-O> :w !sudo tee %<CR>
 

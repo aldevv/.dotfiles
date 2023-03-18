@@ -27,13 +27,10 @@ require("nvim-treesitter.configs").setup({
         "http",
         "nix",
     },
-
     -- Install languages synchronously (only applied to `ensure_installed`)
     sync_install = false,
-
     -- List of parsers to ignore installing
     ignore_install = {},
-
     highlight = {
         -- `false` will disable the whole extension
         enable = true,
@@ -53,6 +50,7 @@ require("nvim-treesitter.configs").setup({
     },
     indent = {
         enable = true,
+        -- disable = { "go" },
         -- disable = { "nix" },
         -- disable = { "org", "yaml", "python" }, -- not working in python as of 23/01/2021
     },

@@ -26,7 +26,7 @@ mode_switch + c
 super + shift + o
     passmenu
 
-mode_switch + e
+mode_switch + shift + e
 	emoji
 
 # lsp not working
