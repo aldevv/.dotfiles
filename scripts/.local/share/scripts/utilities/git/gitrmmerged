@@ -1,42 +1,45 @@
 #!/bin/bash
 
+set -e
+
+# clear stale remote branches (they no longer exist in the remote)
+git remote prune origin
 merged_from_pr_and_deleted="$(git branch -vv | grep ': gone]')"
 
-worktree_active="$( awk '/^+/{print $2}' <<< "$merged_from_pr_and_deleted")"
-normal_branches="$(awk '/^[^+]/{print $1}' <<< "$merged_from_pr_and_deleted")"
+worktree_active="$(awk '/^+/{print $2}' <<<"$merged_from_pr_and_deleted")"
+normal_branches="$(awk '/^[^+]/{print $1}' <<<"$merged_from_pr_and_deleted")"
 
-while read l; do
-    if [[ -z "$l" ]]; then
-        continue
-    fi
-    if [[ -z $1 ]]; then
-        folder="${l%%/*}"
-    else
-        folder="$(basename "$l")"
-    fi
+while read -r l; do
+	if [[ -z "$l" ]]; then
+		continue
+	fi
+	if [[ -z $1 ]]; then
+		folder="${l%%/*}"
+	else
+		folder="$(basename "$l")"
+	fi
 
-    echo "git worktree remove -f $folder"
-    echo "git branch -D $l"
-    echo -e "\ndelete worktree and branch?/y/n)"
-    read -r remove_worktree </dev/tty
-    if [[ "$remove_worktree" == "y" ]]; then
-        git worktree remove -f "$folder"
-        git branch -D "$l"
-    fi
-    echo "-----------------------------------"
-done <<< "$worktree_active"
+	echo "git worktree remove -f $folder"
+	echo "git branch -D $l"
+	echo -e "\ndelete worktree and branch?/y/n)"
+	read -r remove_worktree </dev/tty
+	if [[ "$remove_worktree" == "y" ]]; then
+		git worktree remove -f "$folder"
+		git branch -D "$l"
+	fi
+	echo "-----------------------------------"
+done <<<"$worktree_active"
 
-while read l; do
-    if [[ -z "$l" ]]; then
-        continue
-    fi
+while read -r l; do
+	if [[ -z "$l" ]]; then
+		continue
+	fi
 
-    echo "git branch -D $l"
-    echo -e "\ndelete branch?/y/n)"
-    read -r remove_branch </dev/tty
-    if [[ "$remove_branch" == "y" ]]; then
-        git branch -D "$l"
-    fi
-    echo "-----------------------------------"
-done <<< "$normal_branches"
-
+	echo "git branch -D $l"
+	echo -e "\ndelete branch?/y/n)"
+	read -r remove_branch </dev/tty
+	if [[ "$remove_branch" == "y" ]]; then
+		git branch -D "$l"
+	fi
+	echo "-----------------------------------"
+done <<<"$normal_branches"

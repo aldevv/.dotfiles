@@ -119,25 +119,16 @@ vim.opt.statusline = "%t"
 -- vim.opt.cmdheight = 0
 vim.opt.spell = true
 vim.g.netrw_keepdir = 1
-
--- auto indent on enter
-vim.opt.autoindent = true
-vim.opt.smartindent = true
-
--- use spaces instead of tabs
-vim.opt.expandtab = true
-
-vim.opt.tabstop = 4
-vim.opt.softtabstop = 4
+vim.g.netrw_localrmdir = "rm -r"
 
 -- size of indent and << and >>
 vim.opt.shiftwidth = 4
-vim.g.netrw_localrmdir = "rm -r"
 
 -- general diagnostics
 vim.diagnostic.config({
     virtual_text = {
         spacing = 2,
+        severity_limit = "Warning",
     },
     -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
     -- update_in_insert = true,

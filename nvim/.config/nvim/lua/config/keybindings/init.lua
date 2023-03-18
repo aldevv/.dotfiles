@@ -46,6 +46,7 @@ map("n", "j", "e", nor)
 map("n", "l", "i", nor)
 map("n", "i", "l", nor)
 map("x", "i", "l", nor)
+map("x", "l", "i", nor)
 map("", "N", "mzJ`z", nor)
 
 map("o", "e", "k", nor)
@@ -77,17 +78,22 @@ map("", "<c-u>", "<c-u>zz", nor)
 
 -- s commands
 map("n", "sq", "<cmd>lua require('notify').dismiss()<cr>", nor_s)
-map("n", "ss", "<cmd>silent Ex<cr>", nor_s)
-map("n", "sS", "<cmd>silent Ex .<cr>", nor_s)
-map("n", "st", "<cmd>silent Texplore<cr>", nor_s)
-map("n", "sT", "<cmd>silent Texplore .<cr>", nor_s)
-map("n", "sv", "<cmd>silent Vexplore<cr>", nor_s)
-map("n", "sV", "<cmd>silent Vexplore .<cr>", nor_s)
+
+-- netrw commands
+map("n", "ss", "<cmd>silent Ex<cr>", { remap = true })
+map("n", "sS", "<cmd>silent Ex .<cr>", s)
+map("n", "st", "<cmd>silent Texplore<cr>", s)
+map("n", "sT", "<cmd>silent Texplore .<cr>", s)
+map("n", "sv", "<cmd>silent Vexplore<cr>", s)
+map("n", "sV", "<cmd>silent Vexplore .<cr>", s)
+
 map("n", "sn", "<cmd>call CreateFileEnter()<cr>", nor_s)
 map("n", "sN", "<cmd>call CreateFileTouch()<cr>", nor_s)
 map("n", "sD", "<cmd>call CreateDir()<cr>", nor_s)
 map("n", "sd", "<cmd>bd<cr>", nor_s)
 -- map("n", "si", "<Plug>(InsertSkeleton)", s) -- NOTE: need to make this work with luasnip
+map("n", "sI", "<cmd>IndentBlanklineToggle<cr>", desc("disable indentlines"))
+
 map("n", "spm", "set modifiable!", s)
 map("n", "spw", "set wrap!", s)
 map("n", "sps", "set wrapscan!", s)
@@ -117,11 +123,14 @@ map("n", "<a-down>", ":m .+1<cr>==", nor)
 -- map("n", "<a-n>", ":m .+1<cr>==", nor)
 
 map("i", "<c-y>", "copilot#Accept('<CR>')", vim.tbl_extend("keep", s_e, { script = true }))
-map("", "<leader>C", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
-map("", "<leader>,cc", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
-map("", "<leader>,cC", ":Copilot<cr>", nor)
-map("", "<leader>,cs", ":Copilot status<cr>", nor)
-map("", "<leader>,cS", ":Copilot setup<cr>", nor)
+map("i", "<a-}>", "<Plug>(copilot-next)", nor)
+map("i", "<a-{>", "<Plug>(copilot-previous)", nor)
+map("i", "<c-}>", "<Plug>(copilot-dismiss)", nor)
+map("i", "<m-\\>", "<Plug>(copilot-suggest)", nor)
+map("n", "<leader>,cc", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
+map("n", "<leader>,cC", ":Copilot<cr>", nor)
+map("n", "<leader>,cs", ":Copilot status<cr>", nor)
+map("n", "<leader>,cS", ":Copilot setup<cr>", nor)
 
 -- terminal
 map("n", "sñ", ":botright terminal<cr>", nor)
@@ -130,8 +139,8 @@ map("t", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
 
 -- terminal
 map("t", "<a-'>", "<c-\\><c-n>", nor_s)
-map("t", "<Left>", "<c-\\><c-n>gT", nor_s)
-map("t", "<Right>", "<c-\\><c-n>gt", nor_s)
+map("t", "<c-g>", "<c-\\><c-n>gT", nor_s)
+map("t", "<c-s-g>", "<c-\\><c-n>gt", nor_s)
 
 -- folders
 map("n", "<F1>", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
@@ -159,6 +168,7 @@ map("n", "<c-q>K", ":cprev<cr>zzzv", nor)
 -- ql
 uv.location_toggle_definition()
 vim.keymap.del("n", "<c-l>")
+
 map("n", "<c-l>l", ":call ToggleLocation(0)<cr>", nor_s)
 map("n", "<c-l>L", ":call ToggleLocation(1)<cr>", nor_s)
 map("n", "<c-l>k", ":lnext<cr>zzzv", nor)
@@ -194,8 +204,6 @@ map("n", "<leader>,th", ":TSHighlightCapturesUnderCursor<cr>", nor_s)
 -- harpoon
 require("config.keybindings.harpoon").load_mappings()
 
--- dap
-require("config.keybindings.dap").load_mappings()
 -- nnoremap <leader>gll :let g:_search_term = expand("%")<CR><bar>:Gclog -- %<CR>:call search(g:_search_term)<CR>
 -- nnoremap <leader>gln :cnext<CR>:call search(_search_term)<CR>
 -- nnoremap <leader>glp :cprev<CR>:call search(_search_term)<CR>-
@@ -219,14 +227,22 @@ require("config.keybindings.text-objs")
 map("n", "gwc", ":Telescope git_worktree create_git_worktree<cr>", nor)
 -- use <c-d> while in this to delete it!
 map("n", "gww", ":Telescope git_worktree git_worktrees<cr>", nor)
-local function add_slash_feature_worktree()
+local function add_slash_feature_worktree_post()
     local branch = vim.fn.input("Enter branch name:")
-    local path = vim.split(branch, "/")[1]
+    local path = vim.split(branch, "/")[2]
     require("git-worktree").create_worktree(path, branch, "origin")
     print("Added " .. path .. "!")
 end
 
-map("n", "gwC", add_slash_feature_worktree, nor)
+local function add_slash_feature_worktree_pre()
+    local branch = vim.fn.input("Enter branch name:")
+    local path = vim.split(branch, "/")[2]
+    require("git-worktree").create_worktree(path, branch, "origin")
+    print("Added " .. path .. "!")
+end
+
+map("n", "gwa", add_slash_feature_worktree_post, desc("git worktree create post"))
+map("n", "gwA", add_slash_feature_worktree_pre, desc("git worktree create pre"))
 
 -- <Enter> - switches to that worktree
 -- <c-d> - deletes that worktree
@@ -237,7 +253,6 @@ map("n", "<leader>,fv", ":VimBeGood<cr>", nor)
 map("n", "<leader>,fa", ":VimApm<cr>", nor)
 map("n", "<leader>,fA", ":VimApmShutdown<cr>", nor)
 
-map("i", "€", "<plug>(emmet-expand-abbr)", {})
 map("n", "<leader>u", ":UndotreeToggle<cr>", nor_s)
 map("n", "<leader>sv", ":IndentLinesToggle<cr>", nor_s)
 
@@ -515,12 +530,12 @@ map("n", "<S-Right>", "5<c-w>>", nor_s)
 map("n", "<S-Left>", "5<c-w><", nor_s)
 
 -- tabs
-map("n", "<Right>", function()
-    pcall(vim.cmd, [[checktime]])
-    vim.api.nvim_feedkeys("gt", "n", true)
-end, nor_s)
-
-map("n", "<Left>", function()
-    pcall(vim.cmd, [[checktime]])
-    vim.api.nvim_feedkeys("gT", "n", true)
-end, nor_s)
+-- map("n", "<Right>", function()
+--     pcall(vim.cmd, [[checktime]])
+--     vim.api.nvim_feedkeys("gt", "n", true)
+-- end, nor_s)
+--
+-- map("n", "<Left>", function()
+--     pcall(vim.cmd, [[checktime]])
+--     vim.api.nvim_feedkeys("gT", "n", true)
+-- end, nor_s)

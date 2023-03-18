@@ -40,6 +40,7 @@ local luasnip = require("luasnip")
 vim.api.nvim_set_option("completeopt", "menu,menuone,noselect")
 
 cmp.setup({
+    preselect = cmp.PreselectMode.None, -- so it doesn't select lsp automatically, and lets me choose manually
     snippet = {
         expand = function(args)
             luasnip.lsp_expand(args.body)
@@ -60,24 +61,26 @@ cmp.setup({
         format = function(entry, vim_item)
             vim_item.kind = string.format("%s %s", lspkind.presets.default[vim_item.kind], vim_item.kind)
             vim_item.menu = ({
-                    -- nvim_lsp = "ﲳ",
-                    -- nvim_lsp = "📚",
-                    nvim_lsp = "[LS]",
-                    -- nvim_lua = "[API]",
-                    -- treesitter = "",
-                    treesitter = "🌲",
-                    -- path = "ﱮ",
-                    path = "📁",
-                    -- buffer = "﬘",
-                    buffer = "[BUF]",
-                    zsh = "[SH]",
-                    -- vsnip = "",
-                    ultisnips = "🔥",
-                    -- spell = "暈",
-                    spell = "暈",
-                    cmdline = "[CMD]",
-                    ["vim-dadbod-completion"] = "[DB]",
-                })[entry.source.name]
+                -- nvim_lsp = "ﲳ",
+                -- nvim_lsp = "📚",
+                luasnip = "🔥",
+                nvim_lua = "[nvim]",
+                nvim_lsp = "[LS]",
+                -- nvim_lua = "[API]",
+                -- treesitter = "",
+                treesitter = "🌲",
+                -- path = "ﱮ",
+                path = "📁",
+                -- buffer = "﬘",
+                buffer = "[BUF]",
+                zsh = "[SH]",
+                -- vsnip = "",
+                -- ultisnips = "🔥",
+                -- spell = "暈",
+                spell = "暈",
+                cmdline = "[CMD]",
+                ["vim-dadbod-completion"] = "[DB]",
+            })[entry.source.name]
 
             return vim_item
         end,
@@ -107,18 +110,20 @@ cmp.setup({
                 fallback()
             end
         end,
-        ["<s-up>"] = cmp.mapping(cmp.mapping.scroll_docs( -4), { "i", "c" }),
+        ["<s-up>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
         ["<s-down>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
-        ["<C-Space>"] = cmp.mapping(cmp.mapping.complete(), { "i", "c" }),
-        ["<C-y>"] = cmp.mapping({
-            i = cmp.mapping.abort(),
-            c = cmp.mapping.close(),
-        }),
+        ["<C-Space>"] = cmp.mapping(function()
+            if cmp.visible() then
+                cmp.close()
+            else
+                cmp.complete()
+            end
+        end, { "i", "c" }),
         ["<CR>"] = cmp.mapping.confirm({
-            behavior = cmp.ConfirmBehavior.Replace, -->https://github.com/hrsh7th/nvim-cmp/issues/664
-            -- behavior = cmp.ConfirmBehavio.Replace, -->https://github.com/hrsh7th/nvim-cmp/issues/664
+            behavior = cmp.ConfirmBehavior.Insert, -->https://github.com/hrsh7th/nvim-cmp/issues/664
+            -- behavior = cmp.ConfirmBehavior.Replace, -->https://github.com/hrsh7th/nvim-cmp/issues/664
             --  check for examples https://github.com/hrsh7th/nvim-cmp/wiki/Example-mappings
-            select = false, -- auto select on enter (even if not selected with <a-n>)
+            select = true, -- auto select on enter (even if not selected with <a-n>)
         }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
     },
     -- nvim-cmp by defaults disables autocomplete for prompt buffers
@@ -126,14 +131,14 @@ cmp.setup({
         return vim.api.nvim_buf_get_option(0, "buftype") ~= "prompt" or require("cmp_dap").is_dap_buffer()
     end,
     sources = {
-        -- { name = "nvim_lua" },
+        { name = "luasnip", priority = 1 },
+        { name = "nvim_lua" },
         { name = "nvim_lsp" },
-        { name = "luasnip" }, -- For ultisnips users.
         -- { name = "ultisnips" }, -- For ultisnips users.
         -- these below also need a plugin like cmp-nvim-ultisnips
-        { name = "path",                 max_item_count = 10 },
+        { name = "path", max_item_count = 10 },
         -- { name = 'luasnip' }, TODO change to this!
-        { name = "buffer",               keyword_length = 5 },
+        { name = "buffer", keyword_length = 5 },
         { name = "dap" },
         { name = "orgmode" },
         { name = "vim-dadbod-completion" },

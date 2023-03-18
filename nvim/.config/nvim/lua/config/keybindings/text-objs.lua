@@ -10,16 +10,16 @@ local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 local map = vim.api.nvim_set_keymap
 
 -- it gets deleted for some reason
-map("v", "lp", "ip", nor_s)
-map("v", "lw", "iw", nor_s)
-map("v", "ll", "<Plug>(textobj-line-i)", s)
+map("x", "lp", "ip", nor_s)
+map("x", "lw", "iw", nor_s)
+map("x", "ll", "<Plug>(textobj-line-i)", s)
 map("o", "ll", "<Plug>(textobj-line-i)", s)
-map("v", "al", "<Plug>(textobj-line-a)", s)
+map("x", "al", "<Plug>(textobj-line-a)", s)
 map("o", "al", "<Plug>(textobj-line-a)", s)
 
-map("v", "le", "<Plug>(textobj-entire-i)", s)
+map("x", "le", "<Plug>(textobj-entire-i)", s)
 map("o", "le", "<Plug>(textobj-entire-i)", s)
-map("v", "ae", "<Plug>(textobj-entire-a)", s)
+map("x", "ae", "<Plug>(textobj-entire-a)", s)
 map("o", "ae", "<Plug>(textobj-entire-a)", s)
 
 -- " python text objects
@@ -54,9 +54,9 @@ vim.g.textobj_python_no_default_key_mappings = 1
 -- " text object comments
 vim.g.textobj_comment_no_default_key_mappings = 1
 
-map("v", "ac", "<Plug>(textobj-comment-a)", {})
+map("x", "ac", "<Plug>(textobj-comment-a)", {})
 map("o", "ac", "<Plug>(textobj-comment-a)", {})
-map("v", "lc", "<Plug>(textobj-comment-i)", {})
+map("x", "lc", "<Plug>(textobj-comment-i)", {})
 map("o", "lc", "<Plug>(textobj-comment-i)", {})
-map("v", "aC", "<Plug>(textobj-comment-big-a)", {})
+map("x", "aC", "<Plug>(textobj-comment-big-a)", {})
 map("o", "aC", "<Plug>(textobj-comment-big-a)", {})

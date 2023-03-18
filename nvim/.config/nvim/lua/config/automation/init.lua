@@ -74,7 +74,7 @@ cmd([[
 
 -- require("config.automation.packer")
 
-require("config.automation.lsp").diagnostics_in_loclist() --
+-- require("config.automation.lsp").diagnostics_in_loclist() --
 
 -- so far is working
 -- cmd('autocmd BufReadPre *.{html,css,js,jsx,ts} EmmetInstall')

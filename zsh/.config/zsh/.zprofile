@@ -154,6 +154,8 @@ export  LESS_TERMCAP_us=$'\e[1;32m'
 # [[ -d "$SHARED" ]] && export PATH="$(find -L $SHARED -type d | tr '\n' ':')$PATH"
 # [[ -d "$SCRIPTS/work" ]] && export PATH="$(find -L $SCRIPTS/work -type d | tr '\n' ':')$PATH"
 
+export AWS_PAGER=""
+
 # add flutter
 [[ -d "$PROGRAMS/flutter" ]] && export PATH="$(find $PROGRAMS/flutter $PROGRAMS/android-studio -maxdepth 1 -type d -iname 'bin' | tr '\n' ':')$PATH"
 

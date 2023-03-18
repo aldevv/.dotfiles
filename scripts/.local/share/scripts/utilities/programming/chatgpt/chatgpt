@@ -11,8 +11,14 @@ async def connect(config):
 
 
 async def get_question():
+    question = ""
+    print("Ask: ", end="")
     try:
-        question = input("Ask: ")
+        while True:
+            try:
+                question += input()
+            except EOFError:
+                break
     except (KeyboardInterrupt, SystemExit):
         os._exit(0)
     return question
@@ -31,7 +37,6 @@ def get_config_from_file():
     with open(config_file) as f:
         d = json.load(f)
         return d
-    return {}
 
 
 def get_config():
@@ -46,6 +51,7 @@ def get_config():
 
 
 async def main():
+    print("to enter press: <C-D>")
     config = get_config()
     question, chatbot = await asyncio.gather(get_question(), connect(config))
     prev_text = ""

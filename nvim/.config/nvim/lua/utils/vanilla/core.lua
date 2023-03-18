@@ -1,6 +1,6 @@
 local M = {}
 function M.quickfix_toggle_definition()
-	vim.cmd([[
+    vim.cmd([[
         function! ToggleQuickFix(staywindow)
           if empty(filter(getwininfo(), 'v:val.quickfix'))
             copen
@@ -16,7 +16,7 @@ function M.quickfix_toggle_definition()
 end
 
 function M.location_toggle_definition()
-	vim.cmd([[
+    vim.cmd([[
         function! ToggleLocation(staywindow)
           if empty(filter(getwininfo(), 'v:val.quickfix'))
             lopen

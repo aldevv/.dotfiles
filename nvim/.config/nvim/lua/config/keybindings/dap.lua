@@ -1,6 +1,6 @@
 local M = {}
 
-M.load_mappings = function()
+M.load_mappings = function(client)
     local s = { silent = true }
     local nor = { noremap = true }
     local nor_s = vim.tbl_extend("keep", nor, s)
@@ -60,19 +60,19 @@ M.load_mappings = function()
     map("n", "<localleader>dsb", ":lua require'dap'.step_back()<cr>", nor_s)
 
     -- python
-    if vim.bo.filetype == "python" then
+    if client == "pyright" then
         map("n", "<localleader>dlm", ":lua require('dap-python').test_method()<cr>", nor_s)
         map("n", "<localleader>dlc", ":lua require('dap-python').test_class()<cr>", nor_s)
         map("v", "<localleader>dls", ":lua require('dap-python').debug_selection()<cr>", nor_s)
     end
     -- go
-    if vim.bo.filetype == "go" then
-        map("v", "<localleader>dlt", ":lua require('dap-go').debug_test()<cr>", nor_s)
-        map("v", "<localleader>dlm", ":lua require('dap-go').debug_test()<cr>", nor_s)
+    if client == "gopls" then
+        map("n", "<localleader>dlt", ":lua require('dap-go').debug_test()<cr>", nor_s)
+        map("n", "<localleader>dll", ":lua require('dap-go').debug_last_test()<cr>", nor_s)
     end
 
     -- rust
-    if vim.bo.filetype == "rust" then
+    if client == "rust-analyzer" then
         map("n", "<localleader>dli", ":RustToggleInlayHints<cr>", nor_s)
         map("n", "<localleader>dlr", ":RustRunnables<cr>", nor_s)
         map("n", "<localleader>dle", ":RustExpandMacro<cr>", nor_s)

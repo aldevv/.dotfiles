@@ -47,8 +47,11 @@ map("n", "<leader>gdv", ":Gvdiffsplit!<CR>", desc("Gdiffsplit!")) -- three way s
 
 map("n", "<leader>gdt", ":G! difftool ", desc("G! difftool (G! means only open qfx without moving to first file)"))
 
-map("n", "<leader>gs", ":G<CR>", nor)
-map("n", "<leader>gS", ":Telescope git_stash<CR>", nor)
+map("n", "gs", ":G<CR>", nor)
+map("n", "<leader>gSs", ":G stash<CR>", nor)
+map("n", "<leader>gSp", ":G stash pop<CR>", nor)
+map("n", "<leader>gSa", ":G stash apply<CR>", nor)
+map("n", "<leader>gSt", ":Telescope git_stash<CR>", nor)
 map("n", "<leader>gi", ":G init<CR>", nor)
 map("n", "<leader>gm", ":G mergetool<CR>", nor)
 
@@ -105,11 +108,12 @@ map("n", "<leader>gcc", ":G! commit<CR>", descv("G! commit"))
 map("n", "<leader>gc<space>", ":G! commit ", descv("G! commit _"))
 map("n", "<leader>gco", ":Telescope git_branches<CR>", nor)
 map("n", "<leader>gcO", ":G! checkout -<CR>", nor)
-map("n", "<leader>gR", ":Gread<CR>", nor)
-map("n", "<leader>gW", ":Gwrite<CR>", nor)
-map("n", "<leader>gE", ":Gedit<CR>", nor)
-map("n", "<leader>gS", ":Gsplit @~", nor)
-map("n", "<leader>gV", ":Gvsplit @~", nor)
+map("n", "<leader>gr", ":Gread<CR>", nor) -- use index
+map("n", "<leader>gR", ":Gread -<CR>", nor) -- use commit
+map("n", "<leader>gw", ":Gwrite<CR>", nor)
+map("n", "<leader>ge", ":Gedit<CR>", nor)
+map("n", "<leader>gs", ":Gsplit @~", nor)
+map("n", "<leader>gv", ":Gvsplit @~", nor)
 
 -- GV
 -- o or <cr> on a commit to display the content of it

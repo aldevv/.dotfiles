@@ -7,7 +7,7 @@ local function req(module)
 end
 
 vim.g.mapleader = t("<Space>")
-vim.g.maplocalleader = "\\"
+vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
 
 return {
     "lewis6991/impatient.nvim",
@@ -41,7 +41,7 @@ return {
         branch = "main",
         -- config = req("config.appearance.themes.tokyonight"),
     },
-    { "catppuccin/nvim",      config = req("config.appearance.themes.catppuccin") },
+    { "catppuccin/nvim", config = req("config.appearance.themes.catppuccin") },
 
     "norcalli/nvim-colorizer.lua",
 
@@ -177,8 +177,8 @@ return {
         "mfussenegger/nvim-dap",
         dependencies = {
             -- { "Pocco81/DAPInstall.nvim", module = "dap-install" },
-            { "rcarriga/nvim-dap-ui",             module = "dapui" },
-            { "theHamsta/nvim-dap-virtual-text",  module = "nvim-dap-virtual-text" },
+            { "rcarriga/nvim-dap-ui", module = "dapui" },
+            { "theHamsta/nvim-dap-virtual-text", module = "nvim-dap-virtual-text" },
             { "nvim-telescope/telescope-dap.nvim" },
             { "rcarriga/cmp-dap" },
             { "mfussenegger/nvim-dap-python" },
@@ -202,7 +202,9 @@ return {
     {
         "github/copilot.vim",
         init = function()
-            vim.g.copilot_filetypes = { ["*"] = false, js = true, jsx = true, python = true }
+            -- you can enable a suggestion on any file by doing <M-\>
+            vim.g.copilot_filetypes = { ["*"] = false, rust = true, js = true, ts = true, jsx = true }
+            vim.cmd("highlight CopilotSuggestion guifg=#AAAAAA ctermfg=8")
         end,
         -- cmd = "Copilot",
     },
@@ -255,6 +257,7 @@ return {
         "mattn/emmet-vim",
         init = function()
             vim.g.user_emmet_install_global = 0
+            vim.keymap.set("i", "€", "<plug>(emmet-expand-abbr)")
         end,
         ft = { "html", "js", "ts", "css", "vue", "svelte", "jsx", "tsx" },
     },
@@ -308,15 +311,8 @@ return {
 
     "bkad/CamelCaseMotion",
     "gpanders/editorconfig.nvim",
-    { "bps/vim-textobj-python",   ft = "python" },
+    { "bps/vim-textobj-python", ft = "python" },
 
-    {
-        "AndrewRadev/splitjoin.vim",
-        init = function()
-            vim.g.splitjoin_split_mapping = "gs"
-            vim.g.splitjoin_join_mapping = "gS"
-        end,
-    },
     {
         "matze/vim-move",
         init = function()
@@ -338,7 +334,7 @@ return {
 
     { "osyo-manga/vim-brightest", cmd = "BrightestToggle" },
 
-    { "junegunn/gv.vim",          cmd = "GV" },
+    { "junegunn/gv.vim", cmd = "GV" },
 
     {
         "rbgrouleff/bclose.vim",
@@ -386,7 +382,7 @@ return {
         config = req("core.neotest"),
         module = "neotest",
     },
-    { "brooth/far.vim",               cmd = { "Far", "Fardo", "Farr" } },
+    { "brooth/far.vim", cmd = { "Far", "Fardo", "Farr" } },
 
     {
         "ThePrimeagen/refactoring.nvim",
@@ -594,6 +590,63 @@ return {
             "hrsh7th/nvim-cmp",
         },
     },
+    {
+        "axkirillov/easypick.nvim",
+        config = req("core.easypick"),
+        dependencies = "nvim-telescope/telescope.nvim",
+    },
+    -- "rawnly/gist.nvim", -- getting error when CreateGist
+    -- {
+    --     "miversen33/netman.nvim",
+    --     config = function()
+    --         require("netman")
+    --     end,
+    -- },
+    -- {
+    --     "esensar/nvim-dev-container",
+    --     config = function()
+    --         require("devcontainer").setup({})
+    --     end,
+    --     dependencies = "nvim-treesitter/nvim-treesitter",
+    -- },
+    -- {
+    --     "jamestthompson3/nvim-remote-containers",
+    --     config = function()
+    --             vim.cmd([[
+    --             hi Container guifg=#BADA55 guibg=Black
+    --             set statusline+=%#Container#%{g:currentContainer}
+    --             ]])
+    --     end,
+    -- },
+
+    -- unstable 02/03/2023
+    -- {
+    --     "stevearc/oil.nvim",
+    --     init = function()
+    --         -- avoid loading netrw
+    --         vim.g.loaded_netrw = 1
+    --         vim.g.loaded_netrwPlugin = 1
+    --
+    --         vim.keymap.set("n", "ss", "<cmd>silent Oil<cr>", { silent = true })
+    --         vim.keymap.set("n", "sS", "<cmd>silent Oil .<cr>", { silent = true })
+    --         vim.keymap.set("n", "st", "<cmd>silent tabnew | Oil<cr>", { silent = true })
+    --         vim.keymap.set("n", "sT", "<cmd>silent tabnew | Oil .<cr>", { silent = true })
+    --         vim.keymap.set("n", "sv", "<cmd>silent topleft vs | vertical resize 35 | Oil<cr>", { silent = true })
+    --         vim.keymap.set("n", "sV", "<cmd>silent topleft vs | vertical resize 35 | Oil .<cr>", { silent = true })
+    --     end,
+    --     config = req("core.oil"),
+    -- },
+
+    -- need to pay lol
+    -- {
+    --     "jackMort/ChatGPT.nvim",
+    --     config = req("core.chatgpt"),
+    --     dependencies = {
+    --         "MunifTanjim/nui.nvim",
+    --         "nvim-lua/plenary.nvim",
+    --         "nvim-telescope/telescope.nvim",
+    --     },
+    -- },
     -- {
     --     "j-hui/fidget.nvim",
     --     config = function()
