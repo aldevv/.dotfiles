@@ -53,7 +53,7 @@ local function is_git_repo()
     return vim.v.shell_error == 0
 end
 
-M.git_files_or_cwd = function()
+M.git_files_or_curdir_parent = function()
     local opts = {}
 
     if is_git_repo() then
@@ -61,7 +61,7 @@ M.git_files_or_cwd = function()
     else
         opts = {
             prompt_title = "<CWD DIR>",
-            cwd = ".",
+            cwd = "..",
             follow = true,
         }
         t.find_files(opts)
@@ -223,6 +223,12 @@ M.notes = function()
 end
 
 -- live_grep
+
+M.git_root = function()
+    local cmd = "git rev-parse --show-toplevel"
+    local res = vim.fn.system(cmd)
+    return vim.split(res, "\n")[1]
+end
 
 M.notes_grep = function()
     t.live_grep({
