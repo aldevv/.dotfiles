@@ -8,6 +8,8 @@ end
 
 vim.g.mapleader = t("<Space>")
 vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
+-- whichkey workaround (no BS allowed)
+vim.keymap.set("n", "<BS>", ":WhichKey \\<cr>", { noremap = true, silent = true })
 
 return {
     "lewis6991/impatient.nvim",

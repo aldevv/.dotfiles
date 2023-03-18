@@ -188,8 +188,6 @@ map("n", "<c-s-h>", ":LSoutlineToggle<cr>", nor_s)
 
 -- leader commands
 -- -----------------
--- whichkey workaround (no BS allowed)
-map("n", "<BS>", ":WhichKey \\<cr>", nor_s)
 
 -- telescope
 require("config.keybindings.telescope").load_mappings()
