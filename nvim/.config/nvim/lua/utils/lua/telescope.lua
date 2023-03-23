@@ -236,30 +236,35 @@ end
 
 M.notes_grep = function()
     t.live_grep({
+        prompt_title = "<GREP AL's NOTES>",
         cwd = "$NOTES/",
     })
 end
 
 M.projects_grep = function()
     t.live_grep({
+        prompt_title = "<GREP AL's PROJECTS>",
         cwd = "$PROJECTS/",
     })
 end
 
 M.playground_grep = function()
     t.live_grep({
+        prompt_title = "<GREP AL's PLAYGROUND>",
         cwd = "$PLAYGROUND/",
     })
 end
 
 M.code_grep = function()
     t.live_grep({
+        prompt_title = "<GREP AL's CODE>",
         cwd = "$PLAYGROUND/code/",
     })
 end
 
 M.work_grep = function()
     t.live_grep({
+        prompt_title = "<GREP AL's WORK>",
         cwd = "$WORK",
     })
 end

@@ -30,7 +30,7 @@ m.      $SCRIPTS
 ff      $FILES
 u.      $UTILITIES
 a.      $AUTOMATION
-A.      $APPS
+A.     $APPS
 ml.     $MLIBS
 O       ~/Downloads
 o       ~/Documents

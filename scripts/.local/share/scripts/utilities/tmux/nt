@@ -18,96 +18,94 @@ time_limit_to_archive="20"
 # ntf to send files to subject/.files/
 
 sort_and_format() {
-    # sort by most recent
-    sort -r <<< "$1" | awk -F "|" '{print $2}'
+	# sort by most recent
+	sort -r <<<"$1" | awk -F "|" '{print $2}'
 }
 
 find_notes() {
-    flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
-    [[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
-    sort_and_format "$(find "$1" -mindepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
+	flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
+	[[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
+	sort_and_format "$(find "$1" -mindepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 find_notes_depth() {
-    flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
-    [[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
-    sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
+	flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
+	[[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
+	sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 find_include_archive() {
-    flags=(-not -path '*/.git*' -not -path '*/.files*')
-    [[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
-    sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
+	flags=(-not -path '*/.git*' -not -path '*/.files*')
+	[[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
+	sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 save_in_archive_old_notes() {
-    flags=(-not -path '*/.archive*' -not -path '*/.git*' -not -path '*/.files*' -not -path '*/todo*')
-    files_to_archive="$(find "$NOTES" -mindepth 1 "${flags[@]}" -type d -mtime "+$time_limit_to_archive")"
-    for f in $files_to_archive; do
-        local sub=${f%/*}
-        local sub_no_path="${sub/$NOTES/}"
-        sub=$NOTES/.archive
-        if [[ -n "$sub_no_path" ]]; then
-            sub+="$sub_no_path"
-        fi
-        mkdir -p "$sub"
-        mv "$f" "$sub/"
-    done
+	flags=(-not -path '*/.archive*' -not -path '*/.git*' -not -path '*/.files*' -not -path '*/todo*')
+	files_to_archive="$(find "$NOTES" -mindepth 1 "${flags[@]}" -type d -mtime "+$time_limit_to_archive")"
+	for f in $files_to_archive; do
+		local sub=${f%/*}
+		local sub_no_path="${sub/$NOTES/}"
+		sub=$NOTES/.archive
+		if [[ -n "$sub_no_path" ]]; then
+			sub+="$sub_no_path"
+		fi
+		mkdir -p "$sub"
+		mv "$f" "$sub/" 2>/dev/null
+	done
 }
 
-retrieve_notes_from_archive() { 
-    [[ -z "$1" && -z "$2" ]] && return 
+retrieve_notes_from_archive() {
+	[[ -z "$1" && -z "$2" ]] && return
 
+	local sub="$1"
+	local subject="$2"
+	local archive_sub="$NOTES/.archive"
 
-    local sub="$1"
-    local subject="$2"
-    local archive_sub="$NOTES/.archive"
+	# this if sub --> $NOTES/atomic/programs
+	local sub_no_path="${sub/$NOTES\//}"
+	# this if not sub --> $NOTES/atomic
+	local sub_no_path="${sub_no_path/$NOTES/}"
 
-    # this if sub --> $NOTES/atomic/programs
-    local sub_no_path="${sub/$NOTES\/}"
-    # this if not sub --> $NOTES/atomic
-    local sub_no_path="${sub_no_path/$NOTES}"
+	if [[ -n "$sub_no_path" ]]; then
+		archive_sub+="/$sub_no_path"
+	fi
 
-    if [[ -n "$sub_no_path" ]]; then
-        archive_sub+="/$sub_no_path"
-    fi
+	# if chose an archived file, then make it into a normal path, so it moves it correctly
+	notes_in_archive=$(find "$NOTES/.archive" -wholename "$archive_sub/$subject" -type d)
+	files_in_archive_sub=$(find "$NOTES/.archive" -wholename "$archive_sub/.files" -type d)
 
-    # if chose an archived file, then make it into a normal path, so it moves it correctly
-    notes_in_archive=$(find "$NOTES/.archive" -wholename "$archive_sub/$subject" -type d)
-    files_in_archive_sub=$(find "$NOTES/.archive" -wholename "$archive_sub/.files" -type d)
+	[[ -z $notes_in_archive && -z $files_to_archive && -z $files_in_archive_sub ]] && return 1
 
+	# create folder
+	mkdir -p "$sub"
 
-    [[ -z $notes_in_archive && -z $files_to_archive && -z $files_in_archive_sub ]] && return 1
+	# move files from sub dir
+	[[ -n $files_in_archive_sub ]] && mv "$files_in_archive_sub" "$sub/.files"
 
-    # create folder 
-    mkdir -p "$sub"
+	# if no notes, return
+	[[ -z $notes_in_archive ]] && return 1
 
-    # move files from sub dir
-    [[ -n $files_in_archive_sub ]] && mv "$files_in_archive_sub" "$sub/.files"
-    
-    # if no notes, return
-    [[ -z $notes_in_archive ]] && return 1
+	# move notes
+	mv "$notes_in_archive" "$sub"
 
-    # move notes
-    mv "$notes_in_archive" "$sub"
+	if [[ $? != 0 ]]; then
+		echo "failed command: "
+		echo "mv $notes_in_archive $sub"
+	fi
 
-    if [[ $? != 0 ]]; then
-        echo "failed command: "
-        echo "mv $notes_in_archive $sub"
-    fi
-
-    if [[ -z $(find "$archive_sub/$subject" -mindepth 1 -maxdepth 1 2>/dev/null) ]]; then
-        notify-send "retrieved from archive 📑"
-    fi
-    return 0
+	if [[ -z $(find "$archive_sub/$subject" -mindepth 1 -maxdepth 1 2>/dev/null) ]]; then
+		notify-send "retrieved from archive 📑"
+	fi
+	return 0
 }
 
 if [[ $ARCHIVE == "1" && ! -d "$NOTES/.archive" ]]; then
-    mkdir -p "$NOTES/.archive"
+	mkdir -p "$NOTES/.archive"
 fi
 
 if [[ $ARCHIVE == "1" ]]; then
-    save_in_archive_old_notes
+	save_in_archive_old_notes
 fi
 
 # handle options
@@ -116,157 +114,168 @@ is_list=0
 is_dmenu=0
 is_files=0
 while true; do
-    case "$1" in
-        new) shift; is_new=1;;
-        list) shift; is_list=1;;
-        dmenu) shift; is_dmenu=1;;
-        files) shift; is_files=1;;
-        *) break;;
-    esac
+	case "$1" in
+	new)
+		shift
+		is_new=1
+		;;
+	list)
+		shift
+		is_list=1
+		;;
+	dmenu)
+		shift
+		is_dmenu=1
+		;;
+	files)
+		shift
+		is_files=1
+		;;
+	*) break ;;
+	esac
 done
 
 if [[ $is_new == 1 && $is_list == 1 ]]; then
-    echo -e "\e[31mThese 2 options are exclusive bro"
-    exit
+	echo -e "\e[31mThese 2 options are exclusive bro"
+	exit
 fi
 
 # sub-dir logic
 sub=""
 if [[ -n "$1" ]]; then
-    if [[ -z "$2" ]]; then
-        subject="$NOTES/$1"
-    else
-        sub="$NOTES/$1"
-        subject="$2"
-        shift
-        while [[ -n $2 ]]; do
-           sub="$sub/$subject"
-           subject="$2"
-           shift
-       done
-    fi
+	if [[ -z "$2" ]]; then
+		subject="$NOTES/$1"
+	else
+		sub="$NOTES/$1"
+		subject="$2"
+		shift
+		while [[ -n $2 ]]; do
+			sub="$sub/$subject"
+			subject="$2"
+			shift
+		done
+	fi
 fi
-
 
 # for shell
 if [[ -z "$subject" && $is_dmenu != "1" ]]; then
-    # put space because it wasn't picking up the preview
-    subject=$(echo -e "$(find_notes "$NOTES")\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -2,-1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+	# put space because it wasn't picking up the preview
+	subject=$(echo -e "$(find_notes "$NOTES")\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -2,-1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
 
-    [[ -z "$subject" ]] && exit
-    [[ "$subject" == "new " ]] && is_new=1 && subject="$NOTES"
-    [[ "$subject" == "list" ]] && is_list=1 && subject="$NOTES"
-    [[ "$subject" == "files" ]] && is_files=1 && subject="$NOTES"
+	[[ -z "$subject" ]] && exit
+	[[ "$subject" == "new " ]] && is_new=1 && subject="$NOTES"
+	[[ "$subject" == "list" ]] && is_list=1 && subject="$NOTES"
+	[[ "$subject" == "files" ]] && is_files=1 && subject="$NOTES"
 fi
 
 # add sub if no sub
 if [[ -z "$sub" ]]; then
-    sub="${subject%/*}"
-    subject="$(basename "$subject")"
-    # format if there's 2 //
-    if [[ "$sub" =~ ^// ]]; then
-        sub="${sub#/}"
-    fi
+	sub="${subject%/*}"
+	subject="$(basename "$subject")"
+	# format if there's 2 //
+	if [[ "$sub" =~ ^// ]]; then
+		sub="${sub#/}"
+	fi
 fi
 
 # get normal name instead of .archive
-if grep ".archive" <<< "$sub"; then
-    sub="${sub/$NOTES\/.archive/$NOTES}"
+if grep ".archive" <<<"$sub"; then
+	sub="${sub/$NOTES\/.archive/$NOTES}"
 fi
 
 if [[ $ARCHIVE == "1" ]]; then
-    retrieve_notes_from_archive "$sub" "$subject"
+	retrieve_notes_from_archive "$sub" "$subject"
 fi
 
 _path="$sub/$subject"
 
 if [[ $is_dmenu == 1 ]]; then
-    if [[ "$_path" = "/" ]]; then
-        _path="$NOTES"
-    fi
+	if [[ "$_path" = "/" ]]; then
+		_path="$NOTES"
+	fi
 
-    while [[ -n $(find_notes "$_path") ]]; do
-        _path="$(echo -e "$(find_notes "$_path")\nnew" | dmenu 2>/dev/null )"
-    done
+	while [[ -n $(find_notes "$_path") ]]; do
+		_path="$(echo -e "$(find_notes "$_path")\nnew" | dmenu 2>/dev/null)"
+	done
 
-    [[ -z "$_path" ]] && exit
+	[[ -z "$_path" ]] && exit
 
-    if [[ $_path == "new" ]]; then
-        _path="$NOTES/$(dmenu -p "Enter subject name: " 2>/dev/null <<< "$(echo -e "")")"
-        [[ ! -d $_path ]] && mkdir -p "$_path"
-        session_name="$(basename "$_path")"
-        tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name"  "new_window"
-        exit
-    fi
+	if [[ $_path == "new" ]]; then
+		_path="$NOTES/$(dmenu -p "Enter subject name: " 2>/dev/null <<<"$(echo -e "")")"
+		[[ ! -d $_path ]] && mkdir -p "$_path"
+		session_name="$(basename "$_path")"
+		tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name" "new_window"
+		exit
+	fi
 
-    session_name="$(basename "$_path")"
-    tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name" "new_window"
-    exit
+	session_name="$(basename "$_path")"
+	tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$session_name" "new_window"
+	exit
 fi
 
 # this is for cases when you do "nt something"  and then want to list, new or files
 if [[ $is_new == 0 && $is_list == 0 && $is_files == 0 && -n "$(find_include_archive "$sub/$subject")" ]]; then
-    original="$_path"
-    _path=$(echo -e "$(find_include_archive "$original")\n\e[35mnew \n\e[35mlist\n\e[35mfiles"  | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+	original="$_path"
+	_path=$(echo -e "$(find_include_archive "$original")\n\e[35mnew \n\e[35mlist\n\e[35mfiles" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
 
-    mode_chosen=0
-    [[ -z "$_path" ]] && exit
-    [[ "$_path" == "new " ]] && is_new=1 && _path="$NOTES" && mode_chosen=1
-    [[ "$_path" == "list" ]] && is_list=1 && _path="$NOTES" && mode_chosen=1
-    [[ "$_path" == "files" ]] && is_files=1 && _path="$NOTES" && mode_chosen=1
+	mode_chosen=0
+	[[ -z "$_path" ]] && exit
+	[[ "$_path" == "new " ]] && is_new=1 && _path="$NOTES" && mode_chosen=1
+	[[ "$_path" == "list" ]] && is_list=1 && _path="$NOTES" && mode_chosen=1
+	[[ "$_path" == "files" ]] && is_files=1 && _path="$NOTES" && mode_chosen=1
 
-    if [[ $mode_chosen == 1 ]]; then
-        _path="$original"
-    else
-        while [[ -n $(find_include_archive "$_path") ]]; do
-            _path=$(echo -e "$(find_include_archive "$_path")" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
-        done
-    fi
+	if [[ $mode_chosen == 1 ]]; then
+		_path="$original"
+	else
+		while [[ -n $(find_include_archive "$_path") ]]; do
+			_path=$(echo -e "$(find_include_archive "$_path")" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+		done
+	fi
 fi
 
 if [[ $is_files == 1 ]]; then
-    while [[ -n $(find_include_archive "$_path") && ! -d "$_path/.files" ]]; do
-        pattern="$(echo -e "$(fd . "$_path" -t d -x bash -c "if [[ -f {} ]]; then echo {}; else if [[ -d {}/.files ]]; then echo {}; fi; fi")")"
-        [[ -z $pattern ]] && echo -e "\e[35m \"$(basename "$_path")\" or it's subfolders have no .files folder" && exit 1
-        _path=$(echo -e "$pattern" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {}/.files --color=always || chafa $FILES/fun/kaguya.jpg")
-    done
-    [[ -z "$_path" ]] && exit
-    [[ ! -d $_path/.files ]] && echo -e "\e[35m $(basename "$_path") has no .files folder" && exit 1
-    tmux-sessionizer-cmd "$_path" "cd $_path/.files" "$(basename "$_path")-files"
-    exit 0
+	while [[ -n $(find_include_archive "$_path") && ! -d "$_path/.files" ]]; do
+		pattern="$(echo -e "$(fd . "$_path" -t d -x bash -c "if [[ -f {} ]]; then echo {}; else if [[ -d {}/.files ]]; then echo {}; fi; fi")")"
+		[[ -z $pattern ]] && echo -e "\e[35m \"$(basename "$_path")\" or it's subfolders have no .files folder" && exit 1
+		_path=$(echo -e "$pattern" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {}/.files --color=always || chafa $FILES/fun/kaguya.jpg")
+	done
+	[[ -z "$_path" ]] && exit
+	[[ ! -d $_path/.files ]] && echo -e "\e[35m $(basename "$_path") has no .files folder" && exit 1
+	tmux-sessionizer-cmd "$_path" "cd $_path/.files" "$(basename "$_path")-files"
+	exit 0
 fi
 
 if [[ $is_list == 1 ]]; then
 
-    # if it has folders, is a sub
-    while [[ -n $(find_include_archive "$_path") ]]; do
-        _path=$(echo -e "$(find_notes_depth "$_path")" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
-    done
+	# if it has folders, is a sub
+	while [[ -n $(find_include_archive "$_path") ]]; do
+		_path=$(echo -e "$(find_notes_depth "$_path")" | fzf --delimiter / --with-nth -1 --preview="[ -d {} ] && ls {} --color=always || chafa $FILES/fun/kaguya.jpg")
+	done
 
-    [[ -z "$_path" ]] && exit
+	[[ -z "$_path" ]] && exit
 
-    # list files content
-    chosen_file=$(find "$_path" -mindepth 1 -maxdepth 1 -not -path '*/.*' -printf '%f\n' 2>/dev/null | fzf --preview="[[ -f $_path/{} ]] && bat $_path/{} || bat $_path/.files/{} --color=always")
+	# list files content
+	chosen_file=$(find "$_path" -mindepth 1 -maxdepth 1 -not -path '*/.*' -printf '%f\n' 2>/dev/null | fzf --preview="[[ -f $_path/{} ]] && bat $_path/{} || bat $_path/.files/{} --color=always")
 
-    [[ -z "$chosen_file" ]] && exit
-    tmux-sessionizer-cmd "$_path" "nvim $_path/$chosen_file" "$(basename "$_path")" 
-    exit
+	[[ -z "$chosen_file" ]] && exit
+	tmux-sessionizer-cmd "$_path" "nvim $_path/$chosen_file" "$(basename "$_path")"
+	exit
 fi
 
 if [[ $is_new == 1 ]]; then
-    sub="$_path"
-    subject=""
-    echo -e "\e[35mEnter new subject"
-    read -r subject
-    [[ -z "$subject" ]] && exit 0
-    _path="$sub/$subject"
-    echo "$_path"
+	sub="$_path"
+	subject=""
+	echo -e "\e[35mEnter new subject"
+	read -r subject
+	[[ -z "$subject" ]] && exit 0
+	_path="$sub/$subject"
+	echo "$_path"
 fi
 
 [[ -z "$_path" ]] && exit
 
 if [[ ! -d "$_path" ]]; then
-    mkdir -p "$_path"
+	mkdir -p "$_path"
 fi
 
 tmux-sessionizer-cmd "$_path" "nvim $_path/$name" "$(basename "$_path")"

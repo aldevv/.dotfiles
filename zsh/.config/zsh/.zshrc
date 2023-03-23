@@ -196,7 +196,6 @@ doge() {
 # echo "opening $file" &&
 # xdg-open "$file"
 
-
 bindkey -s "^n" "stn^M"
 bindkey -s 'w' 'nw^M' # wiki
 bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
@@ -271,6 +270,7 @@ if ! is-at-least 582 $less_ver; then
 fi
 unset less_ver
 
+
 # install https://github.com/relastle/pmy
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
@@ -280,7 +280,13 @@ unset less_ver
 
 # shellcheck source=/dev/null
 [[ -f "$ZDOTDIR/.aliases" ]] && . "$ZDOTDIR/.aliases" # old aliases
+[[ -n "$ZDOTDIR" ]] && fpath=($ZDOTDIR/completions $fpath)  
+
 # shellcheck source=/dev/null
 [[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
 [[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases
+
+# enable autocomplete function
+autoload -U compinit
+compinit
 

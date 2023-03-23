@@ -1,0 +1,8 @@
+#compdef _worktree_create_branch
+
+__worktree_create_branch() { 
+    branches="$(git branch | awk '{print $NF}')"
+    branches_arr=("${(f)branches}")
+    _describe 'command' branches_arr
+}
+
