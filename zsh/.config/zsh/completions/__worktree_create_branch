@@ -3,6 +3,8 @@
 __worktree_create_branch() { 
     branches="$(git branch | awk '{print $NF}')"
     branches_arr=("${(f)branches}")
+
+    ## _arguments '-s[sort output]' '1:first arg:_net_interfaces' '::optional arg:_files' ':next arg:(a b c)'
     _describe 'command' branches_arr
 }
 
