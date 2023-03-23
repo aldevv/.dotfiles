@@ -56,15 +56,15 @@ map("n", "<leader>gi", ":G init<CR>", nor)
 map("n", "<leader>gm", ":G mergetool<CR>", nor)
 
 -- for this file
-map("n", "<leader>g0<space>", ":0Gclog! ", nor)
-map("n", "<leader>g0g", ":0Gclog!<cr>", nor)
+map("n", "<leader>g0<space>", ":0Gclog ", nor)
+map("n", "<leader>g0g", ":0Gclog<cr>", nor)
 map("n", "<leader>g0G", ":G log --decorate=short --all %<cr>", nor)
 map("n", "<leader>g0m", ":0Gclog! ", nor)
 map("n", "<leader>g0M", ":G! log % ", nor)
 map("n", "<leader>g0v", ":GV!<CR>", nor) -- only list commits current file
 
 -- old way
-map("n", "<leader>gl0<space>", ":0Gclog! ", nor)
+map("n", "<leader>gl0<space>", ":0Gclog ", nor)
 map("n", "<leader>gl0g", ":0Gclog!<cr>", nor)
 map("n", "<leader>gl0G", ":G log --decorate=short --all %<cr>", nor)
 map("n", "<leader>gl0m", ":0Gclog! ", nor)
@@ -135,6 +135,7 @@ map("v", "<leader>gvv", ":GV<CR>", nor) -- other plugin to visualize repo, you c
 map("v", "<leader>gv0", ":GV!<CR>", nor) -- only list commits current file
 map("v", "<leader>gv?", ":GV!<CR>", nor) -- location list fill
 
+map("n", "<leader>gv", ":Gvsplit @~", nor)
 local wk = require("which-key")
 wk.register({
     gc = {

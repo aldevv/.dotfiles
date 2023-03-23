@@ -62,7 +62,7 @@ cmd([[
     " so when it saves it stays saved
     autocmd BufWritePre *.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua} :silent lua vim.lsp.buf.format()
     " add for any sh file (since might not have extension)
-    autocmd FileType sh :autocmd BufWritePre * lua vim.lsp.buf.format({async = true})
+    autocmd FileType sh :autocmd BufWritePre * lua vim.lsp.buf.format({async = false})
   augroup END
 ]])
 
