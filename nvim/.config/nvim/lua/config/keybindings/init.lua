@@ -94,9 +94,12 @@ map("n", "sd", "<cmd>bd<cr>", nor_s)
 -- map("n", "si", "<Plug>(InsertSkeleton)", s) -- NOTE: need to make this work with luasnip
 map("n", "sI", "<cmd>IndentBlanklineToggle<cr>", desc("disable indentlines"))
 
-map("n", "spm", "set modifiable!", s)
-map("n", "spw", "set wrap!", s)
-map("n", "sps", "set wrapscan!", s)
+map("n", "som", "set modifiable!", nor)
+map("n", "sow", "set wrap!", nor)
+map("n", "sos", "set wrapscan!", nor)
+map("n", "syfp", ":let @+=expand('%:p')<cr>", descv("yank filepath"))
+map("n", "syfP", ":let @+=expand('%')<cr>", descv("yank relative filepath"))
+map("n", "syp", ":let @+=execute('pwd')->split('\\n')[0]<cr>", descv("yank pwd")) -- doing the split because it removes the newline prefix
 
 -- 'cd' towards the directory in which the current file is edited
 -- but only change the path for the current window
@@ -295,10 +298,6 @@ require("config.keybindings.fugitive")
 
 map("n", "<leader>,sf", ":source %<cr>", nor)
 map("n", "<leader>,ss", ":source ~/.config/nvim/lua/lsp/luasnip.lua<cr>", nor)
-map("n", "soL", ":silent source %:h/Session.vim<cr>", nor_s)
-map("n", "sol", ":silent source Session.vim<cr>", nor_s)
-map("n", "soo", ":Obsession<CR>", desc("obsession: add session"))
-map("n", "soO", ":Obsession!<CR>", desc("obsession: remove session"))
 
 -- macro range
 map("x", "@", ":<C-u>call ExecuteMacroOverVisualRange()<cr>", nor_s)

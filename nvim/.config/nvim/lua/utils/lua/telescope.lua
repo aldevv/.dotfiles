@@ -224,10 +224,14 @@ end
 
 -- live_grep
 
-M.git_root = function()
-    local cmd = "git rev-parse --show-toplevel"
-    local res = vim.fn.system(cmd)
-    return vim.split(res, "\n")[1]
+M.git_root_or_curdir_parent = function()
+    if is_git_repo() then
+        local cmd = "git rev-parse --show-toplevel"
+        local res = vim.fn.system(cmd)
+        return vim.split(res, "\n")[1]
+    else
+        return ".."
+    end
 end
 
 M.notes_grep = function()

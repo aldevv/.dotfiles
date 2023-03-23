@@ -362,14 +362,6 @@ return {
             vim.opt.diffopt = "internal,vertical,closeoff,filler"
         end,
     },
-    -- {
-    --     "tpope/vim-obsession",
-    --     cmd = { "Obsession", "Obsession!" },
-    --     config = function()
-    --         vim.g.obsession_no_bufenter = 1
-    --         vim.opt.statusline = "%{ObsessionStatus()}"
-    --     end,
-    -- },
     {
         "nvim-neotest/neotest",
         dependencies = {
