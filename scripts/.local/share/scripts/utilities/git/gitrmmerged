@@ -13,18 +13,20 @@ while read -r l; do
 	if [[ -z "$l" ]]; then
 		continue
 	fi
-	if [[ -z $1 ]]; then
-		folder="${l%%/*}"
-	else
-		folder="$(basename "$l")"
-	fi
+	# if [[ -z $1 ]]; then
+	folder_prefix="${l%%/*}"
+	# else
+	folder_postfix="$(basename "$l")"
+	# fi
 
-	echo "git worktree remove -f $folder"
+	echo "git worktree remove -f $l"
 	echo "git branch -D $l"
 	echo -e "\ndelete worktree and branch?/y/n)"
 	read -r remove_worktree </dev/tty
 	if [[ "$remove_worktree" == "y" ]]; then
-		git worktree remove -f "$folder"
+		if ! git worktree remove -f "$folder_prefix" 2>/dev/null; then
+			git worktree remove -f "$folder_postfix"
+		fi
 		git branch -D "$l"
 	fi
 	echo "-----------------------------------"

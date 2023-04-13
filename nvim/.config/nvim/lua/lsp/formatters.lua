@@ -24,17 +24,18 @@ local opts = {
         level = "warn",
         use_console = "async",
     },
-    on_attach = function(client, bufnr)
-    end,
+    on_attach = function(client, bufnr) end,
     -- conf options
     -- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
     sources = {
         -- formatting.isort,
-        -- formatting.black.with({ extra_args = { "--fast" } }),
+        formatting.black.with({ extra_args = { "--fast" } }),
+        -- formatting.isort,
+        formatting.gofmt,
         -- formatting.uncrustify,
         formatting.clang_format,
         -- formatting.json_tool, jsonls already has one
-        -- formatting.prettier,
+        formatting.prettier,
         diagnostics.vint, --> for vim
         -- formatting.eslint_d,
         -- it looks for node_modules automatically, if you prefer a local in a different place,
@@ -82,21 +83,28 @@ require("mason-null-ls").setup({
     ensure_installed = servers,
     automatic_setup = true,
 })
+
+-- TODO: change to this new way of doing it
+-- require ('mason-null-ls').setup({
+--     ensure_installed = {'stylua', 'jq'}
+--     handlers = {
+--         function() end, -- disables automatic setup of all null-ls sources
+--         stylua = function(source_name, methods)
+--           null_ls.register(null_ls.builtins.formatting.stylua)
+--         end,
+--         shfmt = function(source_name, methods)
+--           -- custom logic
+--           require('mason-null-ls').default_setup(source_name, methods) -- to maintain default behavior
+--         end,
+--     },
+-- })
+
 require("mason-null-ls").setup_handlers({
     function(source_name, methods)
         require("mason-null-ls.automatic_setup")(source_name, methods)
     end,
     stylua = function(source_name, methods)
         null_ls.register(formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }))
-    end,
-    black = function(source_name, methods)
-        null_ls.register(formatting.black.with({ extra_args = { "--fast" } }))
-    end,
-    gofmt = function(source_name, methods)
-        null_ls.register(formatting.gofmt)
-    end,
-    isort = function(source_name, methods)
-        null_ls.register(formatting.isort)
     end,
     shfmt = function(source_name, methods)
         null_ls.register(formatting.shfmt.with({

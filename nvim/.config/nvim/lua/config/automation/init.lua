@@ -114,7 +114,7 @@ autocmd FileType org nnoremap <leader>ll :VimtexCompile<cr>
 -- ]])
 
 cmd([[
-     autocmd BufReadPre *.{org,md,js,jsx,ts,tsx,svelte,vue} :set shiftwidth=2 tabstop=2 softtabstop=2
+     autocmd FileType org,markdown,javascript,javascriptreact,typescript,typescriptreact,svelte,vue :set shiftwidth=2 tabstop=2 softtabstop=2
 ]])
 
 -- cmd([[

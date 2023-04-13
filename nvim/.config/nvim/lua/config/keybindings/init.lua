@@ -137,8 +137,11 @@ map("n", "<leader>,cS", ":Copilot setup<cr>", nor)
 
 -- terminal
 map("n", "sñ", ":botright terminal<cr>", nor)
-map("n", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
-map("t", "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
+map({ "n", "t" }, "<a-q>", "<cmd>ToggleTerm direction=float<cr>", nor)
+
+map({ "n", "t" }, "<a-1>", "<cmd>ToggleTerm direction=horizontal<cr>", nor)
+map({ "n", "t" }, "<a-2>", "<cmd>ToggleTerm direction=vertical size=40<cr>", nor)
+map({ "n", "t" }, "<a-3>", "<cmd>ToggleTerm direction=tab<cr>", nor)
 
 -- terminal
 map("t", "<a-'>", "<c-\\><c-n>", nor_s)
@@ -215,7 +218,7 @@ map("n", "<leader>.vd", ":lua require('osv').launch({port=3333})<cr>", nor_s)
 map("n", "<leader>.vD", ":lua require('osv').run_this()<cr>", nor_s)
 map("n", "<leader>.sb", "ggO#!/bin/bash<escape>", nor_s)
 map("n", "<leader>.sB", "ggO#!/bin/bash<escape>", nor_s)
-map("n", "<leader>.sf", ":luafile %<cr>", nor)
+map("n", "<leader>.vf", ":luafile %<cr>", nor)
 map("v", "<leader>!", ":w !", nor)
 map("n", "Ñ", ":w !", nor)
 map("v", "Ñ", ":w !", nor)

@@ -16,6 +16,7 @@ M.load_mappings = function() -- use these on_attach
     -- map("n", "gd", ":lua vim.lsp.buf.definition()<cr>", nor)
     map("n", "gd", ":Telescope lsp_definitions<cr>", nor_s)
     map("n", "gD", ":vsplit | lua vim.lsp.buf.definition()<cr>")
+    map("n", "gS", ":split | lua vim.lsp.buf.definition()<cr>")
     map("n", "gr", ":Telescope lsp_references<cr>", nor)
     map("n", "gR", ":lua vim.lsp.buf.references()<cr>", nor)
     map("n", "gy", ":lua vim.lsp.buf.type_definition()<cr>", nor)
