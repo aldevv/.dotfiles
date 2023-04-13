@@ -65,7 +65,7 @@ return {
         dependencies = "L3MON4D3/LuaSnip",
     },
     {
-        "honda/friendly-snippets",
+        "rafamadriz/friendly-snippets",
 
         config = function()
             require("luasnip.loaders.from_vscode").lazy_load()
@@ -204,11 +204,9 @@ return {
     {
         "github/copilot.vim",
         init = function()
-            -- you can enable a suggestion on any file by doing <M-\>
             vim.g.copilot_filetypes = { ["*"] = false, rust = true, js = true, ts = true, jsx = true }
             vim.cmd("highlight CopilotSuggestion guifg=#AAAAAA ctermfg=8")
         end,
-        -- cmd = "Copilot",
     },
 
     -- breaking nvim-surround, should look for better option using nvim-treesitter

@@ -51,7 +51,8 @@ require("lazy").setup("plugins", {
 })
 
 -- set theme
-vim.cmd("colorscheme gruvbox")
+-- vim.cmd("colorscheme gruvbox")
+vim.cmd("colorscheme kanagawa")
 -- transparency
 vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
 require("config")

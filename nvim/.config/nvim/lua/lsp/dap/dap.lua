@@ -12,32 +12,30 @@
 
 local dap = require("dap")
 -- default is info
-local level = "trace" -- trace, error, debug, info, warn
+local level = "info" -- trace, error, debug, info, warn
 dap.set_log_level(level)
 
 local servers = { "debugpy", "delve" }
 
+local handlers = {
+    function(config)
+        require('mason-nvim-dap').default_setup(config)
+    end,
+    python = function(config)
+        require("dap-python").setup()
+        require("dap-python").test_runner = "pytest"
+        require('mason-nvim-dap').default_setup(config)
+    end,
+    delve = function(config)
+        require("dap-go").setup()
+        require('mason-nvim-dap').default_setup(config)
+    end,
+}
+
 require("mason-nvim-dap").setup({
     ensure_installed = servers,
     automatic_setup = true,
-})
-
-require("mason-nvim-dap").setup_handlers({
-    function(source_name)
-        require("mason-nvim-dap.automatic_setup")(source_name)
-    end,
-    python = function(source_name)
-        -- local my_py_adapter = require("lsp.dap.languages.python").adapter()
-        require("dap-python").setup()
-        require("dap-python").test_runner = "pytest"
-        -- local my_py_config = require("lsp.dap.languages.python").config()
-        -- table.insert(dap.configurations.python, unpack(my_py_config))
-        require("mason-nvim-dap.automatic_setup")(source_name)
-    end,
-    delve = function(source_name)
-        require("dap-go").setup()
-        require("mason-nvim-dap.automatic_setup")(source_name)
-    end,
+    handlers = handlers,
 })
 
 require("dap.ext.vscode").load_launchjs()
