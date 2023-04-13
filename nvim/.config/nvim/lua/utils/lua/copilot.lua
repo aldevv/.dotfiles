@@ -1,15 +1,15 @@
 local M = {}
-vim.g.copilot_enabled = false
 vim.g.copilot_no_tab_map = true
+vim.b.copilot_enabled = false
+
 -- copilot
 M.toggle_copilot = function()
-    local is_enabled = vim.api.nvim_get_var("copilot_enabled")
-    if is_enabled == 1 then
+    if vim.b.copilot_enabled == 1 then
         print("Disabling copilot")
-        vim.api.nvim_command("Copilot disable")
+        vim.b.copilot_enabled = false
     else
         print("Enabling copilot")
-        vim.api.nvim_command("Copilot enable")
+        vim.b.copilot_enabled = true
     end
 end
 return M
