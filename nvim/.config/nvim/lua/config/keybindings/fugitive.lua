@@ -71,6 +71,8 @@ map("n", "<leader>gl0m", ":0Gclog! ", nor)
 map("n", "<leader>gl0M", ":G! log % ", nor)
 map("n", "<leader>gl0v", ":GV!<CR>", nor) -- only list commits current file
 
+map("n", "gC", ":G commit<CR>", nor) -- only list commits current file
+
 -- while in the git log you can do:
 -- coo to checkout that commit!
 -- O to open in new tab
