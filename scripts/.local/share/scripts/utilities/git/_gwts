@@ -9,25 +9,25 @@ _options="$(git worktree list)"
 sorted="$(git branch --sort=-committerdate | grep '^[+*]' | awk '{print $2}')"
 sorted_options=""
 while read -r l; do
-    if [[ -z "$sorted_options" ]]; then
-        sorted_options="$(grep "$l" <<<"$_options")"
-    else
-        sorted_options="$sorted_options\n$(grep "$l" <<<"$_options")"
-    fi
+	if [[ -z "$sorted_options" ]]; then
+		sorted_options="$(grep -w "$l" <<<"$_options")"
+	else
+		sorted_options="$sorted_options\n$(grep -w "$l" <<<"$_options")"
+	fi
 done <<<"$sorted"
 
 # detached heads handler, since we are searching using branch and worktree
 # we append detached heads to the end
 while read -r l; do
-    worktree_path="$(awk '{print $1}' <<<"$l")"
-    commit="$(awk '{print $2}' <<<"$l")"
-    if [[ "$commit" == "(bare)" ]]; then
-        continue
-    fi
+	worktree_path="$(awk '{print $1}' <<<"$l")"
+	commit="$(awk '{print $2}' <<<"$l")"
+	if [[ "$commit" == "(bare)" ]]; then
+		continue
+	fi
 
-    if ! grep -zoP "$worktree_path" <<<"$sorted_options" &>/dev/null; then
-        sorted_options="$sorted_options\n$l"
-    fi
+	if ! grep -zoP "$worktree_path" <<<"$sorted_options" &>/dev/null; then
+		sorted_options="$sorted_options\n$l"
+	fi
 done <<<"$_options"
 _options="$(echo "$sorted_options" | awk '{print $1}')"
 

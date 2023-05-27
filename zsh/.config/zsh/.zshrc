@@ -85,9 +85,6 @@ preexec() { echo -ne '\e[5 q'; } # Use beam shape cursor for each new prompt.
 ##set history size
 [ ! -d "$HOME/.cache/zsh" ] &&\
     mkdir "$HOME/.cache/zsh"
-export HISTFILE="$HOME/.cache/zsh/.zsh_history"
-export HISTSIZE=999999999
-export SAVEHIST=$HISTSIZE
 # plugins=(copybuffer dirhistory jsontools)
 plugins=(
 	git
@@ -290,3 +287,10 @@ unset less_ver
 autoload -U compinit
 compinit
 
+# put settings here, since oh-my-zsh sets it's own settings
+export HISTFILE="$HOME/.cache/zsh/.zsh_history"
+export SAVEHIST=$HISTSIZE
+export HISTSIZE=999999999
+setopt EXTENDED_HISTORY
+setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
+setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.

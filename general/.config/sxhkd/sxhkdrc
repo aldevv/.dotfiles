@@ -57,6 +57,9 @@ super + F9
 super + F10
     unmountDrive
 
+control + shift + space
+    $UTILITIES/misc/toggle_layout
+
 XF86AudioMute
      volume toggle; $APPS/dwm/refreshVolume
 

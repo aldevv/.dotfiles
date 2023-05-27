@@ -43,7 +43,7 @@ return {
         branch = "main",
         -- config = req("config.appearance.themes.tokyonight"),
     },
-    { "catppuccin/nvim", config = req("config.appearance.themes.catppuccin") },
+    { "catppuccin/nvim",      config = req("config.appearance.themes.catppuccin") },
 
     "norcalli/nvim-colorizer.lua",
 
@@ -161,6 +161,12 @@ return {
         "numToStr/Comment.nvim",
         config = req("core.comment"),
     },
+    -- {
+    --     "echasnovski/mini.comment",
+    --     config = function()
+    --         require("mini.comment").setup()
+    --     end,
+    -- },
     --
     -- -- Lazy loading:
     -- -- Load on specific commands
@@ -179,8 +185,8 @@ return {
         "mfussenegger/nvim-dap",
         dependencies = {
             -- { "Pocco81/DAPInstall.nvim", module = "dap-install" },
-            { "rcarriga/nvim-dap-ui", module = "dapui" },
-            { "theHamsta/nvim-dap-virtual-text", module = "nvim-dap-virtual-text" },
+            { "rcarriga/nvim-dap-ui",             module = "dapui" },
+            { "theHamsta/nvim-dap-virtual-text",  module = "nvim-dap-virtual-text" },
             { "nvim-telescope/telescope-dap.nvim" },
             { "rcarriga/cmp-dap" },
             { "mfussenegger/nvim-dap-python" },
@@ -311,7 +317,7 @@ return {
 
     "bkad/CamelCaseMotion",
     "gpanders/editorconfig.nvim",
-    { "bps/vim-textobj-python", ft = "python" },
+    { "bps/vim-textobj-python",   ft = "python" },
 
     {
         "matze/vim-move",
@@ -334,7 +340,7 @@ return {
 
     { "osyo-manga/vim-brightest", cmd = "BrightestToggle" },
 
-    { "junegunn/gv.vim", cmd = "GV" },
+    { "junegunn/gv.vim",          cmd = "GV" },
 
     {
         "rbgrouleff/bclose.vim",
@@ -374,7 +380,7 @@ return {
         config = req("core.neotest"),
         module = "neotest",
     },
-    { "brooth/far.vim", cmd = { "Far", "Fardo", "Farr" } },
+    { "brooth/far.vim",               cmd = { "Far", "Fardo", "Farr" } },
 
     {
         "ThePrimeagen/refactoring.nvim",
@@ -587,6 +593,24 @@ return {
         config = req("core.easypick"),
         dependencies = "nvim-telescope/telescope.nvim",
     },
+    -- {
+    -- 	"napisani/nvim-github-codesearch",
+    -- 	build = "make",
+    -- 	config = function()
+    -- 		-- dependency: apt-get install libluajit-5.1-dev
+    -- 		local f = io.open(vim.env.HOME .. "/.config/tokens/tokens.json", "r")
+    -- 		if not f then
+    -- 			return
+    -- 		end
+    -- 		local contents = f:read("*all")
+    -- 		local decoded = vim.json.decode(contents)
+    -- 		require("nvim-github-codesearch").setup({
+    -- 			github_auth_token = decoded["GITHUB_TOKEN"],
+    -- 		})
+    -- 		f.close()
+    -- 	end,
+    -- },
+    -- "prisma/vim-prisma",
     -- looks good, have to pay
     -- {
     --     "Bryley/neoai.nvim",
@@ -711,6 +735,7 @@ return {
     -- not working with sshconfig as of 13 jan 2021
     -- use({
     --     "chipsenkbeil/distant.nvim",
+    --     branch = "v0.2",
     --     config = function()
     --         require("distant").setup({
     --             -- Applies Chip's personal settings to every machine you connect to
@@ -721,5 +746,5 @@ return {
     --             ["*"] = require("distant.settings").chip_default(),
     --         })
     --     end,
-    -- })
+    -- }),
 }

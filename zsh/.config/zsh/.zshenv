@@ -32,3 +32,10 @@ load_pyenv() {
 }
 # NOTE: this might slow down tmux when opening a folder with .python-version file
 [[ -f .python-version && -n "$(command -v pyenv)" ]] && load_pyenv
+
+load_fly() { 
+    export FLYCTL_INSTALL="/home/kanon/.fly"
+    export PATH="$FLYCTL_INSTALL/bin:$PATH"
+}
+[[ -d .fly && -n "$(command -v fly)" ]] && load_fly 
+

@@ -16,6 +16,7 @@ local servers = {
     "jsonls",
     "rust_analyzer",
     "volar",
+    -- "eslint-lsp"
     -- "sqls",
     --    "hls",
     "emmet_ls",

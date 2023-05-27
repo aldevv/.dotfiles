@@ -2,6 +2,7 @@
 H       ~
 d.      ~/.dotfiles
 uu      $REMOTES
+r       ~/repos
 n.      $NOTES
 N.      $ATOMIC
 wo      $WORK
