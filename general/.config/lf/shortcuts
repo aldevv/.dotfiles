@@ -7,6 +7,9 @@ map Yd. $ cp -rv $f ~/.dotfiles
 map <backspace2>uu cd /home/kanon/remotes
 map muu $ mv -v $f /home/kanon/remotes
 map Yuu $ cp -rv $f /home/kanon/remotes
+map <backspace2>r cd ~/repos
+map mr $ mv -v $f ~/repos
+map Yr $ cp -rv $f ~/repos
 map <backspace2>n. cd /home/kanon/notes
 map mn. $ mv -v $f /home/kanon/notes
 map Yn. $ cp -rv $f /home/kanon/notes
