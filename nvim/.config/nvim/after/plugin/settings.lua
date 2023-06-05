@@ -4,7 +4,7 @@ vim.cmd("filetype indent off")
 -- use spaces instead of tabs
 vim.opt.expandtab = true
 -- disabled for treesitter-indent
-vim.opt.tabstop = 4
-vim.opt.softtabstop = 4
-vim.opt.autoindent = false
+vim.opt.tabstop = 2
+vim.opt.softtabstop = 2
+vim.opt.autoindent = true -- this is the one for when you press "o"
 vim.opt.smartindent = false
