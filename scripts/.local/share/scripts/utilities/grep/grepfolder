@@ -17,15 +17,15 @@ fi
 
 folder="$2"
 if [[ $nofzf == 1 ]]; then
-	rg -i "$1" --color=always "$folder"
+	rg -uuu -i "$1" --color=always "$folder"
 	exit 0
 fi
 
-preview_cmd="rg -i -C=2 --color=always $1 {}"
+preview_cmd="rg -uuu -i -C=2 --color=always $1 {}"
 
-file_="$(rg -i -l "$1" "$folder" | fzf --with-nth -2,-1 --preview="$preview_cmd" --height='50%' --delimiter /)"
+file_="$(rg -uuu -i -l "$1" "$folder" | fzf --with-nth -2,-1 --preview="$preview_cmd" --height='50%' --delimiter /)"
 if [ -z "$file_" ]; then
 	exit 1
 fi
-line_number="$(awk -F: '{print $1}' <<<"$(rg -n "$1" "$file_")" | head -n 1)"
+line_number="$(awk -F: '{print $1}' <<<"$(rg -uuu -n "$1" "$file_")" | head -n 1)"
 nvim "$file_" +"$line_number"

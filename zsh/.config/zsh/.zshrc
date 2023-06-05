@@ -294,3 +294,4 @@ export HISTSIZE=999999999
 setopt EXTENDED_HISTORY
 setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
 setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
+

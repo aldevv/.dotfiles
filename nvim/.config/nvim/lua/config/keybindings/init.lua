@@ -20,15 +20,15 @@ local map = vim.keymap.set
 local h = "~/.config/nvim"
 
 local desc = function(desc)
-	return vim.tbl_extend("keep", nor_s, { desc = desc })
+    return vim.tbl_extend("keep", nor_s, { desc = desc })
 end
 
 local descv = function(desc)
-	return vim.tbl_extend("keep", nor, { desc = desc })
+    return vim.tbl_extend("keep", nor, { desc = desc })
 end
 
 local descb = function(desc)
-	return vim.tbl_extend("keep", nor, { desc = desc, buffer = true })
+    return vim.tbl_extend("keep", nor, { desc = desc, buffer = true })
 end
 
 -- backlog
@@ -234,17 +234,17 @@ map("n", "gwc", ":Telescope git_worktree create_git_worktree<cr>", nor)
 -- use <c-d> while in this to delete it!
 map("n", "gww", ":Telescope git_worktree git_worktrees<cr>", nor)
 local function add_slash_feature_worktree_post()
-	local branch = vim.fn.input("Enter branch name:")
-	local path = vim.split(branch, "/")[2]
-	require("git-worktree").create_worktree(path, branch, "origin")
-	print("Added " .. path .. "!")
+    local branch = vim.fn.input("Enter branch name:")
+    local path = vim.split(branch, "/")[2]
+    require("git-worktree").create_worktree(path, branch, "origin")
+    print("Added " .. path .. "!")
 end
 
 local function add_slash_feature_worktree_pre()
-	local branch = vim.fn.input("Enter branch name:")
-	local path = vim.split(branch, "/")[2]
-	require("git-worktree").create_worktree(path, branch, "origin")
-	print("Added " .. path .. "!")
+    local branch = vim.fn.input("Enter branch name:")
+    local path = vim.split(branch, "/")[2]
+    require("git-worktree").create_worktree(path, branch, "origin")
+    print("Added " .. path .. "!")
 end
 
 map("n", "gwa", add_slash_feature_worktree_post, desc("git worktree create post"))
@@ -324,6 +324,7 @@ map("n", "<leader>,lll", ":Lazy<cr>", nor_s)
 map("n", "<leader>,llp", ":Lazy profile<cr>", nor_s)
 map("n", "<leader>,llr", ":Lazy restore<cr>", nor_s)
 map("n", "<leader>,lr", ":LspRestart<cr>", nor_s)
+map("n", "<leader>,li", ":LspInfo<cr>", nor_s)
 map("n", "<leader>,ls", ":LspStart<cr>", nor_s)
 map("n", "<leader>,lS", ":LspStop<cr>", nor_s)
 map("n", "<leader>,ln", ":NullLsInfo<cr>", nor_s)
@@ -375,15 +376,15 @@ map("n", "<localleader>Dq", ":DBUILastQueryInfo<cr>", {})
 map("n", "<leader>,,", "<cmd>tabedit<cr>", nor)
 
 local function toggle_transparency()
-	local normal = vim.api.nvim_command_output("hi Normal")
-	-- if nil, then is transparent
-	if string.find(normal, "guibg") == nil then
-		local cur_theme = vim.api.nvim_command_output("colorscheme")
-		vim.cmd("colorscheme " .. cur_theme)
-		return
-	end
+    local normal = vim.api.nvim_command_output("hi Normal")
+    -- if nil, then is transparent
+    if string.find(normal, "guibg") == nil then
+        local cur_theme = vim.api.nvim_command_output("colorscheme")
+        vim.cmd("colorscheme " .. cur_theme)
+        return
+    end
 
-	vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
+    vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
 end
 
 -- map("n", "sT", toggle_transparency, nor)
@@ -394,52 +395,52 @@ map("n", "sT", toggle_transparency, nor)
 -- map("n", "<leader>ss", ":e .projections.json<cr>", {})
 
 map(
-	"n",
-	"<leader>sp",
-	"<cmd>lua require('utils.lua.misc').toggle_float_file('package.json')<cr>",
-	desc("Open package.json file in a floating window")
+    "n",
+    "<leader>sp",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('package.json')<cr>",
+    desc("Open package.json file in a floating window")
 )
 
 map(
-	"n",
-	"<leader>sP",
-	"<cmd>lua require('utils.lua.misc').toggle_float_file('.projections.json')<cr>",
-	desc("Open .projections.json file in a floating window")
+    "n",
+    "<leader>sP",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('.projections.json')<cr>",
+    desc("Open .projections.json file in a floating window")
 )
 
 map(
-	"n",
-	"<leader>sr",
-	"<cmd>lua require('utils.lua.misc').toggle_float_file('requirements.txt')<cr>",
-	desc("Open requirements.txt file in a floating window")
+    "n",
+    "<leader>sr",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('requirements.txt')<cr>",
+    desc("Open requirements.txt file in a floating window")
 )
 
 map(
-	"n",
-	"<leader>sc",
-	"<cmd>lua require('utils.lua.misc').toggle_float_file('Cargo.toml')<cr>",
-	desc("Open Cargo.toml file in a floating window")
+    "n",
+    "<leader>sc",
+    "<cmd>lua require('utils.lua.misc').toggle_float_file('Cargo.toml')<cr>",
+    desc("Open Cargo.toml file in a floating window")
 )
 
 -- commands
 
 map(
-	"n",
-	"<leader><leader>tw",
-	':topleft 40vs $ATOMIC/todo/work/<c-r>=system("stamp")<cr><cr>',
-	desc("create work todo")
+    "n",
+    "<leader><leader>tw",
+    ':topleft 40vs $ATOMIC/todo/work/<c-r>=system("stamp")<cr><cr>',
+    desc("create work todo")
 )
 map(
-	"n",
-	"<leader><leader>tp",
-	':topleft 40vs $ATOMIC/todo/projects/<c-r>=system("stamp")<cr><cr>',
-	desc("create work todo")
+    "n",
+    "<leader><leader>tp",
+    ':topleft 40vs $ATOMIC/todo/projects/<c-r>=system("stamp")<cr><cr>',
+    desc("create work todo")
 )
 map(
-	"n",
-	"<leader><leader>tl",
-	':topleft 40vs $ATOMIC/todo/learn/<c-r>=system("stamp")<cr><cr>',
-	desc("create work todo")
+    "n",
+    "<leader><leader>tl",
+    ':topleft 40vs $ATOMIC/todo/learn/<c-r>=system("stamp")<cr><cr>',
+    desc("create work todo")
 )
 
 map("n", "<leader>.dgpa", "<cmd>Start . _dgpa<cr>", descv("push all my stuff"))
@@ -452,17 +453,17 @@ map("n", "<leader>.anT", ":Spawn st -e bash -c 'ant '<left>", descv("create cust
 map("n", "<leader>.br", ":e README.md<cr>", descv("open README.md"))
 
 map(
-	"n",
-	"<leader>.st",
-	"<cmd>Spawn st -e bash -c 'cd $(dirname %); zsh'<cr>",
-	desc("terminal instance in current folder")
+    "n",
+    "<leader>.st",
+    "<cmd>Spawn st -e bash -c 'cd $(dirname %); zsh'<cr>",
+    desc("terminal instance in current folder")
 )
 
 map(
-	"n",
-	"<leader>.r",
-	"<cmd>Spawn st -e bash -c 'ranger $(dirname %); zsh'<cr>",
-	desc("create ranger instance in current folder")
+    "n",
+    "<leader>.r",
+    "<cmd>Spawn st -e bash -c 'ranger $(dirname %); zsh'<cr>",
+    desc("create ranger instance in current folder")
 )
 
 -- language specific
@@ -475,57 +476,57 @@ map("n", "<leader><leader>S", ":Start! ", descv("Start! _"))
 
 -- run entr
 map("n", "<leader><leader>r", function()
-	local cmd = vim.fn.input("Enter the command entr will run: ")
-	vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
+    local cmd = vim.fn.input("Enter the command entr will run: ")
+    vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
 end, nor_s)
 map("n", "<leader><leader>R", function()
-	local cmd = vim.fn.input("Enter the command entr will run: ")
-	vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
+    local cmd = vim.fn.input("Enter the command entr will run: ")
+    vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
 end, nor_s)
 
 -- go
 map("n", "<leader><leader>g", function()
-	vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
+    vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
 end, nor_s)
 map("n", "<leader><leader>G", function()
-	vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
+    vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
 end, nor_s)
 
 map("n", "<leader><leader>p", function()
-	vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
+    vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
 end, nor_s)
 map("n", "<leader><leader>P", function()
-	vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
+    vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
 end, nor_s)
 
 -- go keymaps
 vim.api.nvim_create_autocmd("FileType", {
-	pattern = "go",
-	callback = function()
-		map("n", "<leader>frr", "<cmd>GoRun<cr>", nb)
-		map("n", "<leader>fr<space>", ":GoRun ", descb("GoRun _"))
-		map("n", "<leader>ff", "<cmd>GoFillStruct<cr>", nb)
-		map("n", "<leader>fF", "<cmd>GoFiles<cr>", descb("GoFiles: show this package's files"))
-		map("n", "<leader>fdd", ":GoDoc <c-r>=expand('<cword>')<cr><cr>", descb("GoDoc <cword>"))
-		map("n", "E", ":GoDoc <c-r>=expand('<cword>')<cr><cr>", nb)
-		map("n", "<leader>fd<space>", ":GoDoc ", nb)
-		map("n", "<leader>fi", "<cmd>GoIfErr<cr>", nb)
-		map("n", "<leader>fta", "<cmd>GoAddTags<cr>", nb)
-		map("n", "<leader>ftr", "<cmd>GoRemoveTags<cr>", nb)
+    pattern = "go",
+    callback = function()
+        map("n", "<leader>frr", "<cmd>GoRun<cr>", nb)
+        map("n", "<leader>fr<space>", ":GoRun ", descb("GoRun _"))
+        map("n", "<leader>ff", "<cmd>GoFillStruct<cr>", nb)
+        map("n", "<leader>fF", "<cmd>GoFiles<cr>", descb("GoFiles: show this package's files"))
+        map("n", "<leader>fdd", ":GoDoc <c-r>=expand('<cword>')<cr><cr>", descb("GoDoc <cword>"))
+        map("n", "E", ":GoDoc <c-r>=expand('<cword>')<cr><cr>", nb)
+        map("n", "<leader>fd<space>", ":GoDoc ", nb)
+        map("n", "<leader>fi", "<cmd>GoIfErr<cr>", nb)
+        map("n", "<leader>fta", "<cmd>GoAddTags<cr>", nb)
+        map("n", "<leader>ftr", "<cmd>GoRemoveTags<cr>", nb)
 
-		-- example: GoImpl var *Struct Interface
-		map("n", "<leader>fi", ":GoImpl<cr>", descb("GoImpl: Implement Interface")) -- example: GoImpl f *Foo io.Writer
-		map("n", "<leader>fa", ":GoAlternate<cr>", descb("GoAlternate: go to test file"))
-		map("n", "<leader>fc", ":GoCoverage<cr>", descb("GoCoverage: check cur file test coverage"))
+        -- example: GoImpl var *Struct Interface
+        map("n", "<leader>fi", ":GoImpl<cr>", descb("GoImpl: Implement Interface")) -- example: GoImpl f *Foo io.Writer
+        map("n", "<leader>fa", ":GoAlternate<cr>", descb("GoAlternate: go to test file"))
+        map("n", "<leader>fc", ":GoCoverage<cr>", descb("GoCoverage: check cur file test coverage"))
 
-		map("n", "<leader>fTt", ":GoTest<cr>", descb("GoTest"))
-		map("n", "<leader>fTf", ":GoTestFunc<cr>", descb("GoTestFunc"))
-		map("n", "<leader>fTF", ":GoTestFile<cr>", descb("GoTestFile"))
-		map("n", "<leader>fTc", ":GoTestCompile<cr>", descb("GoTestCompile"))
+        map("n", "<leader>fTt", ":GoTest<cr>", descb("GoTest"))
+        map("n", "<leader>fTf", ":GoTestFunc<cr>", descb("GoTestFunc"))
+        map("n", "<leader>fTF", ":GoTestFile<cr>", descb("GoTestFile"))
+        map("n", "<leader>fTc", ":GoTestCompile<cr>", descb("GoTestCompile"))
 
-		map("n", "<leader>fg", ":GoGenerate<cr>", nb)
-		map("n", "<leader>fb", ":GoBuild<cr>", nb)
-	end,
+        map("n", "<leader>fg", ":GoGenerate<cr>", nb)
+        map("n", "<leader>fb", ":GoBuild<cr>", nb)
+    end,
 })
 
 -- resize
