@@ -2,12 +2,12 @@
 -- Config { font = "xft:Noto Sans Emoji:pixelsize=11:antialias=true:autohint=true"
 -- Config { font = "xft:DaddyTimeMono Nerd Font Mono:pixelsize=14:antialias=true:autohint=true:bold"
 -- Config { font = "DaddyTimeMono Nerd Font Mono"
-Config { font = "Noto Sans Emoji pixelsize 11"
+Config { font = "Noto Sans Emoji pixelsize 10"
        , additionalFonts =
        [
-       "NotoColorEmoji pixelsize 9"
-       , "JoyPixels pixelsize 9"
-       , "monospace pixelsize 9"
+       "NotoColorEmoji pixelsize 10"
+       , "JoyPixels pixelsize 10"
+       , "monospace pixelsize 10"
        ]
           -- [ "xft:FontAwesome 6 Free Solid:pixelsize=10"
           -- , "xft:FontAwesome:pixelsize=10:bold"
