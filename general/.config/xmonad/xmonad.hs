@@ -1,3 +1,4 @@
+import Control.Monad (liftM2)
 import System.Exit
 import XMonad
 import XMonad.Actions.CycleWS
@@ -11,6 +12,7 @@ import XMonad.Hooks.StatusBar
 import XMonad.Hooks.StatusBar.PP
 import XMonad.Hooks.WindowSwallowing (swallowEventHook)
 import XMonad.Layout.Gaps
+import XMonad.Layout.IndependentScreens (marshallPP)
 import XMonad.Layout.Magnifier (magnifiercz)
 import XMonad.Layout.NoBorders (noBorders, smartBorders)
 import XMonad.Layout.Renamed
@@ -57,8 +59,7 @@ myKeys =
   -- defaults
   -- readable: https://gist.github.com/micrub/aeebe7eb4d2df9e5e203e76a0fd89542
   -- config: https://wiki.haskell.org/Xmonad/Config_archive/Template_xmonad.hs_(0.9)
-  [ ("M-w", spawn "firefox"),
-    ("M-S-z", spawn "xscreensaver-command -lock"),
+  [ ("M-S-z", spawn "xscreensaver-command -lock"),
     ("M-r", spawn "st -e ranger"),
     ("M-q", kill),
     ("M-f", sendMessage (Toggle "M")),
@@ -124,11 +125,11 @@ customLayout =
 
 -- PP docs pretty print
 -- https://hackage.haskell.org/package/xmonad-contrib-0.17.0/docs/XMonad-Hooks-StatusBar-PP.html
-myXmobarPP :: PP
-myXmobarPP =
+myXmobarPP :: ScreenId -> PP
+myXmobarPP s =
   filterOutWsPP
     [scratchpadWorkspaceTag] -- > removes NSP from xmobar NSP cratchpad)
-    def
+    $ def
       { ppSep = magenta " • ",
         -- ppTitle = xmobarColor "magenta" "" . wrap (white "[") (white "]"),
         ppTitle = formatFocused, -- > the format of the current window title
@@ -167,11 +168,11 @@ myXmobarPP =
     red = xmobarColor "#ff5555" ""
     lowWhite = xmobarColor "#646464" ""
 
--- lowWhite = xmobarColor "#bbbbbb" ""
+-- creates a new ManageHook
 myManageHook :: ManageHook
 myManageHook =
   -- using 'doShift ( myWorkspaces !! 7)' sends program to workspace 8!
-  -- doShift "1", this will open program in workspace 1 and move focus to it
+  -- doShift "一", this will open program in workspace 1 and move focus to it
 
   insertPosition -- this is so new windows open in the master area
     Master
@@ -180,7 +181,7 @@ myManageHook =
       [ className =? "Gimp" --> doFloat,
         className =? "copyq" --> doFloat,
         className =? "Slack" --> doShift (myWorkspaces !! 5),
-        className =? "firefox" --> doShift "1",
+        className =? "firefox" --> doShift (myWorkspaces !! 0),
         -- className =? "zoom " --> doFloat,
         className =? "SimpleScreenRecorder" --> doFloat,
         isDialog --> doFloat
@@ -221,29 +222,39 @@ myLogHook =
   where
     fadeAmount = 1 -- > sets opacity for unfocused windows
 
+myStatusBarSpawner :: Applicative f => ScreenId -> f StatusBarConfig
+myStatusBarSpawner (S s) = do
+  pure $
+    statusBarPropTo
+      ("_XMONAD_LOG_" ++ show s)
+      ("xmobar -x " ++ show s ++ " ~/.config/xmobar/xmobar" ++ show s ++ ".hs")
+      (pure $ myXmobarPP (S s))
+
 myStartupHook :: X ()
 myStartupHook = do
-  spawn "killall trayer && killall xmobar" -- kill current trayer and xmobar on each restart
   let colorTrayer = "--tint 0x2B2E37"
-  spawn ("sleep 2 && trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l")
+  spawn ("killall trayer; trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l") -- kill current trayer and xmobar on each restart
+  -- spawn ("trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l")
+  -- spawn "sleep 6 && xmobar  -x 0 $HOME/.config/xmobar/xmobar0.hs"
+  -- spawn "sleep 6 && xmobar  -x 1 $HOME/.config/xmobar/xmobar1.hs"
 
-  spawn "sleep 5 && xmobar  -x 0 $HOME/.config/xmobar/xmobar0.hs"
-  spawn "sleep 5 && xmobar  -x 1 $HOME/.config/xmobar/xmobar1.hs"
+-- xsetroot -cursor_name left_ptr
 
 -- ewmhFullscreen lets apps know about the window size
 
-xmobar0 :: StatusBarConfig
-xmobar0 = statusBarPropTo "_XMONAD_LOG_0" "xmobar -x 0 ~/.config/xmobar/xmobar0.hs" (pure myXmobarPP)
-
-xmobar1 :: StatusBarConfig
-xmobar1 = statusBarPropTo "_XMONAD_LOG_1" "xmobar -x 1 ~/.config/xmobar/xmobar1.hs" (pure myXmobarPP)
+-- xmobar0 :: StatusBarConfig
+-- xmobar0 = statusBarPropTo "_XMONAD_LOG_0" "xmobar -x 0 ~/.config/xmobar/xmobar0.hs" (pure myXmobarPP)
+--
+-- xmobar1 :: StatusBarConfig
+-- xmobar1 = statusBarPropTo "_XMONAD_LOG_1" "xmobar -x 1 ~/.config/xmobar/xmobar1.hs" (pure myXmobarPP)
 
 main :: IO ()
 main = do
   xmonad
-    . withSB (xmobar0 <> xmobar1)
+    -- . withSB (xmobar0 <> xmobar1)
     . ewmhFullscreen
     . ewmh
+    . dynamicSBs myStatusBarSpawner
     -- . withEasySB (xmobar1 <> xmobar2) toggleStrutsKey
     . docks
     $ myConfig
