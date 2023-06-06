@@ -36,7 +36,7 @@ Config { overrideRedirect = True
            -- , Run UnsafeStdinReader
             , Run XPropertyLog "_XMONAD_LOG_2"
         ]
-       , template = "%_XMONAD_LOG_2% }{ %alsa:default:Master% | %cpu% | %memory% * %swap% | %EGPF% | %date% "
+       , template = "%_XMONAD_LOG_1% }{ %alsa:default:Master% | %cpu% | %memory% * %swap% | %EGPF% | %date% "
        , sepChar  = "%"
        , alignSep = "}{"
        }

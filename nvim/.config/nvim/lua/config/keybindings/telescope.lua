@@ -20,16 +20,17 @@ M.load_mappings = function()
 		end
 	end, nor_s)
 
-	map("n", "<a-s-p>", '<cmd>lua require("utils.lua.telescope").git_files_or_curdir_parent()<cr>', nor_s)
+	map("n", "<a-s-p>", function()
+		require("utils.lua.telescope").git_files_or_curdir_parent()
+	end, nor_s)
 
-	map(
-		"n",
-		"<a-r>",
-		':lua require("telescope.builtin").live_grep({cwd = vim.fn.expand("%:p:h"), hidden = true })<cr>',
-		nor_s
-	)
-
-	-- map("n", "<a-s-r>", ':lua require("telescope.builtin").live_grep({ hidden = true })<cr>', nor_s)
+	map("n", "<a-r>", function()
+		if vim.bo.filetype ~= "netrw" then
+			require("telescope.builtin").live_grep({ cwd = vim.fn.expand("%:p:h"), hidden = true })
+		else
+			require("telescope.builtin").live_grep({ cwd = vim.b.netrw_curdir, hidden = true })
+		end
+	end, nor_s)
 
 	map("n", "<a-s-r>", function()
 		local cwd = require("utils.lua.telescope").git_root_or_curdir_parent()

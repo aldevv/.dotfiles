@@ -28,9 +28,9 @@
 .X      ~/.config/sxhkd/sxhkdrc
 .xm     ~/.config/xmonad/xmonad.hs
 .xmm     ~/.config/xmonad/xmonad.hs
-.xmb    ~/.config/xmobar/xmobarrc
+.xmb    ~/.config/xmobar/xmobar0.hs
 .n      ~/.config/newsboat/urls
-.dwm    $PROGRAMS/dwm/config.h
+.dwm    $SUCKLESS/dwm/config.h
 .st     $SUCKLESS/st/config.h
 .a      ~/.config/.aliases
 .aa      ~/.config/.aliases

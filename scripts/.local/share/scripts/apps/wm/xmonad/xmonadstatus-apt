@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ -n $(command -v xmobar) ]]; then
+	xmobar -x 0 $HOME/.config/xmobar/xmobar0.hs
+	xmobar -x 1 $HOME/.config/xmobar/xmobar1.hs
+else
+	$HOME/.cabal/bin/xmobar -x 0 $HOME/.config/xmobar/xmobar0.hs
+	$HOME/.cabal/bin/xmobar -x 1 $HOME/.config/xmobar/xmobar1.hs
+fi
+
+trayer --edge top --align right --SetDockType true --SetPartialStrut true --expand true --widthtype request --tint 0x002b36 --height 20 --alpha 0 --monitor 0 --transparent true -l
