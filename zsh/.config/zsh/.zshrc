@@ -209,7 +209,7 @@ bindkey -s 'a' '. cf ^M'
 bindkey -s 'D' 'vf $HOME/.config ^M'
 # bindkey -s 'z' 'vf  "$LEARN"^M'
 # bindkey -s 'z' '. cf  "$LEARN"^M'
-bindkey -s 'm' 'vf  "$SCRIPTS"^M'
+bindkey -s 'm' 'scripts^M'
 bindkey -s 'M' '. cf  "$SCRIPTS"^M'
 bindkey -s 'o' '**	'
 bindkey -s 'j' 'gwts^M' # projects and work
@@ -288,10 +288,10 @@ autoload -U compinit
 compinit
 
 # put settings here, since oh-my-zsh sets it's own settings
-export HISTFILE="$HOME/.cache/zsh/.zsh_history"
-export SAVEHIST=$HISTSIZE
-export HISTSIZE=999999999
 setopt EXTENDED_HISTORY
 setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
 setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
+export HISTFILE="$HOME/.cache/zsh/.zsh_history"
+export SAVEHIST=$HISTSIZE
+export HISTSIZE=999999999
 

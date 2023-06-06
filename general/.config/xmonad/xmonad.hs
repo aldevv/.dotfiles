@@ -4,19 +4,22 @@ import XMonad.Actions.CycleWS
 import XMonad.Actions.SpawnOn
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeInactive
+import XMonad.Hooks.InsertPosition (Focus (Newer), Position (Master), insertPosition)
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers (isDialog)
 import XMonad.Hooks.StatusBar
 import XMonad.Hooks.StatusBar.PP
+import XMonad.Hooks.WindowSwallowing (swallowEventHook)
 import XMonad.Layout.Gaps
 import XMonad.Layout.Magnifier (magnifiercz)
-import XMonad.Layout.NoBorders (noBorders)
+import XMonad.Layout.NoBorders (noBorders, smartBorders)
 import XMonad.Layout.Renamed
 import XMonad.Layout.Spacing
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.ToggleLayouts (ToggleLayout (..), toggleLayouts)
-import qualified XMonad.StackSet as W
+import XMonad.StackSet qualified as W
 import XMonad.Util.EZConfig
+import XMonad.Util.Hacks qualified as Hacks
 import XMonad.Util.Loggers
 import XMonad.Util.NamedScratchpad
 import XMonad.Util.Run (hPutStrLn, spawnPipe)
@@ -28,14 +31,18 @@ import XMonad.Util.Run (hPutStrLn, spawnPipe)
 
 -- dollar sign --> https://stackoverflow.com/questions/940382/what-is-the-difference-between-dot-and-dollar-sign
 
+myWorkspaces = ["一", "ニ", "三", "四", "五", "六", "七", "八", "九"]
+
 myConfig =
   def
-    { workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    { workspaces = myWorkspaces,
       modMask = mod4Mask,
       terminal = "st",
+      startupHook = myStartupHook,
       layoutHook = customLayout,
       manageHook = myManageHook,
-      logHook = myLogHook
+      logHook = myLogHook,
+      handleEventHook = swallowEventHook (className =? "Alacritty" <||> className =? "st-256color" <||> className =? "XTerm") (return True) <> Hacks.trayerPaddingXmobarEventHook
     }
     `additionalKeys` myKeysGranular
     `additionalKeysP` myKeys
@@ -48,19 +55,19 @@ myKeysGranular =
 myKeys :: [(String, X ())]
 myKeys =
   -- defaults
-  -- https://wiki.haskell.org/Xmonad/Config_archive/Template_xmonad.hs_(0.9)
+  -- readable: https://gist.github.com/micrub/aeebe7eb4d2df9e5e203e76a0fd89542
+  -- config: https://wiki.haskell.org/Xmonad/Config_archive/Template_xmonad.hs_(0.9)
   [ ("M-w", spawn "firefox"),
-    ("M-R", spawn "nautilus"),
     ("M-S-z", spawn "xscreensaver-command -lock"),
     ("M-r", spawn "st -e ranger"),
     ("M-q", kill),
-    ("M-f", sendMessage (Toggle "Full")),
+    ("M-f", sendMessage (Toggle "M")),
     ("M-t", toggleWindowSpacingEnabled >> toggleScreenSpacingEnabled),
     ("M-l", sendMessage NextLayout),
     ("M-S-t", withFocused $ windows . W.sink), -- retile window
     ("M-b", sendMessage ToggleStruts), -- retile window
     -- Quit xmonad
-    ("M-S-q", io exitSuccess),
+    ("M-S-q", spawn "~/.local/bin/xmonad --recompile; ~/.local/bin/xmonad --restart"),
     -- ("M-c", spawn "~/.local/bin/xmonad --recompile; ~/.local/bin/xmonad --restart"),
     --------------
     -- SCRATCHPADS
@@ -71,6 +78,7 @@ myKeys =
     -----------
     -- MOVEMENT
     -----------
+    ("M-v", windows W.swapMaster),
     ("M-n", windows W.focusDown),
     ("M-e", windows W.focusUp),
     ("M-S-n", windows W.swapDown),
@@ -107,9 +115,9 @@ customLayout =
         ||| Mirror tiled
         ||| threeCol
   where
-    threeCol = renamed [Replace "3"] $ mySpacing 10 $ magnifiercz 1.3 (ThreeColMid nmaster delta ratio)
-    tiled = renamed [Replace "T"] $ mySpacing 10 $ Tall nmaster delta ratio
-    toggleMonocle = toggleLayouts $ noBorders Full
+    threeCol = renamed [Replace "W"] $ mySpacing 10 $ smartBorders $ magnifiercz 1.3 (ThreeColMid nmaster delta ratio)
+    tiled = renamed [Replace "T"] $ mySpacing 10 $ smartBorders $ Tall nmaster delta ratio
+    toggleMonocle = toggleLayouts $ renamed [Replace "M"] $ noBorders Full
     nmaster = 1 -- Default number of windows in the master pane
     ratio = 1 / 2 -- Default proportion of screen occupied by master pane
     delta = 3 / 100 -- Percent of screen to increment by when resizing panes
@@ -122,21 +130,24 @@ myXmobarPP =
     [scratchpadWorkspaceTag] -- > removes NSP from xmobar NSP cratchpad)
     def
       { ppSep = magenta " • ",
-        ppTitleSanitize = xmobarStrip,
-        ppCurrent = currentWs, -- > current workspace
-        ppHidden = white . wrap " " "", -- > hidden workspace
-        ppHiddenNoWindows = lowWhite . wrap " " "",
-        ppUrgent = red . wrap (yellow "!") (yellow "!"),
         -- ppTitle = xmobarColor "magenta" "" . wrap (white "[") (white "]"),
         ppTitle = formatFocused, -- > the format of the current window title
+        ppTitleSanitize = xmobarStrip,
+        ppCurrent = currentWs, -- > current workspace
+        ppHidden = gold . wrap " " "", -- > hidden workspace color
+        -- NOTE: for the focused workspace text color, change fgcolor in xmobar
+        -- ppVisible = red . wrap " " "",
+        ppHiddenNoWindows = lowWhite . wrap " " "",
+        ppUrgent = red . wrap (yellow "!") (yellow "!"),
         -- ppExtras = [logTitles formatFocused formatUnfocused], -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
         ppExtras = [winCount], -- > this becomes "wins" in pporder, if you add more extras, you would add one more to pporder
-        ppOrder = \[ws, l, c, ex] -> [ws, l, ex, c] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
+        ppOrder = \[ws, l, ex, c] -> [ws, l, c, ex] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
         -- ppOrder = \[ws, l, _, wins] -> [ws, l, wins] -- > orders stuff in the xmobar (workspaces, layout, title of cur window, and wins, )
       }
   where
     -- myOrder [ws, l, _, wins] = [ws, l, wins]  here we could, but we used a lambda better
-    currentWs = wrap " " "" . xmobarBorder "Top" "#8be9fd" 2
+    curWSBarColor = "#8be9fd" -- blue
+    currentWs = wrap " " "" . xmobarBorder "Top" curWSBarColor 2
     formatFocused = wrap (white "[") (white "]") . magenta . ppWindow
     formatUnfocused = wrap (lowWhite "[") (lowWhite "]") . blue . ppWindow
     winCount :: X (Maybe String)
@@ -152,22 +163,28 @@ myXmobarPP =
     blue = xmobarColor "#bd93f9" ""
     white = xmobarColor "#f8f8f2" ""
     yellow = xmobarColor "#f1fa8c" ""
+    gold = xmobarColor "#DAA520" ""
     red = xmobarColor "#ff5555" ""
-    lowWhite = xmobarColor "#bbbbbb" ""
+    lowWhite = xmobarColor "#646464" ""
 
 -- lowWhite = xmobarColor "#bbbbbb" ""
 myManageHook :: ManageHook
 myManageHook =
-  composeAll
-    [ className =? "Gimp" --> doFloat,
-      className =? "copyq" --> doFloat,
-      className =? "Slack" --> doShift "6",
-      className =? "Workspacesclient" --> doShift "3",
-      className =? "Zoom" --> doShift "7",
-      -- className =? "zoom " --> doFloat,
-      className =? "SimpleScreenRecorder" --> doFloat,
-      isDialog --> doFloat
-    ]
+  -- using 'doShift ( myWorkspaces !! 7)' sends program to workspace 8!
+  -- doShift "1", this will open program in workspace 1 and move focus to it
+
+  insertPosition -- this is so new windows open in the master area
+    Master
+    Newer
+    <+> composeAll
+      [ className =? "Gimp" --> doFloat,
+        className =? "copyq" --> doFloat,
+        className =? "Slack" --> doShift (myWorkspaces !! 5),
+        className =? "firefox" --> doShift "1",
+        -- className =? "zoom " --> doFloat,
+        className =? "SimpleScreenRecorder" --> doFloat,
+        isDialog --> doFloat
+      ]
     <+> manageSpawn
     <+> namedScratchpadManageHook scratchpads
     <+> manageDocks
@@ -204,20 +221,38 @@ myLogHook =
   where
     fadeAmount = 1 -- > sets opacity for unfocused windows
 
+myStartupHook :: X ()
+myStartupHook = do
+  spawn "killall trayer && killall xmobar" -- kill current trayer and xmobar on each restart
+  let colorTrayer = "--tint 0x2B2E37"
+  spawn ("sleep 2 && trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l")
+
+  spawn "sleep 2 && xmobar  -x 0 $HOME/.config/xmobar/xmobar0.hs"
+  spawn "sleep 2 && xmobar  -x 1 $HOME/.config/xmobar/xmobar1.hs"
+
 -- ewmhFullscreen lets apps know about the window size
+
+xmobar0 :: StatusBarConfig
+xmobar0 = statusBarPropTo "_XMONAD_LOG_0" "xmobar -x 0 ~/.config/xmobar/xmobar0.hs" (pure myXmobarPP)
+
+xmobar1 :: StatusBarConfig
+xmobar1 = statusBarPropTo "_XMONAD_LOG_1" "xmobar -x 1 ~/.config/xmobar/xmobar1.hs" (pure myXmobarPP)
+
 main :: IO ()
 main = do
   xmonad
+    . withSB (xmobar0 <> xmobar1)
     . ewmhFullscreen
     . ewmh
-    . withEasySB (xmobar1 <> xmobar2) toggleStrutsKey
+    -- . withEasySB (xmobar1 <> xmobar2) toggleStrutsKey
     . docks
     $ myConfig
   where
-    toggleStrutsKey :: XConfig Layout -> (KeyMask, KeySym)
-    toggleStrutsKey XConfig {modMask = m} = (m, xK_b)
-    xmobar1 = statusBarPropTo "_XMONAD_LOG_1" "xmobar -x 0 $HOME/.config/xmobar/xmobarrc1" (pure myXmobarPP)
-    xmobar2 = statusBarPropTo "_XMONAD_LOG_2" "xmobar -x 1 $HOME/.config/xmobar/xmobarrc2" (pure myXmobarPP)
+
+-- toggleStrutsKey :: XConfig Layout -> (KeyMask, KeySym)
+-- toggleStrutsKey XConfig {modMask = m} = (m, xK_b)
+-- xmobar1 = statusBarPropTo "_XMONAD_LOG_0" "$HOME/.cabal/bin/xmobar -x 0 /home/kanon/.config/xmobar/xmobar0.hs" (pure myXmobarPP)
+-- xmobar2 = statusBarPropTo "_XMONAD_LOG_1" "$HOME/.cabal/bin/xmobar -x 1 $HOME/.config/xmobar/xmobar1.hs" (pure myXmobarPP)
 
 -- barSpawner :: ScreenId -> IO StatusBarConfig
 -- barSpawner 0 = pure $ xmobar1

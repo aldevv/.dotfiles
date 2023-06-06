@@ -249,9 +249,9 @@ map <backspace2>.vf $ $EDITOR ~/.config/nvim/lua/lsp/formatters.lua
 map <backspace2>.X $ $EDITOR ~/.config/sxhkd/sxhkdrc
 map <backspace2>.xm $ $EDITOR ~/.config/xmonad/xmonad.hs
 map <backspace2>.xmm $ $EDITOR ~/.config/xmonad/xmonad.hs
-map <backspace2>.xmb $ $EDITOR ~/.config/xmobar/xmobarrc
+map <backspace2>.xmb $ $EDITOR ~/.config/xmobar/xmobar0.hs
 map <backspace2>.n $ $EDITOR ~/.config/newsboat/urls
-map <backspace2>.dwm $ $EDITOR /home/kanon/programs/dwm/config.h
+map <backspace2>.dwm $ $EDITOR /home/kanon/programs/suckless/dwm/config.h
 map <backspace2>.st $ $EDITOR /home/kanon/programs/suckless/st/config.h
 map <backspace2>.a $ $EDITOR ~/.config/.aliases
 map <backspace2>.aa $ $EDITOR ~/.config/.aliases
