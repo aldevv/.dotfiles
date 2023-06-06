@@ -223,12 +223,12 @@ myLogHook =
 
 myStartupHook :: X ()
 myStartupHook = do
-  spawn "killall trayer && sleep 2 && killall xmobar" -- kill current trayer and xmobar on each restart
+  spawn "killall trayer && killall xmobar" -- kill current trayer and xmobar on each restart
   let colorTrayer = "--tint 0x2B2E37"
-  spawn ("sleep 3 && trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l")
+  spawn ("sleep 2 && trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l")
 
-  spawn "sleep 3 && xmobar  -x 0 $HOME/.config/xmobar/xmobar0.hs"
-  spawn "sleep 3 && xmobar  -x 1 $HOME/.config/xmobar/xmobar1.hs"
+  spawn "sleep 5 && xmobar  -x 0 $HOME/.config/xmobar/xmobar0.hs"
+  spawn "sleep 5 && xmobar  -x 1 $HOME/.config/xmobar/xmobar1.hs"
 
 -- ewmhFullscreen lets apps know about the window size
 
