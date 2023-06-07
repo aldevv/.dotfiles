@@ -7,6 +7,9 @@ super + space
 super + p
     dmenu_run
 
+mode_switch + shift + 0
+    sh -c 'sleep 0.5; xdotool type "$(xclip -o -selection primary)"'
+
 # bug with npm
 super + r
     st -e bash -c "ranger 2>/dev/null; $SHELL"
