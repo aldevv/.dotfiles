@@ -32,7 +32,23 @@ import XMonad.Util.Run (hPutStrLn, spawnPipe)
 -- DT
 -- https://gitlab.com/dwt1/dotfiles/-/blob/master/.config/xmonad/xmonad.hs
 
-myWorkspaces = ["一", "ニ", "三", "四", "五", "六", "七", "八", "九"]
+-- myWorkspaces = ["一", "ニ", "三", "四", "五", "六", "七", "八", "九"]
+
+myWS = ["一", "ニ", "三", "四", "五", "六", "七", "八", "九"]
+
+xmobarEscape = concatMap doubleLts
+  where
+    doubleLts '<' = "<<"
+    doubleLts x = [x]
+
+myWorkspaces :: [String]
+myWorkspaces = clickable . (map xmobarEscape) $ myWS
+  where
+    clickable l =
+      [ "<action=xdotool key super+" ++ show (n) ++ ">" ++ ws ++ "</action>"
+        | (i, ws) <- zip [1 .. 9] l,
+          let n = i
+      ]
 
 myConfig =
   def
