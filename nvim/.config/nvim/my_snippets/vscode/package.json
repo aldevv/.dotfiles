@@ -1,125 +1,125 @@
 {
-    "name": "ultisnipets-snippets",
-    "engines": {
-        "vscode": "^1.11.0"
-    },
-    "contributes": {
-        "snippets": [
-            {
-                "language": "global",
-                "path": "./all.json"
-            },
-            {
-                "language": "c",
-                "path": "./c.json"
-            },
-            {
-                "language": "cpp",
-                "path": "./cpp.json"
-            },
-            {
-                "language": "lua",
-                "path": "./lua.json"
-            },
-            {
-                "language": "go",
-                "path": "./go.json"
-            },
-            {
-                "language": [
-                    "markdown",
-                    "rmd"
-                ],
-                "path": "./markdown.json"
-            },
-            {
-                "language": "java",
-                "path": "./java.json"
-            },
-            {
-                "language": [
-                    "html",
-                    "jade",
-                    "pug",
-                    "eruby"
-                ],
-                "path": "./html.json"
-            },
-            {
-                "language": [
-                    "css",
-                    "scss",
-                    "sass",
-                    "less",
-                    "stylus"
-                ],
-                "path": "./css.json"
-            },
-            {
-                "language": [
-                    "javascript",
-                    "javascriptreact",
-                    "vue",
-                    "svelte"
-                ],
-                "path": "./javascript.json"
-            },
-            {
-                "language": "python",
-                "path": "./python.json"
-            },
-            {
-                "language": "lua",
-                "path": "./lua.json"
-            },
-            {
-                "language": "tex",
-                "path": "./tex.json"
-            },
-            {
-                "language": "docker-compose",
-                "path": "./docker-compose.json"
-            },
-            {
-                "language": "dockerfile",
-                "path": "./dockerfile.json"
-            },
-            {
-                "language": "editorconfig",
-                "path": "./editorconfig.json"
-            },
-            {
-                "language": "json",
-                "path": "./json.json"
-            },
-            {
-                "language": "rust",
-                "path": "./rust.json"
-            },
-            {
-                "language": "projections",
-                "path": "./projections.json"
-            },
-            {
-                "language": "launch",
-                "path": "./launch.json"
-            },
-            {
-                "language": "org",
-                "path": "./org.json"
-            },
-            {
-                "language": "vim",
-                "path": "./vim.json"
-            },
-            {
-                "language": "yml",
-                "path": "./yml.json"
-            },
-            {
-                "language": "yaml",
-                "path": "./yaml.json"
-            }
-        ]
-    }
+  "name": "ultisnipets-snippets",
+  "engines": {
+    "vscode": "^1.11.0"
+  },
+  "contributes": {
+    "snippets": [
+      {
+        "language": "global",
+        "path": "./all.json"
+      },
+      {
+        "language": "c",
+        "path": "./c.json"
+      },
+      {
+        "language": "cpp",
+        "path": "./cpp.json"
+      },
+      {
+        "language": "lua",
+        "path": "./lua.json"
+      },
+      {
+        "language": "go",
+        "path": "./go.json"
+      },
+      {
+        "language": [
+          "markdown",
+          "rmd"
+        ],
+        "path": "./markdown.json"
+      },
+      {
+        "language": "java",
+        "path": "./java.json"
+      },
+      {
+        "language": [
+          "html",
+          "jade",
+          "pug",
+          "eruby"
+        ],
+        "path": "./html.json"
+      },
+      {
+        "language": [
+          "css",
+          "scss",
+          "sass",
+          "less",
+          "stylus"
+        ],
+        "path": "./css.json"
+      },
+      {
+        "language": [
+          "javascript",
+          "javascriptreact",
+          "vue",
+          "svelte"
+        ],
+        "path": "./javascript.json"
+      },
+      {
+        "language": "python",
+        "path": "./python.json"
+      },
+      {
+        "language": "lua",
+        "path": "./lua.json"
+      },
+      {
+        "language": "tex",
+        "path": "./tex.json"
+      },
+      {
+        "language": "docker-compose",
+        "path": "./docker-compose.json"
+      },
+      {
+        "language": "dockerfile",
+        "path": "./dockerfile.json"
+      },
+      {
+        "language": "editorconfig",
+        "path": "./editorconfig.json"
+      },
+      {
+        "language": "json",
+        "path": "./json.json"
+      },
+      {
+        "language": "rust",
+        "path": "./rust.json"
+      },
+      {
+        "language": "projections",
+        "path": "./projections.json"
+      },
+      {
+        "language": "launchjson",
+        "path": "./launch.json"
+      },
+      {
+        "language": "org",
+        "path": "./org.json"
+      },
+      {
+        "language": "vim",
+        "path": "./vim.json"
+      },
+      {
+        "language": "yml",
+        "path": "./yml.json"
+      },
+      {
+        "language": "yaml",
+        "path": "./yaml.json"
+      }
+    ]
+  }
 }

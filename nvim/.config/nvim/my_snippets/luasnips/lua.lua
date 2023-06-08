@@ -1,0 +1,16 @@
+-- parse("nope", "local $1 = function($2)\n yup $0\nend"),
+-- return {
+--     parse("nope", "local $1 = function($2)\n yup $0\nend"),
+-- }
+
+-- return {
+--
+-- 	-- parse("my_c", "local $1 = function($2)\n yup $0\nend"),
+-- 	-- -- A simple "Hello, world!" text node
+-- 	s(
+-- 		{ trig = "hi" }, -- Table of snippet parameters
+-- 		{ -- Table of snippet nodes
+-- 			t("Hello, world!"),
+-- 		}
+-- 	),
+-- }

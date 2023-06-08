@@ -1,4 +1,9 @@
 {
+  "_skel": {
+    "prefix": "_skel",
+    "body": "def main():\n\t$1\n\n\nif __name__ == \"__main__\":\n\tmain()",
+    "description": "for item in items"
+  },
   "ffi": {
     "prefix": "ffi",
     "body": "for ${1:item} in ${2:items}:\n\t$3",

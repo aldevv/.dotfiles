@@ -186,6 +186,7 @@ myManageHook =
       [ className =? "Gimp" --> doFloat,
         className =? "copyq" --> doFloat,
         className =? "Slack" --> doShift (myWorkspaces !! 5),
+        className =? "Insomnia" --> doShift (myWorkspaces !! 3),
         className =? "discord" --> doShift (myWorkspaces !! 6),
         className =? "firefox" --> doShift (myWorkspaces !! 0),
         -- className =? "zoom " --> doFloat,

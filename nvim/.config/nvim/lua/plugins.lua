@@ -6,7 +6,7 @@ local function req(module)
 	-- return string.format('require("%s")', module)
 end
 
-vim.g.mapleader = t("<Space>")
+vim.g.mapleader = _replace_termcodes("<Space>")
 vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
 -- whichkey workaround (no BS allowed)
 vim.keymap.set("n", "<BS>", ":WhichKey \\<cr>", { noremap = true, silent = true })
@@ -32,6 +32,7 @@ return {
 	},
 	{
 		"nvim-telescope/telescope.nvim",
+		version = "*",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
@@ -46,33 +47,12 @@ return {
 	{ "catppuccin/nvim", config = req("config.appearance.themes.catppuccin") },
 
 	"norcalli/nvim-colorizer.lua",
-
 	{
 		"nvim-lualine/lualine.nvim",
-		dependencies = { "kyazdani42/nvim-web-devicons", opt = true },
+
 		config = req("config.appearance.lualine"),
 	},
 
-	{
-		"L3MON4D3/LuaSnip",
-		config = req("lsp.luasnip"),
-	},
-	{
-		"honza/vim-snippets",
-		config = function()
-			require("luasnip.loaders.from_snipmate").lazy_load()
-		end,
-		dependencies = "L3MON4D3/LuaSnip",
-	},
-	{
-		"rafamadriz/friendly-snippets",
-
-		config = function()
-			require("luasnip.loaders.from_vscode").lazy_load()
-			require("luasnip").filetype_extend("all", { "_" })
-		end,
-		dependencies = "L3MON4D3/LuaSnip",
-	},
 	{
 		"neovim/nvim-lspconfig",
 		config = req("lsp.lsp"),
@@ -84,7 +64,6 @@ return {
 				"hrsh7th/nvim-cmp",
 				config = req("lsp.cmp"),
 				dependencies = {
-					"L3MON4D3/LuaSnip",
 					"saadparwaiz1/cmp_luasnip",
 					"nvim-lua/plenary.nvim",
 					"onsails/lspkind-nvim",
@@ -122,6 +101,29 @@ return {
 		build = ":TSUpdate",
 		config = req("core.treesitter"),
 	},
+	-- convert to luasnip using
+	-- - https://github.com/smjonas/snippet-converter.nvim
+	-- and
+	-- - https://cj.rs/blog/ultisnips-to-luasnip/
+	{
+		"L3MON4D3/LuaSnip",
+		config = req("lsp.luasnip"),
+		-- commit = "*",
+	},
+	{
+		"honza/vim-snippets",
+		config = function()
+			require("luasnip.loaders.from_snipmate").lazy_load()
+		end,
+	},
+	{
+		"rafamadriz/friendly-snippets",
+
+		config = function()
+			require("luasnip.loaders.from_vscode").lazy_load()
+			require("luasnip").filetype_extend("all", { "_" })
+		end,
+	},
 
 	{
 		"nvim-treesitter/nvim-treesitter-context",
@@ -133,11 +135,6 @@ return {
 		"glepnir/lspsaga.nvim",
 		config = req("lsp.lspsaga"),
 	},
-
-	-- convert to luasnip using
-	-- - https://github.com/smjonas/snippet-converter.nvim
-	-- and
-	-- - https://cj.rs/blog/ultisnips-to-luasnip/
 
 	{
 		"jose-elias-alvarez/null-ls.nvim",
@@ -155,7 +152,6 @@ return {
 	-- is this needed??? check for haskell
 	{
 		"ahmedkhalf/project.nvim",
-		dependencies = "nvim-telescope/telescope.nvim",
 		config = req("lsp.project"),
 	},
 	{
@@ -397,8 +393,6 @@ return {
 		"pwntester/octo.nvim",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
-			"nvim-telescope/telescope.nvim",
-			"kyazdani42/nvim-web-devicons",
 		},
 		opts = { default_remote = { "origin", "upstream" } },
 	},
@@ -414,7 +408,12 @@ return {
 	-- colors
 	-- use("dracula/vim")
 	"crusoexia/vim-monokai",
-	"rebelot/kanagawa.nvim",
+	-- NOTE: do the lazy and priority following docs
+	{
+		"rebelot/kanagawa.nvim",
+		priority = 1000,
+		lazy = true,
+	},
 	{
 		"folke/todo-comments.nvim",
 		config = function()
@@ -517,20 +516,31 @@ return {
 	-- https://github.com/ray-x/go.nvim
 	-- this is for faster startup!
 	"navarasu/onedark.nvim",
-	{
-		"tjdevries/sg.nvim",
-		dependencies = "nvim-lua/plenary.nvim",
-		-- config = function()
-		--     require("sg").setup({
-		--         -- Pass your own custom attach function
-		--         --    If you do not pass your own attach function, then the following maps are provide:
-		--         --        - gd -> goto definition
-		--         --        - gr -> goto references
-		--         -- on_attach = your_custom_lsp_attach_function,
-		--     })
-		-- end,
-		build = "cargo build --workspace",
-	},
+	-- {
+	--   "sourcegraph/sg.nvim",
+	--   dependencies = "nvim-lua/plenary.nvim",
+	--   config = function()
+	--     require("sg").setup({
+	--       -- Pass your own custom attach function
+	--       --    If you do not pass your own attach function, then the following maps are provide:
+	--       --        - gd -> goto definition
+	--       --        - gr -> goto references
+	--       -- on_attach = your_custom_lsp_attach_function,
+	--     })
+	--   end,
+	--   build = "cargo build --workspace",
+	-- },
+	-- {
+	--
+	--   "sourcegraph/cody.nvim",
+	--   config = function()
+	--     require("cody").setup({
+	--       accessToken = "access token",
+	--       -- OPTIONAL:
+	--       -- url = "https://your-sourcegraph-instance.com"
+	--     })
+	--   end,
+	-- },
 
 	"kana/vim-textobj-user",
 	{
@@ -592,7 +602,6 @@ return {
 	{
 		"axkirillov/easypick.nvim",
 		config = req("core.easypick"),
-		dependencies = "nvim-telescope/telescope.nvim",
 	},
 	-- {
 	-- 	"napisani/nvim-github-codesearch",
