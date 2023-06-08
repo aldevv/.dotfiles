@@ -73,15 +73,12 @@ map Yvu $ cp -rv $f /home/kanon/.config/nvim/lua/utils
 map <backspace2>vk cd /home/kanon/.config/nvim/lua/config/keybindings
 map mvk $ mv -v $f /home/kanon/.config/nvim/lua/config/keybindings
 map Yvk $ cp -rv $f /home/kanon/.config/nvim/lua/config/keybindings
-map <backspace2>sn cd ~/.config/nvim/my_snippets
-map msn $ mv -v $f ~/.config/nvim/my_snippets
-map Ysn $ cp -rv $f ~/.config/nvim/my_snippets
-map <backspace2>sn cd ~/.config/nvim/my_snippets
-map msn $ mv -v $f ~/.config/nvim/my_snippets
-map Ysn $ cp -rv $f ~/.config/nvim/my_snippets
-map <backspace2>sN cd ~/.config/nvim/lua/lsp/snippets
-map msN $ mv -v $f ~/.config/nvim/lua/lsp/snippets
-map YsN $ cp -rv $f ~/.config/nvim/lua/lsp/snippets
+map <backspace2>sn cd ~/.config/nvim/my_snippets/luasnips
+map msn $ mv -v $f ~/.config/nvim/my_snippets/luasnips
+map Ysn $ cp -rv $f ~/.config/nvim/my_snippets/luasnips
+map <backspace2>vL cd ~/.config/nvim/lua/lsp/snippets
+map mvL $ mv -v $f ~/.config/nvim/lua/lsp/snippets
+map YvL $ cp -rv $f ~/.config/nvim/lua/lsp/snippets
 map <backspace2>m. cd /home/kanon/.local/share/scripts
 map mm. $ mv -v $f /home/kanon/.local/share/scripts
 map Ym. $ cp -rv $f /home/kanon/.local/share/scripts
@@ -244,6 +241,7 @@ map <backspace2>.vk $ $EDITOR ~/.config/nvim/lua/config/keybindings/init.lua
 map <backspace2>.vK $ $EDITOR ~/.config/nvim/lua/config/keybindings/dap.lua
 map <backspace2>.vd $ $EDITOR ~/.config/nvim/lua/lsp/dap/dap.lua
 map <backspace2>.vl $ $EDITOR ~/.config/nvim/lua/lsp/lsp.lua
+map <backspace2>.vL $ $EDITOR ~/.config/nvim/lua/lsp/luasnip.lua
 map <backspace2>.vp $ $EDITOR ~/.config/nvim/lua/plugins.lua
 map <backspace2>.vf $ $EDITOR ~/.config/nvim/lua/lsp/formatters.lua
 map <backspace2>.X $ $EDITOR ~/.config/sxhkd/sxhkdrc

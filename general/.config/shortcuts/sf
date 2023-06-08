@@ -23,6 +23,7 @@
 .vK     ~/.config/nvim/lua/config/keybindings/dap.lua
 .vd     ~/.config/nvim/lua/lsp/dap/dap.lua
 .vl     ~/.config/nvim/lua/lsp/lsp.lua
+.vL     ~/.config/nvim/lua/lsp/luasnip.lua
 .vp     ~/.config/nvim/lua/plugins.lua
 .vf     ~/.config/nvim/lua/lsp/formatters.lua
 .X      ~/.config/sxhkd/sxhkdrc

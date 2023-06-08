@@ -50,10 +50,6 @@ require("lazy").setup("plugins", {
 	dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
 })
 
--- set theme
--- vim.cmd("colorscheme gruvbox")
-vim.cmd("colorscheme kanagawa")
--- transparency
-vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
 require("config")
 require("core")
+-- end

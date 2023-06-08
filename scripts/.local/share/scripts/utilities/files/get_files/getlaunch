@@ -1,7 +1,7 @@
 #!/bin/bash
 
 file_name="launch.json"
-folder=$FILES/project_configs/launch
+folder=$FILES/debug/launch
 destination=".vscode/"
 
 getfile "$file_name" "$folder" "$destination"

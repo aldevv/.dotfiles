@@ -1,0 +1,50 @@
+snippet _skel "launch json config python" b
+{
+  // remove these comments
+  // example for go
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "name",
+      "type": "go",
+      "cwd": "${workspaceFolder}",
+      "request": "launch",
+      "program": "./cmd/photos_api/main.go",
+      "args": ["--storage", "google"]
+    },
+    // examples for python
+    {
+      "name": "PyTest: Create",
+      "type": "python",
+      "request": "launch",
+      "stopOnEntry": false,
+      "justMyCode": false,
+      "module": "pytest",
+      "args": ["-x", "functional/transactions/test_create.py"],
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceRoot}"
+    },
+    {
+      "name": "PyTest: getHistory",
+      "type": "python",
+      "request": "launch",
+      "stopOnEntry": false,
+      "justMyCode": false,
+      "module": "pytest",
+      "args": ["-x", "functional/account_activity/test_history.py"],
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceRoot}"
+    },
+    {
+      "name": "Python: Flask",
+      "type": "python",
+      "request": "launch",
+      "module": "flask",
+      "envFile": "${workspaceFolder}/.env",
+      "args": ["run", "-p", "8081"],
+      "jinja": true,
+      "justMyCode": true
+    }
+  ]
+}
+endsnippet
