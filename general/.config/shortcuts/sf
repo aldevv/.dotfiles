@@ -40,7 +40,7 @@
 .ss      $AUTOMATION/startup/startup
 # old aliases
 .ao     ~/.config/zsh/.aliases
-.K      $SCRIPTS/apps/qmk/lily58/keymap.c
+.k      $SCRIPTS/apps/qmk/lily58/keymap.c
 .Z      /root/.config/zsh/.zshrc
 .pr     $FILES/projections/global/.projections.json
 .s      $HOME/.ssh/config

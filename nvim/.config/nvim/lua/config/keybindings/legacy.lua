@@ -7,12 +7,11 @@ vim.cmd([[
 " migrate targets.vim first then this
 noremap gj ge
 noremap gJ gE
+noremap gn gj
+noremap gN gJ
 noremap k nzzzv
 noremap K Nzzzv
 noremap ge gk
-noremap gn gj
-noremap gk gn
-noremap gE gJ
 " ----------------
 
 
