@@ -73,6 +73,7 @@ return {
 					"hrsh7th/cmp-buffer",
 					"hrsh7th/cmp-cmdline",
 					"petertriho/cmp-git",
+					{ "tzachar/cmp-fuzzy-path", dependencies = "tzachar/fuzzy.nvim" },
 					-- "saadparwaiz1/cmp_luasnip",
 					-- { "quangnguyen30192/cmp-nvim-ultisnips" },
 					-- {

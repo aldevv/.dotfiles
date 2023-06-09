@@ -3,11 +3,11 @@
 [[ -z "$1" ]] && return
 
 if ! git ls-remote "$1" 1>/dev/null; then
-    return
+	return
 fi
 
 shallow=0
-if [[ $1 =~ [1-9] ]]; then
+if [[ $1 =~ ^[1-9]$ ]]; then
 	shallow=$1
 	shift
 fi
@@ -46,6 +46,7 @@ else
 fi
 
 _path="$REPOS/$service/$author/$repo"
+echo "path: $_path"
 if [[ ! -d "$_path" ]]; then
 	mkdir -p "$_path"
 else

@@ -35,12 +35,7 @@ endif
     autocmd BufWritePost *sxhkdrc :!killall -s SIGUSR1 sxhkd
 
 " auto shortcuts
-    autocmd BufWritePost,TextChanged sf,sd !$AUTOMATION/shortcuts
-
-" functions
-function Autosaving()
-    autocmd TextChanged,TextChangedI <buffer> silent! write
-endfunction
+  autocmd BufWritePost,TextChanged sf,sd !$AUTOMATION/shortcuts
 
 augroup highlight_yank
    autocmd!
@@ -48,12 +43,6 @@ augroup highlight_yank
 augroup END
 
 autocmd! BufRead,BufNewFile .projections.json  set filetype=projections.json syntax=json
-autocmd! BufRead,BufNewFile .vimspector.json  set filetype=vimspector.json syntax=json
-
-" for tmux
-autocmd BufReadPost,FileReadPost,BufNewFile * call system("tmux rename-window " . expand("%:t:r"))
-
-
 ]])
 
 cmd([[
