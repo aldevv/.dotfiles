@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "haskell",
+      "request": "launch",
+      "name": "Debug file",
+      "workspace": "${workspaceFolder}",
+      "startup": "${file}",
+      "stopOnEntry": true,
+      "logFile": "${workspaceFolder}/.vscode/haskell-dap.log",
+      "logLevel": "WARNING",
+      "ghciEnv": {},
+      "ghciPrompt": "ghci> ",
+      "ghciInitialPrompt": "ghci> ",
+      "ghciCmd": "stack ghci --with-ghc=haskell-dap --test --no-load --no-build --main-is tests --ghci-options -fprint-evld-with-show "
+    },
+    {
+      "type": "haskell",
+      "request": "launch",
+      "name": "Debug project",
+      "workspace": "${workspaceFolder}",
+      "startup": "${workspaceFolder}/app/Main.hs",
+      "stopOnEntry": true,
+      "logFile": "${workspaceFolder}/.vscode/haskell-dap.log",
+      "logLevel": "WARNING",
+      "ghciEnv": {},
+      "ghciPrompt": "ghci> ",
+      "ghciInitialPrompt": "ghci> ",
+      "ghciCmd": "stack ghci --with-ghc=haskell-dap --test --no-load --no-build --main-is tests --ghci-options -fprint-evld-with-show "
+    }
+  ]
+}

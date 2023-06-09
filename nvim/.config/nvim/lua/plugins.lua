@@ -604,6 +604,13 @@ return {
 		config = req("core.easypick"),
 	},
 	-- {
+	-- 	"mrcjkb/haskell-tools.nvim",
+	-- 	config = function()
+	-- 		require("haskell-tools").setup()
+	-- 	end,
+	-- 	branch = "1.x.x", -- recommended
+	-- },
+	-- {
 	-- 	"napisani/nvim-github-codesearch",
 	-- 	build = "make",
 	-- 	config = function()

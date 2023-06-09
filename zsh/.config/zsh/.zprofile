@@ -50,6 +50,10 @@ export NIXPKGS_ALLOW_UNFREE=1
 # path
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
+# bob nvim
+export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
+
+
 export CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com/:$PROJECTS"
 
 
