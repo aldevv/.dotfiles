@@ -390,4 +390,12 @@ function! QuicktypeFunc(lang)
 endfunction
 
 command! -bang -nargs=? Quicktype call QuicktypeFunc(<q-args>)
+
+function! Dump(cmd)
+  let result = trim(execute(a:cmd))
+  put! =result
+  1
+endfunction
+command! -nargs=* -complete=command Dump call Dump(<q-args>)
+
 ]])

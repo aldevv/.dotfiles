@@ -1,8 +1,8 @@
 -- put hover signature_help and cmp help transparent
 
 local colorscheme = "kanagawa"
-if require("utils.lua.misc").is_plugin_loaded(colorscheme) then
-  vim.cmd("colorscheme " .. colorscheme)
+if _is_plugin_loaded(colorscheme) then
+	vim.cmd("colorscheme " .. colorscheme)
 end
 
 -- transparency
@@ -13,4 +13,3 @@ require("config.appearance.folding")
 -- leave this last
 require("config.appearance.colors")
 require("config.appearance.lsp")
-

@@ -50,14 +50,23 @@ local handlers = {
   ["rust_analyzer"] = function()
     local opts = get_opts()
     enhance_server("rust_analyzer", opts)
-    require("rust-tools").setup(opts)
+
+    if _is_plugin_enabled("rust-tools") then
+      require("rust-tools").setup(opts)
+    else
+      require("lspconfig")["rust_analyzer"].setup(opts)
+    end
   end,
   ["hls"] = function()
     -- local opts = get_opts()
     local opts = get_opts()
     enhance_server("hls", opts)
-    require("haskell-tools").setup({ hls = opts })
-    -- require("lspconfig")["hls"].setup(opts)
+
+    if _is_plugin_enabled("haskell-tools") then
+      require("haskell-tools").setup({ hls = opts })
+    else
+      require("lspconfig")["hls"].setup(opts)
+    end
   end,
 }
 
@@ -85,7 +94,3 @@ require("mason-lspconfig").setup({
   automatic_installation = false,
   handlers = handlers,
 })
-
--- set any non mason lsp down here (you have to install the lsp yourself)
--- local opts = get_opts()
--- require("lspconfig")["pyright"].setup(opts)
