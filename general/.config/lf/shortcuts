@@ -136,9 +136,12 @@ map Ylos $ cp -rv $f ~/.local/share
 map <backspace2>lon cd ~/.local/share/nvim
 map mlon $ mv -v $f ~/.local/share/nvim
 map Ylon $ cp -rv $f ~/.local/share/nvim
-map <backspace2>lop cd ~/.local/share/nvim/site/pack/packer
-map mlop $ mv -v $f ~/.local/share/nvim/site/pack/packer
-map Ylop $ cp -rv $f ~/.local/share/nvim/site/pack/packer
+map <backspace2>lol cd ~/.local/share/nvim/lazy
+map mlol $ mv -v $f ~/.local/share/nvim/lazy
+map Ylol $ cp -rv $f ~/.local/share/nvim/lazy
+map <backspace2>lom cd ~/.local/share/nvim/mason
+map mlom $ mv -v $f ~/.local/share/nvim/mason
+map Ylom $ cp -rv $f ~/.local/share/nvim/mason
 map <backspace2>lob cd ~/.local/bin
 map mlob $ mv -v $f ~/.local/bin
 map Ylob $ cp -rv $f ~/.local/bin

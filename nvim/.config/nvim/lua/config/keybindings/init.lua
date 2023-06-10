@@ -125,7 +125,7 @@ map("n", "<a-down>", ":m .+1<cr>==", nor)
 -- map("n", "<a-e>", ":m .-2<cr>==", nor)
 -- map("n", "<a-n>", ":m .+1<cr>==", nor)
 
-map("i", "<c-y>", "copilot#Accept('<CR>')", vim.tbl_extend("keep", s_e, { script = true }))
+map("i", "<a-y>", "copilot#Accept('<CR>')", vim.tbl_extend("keep", s_e, { script = true }))
 map("i", "<a-}>", "<Plug>(copilot-next)", nor)
 map("i", "<a-{>", "<Plug>(copilot-previous)", nor)
 map("i", "<c-}>", "<Plug>(copilot-dismiss)", nor)
@@ -326,16 +326,19 @@ vmap <leader>,Sr <Plug>SnipRun
 ]])
 
 -- , configuration
-map("n", "<leader>,lll", ":Lazy<cr>", nor_s)
-map("n", "<leader>,llp", ":Lazy profile<cr>", nor_s)
-map("n", "<leader>,llr", ":Lazy restore<cr>", nor_s)
+map("n", "<leader>,Ll", ":Lazy<cr>", nor_s)
+map("n", "<leader>,Lp", ":Lazy profile<cr>", nor_s)
+map("n", "<leader>,Lr", ":Lazy restore<cr>", nor_s)
 map("n", "<leader>,lr", ":LspRestart<cr>", nor_s)
 map("n", "<leader>,li", ":LspInfo<cr>", nor_s)
 map("n", "<leader>,ls", ":LspStart<cr>", nor_s)
 map("n", "<leader>,lS", ":LspStop<cr>", nor_s)
-map("n", "<leader>,ln", ":NullLsInfo<cr>", nor_s)
+map("n", "<leader>,ll", ":LspLog<cr>", nor_s)
 
-map("n", "<leader>,mm", ":Mason<cr>", nor_s)
+map("n", "<leader>,ni", ":NullLsInfo<cr>", nor_s)
+
+map("n", "<leader>,Mm", ":Mason<cr>", nor_s)
+map("n", "<leader>,Ml", ":MasonLog<cr>", nor_s)
 
 -- map("n", "<leader>,ps", ":PackerSync<cr>", nor)
 -- map("n", "<leader>,pS", ":PackerStatus<cr>", nor)

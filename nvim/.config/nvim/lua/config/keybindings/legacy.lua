@@ -72,11 +72,6 @@ vnoremap - /
 " for folds
 nnoremap <leader>Z zMzvzz
 
-nnoremap <silent><leader>,n  :w !npm start 2>/dev/null<cr>
-nnoremap <silent><leader>.ri  :w ! [ ! -e '.env' ] && python3 -m venv .venv 2>/dev/null; .venv/bin/pip3 install -r requirements.txt 2>/dev/null<cr>
-
-
-
 let g:extension = expand('%:e')
 " nnoremap <silent> <leader>z :call ToggleFMethod()<cr>
 " function ToggleFMethod()
