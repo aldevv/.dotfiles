@@ -1,6 +1,7 @@
 -- -----------
 -- LSP
 -- -----------
+-- to choose version add a @<version> to the right of the name like hls@2.0.0.0
 local servers = {
   "bashls",
   "pyright",
@@ -18,34 +19,30 @@ local servers = {
   "volar",
   -- "eslint-lsp"
   -- "sqls",
+  -- "hls@2.0.0.0", -- mason is not installing it correctly as of 10/06/23
   "hls",
   "emmet_ls",
 }
 
-require("mason").setup()
-require("mason-lspconfig").setup({
-  ensure_installed = servers,
-  automatic_installation = true,
-})
-
+local lsp_default_opts = require("lsp.lsp_defaults")
 local get_opts = function()
-  local lsp_defaults = require("lsp.lsp_defaults")
+  local opts = vim.deepcopy(lsp_default_opts)
   return {
-    capabilities = lsp_defaults.capabilities,
-    handlers = lsp_defaults.handlers,
-    on_attach = lsp_defaults.on_attach,
+    capabilities = opts.capabilities,
+    handlers = opts.handlers,
+    on_attach = opts.on_attach,
   }
 end
 
+local lang_opts = require("lsp.lang_opts")
 local enhance_server = function(server, opts)
-  local lang_opts = require("lsp.lang_opts")
   if lang_opts.enhanceable(server) then
     lang_opts.enhance(server, opts)
   end
 end
 
-require("mason-lspconfig").setup_handlers({
-  function(server_name) -- default handler (optional)
+local handlers = {
+  function(server_name)
     local opts = get_opts()
     enhance_server(server_name, opts)
     require("lspconfig")[server_name].setup(opts)
@@ -55,9 +52,40 @@ require("mason-lspconfig").setup_handlers({
     enhance_server("rust_analyzer", opts)
     require("rust-tools").setup(opts)
   end,
-  -- ["hls"] = function()
-  -- 	local opts = get_opts()
-  -- 	enhance_server("hls", opts)
-  -- 	require("haskell-tools").setup({ hls = opts })
-  -- end,
+  ["hls"] = function()
+    -- local opts = get_opts()
+    local opts = get_opts()
+    enhance_server("hls", opts)
+    require("haskell-tools").setup({ hls = opts })
+    -- require("lspconfig")["hls"].setup(opts)
+  end,
+}
+
+-- set log level for lsp operations, probably what you want
+vim.lsp.set_log_level("info")
+-- TODO; change this
+-- vim.lsp.set_log_level("trace")
+
+require("mason").setup({
+  -- by default the path is extended to here
+  -- install_root_dir = path.concat { vim.fn.stdpath "data", "mason" },
+  -- useful for package installation errors
+  log_level = vim.log.levels.INFO,
+  -- Where Mason should put its bin location in your PATH. Can be one of:
+  -- - "prepend" (default, Mason's bin location is put first in PATH)
+  -- - "append" (Mason's bin location is put at the end of PATH)
+  -- - "skip" (doesn't modify PATH)
+  ---@type '"prepend"' | '"append"' | '"skip"'
+  PATH = "append", --default is prepend
 })
+require("mason-lspconfig").setup({
+  ensure_installed = servers,
+  --   - false: Servers are not automatically installed.
+  --   - true: All servers set up via lspconfig are automatically installed.
+  automatic_installation = false,
+  handlers = handlers,
+})
+
+-- set any non mason lsp down here (you have to install the lsp yourself)
+-- local opts = get_opts()
+-- require("lspconfig")["pyright"].setup(opts)
