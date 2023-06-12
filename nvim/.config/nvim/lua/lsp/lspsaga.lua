@@ -93,10 +93,10 @@
 local saga = require("lspsaga")
 
 require("lspsaga").setup({
-    lightbulb = {
-        enable = false,
-    },
-    diagnostic = {
-        on_insert = false,
-    },
+	lightbulb = {
+		enable = false,
+	},
+	diagnostic = {
+		on_insert = false,
+	},
 })

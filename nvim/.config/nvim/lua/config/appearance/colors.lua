@@ -8,6 +8,12 @@ vim.cmd([[
     augroup END
 ]])
 
+-- tab and eol colors
+vim.cmd([[
+  execute 'hi WhiteSpace guifg=gray'
+  execute 'hi NonText guifg=gray'
+]])
+
 -- hop
 --
 vim.cmd([[

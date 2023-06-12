@@ -1,7 +1,8 @@
 -- put hover signature_help and cmp help transparent
 
-local colorscheme = "kanagawa"
-if _is_plugin_loaded(colorscheme) then
+-- local colorscheme = "kanagawa"
+local colorscheme = "nvimgelion"
+if require("utils.lua.lazy").is_plugin_loaded(colorscheme) then
 	vim.cmd("colorscheme " .. colorscheme)
 end
 
