@@ -16,4 +16,8 @@ M.toggle_float_file = function(file)
 	require("utils.lua.float").float_file(file)
 end
 
+function M.replace_termcodes(str)
+	return vim.api.nvim_replace_termcodes(str, true, true, true)
+end
+
 return M

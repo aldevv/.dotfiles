@@ -6,7 +6,7 @@ local function req(module)
   -- return string.format('require("%s")', module)
 end
 
-vim.g.mapleader = _replace_termcodes("<Space>")
+vim.g.mapleader = require("utils.lua.misc").replace_termcodes("<Space>")
 vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
 -- whichkey workaround (no BS allowed)
 vim.keymap.set("n", "<BS>", ":WhichKey \\<cr>", { noremap = true, silent = true })
@@ -80,7 +80,7 @@ return {
     },
   },
 
-  "simrat39/rust-tools.nvim",
+  { "simrat39/rust-tools.nvim", lazy = true },
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
@@ -283,7 +283,7 @@ return {
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer", "DBUILastQueryInfo" },
   },
   -- fun
-  { "ThePrimeagen/vim-apm",   cmd = { "VimApm" } },
+  { "ThePrimeagen/vim-apm",     cmd = { "VimApm" } },
   {
     "ThePrimeagen/vim-be-good",
     cmd = { "VimBeGood" },
@@ -299,8 +299,7 @@ return {
   },
 
   "bkad/CamelCaseMotion",
-  "gpanders/editorconfig.nvim",
-  { "bps/vim-textobj-python", ft = "python" },
+  { "bps/vim-textobj-python",   ft = "python" },
 
   {
     "matze/vim-move",
@@ -400,6 +399,7 @@ return {
     priority = 1000,
     lazy = true,
   },
+  "nyngwang/nvimgelion",
   {
     "folke/todo-comments.nvim",
     config = function()
@@ -500,21 +500,11 @@ return {
   -- https://github.com/nvim-telescope/telescope-media-files.nvim
   -- for better go experience
   -- https://github.com/ray-x/go.nvim
-  -- this is for faster startup!
   "navarasu/onedark.nvim",
   -- {
-  --   "sourcegraph/sg.nvim",
-  --   dependencies = "nvim-lua/plenary.nvim",
-  --   config = function()
-  --     require("sg").setup({
-  --       -- Pass your own custom attach function
-  --       --    If you do not pass your own attach function, then the following maps are provide:
-  --       --        - gd -> goto definition
-  --       --        - gr -> goto references
-  --       -- on_attach = your_custom_lsp_attach_function,
-  --     })
-  --   end,
-  --   build = "cargo build --workspace",
+  -- 	"sourcegraph/sg.nvim",
+  -- 	dependencies = "nvim-lua/plenary.nvim",
+  -- 	build = "cargo build --workspace",
   -- },
   -- {
   --
@@ -556,26 +546,26 @@ return {
     "nvim-treesitter/nvim-treesitter-textobjects",
     dependencies = { "nvim-treesitter/nvim-treesitter", "kana/vim-textobj-user" },
   },
-  {
-    "fatih/vim-go",
-    init = function()
-      vim.g.go_echo_command_info = 1
-      vim.g.go_statusline_duration = 60000
-      vim.g.go_echo_go_info = 0
-      vim.g.go_gopls_enabled = 0
-      vim.g.go_def_mapping_enabled = 0
-      vim.g.go_doc_keywordprg_enabled = 0
-      vim.g.go_textobj_enabled = 0
-      vim.g.go_textobj_include_function_doc = 0
-      vim.g.go_textobj_include_variable = 0
-      vim.g.go_term_enabled = 1
-      vim.g.go_term_mode = "split"
-      vim.g.go_diagnostics_enabled = 0
-      vim.g.go_fold_enable = {}
-      vim.g.go_list_type = "quickfix"
-      vim.g.go_fmt_fail_silently = 1.
-    end,
-  },
+  -- {
+  -- 	"fatih/vim-go",
+  -- 	init = function()
+  -- 		vim.g.go_echo_command_info = 1
+  -- 		vim.g.go_statusline_duration = 60000
+  -- 		vim.g.go_echo_go_info = 0
+  -- 		vim.g.go_gopls_enabled = 0
+  -- 		vim.g.go_def_mapping_enabled = 0
+  -- 		vim.g.go_doc_keywordprg_enabled = 0
+  -- 		vim.g.go_textobj_enabled = 0
+  -- 		vim.g.go_textobj_include_function_doc = 0
+  -- 		vim.g.go_textobj_include_variable = 0
+  -- 		vim.g.go_term_enabled = 1
+  -- 		vim.g.go_term_mode = "split"
+  -- 		vim.g.go_diagnostics_enabled = 0
+  -- 		vim.g.go_fold_enable = {}
+  -- 		vim.g.go_list_type = "quickfix"
+  -- 		vim.g.go_fmt_fail_silently = 1.
+  -- 	end,
+  -- },
   "mkitt/tabline.vim",
   {
     "ray-x/lsp_signature.nvim",
@@ -593,6 +583,26 @@ return {
     "mrcjkb/haskell-tools.nvim",
     config = nil,
     branch = "1.x.x", -- recommended
+    lazy = true,
+  },
+  {
+    "BooleanCube/keylab.nvim",
+    cmd = "KeylabStart",
+    opts = {
+      lines = 10,
+      force_accuracy = true,
+      correct_fg = "#B8BB26",
+      wrong_bg = "#FB4934",
+    },
+  },
+  {
+    "olexsmir/gopher.nvim",
+    -- ft = "go",
+    config = function(_, opts)
+      require("gopher").setup(opts)
+      require("config.keybindings.languages").go()
+    end,
+    build = ":GoInstallDeps",
   },
   -- {
   -- 	"napisani/nvim-github-codesearch",
@@ -700,20 +710,20 @@ return {
   --     end,
   -- },
 
-  -- not working properly
+  -- too heavy
   -- {
-  --     "ray-x/go.nvim",
-  --     requires = { -- optional packages
-  --         "ray-x/guihua.lua",
-  --         "neovim/nvim-lspconfig",
-  --         "nvim-treesitter/nvim-treesitter",
-  --     },
-  --     config = function()
-  --         require("go").setup()
-  --     end,
-  --     event = { "CmdlineEnter" },
-  --     ft = { "go", "gomod" },
-  --     build = ':lua require("go.install").update_all_sync()',
+  -- 	"ray-x/go.nvim",
+  -- 	dependencies = { -- optional packages
+  -- 		"ray-x/guihua.lua",
+  -- 		"neovim/nvim-lspconfig",
+  -- 		"nvim-treesitter/nvim-treesitter",
+  -- 	},
+  -- 	config = function()
+  -- 		require("go").setup()
+  -- 	end,
+  -- 	event = { "CmdlineEnter" },
+  -- 	ft = { "go", "gomod" },
+  -- 	build = ':lua require("go.install").update_all_sync()', -- if you need to install/update all binaries
   -- },
 
   -- enable when dadbod completion stops working

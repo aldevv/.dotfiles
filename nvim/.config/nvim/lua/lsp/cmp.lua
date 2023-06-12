@@ -123,7 +123,8 @@ cmp.setup({
       behavior = cmp.ConfirmBehavior.Insert, -->https://github.com/hrsh7th/nvim-cmp/issues/664
       -- behavior = cmp.ConfirmBehavior.Replace, -->https://github.com/hrsh7th/nvim-cmp/issues/664
       --  check for examples https://github.com/hrsh7th/nvim-cmp/wiki/Example-mappings
-      select = true, -- auto select on enter (even if not selected with <a-n>)
+      -- select = true, -- auto select on enter (even if not selected with <a-n>)
+      select = false, -- auto select on enter (even if not selected with <a-n>)
     }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
   },
   -- nvim-cmp by defaults disables autocomplete for prompt buffers

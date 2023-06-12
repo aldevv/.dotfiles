@@ -25,6 +25,7 @@
 .vl     ~/.config/nvim/lua/lsp/lsp.lua
 .vL     ~/.config/nvim/lua/lsp/luasnip.lua
 .vp     ~/.config/nvim/lua/plugins.lua
+.vP     ~/.config/nvim/lua/plugins-debug.lua
 .vf     ~/.config/nvim/lua/lsp/formatters.lua
 .X      ~/.config/sxhkd/sxhkdrc
 .xm     ~/.config/xmonad/xmonad.hs
