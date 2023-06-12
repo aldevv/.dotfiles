@@ -24,9 +24,9 @@ local servers = {
 	"emmet_ls",
 }
 
-local lsp_default_opts = require("lsp.lsp_defaults")
+local default_opts = require("lsp.defaults_opts")
 local get_opts = function()
-	local opts = vim.deepcopy(lsp_default_opts)
+	local opts = vim.deepcopy(default_opts)
 	return {
 		capabilities = opts.capabilities,
 		handlers = opts.handlers,

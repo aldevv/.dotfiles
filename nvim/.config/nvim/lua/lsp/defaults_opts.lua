@@ -24,9 +24,11 @@ local capabilities = require("cmp_nvim_lsp").default_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 local on_attach = function(client, bufnr)
-	require("config.keybindings.lsp").load_mappings()
+	require("config.keybindings.lsp").load_mappings(client.name)
 	require("config.automation.lsp").diagnostics_in_loclist()
 	require("config.keybindings.dap").load_mappings(client.name)
+	-- make which-key load the new mappings added here
+	require("which-key").register({})
 end
 
 M.capabilities = capabilities
