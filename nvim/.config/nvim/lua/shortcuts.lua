@@ -172,7 +172,7 @@ vim.keymap.set("n", "<localleader>.vk", "<cmd>e ~/.config/nvim/lua/config/keybin
 vim.keymap.set("n", "<localleader>.vK", "<cmd>e ~/.config/nvim/lua/config/keybindings/dap.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.vd", "<cmd>e ~/.config/nvim/lua/lsp/dap/dap.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.vl", "<cmd>e ~/.config/nvim/lua/lsp/lsp.lua <cr>", {silent=true, noremap=true})
-vim.keymap.set("n", "<localleader>.vL", "<cmd>e ~/.config/nvim/lua/lsp/luasnip.lua <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>.vL", "<cmd>e ~/.config/nvim/lua/lsp/lang_opts.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.vp", "<cmd>e ~/.config/nvim/lua/plugins.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.vP", "<cmd>e ~/.config/nvim/lua/plugins-debug.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.vf", "<cmd>e ~/.config/nvim/lua/lsp/formatters.lua <cr>", {silent=true, noremap=true})

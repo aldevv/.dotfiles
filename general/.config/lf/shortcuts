@@ -247,7 +247,7 @@ map <backspace2>.vk $ $EDITOR ~/.config/nvim/lua/config/keybindings/init.lua
 map <backspace2>.vK $ $EDITOR ~/.config/nvim/lua/config/keybindings/dap.lua
 map <backspace2>.vd $ $EDITOR ~/.config/nvim/lua/lsp/dap/dap.lua
 map <backspace2>.vl $ $EDITOR ~/.config/nvim/lua/lsp/lsp.lua
-map <backspace2>.vL $ $EDITOR ~/.config/nvim/lua/lsp/luasnip.lua
+map <backspace2>.vL $ $EDITOR ~/.config/nvim/lua/lsp/lang_opts.lua
 map <backspace2>.vp $ $EDITOR ~/.config/nvim/lua/plugins.lua
 map <backspace2>.vP $ $EDITOR ~/.config/nvim/lua/plugins-debug.lua
 map <backspace2>.vf $ $EDITOR ~/.config/nvim/lua/lsp/formatters.lua

@@ -23,7 +23,7 @@
 .vK     ~/.config/nvim/lua/config/keybindings/dap.lua
 .vd     ~/.config/nvim/lua/lsp/dap/dap.lua
 .vl     ~/.config/nvim/lua/lsp/lsp.lua
-.vL     ~/.config/nvim/lua/lsp/luasnip.lua
+.vL     ~/.config/nvim/lua/lsp/lang_opts.lua
 .vp     ~/.config/nvim/lua/plugins.lua
 .vP     ~/.config/nvim/lua/plugins-debug.lua
 .vf     ~/.config/nvim/lua/lsp/formatters.lua

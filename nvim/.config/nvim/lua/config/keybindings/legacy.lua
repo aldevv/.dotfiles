@@ -11,8 +11,11 @@ noremap gn gj
 noremap gN gJ
 noremap k nzzzv
 noremap K Nzzzv
-noremap ge gk
+noremap gj ge
+noremap gJ gE
+noremap + K
 " ----------------
+
 
 
 
@@ -236,12 +239,11 @@ map <a-O> :w !sudo tee %<CR>
 
 " map  <leader>ss :wq<CR>
 " map <leader><F1> :e ~/.config/nvim/init.vim<cr>
-nnoremap <F6> :e $HOME/.config/nvim/init.vim<cr>
+nnoremap <F6> :e $HOME/.config/nvim/init.lua<cr>
 map <leader><F2> :e ~/.zshrc<cr>
 " noremap  <leader>ww :w<CR>
 
 noremap  <F7> :set spell! \| set wrap<CR>
-noremap  <leader>Ts :set spell! \| set wrap<CR>
 
 
 " Ctrl-O lets you do just one command in insert mode
