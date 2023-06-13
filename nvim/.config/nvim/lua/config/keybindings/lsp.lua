@@ -1,4 +1,16 @@
 local M = {}
+M.ufo_mappings = function()
+	vim.keymap.set("n", "zR", require("ufo").openAllFolds)
+	vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
+	vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds)
+	vim.keymap.set("n", "zm", require("ufo").closeFoldsWith) -- closeAllFolds == closeFoldsWith(0)
+	vim.keymap.set("n", "+", function()
+		local winid = require("ufo").peekFoldedLinesUnderCursor()
+		if not winid then
+			vim.lsp.buf.hover()
+		end
+	end)
+end
 
 M.load_mappings = function(client) -- use these on_attach
 	local s = { silent = true }
@@ -18,6 +30,7 @@ M.load_mappings = function(client) -- use these on_attach
 	-- NOTE: ge can be remapped
 	--       gE can be remmaped
 	--       <leader>f can be remmaped
+	--       <leader>e can be remmaped
 
 	map("n", "gd", ":Telescope lsp_definitions<cr>", nor_s)
 	map("n", "gD", ":vsplit | lua vim.lsp.buf.definition()<cr>")
@@ -26,7 +39,7 @@ M.load_mappings = function(client) -- use these on_attach
 	map("n", "gR", ":lua vim.lsp.buf.references()<cr>", nor)
 	map("n", "gy", ":lua vim.lsp.buf.type_definition()<cr>", nor)
 	map("n", "gY", ":lua vim.lsp.buf.declaration()<cr>", nor)
-	map("n", "+", "<cmd>lua vim.lsp.buf.hover()<cr>", nor)
+	M.ufo_mappings() --includes hover
 	map("n", "<M-->", vim.lsp.buf.signature_help, nor)
 	map("i", "<a-->", "<C-\\><C-O>:lua require('lsp_signature').signature()<cr>", nor)
 	-- map("n", "+", "<cmd>Lspsaga hover_doc<cr>", nor)

@@ -1,7 +1,6 @@
 local worktree = require("git-worktree")
 worktree.setup({
 	change_directory_command = "cd", -- default: "cd",
-
 	--  this command will only be run when the current file is not found in the new worktree.
 	--  This option defaults to e . which opens the root directory of the new worktree.
 	update_on_change = true, -- default: true,
@@ -18,8 +17,11 @@ worktree.on_tree_change(function(op, metadata)
 	end
 end)
 
-require("telescope").load_extension("git_worktree")
-
+local ok, telescope = pcall(require, "telescope")
+if not ok then
+	return
+end
+telescope.load_extension("git_worktree")
 -- :lua require('telescope').extensions.git_worktree.create_git_worktree()
 --:lua require('telescope').extensions.git_worktree.git_worktrees()
 -- <Enter> - switches to that worktree

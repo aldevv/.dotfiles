@@ -29,4 +29,8 @@ require("refactoring").setup({
 })
 
 -- load refactoring Telescope extension
-require("telescope").load_extension("refactoring")
+local ok, telescope = pcall(require, "telescope")
+if not ok then
+	return
+end
+telescope.load_extension("refactoring")

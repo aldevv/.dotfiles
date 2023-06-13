@@ -25,8 +25,15 @@ end
 
 local M = {}
 M.gopls = function()
-	map("n", "Esj", "<cmd>GoAddTags json <CR>", { desc = "Add json struct tags" })
-	map("n", "Esb", "<cmd>GoAddTags bson <CR>", { desc = "Add jbson struct tags" })
+	map("n", "Esj", "<cmd>GoTagAdd json <CR>", { desc = "Add json struct tags" })
+	map("n", "Esb", "<cmd>GoTagAdd bson <CR>", { desc = "Add bson struct tags" })
+	map("n", "Esrj", "<cmd>GoTagRm json <CR>", { desc = "Rm json struct tags" })
+	map("n", "Esrb", "<cmd>GoTagRm bson <CR>", { desc = "Rm bson struct tags" })
 	map("n", "Ei", "<cmd>GoIfErr <CR>", { desc = "Add if error" })
+	map("n", "EI", "<cmd>GoImpl <CR>", { desc = "Add Impl" })
+	map("n", "Et", "<cmd>GoTestsAll <CR>", { desc = "Run All tests" })
+	map("n", "Emt", "<cmd>GoMod tidy", { desc = "Go mod tidy" })
+	map("n", "Emi", "<cmd>GoMod init", { desc = "Go mod init" })
+	map("n", "Eg", "<cmd>Go generate", { desc = "Go generate" })
 end
 return M
