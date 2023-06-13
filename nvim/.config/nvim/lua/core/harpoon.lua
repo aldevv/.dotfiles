@@ -1,15 +1,15 @@
 local cfg = {
-    global_settings = {
-        enter_on_sendcmd = true,
-        -- set marks specific to each git branch inside git repository
-        -- mark_branch = false,
-    },
+	global_settings = {
+		enter_on_sendcmd = true,
+		-- set marks specific to each git branch inside git repository
+		-- mark_branch = false,
+	},
 }
 local ok, work = pcall(require, "work")
 if ok then
-    local projects = {}
-    projects = work.harpoon_projects
-    cfg = vim.tbl_extend("keep", cfg, projects)
+	local projects = {}
+	projects = work.harpoon_projects
+	cfg = vim.tbl_extend("keep", cfg, projects)
 end
 
 require("harpoon").setup(cfg)
@@ -96,4 +96,8 @@ require("harpoon").setup(cfg)
 --     },
 -- })
 --
-require("telescope").load_extension("harpoon")
+local ok, telescope = pcall(require, "telescope")
+if not ok then
+	return
+end
+telescope.load_extension("harpoon")

@@ -41,6 +41,14 @@ return {
 		},
 		config = req("core.telescope"),
 	},
+
+	{
+		"axkirillov/easypick.nvim",
+		config = req("core.easypick"),
+		dependencies = {
+			"nvim-telescope/telescope.nvim",
+		},
+	},
 	{
 		"folke/tokyonight.nvim",
 		branch = "main",
@@ -548,26 +556,6 @@ return {
 		"nvim-treesitter/nvim-treesitter-textobjects",
 		dependencies = { "nvim-treesitter/nvim-treesitter", "kana/vim-textobj-user" },
 	},
-	-- {
-	--   "fatih/vim-go",
-	--   init = function()
-	--     vim.g.go_echo_command_info = 1
-	--     vim.g.go_statusline_duration = 60000
-	--     vim.g.go_echo_go_info = 0
-	--     vim.g.go_gopls_enabled = 0
-	--     vim.g.go_def_mapping_enabled = 0
-	--     vim.g.go_doc_keywordprg_enabled = 0
-	--     vim.g.go_textobj_enabled = 0
-	--     vim.g.go_textobj_include_function_doc = 0
-	--     vim.g.go_textobj_include_variable = 0
-	--     vim.g.go_term_enabled = 1
-	--     vim.g.go_term_mode = "split"
-	--     vim.g.go_diagnostics_enabled = 0
-	--     vim.g.go_fold_enable = {}
-	--     vim.g.go_list_type = "quickfix"
-	--     vim.g.go_fmt_fail_silently = 1.
-	--   end,
-	-- },
 	"mkitt/tabline.vim",
 	{
 		"ray-x/lsp_signature.nvim",
@@ -576,10 +564,6 @@ return {
 			"neovim/nvim-lspconfig",
 			"hrsh7th/nvim-cmp",
 		},
-	},
-	{
-		"axkirillov/easypick.nvim",
-		config = req("core.easypick"),
 	},
 	{
 		"mrcjkb/haskell-tools.nvim",
@@ -597,14 +581,19 @@ return {
 			wrong_bg = "#FB4934",
 		},
 	},
-	-- {
-	-- 	"olexsmir/gopher.nvim",
-	-- 	-- ft = "go",
-	-- 	config = function(_, opts)
-	-- 		require("gopher").setup(opts)
-	-- 	end,
-	-- 	build = ":GoInstallDeps",
-	-- },
+	{
+		"olexsmir/gopher.nvim",
+		-- ft = "go",
+		config = function(_, opts)
+			require("gopher").setup(opts)
+		end,
+		build = ":GoInstallDeps",
+	},
+	{
+		"kevinhwang91/nvim-ufo",
+		config = req("core.ufo"),
+		dependencies = { "kevinhwang91/promise-async", "nvim-treesitter/nvim-treesitter" },
+	},
 	-- {
 	-- 	"napisani/nvim-github-codesearch",
 	-- 	build = "make",
