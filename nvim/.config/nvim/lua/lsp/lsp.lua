@@ -3,71 +3,71 @@
 -- -----------
 -- to choose version add a @<version> to the right of the name like hls@2.0.0.0
 local servers = {
-	"bashls",
-	"pyright",
-	"clangd",
-	"html",
-	"cssls",
-	"tsserver",
-	"svelte",
-	"lua_ls",
-	"vimls",
-	"gopls",
-	"dockerls",
-	"jsonls",
-	"rust_analyzer",
-	"volar",
-	-- "eslint-lsp"
-	-- "sqls",
-	-- "hls@2.0.0.0", -- mason is not installing it correctly as of 10/06/23
-	"hls",
-	"emmet_ls",
+  "bashls",
+  "pyright",
+  "clangd",
+  "html",
+  "cssls",
+  "tsserver",
+  "svelte",
+  "lua_ls",
+  "vimls",
+  "gopls",
+  "dockerls",
+  "jsonls",
+  "rust_analyzer",
+  "volar",
+  -- "eslint-lsp"
+  -- "sqls",
+  -- "hls@2.0.0.0", -- mason is not installing it correctly as of 10/06/23
+  "hls",
+  "emmet_ls",
 }
 
 local default_opts = require("lsp.defaults_opts")
 local get_opts = function()
-	local opts = vim.deepcopy(default_opts)
-	return {
-		capabilities = opts.capabilities,
-		handlers = opts.handlers,
-		on_attach = opts.on_attach,
-	}
+  local opts = vim.deepcopy(default_opts)
+  return {
+    capabilities = opts.capabilities,
+    handlers = opts.handlers,
+    on_attach = opts.on_attach,
+  }
 end
 
 local lang_opts = require("lsp.lang_opts")
 local enhance_server = function(server, opts)
-	if lang_opts.enhanceable(server) then
-		lang_opts.enhance(server, opts)
-	end
+  if lang_opts.enhanceable(server) then
+    lang_opts.enhance(server, opts)
+  end
 end
 
 local handlers = {
-	function(server_name)
-		local opts = get_opts()
-		enhance_server(server_name, opts)
-		require("lspconfig")[server_name].setup(opts)
-	end,
-	["rust_analyzer"] = function()
-		local opts = get_opts()
-		enhance_server("rust_analyzer", opts)
+  function(server_name)
+    local opts = get_opts()
+    enhance_server(server_name, opts)
+    require("lspconfig")[server_name].setup(opts)
+  end,
+  ["rust_analyzer"] = function()
+    local opts = get_opts()
+    enhance_server("rust_analyzer", opts)
 
-		if require("utils.lua.lazy").is_plugin_enabled("rust-tools") then
-			require("rust-tools").setup(opts)
-		else
-			require("lspconfig")["rust_analyzer"].setup(opts)
-		end
-	end,
-	["hls"] = function()
-		-- local opts = get_opts()
-		local opts = get_opts()
-		enhance_server("hls", opts)
+    if require("utils.lua.lazy").is_plugin_enabled("rust-tools") then
+      require("rust-tools").setup(opts)
+    else
+      require("lspconfig")["rust_analyzer"].setup(opts)
+    end
+  end,
+  ["hls"] = function()
+    -- local opts = get_opts()
+    local opts = get_opts()
+    enhance_server("hls", opts)
 
-		if require("utils.lua.lazy").is_plugin_enabled("haskell-tools") then
-			require("haskell-tools").setup({ hls = opts })
-		else
-			require("lspconfig")["hls"].setup(opts)
-		end
-	end,
+    if require("utils.lua.lazy").is_plugin_enabled("haskell-tools") then
+      require("haskell-tools").setup({ hls = opts })
+    else
+      require("lspconfig")["hls"].setup(opts)
+    end
+  end,
 }
 
 -- set log level for lsp operations, probably what you want
@@ -76,21 +76,21 @@ vim.lsp.set_log_level("info")
 -- vim.lsp.set_log_level("trace")
 
 require("mason").setup({
-	-- by default the path is extended to here
-	-- install_root_dir = path.concat { vim.fn.stdpath "data", "mason" },
-	-- useful for package installation errors
-	log_level = vim.log.levels.INFO,
-	-- Where Mason should put its bin location in your PATH. Can be one of:
-	-- - "prepend" (default, Mason's bin location is put first in PATH)
-	-- - "append" (Mason's bin location is put at the end of PATH)
-	-- - "skip" (doesn't modify PATH)
-	---@type '"prepend"' | '"append"' | '"skip"'
-	PATH = "append", --default is prepend
+  -- by default the path is extended to here
+  -- install_root_dir = path.concat { vim.fn.stdpath "data", "mason" },
+  -- useful for package installation errors
+  log_level = vim.log.levels.INFO,
+  -- Where Mason should put its bin location in your PATH. Can be one of:
+  -- - "prepend" (default, Mason's bin location is put first in PATH)
+  -- - "append" (Mason's bin location is put at the end of PATH)
+  -- - "skip" (doesn't modify PATH)
+  ---@type '"prepend"' | '"append"' | '"skip"'
+  PATH = "append", --default is prepend
 })
 require("mason-lspconfig").setup({
-	ensure_installed = servers,
-	--   - false: Servers are not automatically installed.
-	--   - true: All servers set up via lspconfig are automatically installed.
-	automatic_installation = false,
-	handlers = handlers,
+  ensure_installed = servers,
+  --   - false: Servers are not automatically installed.
+  --   - true: All servers set up via lspconfig are automatically installed.
+  automatic_installation = false,
+  handlers = handlers,
 })

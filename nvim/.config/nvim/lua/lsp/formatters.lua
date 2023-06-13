@@ -19,29 +19,28 @@ local opts = {
 	on_attach = function(nlient, bufnr) end,
 }
 
-local format_servers = {
+local ensure_format_servers = {
 	"prettier",
 	"shfmt",
 	"black",
-	"stylua",
 	"clang_format",
 }
-local diagnostic_servers = {
+local ensure_diagnostic_servers = {
 	"shellcheck",
 	"flake8",
 	"vint", -- for vim
 }
-local code_actions_servers = {
+local ensure_code_actions = {
 	"shellcheck",
 	"gitsigns",
 	"refactoring",
 }
 
-local servers = vim.tbl_extend("force", format_servers, diagnostic_servers, code_actions_servers)
+local ensure_installed = vim.tbl_extend("force", ensure_format_servers, ensure_diagnostic_servers, ensure_code_actions)
 
 local conf = {
 	black = { formatting.black.with({ extra_args = { "--fast" } }) },
-	stylua = { formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }) },
+	-- stylua = { formatting.stylua.with({ extra_args = { "--indent-type", "Spaces" } }) },
 	shfmt = { formatting.shfmt.with({
 		extra_filetypes = { "zsh", "bash" },
 	}) },
@@ -60,7 +59,7 @@ local handlers = {
 	end,
 }
 require("mason-null-ls").setup({
-	ensure_installed = servers,
+	ensure_installed = ensure_installed,
 	automatic_setup = true,
 	handlers = handlers,
 })
