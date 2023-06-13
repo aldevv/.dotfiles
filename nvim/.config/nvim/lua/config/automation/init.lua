@@ -45,21 +45,14 @@ augroup END
 autocmd! BufRead,BufNewFile .projections.json  set filetype=projections.json syntax=json
 ]])
 
-cmd([[
-  augroup FormatOnSave
-    autocmd!
-    " so when it saves it stays saved
-    autocmd BufWritePre *.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua} :silent lua vim.lsp.buf.format()
-    " add for any sh file (since might not have extension)
-    autocmd FileType sh :autocmd BufWritePre * lua vim.lsp.buf.format({async = false})
-  augroup END
-]])
 
--- cmd([[
---     augroup ReloadNvimConfig
---         autocmd BufWritePost *.{lua,vim} source %
---     augroup END
---a]])
+local patterns = "*.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua}"
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = patterns,
+  callback = function()
+    vim.lsp.buf.format()
+  end,
+})
 
 -- require("config.automation.packer")
 
@@ -111,37 +104,37 @@ cmd([[
 -- ]])
 
 vim.api.nvim_create_autocmd({ "Filetype" }, {
-	pattern = "*",
-	callback = function()
-		vim.opt.cursorline = true
-		vim.api.nvim_set_hl(0, "HarpoonWindow", { link = "Normal" })
-		vim.api.nvim_set_hl(0, "HarpoonBorder", { link = "Normal" })
-		vim.api.nvim_set_hl(0, "FloatWindow", { link = "Normal" })
-		vim.api.nvim_set_hl(0, "FloatBorder", { link = "Normal" })
-	end,
+  pattern = "*",
+  callback = function()
+    vim.opt.cursorline = true
+    vim.api.nvim_set_hl(0, "HarpoonWindow", { link = "Normal" })
+    vim.api.nvim_set_hl(0, "HarpoonBorder", { link = "Normal" })
+    vim.api.nvim_set_hl(0, "FloatWindow", { link = "Normal" })
+    vim.api.nvim_set_hl(0, "FloatBorder", { link = "Normal" })
+  end,
 })
 
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-	pattern = vim.fn.getenv("NOTES") .. "/*.md",
-	command = "Dispatch! . _dgp $NOTES $(stamp)",
+  pattern = vim.fn.getenv("NOTES") .. "/*.md",
+  command = "Dispatch! . _dgp $NOTES $(stamp)",
 })
 
 -- NOTE: this is because the file appears with wrong highlighting, fault of the lsp
 vim.api.nvim_create_autocmd({ "LspAttach" }, {
-	pattern = "*/dwm-flexipatch/config.h",
-	command = "LspStop",
+  pattern = "*/dwm-flexipatch/config.h",
+  command = "LspStop",
 })
 
 vim.api.nvim_create_autocmd({ "FileType" }, {
-	pattern = { "TelescopePrompt*", "TelescopeResults" },
-	command = "setlocal nocursorline",
+  pattern = { "TelescopePrompt*", "TelescopeResults" },
+  command = "setlocal nocursorline",
 })
 
 vim.api.nvim_create_autocmd({ "TermOpen" }, {
-	pattern = "*",
-	callback = function()
-		-- pcall(vim.cmd, "set background=dark")
-		-- pcall(vim.cmd, "hi Normal guibg=NONE ctermbg=NONE")
-		pcall(vim.cmd, "setlocal nospell")
-	end,
+  pattern = "*",
+  callback = function()
+    -- pcall(vim.cmd, "set background=dark")
+    -- pcall(vim.cmd, "hi Normal guibg=NONE ctermbg=NONE")
+    pcall(vim.cmd, "setlocal nospell")
+  end,
 })

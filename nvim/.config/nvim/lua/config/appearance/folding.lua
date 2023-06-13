@@ -25,6 +25,7 @@ vim.api.nvim_create_autocmd("BufWinLeave", {
 -- -- for when there are no extensions
 
 local filetypes = {
+  "lua",
   "sh",
   "zsh",
   "bash",
@@ -37,6 +38,9 @@ local filetypes = {
   "typescript",
   "javascript",
   "javascriptreact",
+  "haskell",
+  "ocaml",
+  "zig",
 }
 
 vim.api.nvim_create_autocmd("FileType", {
