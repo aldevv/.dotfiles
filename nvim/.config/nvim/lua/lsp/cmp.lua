@@ -8,26 +8,32 @@ lspkind.init({
   -- with_text = true,
   mode = "symbol_text",
   symbol_map = {
-    Text = "",
-    Method = "ƒ",
-    Function = "ﬦ",
-    Constructor = "",
-    Variable = "",
-    Class = "",
-    Interface = "ﰮ",
-    Module = "",
-    Property = "",
-    Unit = "",
-    Value = "",
-    Enum = "了",
-    Keyword = "",
-    Snippet = "﬌",
-    Color = "",
-    File = "",
-    Folder = "",
+    Text = "󰉿",
+    Method = "󰆧",
+    Function = "󰊕",
+    Constructor = "",
+    Field = "󰜢",
+    Variable = "󰀫",
+    Class = "󰠱",
+    Interface = "",
+    Module = "",
+    Property = "󰜢",
+    Unit = "󰑭",
+    Value = "󰎠",
+    Enum = "",
+    Keyword = "󰌋",
+    Snippet = "",
+    Color = "󰏘",
+    File = "󰈙",
+    Reference = "󰈇",
+    Folder = "󰉋",
     EnumMember = "",
-    Constant = "",
-    Struct = "",
+    Constant = "󰏿",
+    Struct = "󰙅",
+    Event = "",
+    Operator = "󰆕",
+    TypeParameter = "🔥",
+
   },
 })
 
@@ -126,6 +132,11 @@ cmp.setup({
       -- select = true, -- auto select on enter (even if not selected with <a-n>)
       select = false, -- auto select on enter (even if not selected with <a-n>)
     }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+    -- same as <cr> but it auto selects first option
+    -- ["<a-y>"] = cmp.mapping.confirm({
+    --   behavior = cmp.ConfirmBehavior.Insert,
+    --   select = true, -- auto select on enter (even if not selected with <a-n>)
+    -- }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
   },
   -- nvim-cmp by defaults disables autocomplete for prompt buffers
   enabled = function()

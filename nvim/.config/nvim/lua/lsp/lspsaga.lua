@@ -93,10 +93,60 @@
 local saga = require("lspsaga")
 
 require("lspsaga").setup({
-	lightbulb = {
-		enable = false,
-	},
-	diagnostic = {
-		on_insert = false,
-	},
+  lightbulb = {
+    enable = false,
+  },
+  diagnostic = {
+    on_insert = false,
+  },
+  ui = {
+    -- This option only works in Neovim 0.9
+    title = true,
+    -- Border type can be single, double, rounded, solid, shadow.
+    border = "single",
+    winblend = 0,
+    expand = "",
+    collapse = "",
+    code_action = "💡",
+    incoming = " ",
+    outgoing = " ",
+    hover = ' ',
+    kind = {
+      ['File'] = { ' ', 'Tag' },
+      ['Module'] = { ' ', 'Exception' },
+      ['Namespace'] = { ' ', 'Include' },
+      ['Package'] = { ' ', 'Label' },
+      ['Class'] = { ' ', 'Include' },
+      ['Method'] = { ' ', 'Function' },
+      ['Property'] = { ' ', '@property' },
+      ['Field'] = { ' ', '@field' },
+      ['Constructor'] = { ' ', '@constructor' },
+      ['Enum'] = { ' ', '@number' },
+      ['Interface'] = { ' ', 'Type' },
+      ['Function'] = { '󰡱 ', 'Function' },
+      ['Variable'] = { ' ', '@variable' },
+      ['Constant'] = { ' ', 'Constant' },
+      ['String'] = { '󰅳 ', 'String' },
+      ['Number'] = { '󰎠 ', 'Number' },
+      ['Boolean'] = { ' ', 'Boolean' },
+      ['Array'] = { '󰅨 ', 'Type' },
+      ['Object'] = { ' ', 'Type' },
+      ['Key'] = { ' ', 'Constant' },
+      ['Null'] = { '󰟢 ', 'Constant' },
+      ['EnumMember'] = { ' ', 'Number' },
+      ['Struct'] = { ' ', 'Type' },
+      ['Event'] = { ' ', 'Constant' },
+      ['Operator'] = { ' ', 'Operator' },
+      ['TypeParameter'] = { ' ', 'Type' },
+      ['TypeAlias'] = { ' ', 'Type' },
+      ['Parameter'] = { ' ', '@parameter' },
+      ['StaticMethod'] = { ' ', 'Function' },
+      ['Macro'] = { ' ', 'Macro' },
+      ['Text'] = { '󰭷 ', 'String' },
+      ['Snippet'] = { ' ', '@variable' },
+      ['Folder'] = { ' ', 'Title' },
+      ['Unit'] = { '󰊱 ', 'Number' },
+      ['Value'] = { ' ', '@variable' },
+    },
+  },
 })

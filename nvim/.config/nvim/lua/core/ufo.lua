@@ -34,6 +34,16 @@ require("ufo").setup({
     win_config = {
       winblend = 0,
     },
+
+    mappings = {
+      scrollU = '<C-u>',
+      scrollD = '<C-d>',
+      jumpTop = '[',
+      jumpBot = ']',
+      close = 'q',
+      switch = '+',
+      trace = '<CR>'
+    },
   },
   provider_selector = function(bufnr, filetype, buftype)
     return { "treesitter", "indent" }

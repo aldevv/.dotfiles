@@ -129,6 +129,11 @@ return {
     "nvimdev/lspsaga.nvim",
     config = req("lsp.lspsaga"),
     event = "LspAttach",
+    dependencies = {
+      { "nvim-tree/nvim-web-devicons" },
+      --Please make sure you install markdown and markdown_inline parser
+      { "nvim-treesitter/nvim-treesitter" }
+    }
   },
 
   {
@@ -255,6 +260,8 @@ return {
     "mattn/emmet-vim",
     init = function()
       vim.g.user_emmet_install_global = 0
+    end,
+    config = function()
       vim.keymap.set("i", "€", "<plug>(emmet-expand-abbr)")
     end,
     ft = { "html", "js", "ts", "css", "vue", "svelte", "jsx", "tsx" },
@@ -412,9 +419,26 @@ return {
   { "hachy/eva01.vim", priority = 1000, lazy = false },
   {
     "folke/todo-comments.nvim",
-    config = function()
-      require("todo-comments").setup({})
-    end,
+    opts = {
+      keywords = {
+        FIX = {
+          icon = " ", -- icon used for the sign, and in search results
+          color = "error", -- can be a hex color, or a named color (see below)
+          alt = { "FIXME", "BUG", "FIXIT", "ISSUE" }, -- a set of other keywords that all map to this FIX keywords
+          -- signs = false, -- configure signs for some keywords individually
+        },
+        TODO = { icon = " ", color = "info" },
+        HACK = { icon = " ", color = "warning" },
+        WARN = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
+        PERF = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
+        NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
+        TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
+      },
+      gui_style = {
+        fg = "NONE", -- The gui style to use for the fg highlight group.
+        bg = "BOLD", -- The gui style to use for the bg highlight group.
+      },
+    },
     dependencies = "nvim-lua/plenary.nvim",
   },
 
@@ -594,6 +618,15 @@ return {
     config = req("core.ufo"),
     dependencies = { "kevinhwang91/promise-async", "nvim-treesitter/nvim-treesitter" },
   },
+  -- {
+  --   "folke/persistence.nvim",
+  --   event = "BufReadPre", -- this will only start session saving when an actual file was opened
+  --   opts = {
+  --     dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"), -- directory where session files are saved
+  --     options = { "buffers", "curdir", "tabpages", "winsize" }, -- sessionoptions used for saving
+  --     pre_save = nil, -- a function to call before saving the session
+  --   }
+  -- }
   -- {
   -- 	"napisani/nvim-github-codesearch",
   -- 	build = "make",
