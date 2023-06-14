@@ -261,8 +261,6 @@ cnoremap <a-i> <Right>
 " map <silent> <leader>RR :call Runner()<cr>
 " autocmd FileType python map <silent> <cr> :call Runner()<cr>
 " autocmd FileType python nnoremap <buffer> <s-cr> :silent w<bar>only<bar>vsp<bar>term ipython3 -i %<cr>
-autocmd FileType python nnoremap <buffer> <s-cr> :silent w<bar>only<bar>vsp<bar>term jupyter console<cr> <c-w>l :JupyterConnect<cr><cr> :JupyterRunFile<cr>
-autocmd FileType java nnoremap <silent><buffer> <s-cr> :silent w<bar>execute "!java ".expand('%:t:r')<cr>
 noremap <silent><leader><cr> :silent call RunnerTerminal()<cr>
 " nnoremap <silent><buffer><cr> :silent call RunnerEnter()<cr>
 
