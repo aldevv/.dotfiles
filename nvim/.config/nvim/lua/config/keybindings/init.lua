@@ -43,10 +43,27 @@ end
 map("n", "n", "j", nor)
 map("n", "e", "k", nor)
 map("n", "j", "e", nor)
-map("n", "l", "i", nor)
-map("n", "i", "lzv", nor) -- zv so it also works with folds
-map("x", "i", "l", nor)
-map("x", "l", "i", nor)
+
+-- ===================
+-- map("n", "l", "i", nor)
+-- map("x", "l", "i", nor)
+-- vim.cmd([[
+-- nnoremap l i
+-- nnoremap i l
+-- vnoremap i l
+-- ]])
+-- map("o", "l", "i", nor)
+
+-- map("n", "i", "l", nor)
+-- map("x", "i", "l", nor)
+-- map("o", "i", "l", nor)
+
+-- ===================
+
+map({ "n", "x" }, "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
+map({ "n", "x" }, "i", "lzv", nor)
+-- map("o", "lp", "ip", nor) -- mini.ai doesn't set this, also doesn't work with gulw
+-- map("n", "i", "lzv", nor) -- zv so it also works with folds
 map("", "N", "mzJ`z", nor)
 
 map("n", "w", "zvw", nor) -- zv so it also works with folds
@@ -58,8 +75,6 @@ map("x", "e", "k", nor)
 map("x", "n", "j", nor)
 map("x", "j", "e", nor)
 
-map("o", "l", "i", nor)
-map("o", "i", "l", nor)
 
 -- map("n", "zn", "zj", nor)
 -- map("n", "ze", "zk", nor)
@@ -133,6 +148,7 @@ map("n", "<a-down>", ":m .+1<cr>==", nor)
 -- this way also works but no fallback
 -- vim.keymap.set("i", "<a-y>", "copilot#Accept('<a-y>')",
 --   { replace_keycodes = false, silent = true, expr = true, script = true })
+map("i", "<a-cr>", "<cr>")
 map("i", "<a-y>", function()
   local copilot_keys = vim.fn["copilot#Accept"]()
   if copilot_keys ~= "	" then
@@ -336,19 +352,23 @@ vmap <leader>,Sr <Plug>SnipRun
 ]])
 
 -- , configuration
-map("n", "<leader>,Ll", ":Lazy<cr>", nor_s)
-map("n", "<leader>,Lp", ":Lazy profile<cr>", nor_s)
-map("n", "<leader>,Lr", ":Lazy restore<cr>", nor_s)
-map("n", "<leader>,lr", ":LspRestart<cr>", nor_s)
-map("n", "<leader>,li", ":LspInfo<cr>", nor_s)
-map("n", "<leader>,ls", ":LspStart<cr>", nor_s)
-map("n", "<leader>,lS", ":LspStop<cr>", nor_s)
-map("n", "<leader>,ll", ":LspLog<cr>", nor_s)
+map("n", "<leader>,la", ":Lazy<cr>", nor)
+map("n", "<leader>,ll", ":Lazy log<cr>", nor)
+map("n", "<leader>,lp", ":Lazy profile<cr>", nor)
+map("n", "<leader>,lr", ":Lazy restore<cr>", nor)
 
-map("n", "<leader>,ni", ":NullLsInfo<cr>", nor_s)
+map("n", "<leader>,Lr", ":LspRestart<cr>", nor)
+map("n", "<leader>,Li", ":LspInfo<cr>", nor)
+map("n", "<leader>,Ls", ":LspStart ", nor)
+map("n", "<leader>,LS", ":LspStop ", nor)
+map("n", "<leader>,Ll", ":LspLog<cr>", nor)
 
-map("n", "<leader>,Mm", ":Mason<cr>", nor_s)
-map("n", "<leader>,Ml", ":MasonLog<cr>", nor_s)
+map("n", "<leader>,ni", ":NullLsInfo<cr>", nor)
+map("n", "<leader>,nl", ":NullLsLog<cr>", nor)
+
+map("n", "<leader>,Ma", ":Mason<cr>", nor)
+map("n", "<leader>,Ml", ":MasonLog<cr>", nor)
+map("n", "<leader>,Mu", ":MasonUpdate<cr>", nor)
 
 -- map("n", "<leader>,ps", ":PackerSync<cr>", nor)
 -- map("n", "<leader>,pS", ":PackerStatus<cr>", nor)
@@ -375,18 +395,20 @@ map("n", "<a-c>", "vip:w !bash<cr>", nor)
 -- markdown
 map("n", "<leader>,mp", "<cmd>MarkdownPreviewToggle<cr>", nor)
 
+-- this is to disalbe <Del> default behaviour
+map("n", "<Del>", "<cmd>WhichKey <Del> <cr>", nor)
 -- rest.nvim
-map("n", "<localleader>rr", "<Plug>RestNvim<cr>", nor)
-map("n", "<localleader>rp", "<Plug>RestNvimPreview<cr>", nor)
-map("n", "<localleader>rl", "<Plug>RestNvimLast<cr>", nor)
+map("n", "<Del>rr", "<Plug>RestNvim<cr>", nor)
+map("n", "<Del>rp", "<Plug>RestNvimPreview<cr>", nor)
+map("n", "<Del>rl", "<Plug>RestNvimLast<cr>", nor)
 
 -- dadbod
 -- opening it in a new tab
-map("n", "<localleader>Dd", ":tabedit | DBUI<cr>", {})
-map("n", "<localleader>DD", ":DBUIToggle<cr>", {})
-map("n", "<localleader>Da", ":DBUIAddConnection<cr>", {})
-map("n", "<localleader>Df", ":DBUIFindBuffer<cr>", {})
-map("n", "<localleader>Dq", ":DBUILastQueryInfo<cr>", {})
+map("n", "<Del>bd", ":tabedit | DBUI<cr>", {})
+map("n", "<Del>bD", ":DBUIToggle<cr>", {})
+map("n", "<Del>ba", ":DBUIAddConnection<cr>", {})
+map("n", "<Del>bf", ":DBUIFindBuffer<cr>", {})
+map("n", "<Del>bq", ":DBUILastQueryInfo<cr>", {})
 -- For queries, filetype is automatically set to sql. Also, two mappings is added for the sql filetype:
 --
 -- W - Permanently save query for later use (<Plug>(DBUI_SaveQuery))
@@ -539,3 +561,7 @@ map("n", "<S-Left>", "5<c-w><", nor_s)
 map("n", "<CR>", "za")
 map("n", "<s-CR>", "zA")
 map("n", "<c-l><c-l>", ":nohl<cr>")
+
+-- color picker
+map("n", "<C-c>", "<cmd>PickColor<cr>", nor)
+map("i", "<C-c>", "<cmd>PickColorInsert<cr>", nor)

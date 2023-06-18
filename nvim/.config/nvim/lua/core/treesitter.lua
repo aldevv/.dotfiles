@@ -67,14 +67,14 @@ require("nvim-treesitter.configs").setup({
     select = {
       enable = true,
       lookahead = true,
-      keymaps = {
-        ["aa"] = "@parameter.outer",
-        ["la"] = "@parameter.inner",
-        ["am"] = "@function.outer",
-        ["lm"] = "@function.inner",
-        ["ac"] = "@class.outer",
-        ["lc"] = "@class.inner",
-      },
+      -- keymaps = {
+      --   ["aa"] = "@parameter.outer",
+      --   ["la"] = "@parameter.inner",
+      --   ["am"] = "@function.outer",
+      --   ["lm"] = "@function.inner",
+      --   ["ac"] = "@class.outer",
+      --   ["lc"] = "@class.inner",
+      -- },
     },
   },
   move = {

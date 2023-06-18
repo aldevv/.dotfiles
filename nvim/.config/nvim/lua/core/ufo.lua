@@ -27,7 +27,10 @@ local handler = function(virtText, lnum, endLnum, width, truncate)
   return newVirtText
 end
 
+
+
 require("ufo").setup({
+  enable_get_fold_virt_text = true,
   fold_virt_text_handler = handler,
   close_fold_kinds = { "imports", "comment" },
   preview = {
@@ -47,5 +50,7 @@ require("ufo").setup({
   },
   provider_selector = function(bufnr, filetype, buftype)
     return { "treesitter", "indent" }
+    -- return { "lsp", "treesitter" } -- main and fallback, indent is also available
   end,
 })
+vim.cmd("autocmd FileType org :UfoDetach")

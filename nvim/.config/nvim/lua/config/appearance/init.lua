@@ -4,7 +4,7 @@
 -- local colorscheme = "nvimgelion"
 local colorscheme = "eva01"
 if require("utils.lua.lazy").is_plugin_loaded(colorscheme) then
-	vim.cmd("colorscheme " .. colorscheme)
+  vim.cmd("colorscheme " .. colorscheme)
 end
 
 -- transparency
