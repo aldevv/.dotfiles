@@ -1,25 +1,32 @@
 require("orgmode").setup_ts_grammar()
 require("orgmode").setup({
-    org_indent_mode = "indent",
-    org_edit_src_content_indentation = 0,
-    mappings = {
-        org = {
-            -- done because original mapping was NOT SILENT
-            org_global_cycle = "<ignore>",
-            -- org_agenda_switch_to = "<ignore>",
-        },
+  org_indent_mode = "indent",
+  org_edit_src_content_indentation = 0,
+  mappings = {
+    org = {
+      -- done because original mapping was NOT SILENT
+      org_global_cycle = "<ignore>",
+      org_cycle = "<ignore>", -- this is tab by default
+      -- org_agenda_switch_to = "<ignore>",
     },
+  },
 })
 
 -- done because original mapping was NOT SILENT
 vim.api.nvim_create_autocmd("FileType", {
-    pattern = "org",
-    callback = function()
-        vim.keymap.set(
-            "n",
-            "<s-tab>",
-            '<Cmd>lua require("orgmode").action("org_mappings.global_cycle")<CR>)',
-            { silent = true }
-        )
-    end,
+  pattern = "org",
+  callback = function()
+    vim.keymap.set(
+      "n",
+      "<tab>",
+      'za',
+      { silent = true }
+    )
+    vim.keymap.set(
+      "n",
+      "<s-tab>",
+      '<Cmd>lua require("orgmode").action("org_mappings.global_cycle")<CR>)',
+      { silent = true }
+    )
+  end,
 })

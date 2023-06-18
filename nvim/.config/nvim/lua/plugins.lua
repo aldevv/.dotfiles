@@ -55,8 +55,12 @@ return {
     -- config = req("config.appearance.themes.tokyonight"),
   },
   { "catppuccin/nvim",             config = req("config.appearance.themes.catppuccin") },
-
-  "norcalli/nvim-colorizer.lua",
+  { "norcalli/nvim-colorizer.lua", config = function()
+    require("colorizer").setup()
+  end },
+  { "ziontee113/color-picker.nvim", config = function()
+    require("color-picker").setup()
+  end },
   {
     "nvim-lualine/lualine.nvim",
 
@@ -209,18 +213,6 @@ return {
     init = function()
       vim.g.copilot_filetypes = { ["*"] = false, rust = true, js = true, ts = true, jsx = true }
       vim.cmd("highlight CopilotSuggestion guifg=#AAAAAA ctermfg=8")
-    end,
-  },
-
-  -- breaking nvim-surround, should look for better option using nvim-treesitter
-  {
-    "wellle/targets.vim",
-    init = function()
-      vim.g.targets_aiAI = { "a", "l", "A", "L" }
-      vim.g.targets_mapped_aiAI = { "a", "i", "A", "I" }
-      vim.g.targets_nl = { "n", "N" }
-      -- this script lets you apply macros to multiple lines
-      -- vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
     end,
   },
   "tpope/vim-surround",
@@ -415,7 +407,7 @@ return {
     priority = 1000,
     lazy = true,
   },
-  -- "nyngwang/nvimgelion",
+  "nyngwang/nvimgelion",
   { "hachy/eva01.vim", priority = 1000, lazy = false },
   {
     "folke/todo-comments.nvim",
@@ -605,19 +597,41 @@ return {
       wrong_bg = "#FB4934",
     },
   },
-  {
-    "olexsmir/gopher.nvim",
-    -- ft = "go",
-    config = function(_, opts)
-      require("gopher").setup(opts)
-    end,
-    build = ":GoInstallDeps",
-  },
+  -- {
+  --   "olexsmir/gopher.nvim",
+  --   -- ft = "go",
+  --   config = function(_, opts)
+  --     require("gopher").setup(opts)
+  --   end,
+  --   build = ":GoInstallDeps",
+  -- },
   {
     "kevinhwang91/nvim-ufo",
     config = req("core.ufo"),
     dependencies = { "kevinhwang91/promise-async", "nvim-treesitter/nvim-treesitter" },
   },
+  {
+    "wellle/targets.vim",
+    init = function()
+      vim.g.targets_aiAI = { "a", "l", "A", "L" }
+      vim.g.targets_mapped_aiAI = { "a", "i", "A", "I" }
+      vim.g.targets_nl = { "n", "N" }
+      -- this script lets you apply macros to multiple lines
+      -- vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
+    end,
+  },
+  -- NOTE: failing for gUlw
+  -- { 'echasnovski/mini.nvim', version = '*', config = function()
+  --   require("mini.ai").setup({
+  --     mappings = {
+  --       inside = "l",
+  --       inside_next = "ln",
+  --       inside_last = "ll"
+  --     }
+  --   })
+  -- end
+  -- },
+
   -- {
   --   "folke/persistence.nvim",
   --   event = "BufReadPre", -- this will only start session saving when an actual file was opened
@@ -734,20 +748,20 @@ return {
   -- },
 
   -- too heavy
-  -- {
-  -- 	"ray-x/go.nvim",
-  -- 	dependencies = { -- optional packages
-  -- 		"ray-x/guihua.lua",
-  -- 		"neovim/nvim-lspconfig",
-  -- 		"nvim-treesitter/nvim-treesitter",
-  -- 	},
-  -- 	config = function()
-  -- 		require("go").setup()
-  -- 	end,
-  -- 	event = { "CmdlineEnter" },
-  -- 	ft = { "go", "gomod" },
-  -- 	build = ':lua require("go.install").update_all_sync()', -- if you need to install/update all binaries
-  -- },
+  {
+    "ray-x/go.nvim",
+    dependencies = { -- optional packages
+      "ray-x/guihua.lua",
+      "neovim/nvim-lspconfig",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = function()
+      require("go").setup()
+    end,
+    event = { "CmdlineEnter" },
+    ft = { "go", 'gomod' },
+    build = ':lua require("go.install").update_all_sync()' -- if you need to install/update all binaries
+  }
 
   -- enable when dadbod completion stops working
   -- use("nanotee/sqls.nvim")
