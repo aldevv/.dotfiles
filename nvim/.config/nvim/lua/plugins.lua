@@ -99,6 +99,17 @@ return {
     build = ":TSUpdate",
     config = req("core.treesitter"),
   },
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    dependencies = { "nvim-treesitter/nvim-treesitter", "kana/vim-textobj-user" },
+  },
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    config = function()
+      vim.cmd("hi TreesitterContextLineNumber gui=bold guifg=orange")
+    end,
+    dependencies = { "nvim-treesitter/nvim-treesitter" }
+  },
   -- convert to luasnip using
   -- - https://github.com/smjonas/snippet-converter.nvim
   -- and
@@ -116,18 +127,10 @@ return {
   },
   {
     "rafamadriz/friendly-snippets",
-
     config = function()
       require("luasnip.loaders.from_vscode").lazy_load()
       require("luasnip").filetype_extend("all", { "_" })
-    end,
-  },
-
-  {
-    "nvim-treesitter/nvim-treesitter-context",
-    config = function()
-      vim.cmd("hi TreesitterContextLineNumber gui=bold guifg=orange")
-    end,
+    end
   },
   {
     "nvimdev/lspsaga.nvim",
@@ -568,10 +571,6 @@ return {
     end,
   },
 
-  {
-    "nvim-treesitter/nvim-treesitter-textobjects",
-    dependencies = { "nvim-treesitter/nvim-treesitter", "kana/vim-textobj-user" },
-  },
   "mkitt/tabline.vim",
   {
     "ray-x/lsp_signature.nvim",
@@ -618,6 +617,16 @@ return {
       vim.g.targets_nl = { "n", "N" }
       -- this script lets you apply macros to multiple lines
       -- vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
+    end,
+  },
+  {
+    "ianding1/leetcode.vim",
+    build = "pip3 install keyring browser-cookie3 --user",
+    config = function()
+      -- Values: 'cpp', 'java', 'python', 'python3', 'csharp', 'javascript', 'ruby', 'swift', 'golang', 'scala', 'kotlin', 'rust'.
+      -- Default value is 'cpp'.
+      vim.g.leetcode_solution_filetype = "golang"
+      vim.g.leetcode_browser = "firefox"
     end,
   },
   -- NOTE: failing for gUlw

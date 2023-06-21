@@ -202,18 +202,18 @@ map Yvo $ cp -rv $f /home/kanon/volumes
 map <backspace2>an. cd ~/.local/share/ansible
 map man. $ mv -v $f ~/.local/share/ansible
 map Yan. $ cp -rv $f ~/.local/share/ansible
-map <backspace2>p cd /home/kanon/programs/
-map mp $ mv -v $f /home/kanon/programs/
-map Yp $ cp -rv $f /home/kanon/programs/
-map <backspace2>p. cd /home/kanon/programs/
-map mp. $ mv -v $f /home/kanon/programs/
-map Yp. $ cp -rv $f /home/kanon/programs/
-map <backspace2>P cd /home/kanon/projects/
-map mP $ mv -v $f /home/kanon/projects/
-map YP $ cp -rv $f /home/kanon/projects/
-map <backspace2>P. cd /home/kanon/projects/
-map mP. $ mv -v $f /home/kanon/projects/
-map YP. $ cp -rv $f /home/kanon/projects/
+map <backspace2>P cd /home/kanon/programs/
+map mP $ mv -v $f /home/kanon/programs/
+map YP $ cp -rv $f /home/kanon/programs/
+map <backspace2>P. cd /home/kanon/programs/
+map mP. $ mv -v $f /home/kanon/programs/
+map YP. $ cp -rv $f /home/kanon/programs/
+map <backspace2>p cd /home/kanon/projects/
+map mp $ mv -v $f /home/kanon/projects/
+map Yp $ cp -rv $f /home/kanon/projects/
+map <backspace2>p. cd /home/kanon/projects/
+map mp. $ mv -v $f /home/kanon/projects/
+map Yp. $ cp -rv $f /home/kanon/projects/
 map <backspace2>c. cd /home/kanon/playground/code
 map mc. $ mv -v $f /home/kanon/playground/code
 map Yc. $ cp -rv $f /home/kanon/playground/code
@@ -263,6 +263,9 @@ map <backspace2>.aa $ $EDITOR ~/.config/.aliases
 map <backspace2>.aw $ $EDITOR ~/.config/.aliases_work
 map <backspace2>.sw $ $EDITOR ~/.config/.startup_work
 map <backspace2>.ss $ $EDITOR /home/kanon/.local/share/scripts/automation/startup/startup
+map <backspace2>.sng $ $EDITOR ~/.config/nvim/my_snippets/snipmate/go.snippets
+map <backspace2>.snl $ $EDITOR ~/.config/nvim/my_snippets/snipmate/lua.snippets
+map <backspace2>.snp $ $EDITOR ~/.config/nvim/my_snippets/snipmate/python.snippets
 map <backspace2>.ao $ $EDITOR ~/.config/zsh/.aliases
 map <backspace2>.k $ $EDITOR /home/kanon/.local/share/scripts/apps/qmk/lily58/keymap.c
 map <backspace2>.Z $ $EDITOR /root/.config/zsh/.zshrc

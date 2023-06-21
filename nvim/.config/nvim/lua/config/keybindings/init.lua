@@ -62,6 +62,7 @@ map("n", "j", "e", nor)
 
 map({ "n", "x" }, "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
 map({ "n", "x" }, "i", "lzv", nor)
+
 -- map("o", "lp", "ip", nor) -- mini.ai doesn't set this, also doesn't work with gulw
 -- map("n", "i", "lzv", nor) -- zv so it also works with folds
 map("", "N", "mzJ`z", nor)
@@ -565,3 +566,24 @@ map("n", "<c-l><c-l>", ":nohl<cr>")
 -- color picker
 map("n", "<C-c>", "<cmd>PickColor<cr>", nor)
 map("i", "<C-c>", "<cmd>PickColorInsert<cr>", nor)
+
+-- leetcode
+-- used because adding package something in go gives an error when submitting
+local no_first_line_cmd = function(cmd)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local first_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)
+  vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
+  vim.cmd(cmd)
+  vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, first_line)
+end
+
+vim.keymap.set("n", "<leader>,fll", ":LeetCodeList<cr>")
+vim.keymap.set("n", "<leader>,flt", function()
+  no_first_line_cmd("LeetCodeTest")
+end, desc("LeetCodeTest"))
+vim.keymap.set("n", "<leader>,fls", function()
+  no_first_line_cmd("LeetCodeSubmit")
+end, desc("LeetCodeSubmit"))
+-- vim.keymap.set("n", "<leader>,flt", ":LeetCodeTest<cr>")
+-- vim.keymap.set("n", "<leader>,fls", ":LeetCodeSubmit<cr>")
+vim.keymap.set("n", "<leader>,fli", ":LeetCodeSignIn<cr>")

@@ -39,6 +39,9 @@
 .aw      ~/.config/.aliases_work
 .sw      ~/.config/.startup_work
 .ss      $AUTOMATION/startup/startup
+.sng      ~/.config/nvim/my_snippets/snipmate/go.snippets
+.snl      ~/.config/nvim/my_snippets/snipmate/lua.snippets
+.snp      ~/.config/nvim/my_snippets/snipmate/python.snippets
 # old aliases
 .ao     ~/.config/zsh/.aliases
 .k      $SCRIPTS/apps/qmk/lily58/keymap.c

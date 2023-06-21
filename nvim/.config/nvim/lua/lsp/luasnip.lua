@@ -3,6 +3,9 @@
 -- local t = ls.text_node
 -- ================================
 
+-- general docs
+-- https://github.com/L3MON4D3/LuaSnip/blob/master/DOC.md
+
 -- https://github.com/L3MON4D3/LuaSnip/blob/master/lua/luasnip/config.lua#L122-L147
 -- https://github.com/L3MON4D3/LuaSnip/blob/master/DOC.md#loaders
 -- local ls = require("luasnip")
