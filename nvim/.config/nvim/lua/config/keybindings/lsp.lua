@@ -67,10 +67,10 @@ M.load_mappings = function(client) -- use these on_attach
   vim.cmd([[ cnoreabbrev LspCmd :lua vim.lsp.buf.execute_command() ]])
 
   -- codelens
-  map("n", "<leader>ecd", ":lua vim.lsp.codelens.display()<cr>", nor)
   -- map("n", "<leader>lcd", ":lua vim.lsp.codelens.display()<cr>", nor)
   map("n", "<leader>lcR", ":lua vim.lsp.codelens.refresh()<cr>", nor)
   map("n", "<leader>lcr", ":lua vim.lsp.codelens.run()<cr>", nor)
+  map("n", "<leader>lcd", ":lua vim.lsp.codelens.display()<cr>", nor)
 
   -- prefix w --> workspace
   map("n", "<leader>lws", ":Telescope lsp_workspace_symbols<cr>", nor)

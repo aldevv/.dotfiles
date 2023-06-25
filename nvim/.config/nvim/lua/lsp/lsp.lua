@@ -24,6 +24,7 @@ local servers = {
   "emmet_ls",
 }
 
+
 local default_opts = require("lsp.defaults_opts")
 local get_opts = function()
   local opts = vim.deepcopy(default_opts)
@@ -33,7 +34,6 @@ local get_opts = function()
     on_attach = opts.on_attach,
   }
 end
-
 local lang_opts = require("lsp.lang_opts")
 local enhance_server = function(server, opts)
   if lang_opts.enhanceable(server) then
@@ -68,6 +68,12 @@ local handlers = {
       require("lspconfig")["hls"].setup(opts)
     end
   end,
+  ["lua_ls"] = function()
+    require("neodev").setup({})
+    local opts = get_opts()
+    enhance_server("lua_ls", opts)
+    require('lspconfig')["lua_ls"].setup(opts)
+  end
 }
 
 -- set log level for lsp operations, probably what you want

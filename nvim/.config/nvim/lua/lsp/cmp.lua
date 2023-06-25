@@ -70,7 +70,7 @@ cmp.setup({
             -- nvim_lsp = "ﲳ",
             -- nvim_lsp = "📚",
             luasnip = "🔥",
-            nvim_lua = "[nvim]",
+            -- nvim_lua = "[nvim]",
             nvim_lsp = "[LS]",
             -- nvim_lua = "[API]",
             -- treesitter = "",
@@ -145,7 +145,7 @@ cmp.setup({
   end,
   sources = {
     { name = "luasnip",              priority = 1 },
-    { name = "nvim_lua" },
+    -- { name = "nvim_lua" },
     { name = "nvim_lsp" },
     -- { name = "ultisnips" }, -- For ultisnips users.
     -- these below also need a plugin like cmp-nvim-ultisnips
