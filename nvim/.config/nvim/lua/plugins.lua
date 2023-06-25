@@ -82,7 +82,7 @@ return {
           "nvim-lua/plenary.nvim",
           "onsails/lspkind-nvim",
           "hrsh7th/cmp-nvim-lsp",
-          { "hrsh7th/cmp-nvim-lua",   ft = "lua" },
+          -- { "hrsh7th/cmp-nvim-lua",   ft = "lua" },
           "hrsh7th/cmp-path",
           "hrsh7th/cmp-buffer",
           "hrsh7th/cmp-cmdline",
@@ -97,12 +97,12 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    config = req("core.treesitter"),
+    config = req("core.treesitter")
   },
-  {
-    "nvim-treesitter/nvim-treesitter-textobjects",
-    dependencies = { "nvim-treesitter/nvim-treesitter", "kana/vim-textobj-user" },
-  },
+  -- {
+  --   "nvim-treesitter/nvim-treesitter-textobjects",
+  --   dependencies = { "nvim-treesitter/nvim-treesitter" },
+  -- },
   {
     "nvim-treesitter/nvim-treesitter-context",
     config = function()
@@ -294,7 +294,8 @@ return {
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer", "DBUILastQueryInfo" },
   },
   -- fun
-  { "ThePrimeagen/vim-apm",     cmd = { "VimApm" } },
+  -- broken
+  -- { "ThePrimeagen/vim-apm",     cmd = { "VimApm" } },
   {
     "ThePrimeagen/vim-be-good",
     cmd = { "VimBeGood" },
@@ -310,7 +311,6 @@ return {
   },
 
   "bkad/CamelCaseMotion",
-  { "bps/vim-textobj-python",   ft = "python" },
 
   {
     "matze/vim-move",
@@ -555,14 +555,6 @@ return {
       vim.g.textobj_comment_no_default_key_mappings = 1
     end,
   },
-  {
-    "kana/vim-textobj-line",
-    dependencies = "kana/vim-textobj-user",
-    init = function()
-      vim.g.textobj_line_no_default_key_mappings = 1
-    end,
-  },
-
   {
     "kana/vim-textobj-entire",
     dependencies = "kana/vim-textobj-user",

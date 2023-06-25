@@ -2,14 +2,15 @@ local M = {}
 -- :h lspconfig-root-advanced
 -- :h lspconfig-root-composition
 local util = require("lspconfig.util")
-local configs = require("lspconfig.configs")
-local nvim_paths = vim.tbl_extend(
-  "keep",
-  vim.api.nvim_get_runtime_file("", true),
-  { vim.fn.expand("$VIMRUNTIME/lua/vim"), vim.fn.expand("$VIMRUNTIME/lua/vim/lsp") }
-)
+-- local configs = require("lspconfig.configs")
+-- local nvim_paths = vim.tbl_extend(
+--   "keep",
+--   vim.api.nvim_get_runtime_file("", true),
+--   { os.getenv("HOME") .. "/.dotfiles/nvim/.config/nvim" }
+-- -- { vim.fn.expand("$VIMRUNTIME/lua/vim"), vim.fn.expand("$VIMRUNTIME/lua/vim/lsp") }
+-- )
 
-function copy(opts)
+local function copy(opts)
   local tmp = {}
   for k, v in pairs(opts) do
     tmp[k] = v
@@ -17,9 +18,9 @@ function copy(opts)
   return tmp
 end
 
-local runtime_path = vim.split(package.path, ";")
-table.insert(runtime_path, "lua/?.lua")
-table.insert(runtime_path, "lua/?/init.lua")
+-- local runtime_path = vim.split(package.path, ";")
+-- table.insert(runtime_path, "lua/?.lua")
+-- table.insert(runtime_path, "lua/?/init.lua")
 
 -- local runtime_path = vim.split(package.path, ";")
 -- table.insert(runtime_path, "lua/?.lua")
@@ -103,9 +104,22 @@ local enhance_server_opts = {
     opts.capabilities.offsetEncoding = { "utf-16" }
   end,
   ["gopls"] = function(opts)
-    -- https://go.googlesource.com/tools/+/refs/tags/gopls/v0.2.0-pre1/gopls/doc/settings.md
+    -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
     opts.settings = {
       gopls = {
+        -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md#code-lenses
+        -- codelenses = { gc_details = false, generate = true, regenerate_cgo = true, tidy = true, upgrade_dependency = true, vendor = true },
+        -- https://github.com/golang/tools/blob/master/gopls/doc/inlayHints.md
+        -- hints = {},
+        -- hints = {
+        --   assignVariableTypes = true,
+        --   compositeLiteralFields = true,
+        --   compositeLiteralTypes = true,
+        --   constantValues = true,
+        --   functionTypeParameters = true,
+        --   parameterNames = true,
+        --   rangeVariableTypes = true,
+        -- },
         completeUnimported = true,
         usePlaceholders = true,
       },
@@ -113,18 +127,37 @@ local enhance_server_opts = {
   end,
   -- end,
   ["lua_ls"] = function(opts)
-    opts.root_dir = util.root_pattern("apm.csv") or util.path.dirname(fname)
+    opts.root_dir = function(filepath)
+      util.root_pattern(".luarc.json", ".luarc.jsonc", ".luacheckrc", ".stylua.toml", "stylua.toml",
+        "selene.toml", "selene.yml", ".git")(filepath)
+    end
+    -- opts.root_dir = function()
+    --   local def_env = function()
+    --     return "/home/kanon/.dotfiles/nvim/.config/nvim/lua"
+    --   end
+    --   return util.root_pattern("apm.csv")() or def_env()
+    -- end
     opts.settings = {
       Lua = {
-        runtime = {
-          path = runtime_path,
-        },
-        diagnostics = {
-          globals = { "vim" },
-        },
+        -- annoying lenses
+        -- hint = {
+        --   enable = true
+        -- },
+
+        -- runtime = {
+        --   --   path = os.getenv("HOME") .. "/.dotfiles/nvim/.config/nvim/lua"
+        --   -- path = runtime_path,
+        --   version = "LuaJIT",
+        --   path = nvim_paths,
+        -- },
+        -- diagnostics = {
+        --   globals = { "vim" },
+        -- },
         workspace = {
-          library = nvim_paths,
           checkThirdParty = false,
+          -- library = vim.api.nvim_get_runtime_file("", true),
+          -- library = nvim_paths,
+          --   checkThirdParty = false,
         },
       },
     }

@@ -575,6 +575,9 @@ local no_first_line_cmd = function(cmd)
   vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
   vim.cmd(cmd)
   vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, first_line)
+  local cw = require("utils.lua.misc").replace_termcodes("<c-w>")
+  local cr = require("utils.lua.misc").replace_termcodes("<cr>")
+  vim.api.nvim_feedkeys(cw .. "e:w" .. cr .. cw .. "n", "m", true)
 end
 
 vim.keymap.set("n", "<leader>,fll", ":LeetCodeList<cr>")

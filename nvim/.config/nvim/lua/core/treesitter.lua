@@ -1,75 +1,74 @@
 --===================
 -- TREE SITTER
 -- ===================
-
-local textobjects = {
-  select = {
-    enable = true,
-
-    -- Automatically jump forward to textobj, similar to targets.vim
-    lookahead = true,
-
-    keymaps = {
-      -- You can use the capture groups defined in textobjects.scm
-      ["aa"] = "@parameter.outer",
-      ["la"] = "@parameter.inner",
-      ["af"] = "@function.outer",
-      ["lf"] = "@function.inner",
-      ["ac"] = "@class.outer",
-      -- You can optionally set descriptions to the mappings (used in the desc parameter of
-      -- nvim_buf_set_keymap) which plugins like which-key display
-      ["lc"] = { query = "@class.inner", desc = "Select inner part of a class region" },
-      -- You can also use captures from other query groups like `locals.scm`
-      ["as"] = { query = "@scope", query_group = "locals", desc = "Select language scope" },
-    },
-    -- You can choose the select mode (default is charwise 'v')
-    --
-    -- Can also be a function which gets passed a table with the keys
-    -- * query_string: eg '@function.inner'
-    -- * method: eg 'v' or 'o'
-    -- and should return the mode ('v', 'V', or '<c-v>') or a table
-    -- mapping query_strings to modes.
-    selection_modes = {
-      ['@parameter.outer'] = 'v', -- charwise
-      ['@function.outer'] = 'V', -- linewise
-      ['@class.outer'] = '<c-v>', -- blockwise
-    },
-  },
-  move = {
-    enable = true,
-    set_jumps = true,
-
-    goto_next_start = {
-      ["]m"] = "@function.outer",
-      ["]]"] = "@class.outer",
-    },
-    goto_next_end = {
-      ["]M"] = "@function.outer",
-      ["]["] = "@class.outer",
-    },
-    goto_previous_start = {
-      ["[m"] = "@function.outer",
-      ["[["] = "@class.outer",
-    },
-    goto_previous_end = {
-      ["[M"] = "@function.outer",
-      ["[]"] = "@class.outer",
-    },
-    swap = {
-      enable = true,
-      swap_next = {
-        ["<leader>a"] = "@parameter.inner",
-      },
-      swap_previous = {
-        ["<leader>A"] = "@parameter.inner",
-      },
-    },
-  },
-}
-
+-- local textobjects = {
+--   select = {
+--     enable = true,
+--
+--     -- Automatically jump forward to textobj, similar to targets.vim
+--     lookahead = true,
+--
+--     keymaps = {
+--       -- You can use the capture groups defined in textobjects.scm
+--       -- ["aa"] = "@parameter.outer",
+--       -- ["la"] = "@parameter.inner",
+--       ["af"] = "@function.outer",
+--       ["lf"] = "@function.inner",
+--       ["ac"] = "@class.outer",
+--       -- You can optionally set descriptions to the mappings (used in the desc parameter of
+--       -- nvim_buf_set_keymap) which plugins like which-key display
+--       ["lc"] = { query = "@class.inner", desc = "Select inner part of a class region" },
+--       -- You can also use captures from other query groups like `locals.scm`
+--       ["as"] = { query = "@scope", query_group = "locals", desc = "Select language scope" },
+--     },
+--     -- You can choose the select mode (default is charwise 'v')
+--     --
+--     -- Can also be a function which gets passed a table with the keys
+--     -- * query_string: eg '@function.inner'
+--     -- * method: eg 'v' or 'o'
+--     -- and should return the mode ('v', 'V', or '<c-v>') or a table
+--     -- mapping query_strings to modes.
+--     selection_modes = {
+--       ['@parameter.outer'] = 'v', -- charwise
+--       ['@function.outer'] = 'V', -- linewise
+--       ['@class.outer'] = '<c-v>', -- blockwise
+--     },
+--   },
+--   move = {
+--     enable = true,
+--     set_jumps = true,
+--
+--     goto_next_start = {
+--       ["]m"] = "@function.outer",
+--       ["]]"] = "@class.outer",
+--     },
+--     goto_next_end = {
+--       ["]M"] = "@function.outer",
+--       ["]["] = "@class.outer",
+--     },
+--     goto_previous_start = {
+--       ["[m"] = "@function.outer",
+--       ["[["] = "@class.outer",
+--     },
+--     goto_previous_end = {
+--       ["[M"] = "@function.outer",
+--       ["[]"] = "@class.outer",
+--     },
+--     swap = {
+--       enable = true,
+--       swap_next = {
+--         ["<leader>a"] = "@parameter.inner",
+--       },
+--       swap_previous = {
+--         ["<leader>A"] = "@parameter.inner",
+--       },
+--     },
+--   },
+-- }
 require("nvim-treesitter.configs").setup({
   -- One of "all", "maintained" (parsers with maintainers), or a list of languages
   -- ensure_installed = "all",
+  -- textobjects = textobjects,
   ensure_installed = {
     "python",
     "c",
@@ -107,11 +106,6 @@ require("nvim-treesitter.configs").setup({
 
     -- list of language that will be disabled
     disable = {},
-
-    -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-    -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-    -- Using this option may slow down your editor, and you may see some duplicate highlights.
-    -- Instead of true it can also be a list of languages
   },
   indent = {
     enable = true,
@@ -128,7 +122,6 @@ require("nvim-treesitter.configs").setup({
       node_decremental = "<c-backspace>",
     },
   },
-  textobjects = textobjects,
   playground = {
     enable = true,
     disable = {},
@@ -136,10 +129,10 @@ require("nvim-treesitter.configs").setup({
     persist_queries = false, -- Whether the query persists across vim sessions
     keybindings = {
       toggle_query_editor = "o",
-      toggle_hl_groups = "i",
+      toggle_hl_groups = "l",
       toggle_injected_languages = "t",
       toggle_anonymous_nodes = "a",
-      toggle_language_display = "I",
+      toggle_language_display = "L",
       focus_language = "f",
       unfocus_language = "F",
       update = "R",
@@ -150,6 +143,7 @@ require("nvim-treesitter.configs").setup({
 })
 
 local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+parser_config.markdown.filetype_to_parsername = "octo"
 -- org mode config
 -- parser_config.org = {
 --     install_info = {
@@ -159,7 +153,6 @@ local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
 --     },
 --     filetype = "org",
 -- }
-parser_config.markdown.filetype_to_parsername = "octo"
 
 local ft_to_lang = require("nvim-treesitter.parsers").ft_to_lang
 require("nvim-treesitter.parsers").ft_to_lang = function(ft)
@@ -169,7 +162,10 @@ require("nvim-treesitter.parsers").ft_to_lang = function(ft)
   return ft_to_lang(ft)
 end
 
-vim.opt.foldmethod = "expr"
-vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-vim.opt.foldlevel = 20
-vim.o.foldenable = true
+-- local del_mappings = function()
+--   vim.keymap.del("", "if")
+--   vim.keymap.del("", "ia")
+--   vim.keymap.del("", "ic")
+-- end
+--
+-- local res = pcall(del_mappings)
