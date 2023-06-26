@@ -252,6 +252,7 @@ map <backspace2>.vp $ $EDITOR ~/.config/nvim/lua/plugins.lua
 map <backspace2>.vP $ $EDITOR ~/.config/nvim/lua/plugins-debug.lua
 map <backspace2>.vf $ $EDITOR ~/.config/nvim/lua/lsp/formatters.lua
 map <backspace2>.X $ $EDITOR ~/.config/sxhkd/sxhkdrc
+map <backspace2>.A $ $EDITOR ~/.config/awesome/rc.lua
 map <backspace2>.xm $ $EDITOR ~/.config/xmonad/xmonad.hs
 map <backspace2>.xmm $ $EDITOR ~/.config/xmonad/xmonad.hs
 map <backspace2>.xmb $ $EDITOR ~/.config/xmobar/xmobar0.hs

@@ -559,8 +559,8 @@ map("n", "<S-Left>", "5<c-w><", nor_s)
 --     vim.api.nvim_feedkeys("gT", "n", true)
 -- end, nor_s)
 
-map("n", "<CR>", "za")
-map("n", "<s-CR>", "zA")
+map({ "n", "v" }, "<Tab>", "za")
+map({ "n", "v" }, "<s-Tab>", "zA")
 map("n", "<c-l><c-l>", ":nohl<cr>")
 
 -- color picker

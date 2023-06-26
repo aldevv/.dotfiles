@@ -3,6 +3,10 @@ require("orgmode").setup({
   org_indent_mode = "indent",
   org_edit_src_content_indentation = 0,
   mappings = {
+    text_objects = {
+      inner_heading = "<ignore>",
+      inner_subtree = "<ignore>",
+    },
     org = {
       -- done because original mapping was NOT SILENT
       org_global_cycle = "<ignore>",
@@ -16,6 +20,8 @@ require("orgmode").setup({
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "org",
   callback = function()
+    vim.keymap.del("n", "<tab>")
+    vim.keymap.del("n", "<s-tab>")
     vim.keymap.set(
       "n",
       "<tab>",

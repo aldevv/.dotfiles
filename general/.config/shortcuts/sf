@@ -28,6 +28,7 @@
 .vP     ~/.config/nvim/lua/plugins-debug.lua
 .vf     ~/.config/nvim/lua/lsp/formatters.lua
 .X      ~/.config/sxhkd/sxhkdrc
+.A     ~/.config/awesome/rc.lua
 .xm     ~/.config/xmonad/xmonad.hs
 .xmm     ~/.config/xmonad/xmonad.hs
 .xmb    ~/.config/xmobar/xmobar0.hs
