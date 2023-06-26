@@ -177,6 +177,7 @@ vim.keymap.set("n", "<localleader>.vp", "<cmd>e ~/.config/nvim/lua/plugins.lua <
 vim.keymap.set("n", "<localleader>.vP", "<cmd>e ~/.config/nvim/lua/plugins-debug.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.vf", "<cmd>e ~/.config/nvim/lua/lsp/formatters.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.X", "<cmd>e ~/.config/sxhkd/sxhkdrc <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>.A", "<cmd>e ~/.config/awesome/rc.lua <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.xm", "<cmd>e ~/.config/xmonad/xmonad.hs <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.xmm", "<cmd>e ~/.config/xmonad/xmonad.hs <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.xmb", "<cmd>e ~/.config/xmobar/xmobar0.hs <cr>", {silent=true, noremap=true})
