@@ -211,7 +211,17 @@ awful.screen.connect_for_each_screen(function(s)
   s.mytaglist = awful.widget.taglist {
     screen  = s,
     filter  = awful.widget.taglist.filter.all,
-    buttons = taglist_buttons
+    buttons = taglist_buttons,
+    gap     = 10,
+    layout  = {
+      spacing = 5,
+      -- spacing_widget = {
+      --   color  = '#dddddd',
+      --   shape  = gears.shape.powerline,
+      --   widget = wibox.widget.separator,
+      -- },
+      layout  = wibox.layout.fixed.horizontal
+    }
   }
 
 
@@ -229,7 +239,8 @@ awful.screen.connect_for_each_screen(function(s)
   -- beautiful.tasklist_shape_border_color_focus = green
   beautiful.font = "monospace 11"
   beautiful.wibar_height = 18
-
+  beautiful.useless_gap = 10
+  beautiful.gap_single_client = true
   beautiful.fg_normal = white
   beautiful.fg_focus = "#000000"
   beautiful.bg_focus = gold
@@ -244,12 +255,12 @@ awful.screen.connect_for_each_screen(function(s)
   -- Create a tasklist widget
   s.mytasklist = awful.widget.tasklist {
     screen = s,
-    filter = awful.widget.tasklist.filter.currenttags,
+    filter = awful.widget.tasklist.filter.focused,
     buttons = tasklist_buttons
   }
 
   -- -- Create the wibox
-  s.mywibox = awful.wibar({ position = "top", screen = s })
+  s.mywibox = awful.wibar({ position = "top", screen = s, opacity = 0.70 })
 
   -- Add widgets to the wibox
   s.mywibox:setup {
@@ -259,6 +270,7 @@ awful.screen.connect_for_each_screen(function(s)
       -- mylauncher,
       s.mytaglist,
       s.mypromptbox,
+      s.mylayoutbox,
     },
     s.mytasklist, -- Middle widget
     { -- Right widgets
@@ -266,7 +278,6 @@ awful.screen.connect_for_each_screen(function(s)
       mykeyboardlayout,
       wibox.widget.systray(),
       mytextclock,
-      s.mylayoutbox,
     },
   }
 end)

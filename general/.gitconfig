@@ -3,6 +3,8 @@
 	name = Alejandro Bernal
 [init]
 	defaultBranch = main
+[includeIf "gitdir:~/work/"]
+    path = ~/work/.gitconfig
 [push]
 	autoSetupRemote = true
 [checkout]
