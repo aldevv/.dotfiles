@@ -47,53 +47,17 @@ alias c="cat"
 alias f="find"
 
 # git
-# alias gcA="git commit -a"
 alias gca="git commit --amend"
 alias gce="git commit --amend --no-edit"
 alias gR="git reset"
 alias gRh="git reset --hard"
 alias grs="git remote set-url"
 alias grso="git remote set-url origin"
+alias grao="git remote add origin"
 alias grg="git remote get-url origin"
 alias gcsr="git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'"
-_gwts() {
-	# this can be much easier using git worktree list --porcelain
 
-	_options="$(git worktree list)"
-	[[ -z "$_options" ]] && return 1
-
-	# this section sorts the worktree by committerdate
-	sorted="$(git branch --sort=-committerdate | grep '^[+*]' | awk '{print $2}')"
-	sorted_options=""
-	while read -r l; do
-		if [[ -z "$sorted_options" ]]; then
-			sorted_options="$(grep "$l" <<<"$_options")"
-		else
-			sorted_options="$sorted_options\n$(grep "$l" <<<"$_options")"
-		fi
-	done <<<"$sorted"
-
-	# detached heads handler, since we are searching using branch and worktree
-	# we append detached heads to the end
-	while read -r l; do
-		worktree_path="$(awk '{print $1}' <<<"$l")"
-		commit="$(awk '{print $2}' <<<"$l")"
-		if [[ "$commit" == "(bare)" ]]; then
-			continue
-		fi
-
-		if ! grep -zoP "$worktree_path" <<<"$sorted_options" &>/dev/null; then
-			sorted_options="$sorted_options\n$l"
-		fi
-	done <<<"$_options"
-	_options="$(echo "$sorted_options" | awk '{print $1}')"
-
-	_path="$(fzf -d / --with-nth -3,-2,-1 --preview="source $UTILITIES/programming/git/logWorktree &>/dev/null; logWorktree {}" --preview-window="70%:wrap" <<<"$_options")"
-	[ -z "$_path" ] && return
-	cd "$_path" || return
-}
-
-alias gwts="_gwts"
+alias gwts=". _gwts"
 
 gclb() {
 	repo_dirty="${1##*/}"
@@ -101,133 +65,14 @@ gclb() {
 	git clone --bare --recurse-submodules "$1" "$repo"
 }
 
-worktreeBranchCreate() {
-	git_dir="$(git rev-parse --git-dir)"
-	cur_dir="$(pwd)"
-	[[ -z "$git_dir" ]] && return 2
+alias a=". _worktree_create_branch 'second'"
+alias gwta/=". _worktree_create_branch 'second'"
 
-	# cd root folder if bare, else add ../ as prefix to folder
-	# if [[ "$git_dir" != "." && "$git_dir" != ".git" ]]; then
-	# 	cd "${git_dir%/worktrees/*}" || return
-	# else
-	# 	prefix="../"
-	# fi
-	bare_path=""
-	if [[ "$git_dir" == "." ]]; then
-		echo "first"
-		bare_path="${git_dir%/worktrees/*}"
-		cd "$bare_path" || return
+alias A=". _worktree_create_branch 'first'"
+alias gwtA/=". _worktree_create_branch 'first'"
 
-	fi
-
-	if grep -q "worktrees" <<<"$git_dir" && ! grep -q ".git/worktrees" <<<"$git_dir"; then
-		echo "second"
-		bare_path="${git_dir%/worktrees/*}"
-		cd "$bare_path" || return
-	fi
-
-	prefix=""
-	if grep -q ".git/worktrees" <<<"$git_dir"; then
-		echo "third"
-		bare_path=${git_dir%/.git/*}
-		prefix="$bare_path/../"
-	fi
-
-	if grep -q ".git" <<<"$git_dir"; then
-		echo "fourth"
-		bare_path=${git_dir%/.git*}
-		prefix="$bare_path/../"
-	fi
-
-	[ -z "$2" ] && echo "no branch name given" && return 1
-	branch="$2"
-
-	folder_name="$1"
-	# if folder_name does not contain the structure of name/other_name, change to third
-	if ! grep -o '/' <<<"$branch" &>/dev/null; then
-		folder="$branch"
-		folder_name="third"
-	fi
-
-	#<folder>/some_name
-	if [[ $folder_name == "first" ]]; then
-		folder="${branch%%/*}"
-	fi
-	# some_name/<folder>
-	if [[ $folder_name == "second" ]]; then
-		folder="$(basename "$branch")"
-	fi
-
-	if [[ -z "$prefix" ]]; then
-		prefix="$bare_path/"
-	fi
-	folder="${prefix}${folder}"
-	echo "folder: $folder"
-
-	base_branch="$3"
-	if [[ -z $base_branch ]]; then
-		git worktree add -b "$branch" "$folder"
-		# to keep history
-		cd "$cur_dir" || return 4
-		cd "$folder" || return 4
-		return 0
-	fi
-
-	git worktree add -b "$branch" "$folder" "$base_branch"
-	# to keep history
-	cd "$cur_dir" || return 4
-	cd "$folder" || return 4
-	return 0
-}
-
-alias a="worktreeBranchCreate 'second'"
-alias gwta/="worktreeBranchCreate 'second'"
-
-alias A="worktreeBranchCreate 'first'"
-alias gwtA/="worktreeBranchCreate 'first'"
-
-tobare() {
-	git_dir="$(git rev-parse --git-dir)"
-	[[ -z "$git_dir" ]] && return 2
-
-	_status=$(git status --porcelain)
-	branch=$(git branch --show-current)
-	if [[ -n "$_status" ]]; then
-		echo -e "\e[31myou have uncommitted stuff\e[0m"
-		echo -e "$_status\n"
-		echo -e -n "\e[31mare you sure you want to change to a bare repo? (Y/n) \e[0m"
-		read -r ans
-		if [[ "$ans" == "n" || "$ans" == "no" ]]; then
-			return 0
-		fi
-	fi
-
-	if [[ "$git_dir" == "." ]]; then
-		echo "already a bare repo"
-		return 0
-	fi
-
-	if [[ "$git_dir" == ".git" ]]; then
-		folder_path="$(pwd)"
-	else
-		folder_path="${git_dir%/.git}"
-	fi
-	_path="${folder_path%/*}"
-	folder_name="$(basename "$folder_path")"
-	bare_name="${folder_name}_tmp"
-
-	mv "${folder_path}/.git" "$_path/$bare_name"
-	cd ..
-	rm -fr "$folder_path"
-	mv "$_path/$bare_name" "$folder_path"
-	cd "$folder_path" || return 1
-	git config --bool core.bare true
-	def_branch="$(git config init.defaultBranch)"
-	git worktree add "$def_branch"
-	cd "$def_branch" || return 1
-}
-
-alias gg="cd $(gitRoot)"
+alias tobare=". _tobare"
+alias gg='cd $(gitRoot)'
 
 # dotfiles
 alias dgp=". _dgp"
@@ -266,6 +111,7 @@ alias run_debian="~/.local/share/ansible/run_debian"
 alias run_arch="~/.local/share/ansible/run_arch"
 alias ssh_phone="ssh -p 8022 u0_a473@axlknight1-everest.nord"
 alias toasc="ascii-image-converter"
+alias sa="source .venv/bin/activate"
 
 # functions
 
@@ -295,10 +141,3 @@ nixs() {
 nixi() {
 	nix-env -iA nixpkgs.$1
 }
-
-# source_env() {
-# 	# load .env file or any other file
-# 	file=$1
-# 	[ -z $file ] && file=".env"
-# 	[ -f $file ] && zsh -c "set -o allexport; source $file; echo 'loaded'; set +o allexport; zsh -i"
-# }
