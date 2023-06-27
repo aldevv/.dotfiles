@@ -59,6 +59,7 @@ end
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
+-- beautiful.init(gears.filesystem.get_configuration_dir() .. "mytheme.lua")
 
 
 -- This is used later as the default terminal and editor to run.
@@ -239,11 +240,11 @@ awful.screen.connect_for_each_screen(function(s)
   -- beautiful.tasklist_shape_border_color_focus = green
   beautiful.font = "monospace 11"
   beautiful.wibar_height = 18
-  beautiful.useless_gap = 10
-  beautiful.gap_single_client = true
   beautiful.fg_normal = white
   beautiful.fg_focus = "#000000"
   beautiful.bg_focus = gold
+  beautiful.useless_gaps = 5
+  beautiful.gap_single_client = false
 
   beautiful.taglist_fg_occupied = gold
   beautiful.taglist_fg_empty = white -- these are the NON occupied
@@ -602,6 +603,8 @@ awful.rules.rules = {
   { rule_any = { type = { "normal", "dialog" }
   }, properties = { titlebars_enabled = false }
   },
+
+  { rule = { class = "St" }, properties = { size_hints_honor = false } }
 
   -- Set Firefox to always map on the tag named "2" on screen 1.
   -- { rule = { class = "Firefox" },
