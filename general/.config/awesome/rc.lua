@@ -1,4 +1,3 @@
--- ===============================================================================================0000
 -- https://awesomewm.org/doc/api
 -- taglist styles: https://awesomewm.org/apidoc/widgets/awful.widget.taglist.html
 -- If LuaRocks is installed, make sure that packages installed through it are
@@ -348,7 +347,7 @@ local sp2 = 'tdrop -n 2 -w "86%" -h "86%" -y "7%" -x "7%" st -c spadBigger'
 -- globalkeys = gears.table.join(scratchpads,
 globalkeys = gears.table.join(
   awful.key({ modkey }, "c", function() scratch.toggle("st -c scratch", { class = "scratch" }) end),
-  awful.key({ modkey, "Shift" }, "c", function() scratch.toggle("st -c scratch", { class = "scratch" }) end),
+  awful.key({ modkey, "Shift" }, "c", function() scratch.toggle("st -c scratchBigger", { class = "scratch" }) end),
   awful.key({ modkey, }, "s", hotkeys_popup.show_help,
     { description = "show help", group = "awesome" }),
   awful.key({ modkey, }, "Left", awful.tag.viewprev,
@@ -560,6 +559,31 @@ clientbuttons = gears.table.join(
 root.keys(globalkeys)
 -- }}}
 
+local scratch_rule = function(class, icon_name)
+  return {
+    rule_any = {
+      instance = { class },
+      class = { class },
+      icon_name = { icon_name },
+    },
+    properties = {
+      skip_taskbar = false,
+      floating = true,
+      ontop = false,
+      minimized = true,
+      sticky = false,
+      width = screen_width * 0.7,
+      height = screen_height * 0.75
+    },
+    callback = function(c)
+      awful.placement.centered(c, { honor_padding = true, honor_workarea = true })
+      gears.timer.delayed_call(function()
+        c.urgent = false
+      end)
+    end
+  }
+end
+
 -- {{{ Rules
 -- Rules to apply to new clients (through the "manage" signal).
 awful.rules.rules = {
@@ -585,8 +609,6 @@ awful.rules.rules = {
       "pinentry",
     },
     class = {
-      "spad",
-      "spadBigger",
       "spdiscord",
       "Arandr",
       "Blueman-manager",
@@ -616,35 +638,14 @@ awful.rules.rules = {
   }, properties = { titlebars_enabled = false }
   },
 
-  { rule = { class = "St" }, properties = { size_hints_honor = false } },
+  { rule = { class = "St" },      properties = { size_hints_honor = false } },
+  scratch_rule("scratch", "scratchpad_st"),
+  scratch_rule("scratchBigger", "scratchpad_st_bigger"),
+  { rule = { class = "firefox" }, properties = { tag = "1" } },
+  "一", "ニ", "三", "四", "五", "六", "七", "八", "九", "0",
 
-  -- Set Firefox to always map on the tag named "2" on screen 1.
-  -- { rule = { class = "Firefox" },
-  --   properties = { screen = 1, tag = "2" } },
-
-  {
-    rule_any = {
-      instance = { "scratch" },
-      class = { "scratch" },
-      icon_name = { "scratchpad_st" },
-    },
-    properties = {
-      skip_taskbar = false,
-      floating = true,
-      ontop = false,
-      minimized = true,
-      sticky = false,
-      width = screen_width * 0.7,
-      height = screen_height * 0.75
-    },
-    callback = function(c)
-      awful.placement.centered(c, { honor_padding = true, honor_workarea = true })
-      gears.timer.delayed_call(function()
-        c.urgent = false
-      end)
-    end
-  },
 }
+
 -- }}}
 
 -- {{{ Signals
@@ -709,4 +710,5 @@ end)
 
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+-- }}}
 -- }}}
