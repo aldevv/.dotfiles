@@ -243,7 +243,7 @@ awful.screen.connect_for_each_screen(function(s)
   beautiful.fg_normal = white
   beautiful.fg_focus = "#000000"
   beautiful.bg_focus = gold
-  beautiful.useless_gaps = 5
+  beautiful.useless_gap = 10
   beautiful.gap_single_client = false
 
   beautiful.taglist_fg_occupied = gold
