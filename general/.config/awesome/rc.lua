@@ -1,3 +1,4 @@
+-- ===============================================================================================0000
 -- https://awesomewm.org/doc/api
 -- taglist styles: https://awesomewm.org/apidoc/widgets/awful.widget.taglist.html
 -- If LuaRocks is installed, make sure that packages installed through it are
@@ -25,6 +26,10 @@ local debian = require("debian.menu")
 local has_fdo, freedesktop = pcall(require, "freedesktop")
 -- other imports
 
+--TOP OF FILE
+local scratch = require("scratch")
+screen_width = awful.screen.focused().geometry.width
+screen_height = awful.screen.focused().geometry.height
 
 
 -- {{{ Error handling
@@ -196,7 +201,7 @@ end
 awful.screen.connect_for_each_screen(function(s)
   -- Wallpaper
   -- Each screen has its own tag table.
-  awful.tag({ "一", "ニ", "三", "四", "五", "六", "七", "八", "九" }, s, awful.layout.layouts[1])
+  awful.tag({ "一", "ニ", "三", "四", "五", "六", "七", "八", "九", "0", }, s, awful.layout.layouts[1])
 
   -- Create a promptbox for each screen
   s.mypromptbox = awful.widget.prompt()
@@ -294,9 +299,10 @@ root.buttons(gears.table.join(
 
 
 -- scratchpads
+-- local bling = require("bling")
 -- local term_scratch = bling.module.scratchpad {
---   command                 = "st", -- How to spawn the scratchpad
---   rule                    = { instance = "spad" }, -- The rule that the scratchpad will be searched by
+--   command                 = "st -c spad_bling", -- How to spawn the scratchpad
+--   rule                    = { instance = "spad_bling" }, -- The rule that the scratchpad will be searched by
 --   sticky                  = false, -- Whether the scratchpad should be sticky
 --   autoclose               = false, -- Whether it should hide itself when losing focus
 --   floating                = true, -- Whether it should be floating (MUST BE TRUE FOR ANIMATIONS)
@@ -321,11 +327,13 @@ root.buttons(gears.table.join(
 local sp1 = 'tdrop -n 1 -w "50%" -h "50%" -y "25%" -x "25%" st -c spad'
 local sp2 = 'tdrop -n 2 -w "86%" -h "86%" -y "7%" -x "7%" st -c spadBigger'
 
-local scratchpads = gears.table.join(
-  awful.key({ modkey }, "c", function() awful.spawn(sp1) end, { description = "scratchpad", group = "scratchpads" }),
-  awful.key({ modkey, "Shift" }, "c", function() awful.spawn(sp2) end,
-    { description = "scratchpad bigger", group = "scratchpads" })
-)
+
+
+-- local scratchpads = gears.table.join(
+--   awful.key({ modkey }, "c", function() awful.spawn(sp1) end, { description = "scratchpad", group = "scratchpads" }),
+--   awful.key({ modkey, "Shift" }, "c", function() awful.spawn(sp2) end,
+--     { description = "scratchpad bigger", group = "scratchpads" })
+-- )
 
 
 
@@ -337,7 +345,10 @@ local scratchpads = gears.table.join(
 -- awful.key({ modkey, "Control" }, "=", scratchpad.cycle, { description = "Cycle Scratch pad", group = "Scratchpad" })
 
 -- {{{ Key bindings
-globalkeys = gears.table.join(scratchpads,
+-- globalkeys = gears.table.join(scratchpads,
+globalkeys = gears.table.join(
+  awful.key({ modkey }, "c", function() scratch.toggle("st -c scratch", { class = "scratch" }) end),
+  awful.key({ modkey, "Shift" }, "c", function() scratch.toggle("st -c scratch", { class = "scratch" }) end),
   awful.key({ modkey, }, "s", hotkeys_popup.show_help,
     { description = "show help", group = "awesome" }),
   awful.key({ modkey, }, "Left", awful.tag.viewprev,
@@ -553,6 +564,7 @@ root.keys(globalkeys)
 -- Rules to apply to new clients (through the "manage" signal).
 awful.rules.rules = {
   -- All clients will match this rule.
+
   { rule = {},
     properties = { border_width = beautiful.border_width,
       border_color = beautiful.border_normal,
@@ -604,11 +616,34 @@ awful.rules.rules = {
   }, properties = { titlebars_enabled = false }
   },
 
-  { rule = { class = "St" }, properties = { size_hints_honor = false } }
+  { rule = { class = "St" }, properties = { size_hints_honor = false } },
 
   -- Set Firefox to always map on the tag named "2" on screen 1.
   -- { rule = { class = "Firefox" },
   --   properties = { screen = 1, tag = "2" } },
+
+  {
+    rule_any = {
+      instance = { "scratch" },
+      class = { "scratch" },
+      icon_name = { "scratchpad_st" },
+    },
+    properties = {
+      skip_taskbar = false,
+      floating = true,
+      ontop = false,
+      minimized = true,
+      sticky = false,
+      width = screen_width * 0.7,
+      height = screen_height * 0.75
+    },
+    callback = function(c)
+      awful.placement.centered(c, { honor_padding = true, honor_workarea = true })
+      gears.timer.delayed_call(function()
+        c.urgent = false
+      end)
+    end
+  },
 }
 -- }}}
 
