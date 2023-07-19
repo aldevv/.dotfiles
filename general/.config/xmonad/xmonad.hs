@@ -3,6 +3,7 @@ import System.Exit
 import XMonad
 import XMonad.Actions.CycleWS
 import XMonad.Actions.SpawnOn
+import XMonad.Actions.CopyWindow
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.InsertPosition (Focus (Newer), Position (Master), insertPosition)
@@ -18,6 +19,7 @@ import XMonad.Layout.NoBorders (Ambiguity (OnlyScreenFloat, Screen), lessBorders
 import XMonad.Layout.Renamed
 import XMonad.Layout.Spacing
 import XMonad.Layout.ThreeColumns
+import XMonad.Layout.Simplest
 import XMonad.Layout.ToggleLayouts (ToggleLayout (..), toggleLayouts)
 import XMonad.StackSet qualified as W
 import XMonad.Util.EZConfig
@@ -77,7 +79,10 @@ myKeys =
   [ ("M-S-z", spawn "xscreensaver-command -lock"),
     ("M-r", spawn "st -e ranger"),
     ("M-q", kill),
-    ("M-f", sendMessage (Toggle "M")),
+    -- ("M-f", sendMessage (Toggle "M")),
+    ("M-f", sendMessage (Toggle "S")),
+    ("M-s", windows copyToAll),
+    ("M-S-s", killAllOtherCopies),
     ("M-t", toggleWindowSpacingEnabled >> toggleScreenSpacingEnabled),
     ("M-ñ", sendMessage NextLayout),
     ("M-S-t", withFocused $ windows . W.sink), -- retile window
@@ -121,15 +126,19 @@ mySpacing i = spacingRaw True (Border i i i i) True (Border i i i i) True
 customLayout =
   lessBorders Screen -- this is so no borders when only one window in screen
     . avoidStruts
-    . toggleMonocle
+    -- . toggleMonocle
+    . toggleSimplest
     $ tiled
       ||| mirrorTiled
       ||| threeCol
+      -- ||| Simplest
   where
+    -- https://betweentwocommits.com/blog/xmonad-layouts-guide
     tiled = renamed [Replace "T"] $ mySpacing 10 $ Tall nmaster delta ratio
     mirrorTiled = smartBorders $ Mirror tiled
     threeCol = renamed [Replace "W"] $ mySpacing 10 $ magnifiercz 1.3 (ThreeColMid nmaster delta ratio)
-    toggleMonocle = toggleLayouts $ renamed [Replace "M"] $ noBorders Full
+    -- toggleMonocle = toggleLayouts $ renamed [Replace "M"] $ noBorders Full
+    toggleSimplest = toggleLayouts $ renamed [Replace "S"] $ noBorders Simplest -- monocle one over other
     nmaster = 1 -- Default number of windows in the master pane
     ratio = 1 / 2 -- Default proportion of screen occupied by master pane
     delta = 3 / 100 -- Percent of screen to increment by when resizing panes
@@ -236,7 +245,8 @@ myStatusBarSpawner (S s) = do
 myStartupHook :: X ()
 myStartupHook = do
   let colorTrayer = "--tint 0x2B2E37"
-  spawn ("killall trayer; trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 1 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l") -- kill current trayer and xmobar on each restart
+  spawn ("killall trayer; trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 0 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l") -- kill current trayer and xmobar on each restart
+  -- spawn ("killall trayer; trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 1 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l") -- kill current trayer and xmobar on each restart
   spawn ("sleep 2 && xsetroot -cursor_name left_ptr") -- for mouse pointer
 
 main :: IO ()

@@ -282,6 +282,8 @@ unset less_ver
 # shellcheck source=/dev/null
 [[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
 [[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases
+[[ -f ~/.opam/ ]] && eval $(opam env)
+
 
 # enable autocomplete function
 autoload -U compinit
@@ -294,4 +296,5 @@ setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a d
 export HISTFILE="$HOME/.cache/zsh/.zsh_history"
 export SAVEHIST=$HISTSIZE
 export HISTSIZE=999999999
+
 

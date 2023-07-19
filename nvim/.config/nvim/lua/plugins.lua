@@ -423,7 +423,7 @@ return {
           -- signs = false, -- configure signs for some keywords individually
         },
         TODO = { icon = " ", color = "info" },
-        HACK = { icon = " ", color = "warning" },
+        HACK = { icon = " ", color = "warning", alt = { "ERROR" } },
         WARN = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
         PERF = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
         NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
@@ -757,7 +757,9 @@ return {
       "nvim-treesitter/nvim-treesitter",
     },
     config = function()
-      require("go").setup()
+      require("go").setup({
+        run_in_floaterm = false,
+      })
     end,
     event = { "CmdlineEnter" },
     ft = { "go", 'gomod' },

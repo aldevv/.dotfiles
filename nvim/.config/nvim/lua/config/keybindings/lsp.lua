@@ -17,14 +17,18 @@ M.load_mappings = function(client) -- use these on_attach
   local nor = { noremap = true }
   local nor_s = vim.tbl_extend("keep", nor, s)
   local map = vim.keymap.set
+  local desc = function(desc)
+    return vim.tbl_extend("keep", nor_s, { desc = desc })
+  end
   -- lsp
   -- https://rishabhrd.github.io/jekyll/update/2020/09/19/nvim_lsp_config.html
 
   -- prefix , --> config
   map("n", "<leader>lf", ":lua vim.lsp.buf.format({async = true})<cr>", nor)
   -- needs to be this way for it to work (stays in visual mode, no enter)
-  map("v", "<leader>lf", vim.lsp.buf.format, nor)
-  map("v", "gq", vim.lsp.buf.format, nor)
+  map("n", "<leader>lf", ":lua vim.lsp.buf.format({async = true})<cr>", nor)
+  map("v", "<leader>lf", function() vim.lsp.buf.format() end, desc("vim.lsp.buf.format"))
+  map("v", "gq", function() vim.lsp.buf.format() end, desc("vim.lsp.buf.format"))
 
   -- map("n", "gd", ":lua vim.lsp.buf.definition()<cr>", nor)
   -- NOTE: ge can be remapped

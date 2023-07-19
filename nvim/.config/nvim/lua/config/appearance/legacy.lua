@@ -51,7 +51,7 @@ function MyJavaHighlights()
     execute 'hi! javaType         gui=italic ' . HighGet("javaType")
 endfunction
 
- execute 'hi! lineNr guibg=NONE ' . HighGet("lineNr")
+ " execute 'hi! lineNr guibg=NONE ' . HighGet("lineNr")
 
 
 let g:java_highlight_all = 1

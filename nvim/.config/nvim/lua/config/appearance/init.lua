@@ -9,6 +9,7 @@ end
 
 -- transparency
 vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
+vim.cmd("hi LineNr gui=bold guifg=darkyellow ctermbg=NONE")
 
 require("config.appearance.legacy")
 require("config.appearance.colors")

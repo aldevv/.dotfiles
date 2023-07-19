@@ -44,6 +44,8 @@ map("n", "n", "j", nor)
 map("n", "e", "k", nor)
 map("n", "j", "e", nor)
 
+map("n", "gk", "gn", nor)
+
 -- ===================
 -- map("n", "l", "i", nor)
 -- map("x", "l", "i", nor)
@@ -559,8 +561,15 @@ map("n", "<S-Left>", "5<c-w><", nor_s)
 --     vim.api.nvim_feedkeys("gT", "n", true)
 -- end, nor_s)
 
-map({ "n", "v" }, "<Tab>", "za")
-map({ "n", "v" }, "<s-Tab>", "zA")
+map({ "n", "v" }, "<CR>", "za")
+vim.api.nvim_create_autocmd("FileType", {
+  pattern =  "qf" ,
+  callback = function()
+    map({ "n", "v" }, "<CR>", "<CR>", { buffer = true })
+  end
+})
+
+map({ "n", "v" }, "<s-CR>", "zA")
 map("n", "<c-l><c-l>", ":nohl<cr>")
 
 -- color picker
