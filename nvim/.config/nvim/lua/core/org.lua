@@ -20,17 +20,17 @@ require("orgmode").setup({
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "org",
   callback = function()
-    vim.keymap.del("n", "<tab>")
-    vim.keymap.del("n", "<s-tab>")
+    vim.keymap.del("n", "<cr>")
+    vim.keymap.del("n", "<s-cr>")
     vim.keymap.set(
       "n",
-      "<tab>",
+      "<cr>",
       'za',
       { silent = true }
     )
     vim.keymap.set(
       "n",
-      "<s-tab>",
+      "<s-cr>",
       '<Cmd>lua require("orgmode").action("org_mappings.global_cycle")<CR>)',
       { silent = true }
     )

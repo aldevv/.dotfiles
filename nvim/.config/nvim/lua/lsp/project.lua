@@ -9,7 +9,7 @@ require("project_nvim").setup({
   detection_methods = { "lsp", "pattern" },
   -- All the patterns used to detect root dir, when **"pattern"** is in
   -- detection_methods
-  patterns = { ".projections.json", "Makefile", "package.json", "stack.yaml", ".git" },
+  patterns = { ".projections.json", "go.mod", "Makefile", "package.json", "stack.yaml", ".git" },
   -- Table of lsp clients to ignore by name
   -- eg: { "efm", ... }
   ignore_lsp = { "null-ls" },
