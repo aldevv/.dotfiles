@@ -43,7 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define LEADER_TIMEOUT 400
 #define COMBO_COUNT 4
 #define COMBO_TERM 160
-#define TAPPING_TERM 145
+#define TAPPING_TERM 165
 /* #define */
 // KC_TRNS for no tap mod
 // it doesn't read the colemak redefinitions
