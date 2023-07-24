@@ -108,7 +108,7 @@ M.load_mappings = function()
 
   map("n", "<leader>tt", ":Telescope<cr>", nor_s)
   -- t core
-  map("n", "<leader>tch", ":Telescope harpoon marks<cr>", nor_s)
+  map("n", "<leader>t,h", ":Telescope harpoon marks<cr>", nor_s)
 
   -- telescope lsp
   map("n", "<leader>tlr", ':lua require("telescope.builtin").lsp_references()<cr>', nor_s)
@@ -132,7 +132,7 @@ M.load_mappings = function()
   map("n", "<leader>tgs", ':lua require("telescope.builtin").git_status()<cr>', nor_s)
   map("n", "<leader>tgS", ':lua require("telescope.builtin").git_stash()<cr>', nor_s)
 
-  map("n", "<leader>tp", ":Telescope projects<cr>", nor) -- recently opened projects!!
+  map("n", "<leader>tp", ":Telescope projects<cr>", nor)                                        -- recently opened projects!!
 
   map("n", "<leader>tC", "<cmd>lua require('utils.lua.color_picker').choose_colors()<cr>", nor) -- recently opened porjects!!
 end
