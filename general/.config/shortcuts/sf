@@ -45,7 +45,8 @@
 .snp      ~/.config/nvim/my_snippets/snipmate/python.snippets
 # old aliases
 .ao     ~/.config/zsh/.aliases
-.k      $SCRIPTS/apps/qmk/lily58/keymap.c
+# .k      $SCRIPTS/apps/qmk/lily58/keymap.c
+.k      $HOME/qmk_firmware/keyboards/lily58/keymaps/mine/keymap.c
 .Z      /root/.config/zsh/.zshrc
 .pr     $FILES/projections/global/.projections.json
 .s      $HOME/.ssh/config

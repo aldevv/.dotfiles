@@ -337,17 +337,38 @@ bool oled_task_user(void) {
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case LALT_T(KC_ENT):
-            return TAPPING_TERM - 10;
+            return TAPPING_TERM - 30;
+
+        case LT(_LOWER, KC_SPC):
+            return TAPPING_TERM - 25;
+
+        case CTL_T(KC_DEL):
+            return TAPPING_TERM - 30;
+
+        case SC_LSPO: // lshift and {
+            return TAPPING_TERM - 80;
+        case SC_RSPC: // rshift and }
+            return TAPPING_TERM - 80;
+
+            //=========================================
+            //        case LALT_T(KC_ENT):
+            //            return TAPPING_TERM - 10;
+            //
+            //            /* case TD(TD_PLUS): */
+            //            /*     return TAPPING_TERM + 40; */
+            //
+            //        case SC_LSPO:
+            //            return TAPPING_TERM - 20;
+            //        case SC_RSPC:
+            //            return TAPPING_TERM - 50;
+            //        case LT(_LOWER, KC_SPC):
+            //            return TAPPING_TERM - 10;
+            //        case LT(_LOWER, KC_SPC):
+            //            return TAPPING_TERM - 10;
+            //=========================================
 
             /* case TD(TD_PLUS): */
             /*     return TAPPING_TERM + 40; */
-
-        case SC_LSPO:
-            return TAPPING_TERM - 20;
-        case SC_RSPC:
-            return TAPPING_TERM - 50;
-        case LT(_LOWER, KC_SPC):
-            return TAPPING_TERM - 10;
 
         /* case TD(TD_HTTP_TYPE): */
         /*     return TAPPING_TERM + 50; */
