@@ -1,6 +1,6 @@
 #!/bin/sh
 
-xset r rate 190 60
+xset r rate 200 60
 
 remove_dead_keys
 

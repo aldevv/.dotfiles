@@ -268,7 +268,7 @@ map <backspace2>.sng $ $EDITOR ~/.config/nvim/my_snippets/snipmate/go.snippets
 map <backspace2>.snl $ $EDITOR ~/.config/nvim/my_snippets/snipmate/lua.snippets
 map <backspace2>.snp $ $EDITOR ~/.config/nvim/my_snippets/snipmate/python.snippets
 map <backspace2>.ao $ $EDITOR ~/.config/zsh/.aliases
-map <backspace2>.k $ $EDITOR /home/kanon/.local/share/scripts/apps/qmk/lily58/keymap.c
+map <backspace2>.k $ $EDITOR /home/kanon/qmk_firmware/keyboards/lily58/keymaps/mine/keymap.c
 map <backspace2>.Z $ $EDITOR /root/.config/zsh/.zshrc
 map <backspace2>.pr $ $EDITOR /home/kanon/.local/share/scripts/files/projections/global/.projections.json
 map <backspace2>.s $ $EDITOR /home/kanon/.ssh/config

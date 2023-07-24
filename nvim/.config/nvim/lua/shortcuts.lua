@@ -193,7 +193,7 @@ vim.keymap.set("n", "<localleader>.sng", "<cmd>e ~/.config/nvim/my_snippets/snip
 vim.keymap.set("n", "<localleader>.snl", "<cmd>e ~/.config/nvim/my_snippets/snipmate/lua.snippets <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.snp", "<cmd>e ~/.config/nvim/my_snippets/snipmate/python.snippets <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.ao", "<cmd>e ~/.config/zsh/.aliases <cr>", {silent=true, noremap=true})
-vim.keymap.set("n", "<localleader>.k", "<cmd>e $SCRIPTS/apps/qmk/lily58/keymap.c <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>.k", "<cmd>e $HOME/qmk_firmware/keyboards/lily58/keymaps/mine/keymap.c <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.Z", "<cmd>e /root/.config/zsh/.zshrc <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.pr", "<cmd>e $FILES/projections/global/.projections.json <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.s", "<cmd>e $HOME/.ssh/config <cr>", {silent=true, noremap=true})
