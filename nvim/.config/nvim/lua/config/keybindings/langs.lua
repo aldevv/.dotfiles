@@ -25,18 +25,31 @@ end
 
 local M = {}
 M.gopls = function()
-  map("n", "Esj", "<cmd>GoTag json <CR>", { desc = "Add json struct tags" })
-  map("n", "Esb", "<cmd>GoTag bson <CR>", { desc = "Add bson struct tags" })
-  map("n", "Est", "<cmd>GoTag json,omitempty", { desc = "Add json custom struct tags" })
-  map("n", "Esrj", "<cmd>GoTag json --rm <CR>", { desc = "Rm json struct tags" })
-  map("n", "Esrb", "<cmd>GoTag bson --rm <CR>", { desc = "Rm bson struct tags" })
+  -- map("n", "Esj", "<cmd>GoTag json <CR>", { desc = "Add json struct tags" })
+  -- map("n", "Esb", "<cmd>GoTag bson <CR>", { desc = "Add bson struct tags" })
+  -- map("n", "Est", "<cmd>GoTag json,omitempty", { desc = "Add json custom struct tags" })
+  -- map("n", "Esrj", "<cmd>GoTag json --rm <CR>", { desc = "Rm json struct tags" })
+  -- map("n", "Esrb", "<cmd>GoTag bson --rm <CR>", { desc = "Rm bson struct tags" })
+  map("n", "Esj", "<cmd>GoAddTag json <CR>", { desc = "Add json struct tags" })
+  map("n", "Esb", "<cmd>GoAddTag bson <CR>", { desc = "Add bson struct tags" })
+  map("n", "Est", "<cmd>GoAddTag json,omitempty", { desc = "Add json custom struct tags" })
+  map("n", "Esrj", "<cmd>GoAddTag json --rm <CR>", { desc = "Rm json struct tags" })
+  map("n", "Esrb", "<cmd>GoAddTag bson --rm <CR>", { desc = "Rm bson struct tags" })
+
   map("n", "Etf", "<cmd>GoTestFile <CR>", { desc = "Test File" })
   map("n", "Ett", "<cmd>GoTest <CR>", { desc = "Run All tests" })
   map("n", "EtF", "<cmd>GoTestFunc <CR>", { desc = "Test Function" })
   map("n", "Etp", "<cmd>GoTestPkg <CR>", { desc = "Test Package" })
 
   map("n", "Ei", "<cmd>GoIfErr <CR>", { desc = "Add if error" })
-  map("n", "EI", "<cmd>GoImpl <CR>", { desc = "Add Impl" })
+  map("n", "EIi", "<cmd>GoImpl )<CR>", { desc = "Add Impl" })
+  map("n", "EII", function()
+    local cword = vim.fn.expand("<cword>")
+    local cmd = "GoImpl " .. cword
+    local interface = vim.fn.input("Interface: ")
+    cmd = cmd .. " " .. interface
+    vim.cmd(cmd)
+  end, { desc = "Add Impl under cursor" })
   map("n", "Ef", "<cmd>GoFillStruct <CR>", { desc = "Go Fill Struct" })
   map("n", "Emt", "<cmd>GoModTidy", { desc = "Go mod tidy" })
   map("n", "Emi", "<cmd>GoModInit", { desc = "Go mod init" })

@@ -79,15 +79,9 @@ map("x", "n", "j", nor)
 map("x", "j", "e", nor)
 
 
--- map("n", "zn", "zj", nor)
--- map("n", "ze", "zk", nor)
-
--- map("n", "!!", ":.!", nor)
--- map("n", "!.", ".!bash", nor)
-
--- jumplist mutations
--- map("n", "e", '(v:count > 5  ? "m\'" . v:count : "") . \'k\'', nor_e)
--- map("n", "n", '(v:count > 5  ? "m\'" . v:count : "") . \'j\'', nor_e)
+-- add e and n movements to the jumplist!
+map("n", "e", '(v:count > 5  ? "m\'" . v:count : "") . \'k\'', nor_e)
+map("n", "n", '(v:count > 5  ? "m\'" . v:count : "") . \'j\'', nor_e)
 
 -- generate checkpoints for undo
 map("i", ",", ",<c-g>u", nor)
@@ -202,7 +196,7 @@ end, nor_s)
 -- map("n", "<localleader>v.", "<cmd>cd " .. h .. "<cr> | <cmd>e .<cr>", nor_s)
 
 -- defaults override
-map("", "gh", ":h <c-r><c-w>|resize 15<cr>", nor) -- select mode, not used
+map("", "gh", ":h <c-r><c-w>|resize 16<cr>", nor) -- select mode, not used
 map("", "<leader>sh", "<c-l>", {})
 
 local uv = require("utils.vanilla.core")
@@ -563,7 +557,7 @@ map("n", "<S-Left>", "5<c-w><", nor_s)
 
 map({ "n", "v" }, "<CR>", "za")
 vim.api.nvim_create_autocmd("FileType", {
-  pattern =  "qf" ,
+  pattern = "qf",
   callback = function()
     map({ "n", "v" }, "<CR>", "<CR>", { buffer = true })
   end

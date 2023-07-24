@@ -55,12 +55,18 @@ return {
     -- config = req("config.appearance.themes.tokyonight"),
   },
   { "catppuccin/nvim",             config = req("config.appearance.themes.catppuccin") },
-  { "norcalli/nvim-colorizer.lua", config = function()
-    require("colorizer").setup()
-  end },
-  { "ziontee113/color-picker.nvim", config = function()
-    require("color-picker").setup()
-  end },
+  {
+    "norcalli/nvim-colorizer.lua",
+    config = function()
+      require("colorizer").setup()
+    end
+  },
+  {
+    "ziontee113/color-picker.nvim",
+    config = function()
+      require("color-picker").setup()
+    end
+  },
   {
     "nvim-lualine/lualine.nvim",
 
@@ -417,8 +423,8 @@ return {
     opts = {
       keywords = {
         FIX = {
-          icon = " ", -- icon used for the sign, and in search results
-          color = "error", -- can be a hex color, or a named color (see below)
+          icon = " ",                              -- icon used for the sign, and in search results
+          color = "error",                            -- can be a hex color, or a named color (see below)
           alt = { "FIXME", "BUG", "FIXIT", "ISSUE" }, -- a set of other keywords that all map to this FIX keywords
           -- signs = false, -- configure signs for some keywords individually
         },
@@ -531,9 +537,10 @@ return {
   -- https://github.com/ray-x/go.nvim
   "navarasu/onedark.nvim",
   -- {
-  -- 	"sourcegraph/sg.nvim",
-  -- 	dependencies = "nvim-lua/plenary.nvim",
-  -- 	build = "cargo build --workspace",
+  --   "sourcegraph/sg.nvim",
+  --   dependencies = { "nvim-lua/plenary.nvim" },
+  --   -- If you have a recent version of lazy.nvim, you don't need to add this!
+  --   -- build = "nvim -l build/init.lua",
   -- },
   -- {
   --
