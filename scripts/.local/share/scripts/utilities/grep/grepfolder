@@ -21,8 +21,7 @@ if [[ $nofzf == 1 ]]; then
 	exit 0
 fi
 
-preview_cmd="rg -uuu -i -C=2 --color=always $1 {}"
-
+preview_cmd="rg -uuu -i -C=2 --color=always \"$1\" {}"
 file_="$(rg -uuu -i -l "$1" "$folder" | fzf --with-nth -2,-1 --preview="$preview_cmd" --height='50%' --delimiter /)"
 if [ -z "$file_" ]; then
 	exit 1

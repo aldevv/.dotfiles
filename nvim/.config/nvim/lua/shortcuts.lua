@@ -151,6 +151,7 @@ vim.keymap.set("n","<localleader>,pl", ":lua require('telescope.builtin').find_f
 vim.keymap.set("n", "<localleader>.sf", "<cmd>e ~/.config/shortcuts/sf <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.sd", "<cmd>e ~/.config/shortcuts/sd <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.z", "<cmd>e ~/.config/zsh/.zshrc <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>.zz", "<cmd>e ~/.config/zsh/.zshrc <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.zp", "<cmd>e ~/.config/zsh/.zprofile <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.pi", "<cmd>e ~/.config/picom/picom.conf <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.r", "<cmd>e ~/.config/ranger/rc.conf <cr>", {silent=true, noremap=true})

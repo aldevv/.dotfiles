@@ -771,7 +771,18 @@ return {
     event = { "CmdlineEnter" },
     ft = { "go", 'gomod' },
     build = ':lua require("go.install").update_all_sync()' -- if you need to install/update all binaries
-  }
+  },
+  -- not finding luarocks magick install
+  -- {
+  --   "https://github.com/3rd/image.nvim",
+  --   opts = {
+  --     backend = "ueberzugpp"
+  --   },
+  -- init = function()
+  --  package.path = package.path .. ";" .. "/usr/local/share/lua/5.1/?/init.lua;"
+  -- package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua;"
+  -- end,
+  -- },
 
   -- enable when dadbod completion stops working
   -- use("nanotee/sqls.nvim")

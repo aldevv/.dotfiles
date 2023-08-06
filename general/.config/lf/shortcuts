@@ -226,6 +226,7 @@ map Ypl $ cp -rv $f /home/kanon/playground
 map <backspace2>.sf $ $EDITOR ~/.config/shortcuts/sf
 map <backspace2>.sd $ $EDITOR ~/.config/shortcuts/sd
 map <backspace2>.z $ $EDITOR ~/.config/zsh/.zshrc
+map <backspace2>.zz $ $EDITOR ~/.config/zsh/.zshrc
 map <backspace2>.zp $ $EDITOR ~/.config/zsh/.zprofile
 map <backspace2>.pi $ $EDITOR ~/.config/picom/picom.conf
 map <backspace2>.r $ $EDITOR ~/.config/ranger/rc.conf

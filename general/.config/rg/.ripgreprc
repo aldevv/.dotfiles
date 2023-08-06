@@ -2,6 +2,7 @@
 --max-columns-preview
 --color=auto
 --colors=match:fg:magenta
+--glob=!.git/
 #--colors=match:bg:yellow
 #--colors=line:fg:yellow
 # this file doesn't understand env variables

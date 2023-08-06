@@ -1,0 +1,29 @@
+#!/bin/sh
+# first argument: pattern
+# second argument:  path
+
+
+# FZF_DEFAULT_COMMAND="find . -type f"
+# _file="$(rg -uu --color=always --line-number --no-heading --smart-case "${@:-^[^\n]}" \
+#     | fzf -d ':' --preview 'bat --style=numbers --color=always $(cut -d: -f1 <<< {1}) --highlight-line {2}  --line-range={2}:+20' \
+#     --preview-window='50%' --height='50%' --with-nth 1,3.. --exact)"
+
+# ccolor is colon color
+# tcolor is text color
+# ncolor is number color
+ccolor="\x1b\[0m"
+tcolor="$ccolor\x1b\[35m"
+ncolor="$ccolor\x1b\[32m"
+rg_cmd="$(rg -uuu --color=always --line-number --no-heading --smart-case "${@:-^[^\n]}" | sed "s|$HOME/\(.*\)|~/\1|" | sed "/^${tcolor}.*${ccolor}:${ncolor}[0-9]*${ccolor}:\$/d")" 
+
+preview_inner_cmd='echo {1} | sed "s|^~/\(.*\)|'"$HOME"'/\1|" | cut -d: -f1'
+preview_cmd='bat --style=numbers --color=always $('"$preview_inner_cmd"') --highlight-line {2}  --line-range={2}:+20'
+_file="$(echo "$rg_cmd" | fzf -d ':' --preview "$preview_cmd" --preview-window='50%' --height='50%'  --with-nth 1,3.. --exact)"
+
+expand() {
+  echo "$1" | sed "s|~/\(.*\)|$HOME/\1|"
+}
+
+_file="${_file%%:*}"
+[ -z "$_file" ] && exit
+exec nvim "$(expand "$_file")"
