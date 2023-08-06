@@ -64,6 +64,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 --autopairs disabled
 -- cmd("autocmd FileType TelescopePrompt let b:autopairs_enabled = 0")
 
+
 cmd([[
 function! ExecuteMacroOverVisualRange()
   echo "@".getcmdline()

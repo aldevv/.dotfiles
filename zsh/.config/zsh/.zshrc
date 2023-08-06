@@ -195,6 +195,7 @@ doge() {
 
 bindkey -s "^n" "stn^M"
 bindkey -s 'w' 'nw^M' # wiki
+bindkey -s 'N' '$UTILITIES/grep/lgnotes^M' # projects and work
 bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
 bindkey -s 'd' '$UTILITIES/tmux/nd^M' # start something new
 bindkey -s 't' '$UTILITIES/tmux/nt^M' # notes
@@ -293,8 +294,8 @@ compinit
 setopt EXTENDED_HISTORY
 setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
 setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
-export HISTFILE="$HOME/.cache/zsh/.zsh_history"
+export HISTSIZE=9999999
 export SAVEHIST=$HISTSIZE
-export HISTSIZE=999999999
+export HISTFILE="$HOME/.cache/zsh/.zsh_history"
 
 

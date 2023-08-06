@@ -62,7 +62,7 @@ map("n", "gk", "gn", nor)
 
 -- ===================
 
-map({ "n", "x" }, "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
+map({ "n" }, "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
 map({ "n", "x" }, "i", "lzv", nor)
 
 -- map("o", "lp", "ip", nor) -- mini.ai doesn't set this, also doesn't work with gulw
@@ -80,8 +80,8 @@ map("x", "j", "e", nor)
 
 
 -- add e and n movements to the jumplist!
-map("n", "e", '(v:count > 5  ? "m\'" . v:count : "") . \'k\'', nor_e)
-map("n", "n", '(v:count > 5  ? "m\'" . v:count : "") . \'j\'', nor_e)
+map("n", "e", '(v:count > 1  ? "m\'" . v:count : "") . \'k\'', nor_e)
+map("n", "n", '(v:count > 1  ? "m\'" . v:count : "") . \'j\'', nor_e)
 
 -- generate checkpoints for undo
 map("i", ",", ",<c-g>u", nor)
@@ -556,6 +556,7 @@ map("n", "<S-Left>", "5<c-w><", nor_s)
 -- end, nor_s)
 
 map({ "n", "v" }, "<CR>", "za")
+map({ "n", "v" }, "<s-CR>", "zA")
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "qf",
   callback = function()
@@ -563,7 +564,6 @@ vim.api.nvim_create_autocmd("FileType", {
   end
 })
 
-map({ "n", "v" }, "<s-CR>", "zA")
 map("n", "<c-l><c-l>", ":nohl<cr>")
 
 -- color picker

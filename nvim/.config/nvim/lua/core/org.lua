@@ -21,16 +21,23 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "org",
   callback = function()
     vim.keymap.del("n", "<cr>")
-    vim.keymap.del("n", "<s-cr>")
+    -- vim.keymap.del("n", "<s-cr>")
+    -- vim.keymap.del("n", "zM")
     vim.keymap.set(
       "n",
       "<cr>",
       'za',
       { silent = true }
     )
+    -- vim.keymap.set(
+    --   "n",
+    --   "<s-cr>",
+    --   '<Cmd>lua require("orgmode").action("org_mappings.global_cycle")<CR>)',
+    --   { silent = true }
+    -- )
     vim.keymap.set(
       "n",
-      "<s-cr>",
+      "zM",
       '<Cmd>lua require("orgmode").action("org_mappings.global_cycle")<CR>)',
       { silent = true }
     )

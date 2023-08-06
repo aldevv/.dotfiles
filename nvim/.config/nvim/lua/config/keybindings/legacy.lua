@@ -10,6 +10,8 @@ noremap gJ gE
 noremap gn gj
 noremap gN gJ
 noremap k nzzzv
+" for select mode
+snoremap k k
 noremap K Nzzzv
 noremap gj ge
 noremap gJ gE

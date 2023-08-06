@@ -24,6 +24,13 @@ M.load_mappings = function()
     require("utils.lua.telescope").git_files_or_curdir_parent()
   end, nor_s)
 
+  -- cmd("autocmd FileType TelescopePrompt let b:autopairs_enabled = 0")
+  -- vim.api.nvim_create_autocmd("TelescopePrompt", {
+  --   callback = function()
+  --     map("i", "<c-s-u>", "")
+  --   end
+  -- })
+
   map("n", "<a-r>", function()
     if vim.bo.filetype ~= "netrw" then
       require("telescope.builtin").live_grep({ cwd = vim.fn.expand("%:p:h"), hidden = true })

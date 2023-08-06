@@ -140,4 +140,4 @@ vim.diagnostic.config({
 })
 
 -- https://neovim.io/doc/user/motion.html#jumplist-stack
--- vim.opt.jumpoptions = "stack"
+vim.opt.jumpoptions = "stack"

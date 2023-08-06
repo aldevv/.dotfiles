@@ -117,11 +117,12 @@ local enhance_server_opts = {
         --   compositeLiteralTypes = true,
         --   constantValues = true,
         --   functionTypeParameters = true,
-        --   parameterNames = true,
+        -- parameterNames = true,
+        -- parameterNames = true,
         --   rangeVariableTypes = true,
         -- },
         completeUnimported = true,
-        usePlaceholders = true,
+        usePlaceholders = false, -- this fills when pressing enter on cmp
       },
     }
   end,
@@ -172,9 +173,9 @@ local enhance_server_opts = {
   ["hls"] = function(opts)
     opts.root_dir = function(filepath)
       return (
-          util.root_pattern("hie.yaml", "stack.yaml", "cabal.project")(filepath)
-          or util.root_pattern("*.cabal", "package.yaml")(filepath)
-          )
+        util.root_pattern("hie.yaml", "stack.yaml", "cabal.project")(filepath)
+        or util.root_pattern("*.cabal", "package.yaml")(filepath)
+      )
     end
   end,
 }
