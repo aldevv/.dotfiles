@@ -185,7 +185,12 @@ map("t", "<c-s-g>", "<c-\\><c-n>gt", nor_s)
 map("n", "<F1>", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
 
 -- shortcuts
-require("shortcuts")
+-- require("shortcuts")
+local ok, err = pcall(require, "shortcuts")
+if not ok then
+  require("notify")("failed to load shortcuts: \n" .. err, "error")
+end
+
 -- opening config file (using shortcuts script now)
 map("n", "<leader>,la", function()
   vim.fn.system("[ ! -d .vscode ] && mkdir .vscode")
@@ -258,26 +263,6 @@ map("v", "!q", ":!", nor)
 
 require("config.keybindings.text-objs")
 
--- git worktrees
-map("n", "gwc", ":Telescope git_worktree create_git_worktree<cr>", nor)
--- use <c-d> while in this to delete it!
-map("n", "gww", ":Telescope git_worktree git_worktrees<cr>", nor)
-local function add_slash_feature_worktree_post()
-  local branch = vim.fn.input("Enter branch name:")
-  local path = vim.split(branch, "/")[2]
-  require("git-worktree").create_worktree(path, branch, "origin")
-  print("Added " .. path .. "!")
-end
-
-local function add_slash_feature_worktree_pre()
-  local branch = vim.fn.input("Enter branch name:")
-  local path = vim.split(branch, "/")[2]
-  require("git-worktree").create_worktree(path, branch, "origin")
-  print("Added " .. path .. "!")
-end
-
-map("n", "gwa", add_slash_feature_worktree_post, desc("git worktree create post"))
-map("n", "gwA", add_slash_feature_worktree_pre, desc("git worktree create pre"))
 
 -- <Enter> - switches to that worktree
 -- <c-d> - deletes that worktree
@@ -561,6 +546,14 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "qf",
   callback = function()
     map({ "n", "v" }, "<CR>", "<CR>", { buffer = true })
+  end
+})
+
+-- for command line window
+vim.api.nvim_create_autocmd("CmdwinEnter", {
+  callback = function()
+    map({ "n", "v" }, "<CR>", "<CR>", { noremap = true, buffer = true })
+    map({ "n", "v" }, "<C-c>", "<C-c>", { noremap = true, buffer = true })
   end
 })
 

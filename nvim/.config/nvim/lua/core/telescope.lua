@@ -102,6 +102,7 @@ local mappings = {
 }
 local vimgrep_arguments = {
   "rg",
+  "-uuu",
   "-L",
   "--hidden", --  remove this for live_grep
   "--color=never",
@@ -116,6 +117,9 @@ local vimgrep_arguments = {
 local setup = {
   pickers = {
     -- find_files = find_command(),
+    find_files = {
+      follow = true
+    },
     buffers = {
       theme = "cursor", -- ivy, dropdown, cursor
       layout_config = { width = 0.7 },

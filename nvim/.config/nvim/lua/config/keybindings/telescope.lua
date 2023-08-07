@@ -54,23 +54,23 @@ M.load_mappings = function()
   map("n", "sz", ':lua require("utils.lua.telescope").zenmode()<cr>', nor_s)
 
   -- t misc
-  map("n", "<a-g>", ':lua require("telescope.builtin").oldfiles()<cr>', nor_s)
-  map("n", "<leader>to", ':lua require("telescope.builtin").oldfiles()<cr>', nor_s)
-  map("n", "<leader>tj", ':lua require("telescope.builtin").jumplist()<cr>', nor_s)
-  map("n", "<leader>tL", ':lua require("telescope.builtin").loclist()<cr>', nor_s)
-  map("n", "<leader>tq", ':lua require("telescope.builtin").quickfix()<cr>', nor_s)
-  map("n", "<leader>tr", ':lua require("telescope.builtin").registers()<cr>', nor_s)
-  map("n", "<leader>ta", ':lua require("telescope.builtin").autocommands()<cr>', nor_s)
-  map("n", "<leader>tk", ':lua require("telescope.builtin").keymaps()<cr>', nor_s)
-  map("n", "<leader>tM", ':lua require("telescope.builtin").marks()<cr>', nor_s)
-  map("n", "<leader>tm", ':lua require("telescope.builtin").man_pages()<cr>', nor_s)
-  map("n", "<leader>th", ':lua require("telescope.builtin").help_tags()<cr>', nor_s)
-  map("n", "<leader>tH", ':lua require("telescope.builtin").highlights()<cr>', nor_s)
-  map("n", "<leader>tvo", ':lua require("telescope.builtin").vim_options()<cr>', nor_s)
-  map("n", "<leader>tvc", ':lua require("telescope.builtin").commands()<cr>', nor_s)
-  map("n", "<leader>tvC", ':lua require("telescope.builtin").colorscheme()<cr>', nor_s)
-  map("n", "<leader>tc", ':lua require("telescope.builtin").command_history()<cr>', nor_s)
-  map("n", "<leader>ts", ':lua require("telescope.builtin").search_history()<cr>', nor_s)
+  map("n", "<a-g>", ':lua require("telescope.builtin").oldfiles()<cr>', desc("builtin.oldfiles"))
+  map("n", "<leader>to", ':lua require("telescope.builtin").oldfiles()<cr>', desc("builtin.oldfiles"))
+  map("n", "<leader>tj", ':lua require("telescope.builtin").jumplist()<cr>', desc("builtin.jumplist"))
+  map("n", "<leader>tL", ':lua require("telescope.builtin").loclist()<cr>', desc("builtin.loclist"))
+  map("n", "<leader>tq", ':lua require("telescope.builtin").quickfix()<cr>', desc("builtin.quickfix"))
+  map("n", "<leader>tr", ':lua require("telescope.builtin").registers()<cr>', desc("builtin.registers"))
+  map("n", "<leader>ta", ':lua require("telescope.builtin").autocommands()<cr>', desc("builtin.autocommands"))
+  map("n", "<leader>tk", ':lua require("telescope.builtin").keymaps()<cr>', desc("builtin.keymaps"))
+  map("n", "<leader>tM", ':lua require("telescope.builtin").marks()<cr>', desc("builtin.marks"))
+  map("n", "<leader>tm", ':lua require("telescope.builtin").man_pages()<cr>', desc("builtin.man_pages"))
+  map("n", "<leader>th", ':lua require("telescope.builtin").help_tags()<cr>', desc("builtin.help_tags"))
+  map("n", "<leader>tH", ':lua require("telescope.builtin").highlights()<cr>', desc("builtin.highlights"))
+  map("n", "<leader>tvo", ':lua require("telescope.builtin").vim_options()<cr>', desc("builtin.vim_options"))
+  map("n", "<leader>tvc", ':lua require("telescope.builtin").commands()<cr>', desc("builtin.commands"))
+  map("n", "<leader>tvC", ':lua require("telescope.builtin").colorscheme()<cr>', desc("builtin.colorscheme"))
+  map("n", "<leader>tc", ':lua require("telescope.builtin").command_history()<cr>', desc("builtin.command_history"))
+  map("n", "<leader>ts", ':lua require("telescope.builtin").search_history()<cr>', desc("builtin.search_history"))
   -- custom
 
   -- folders
@@ -81,13 +81,6 @@ M.load_mappings = function()
   -- map("n", "<localleader>gd", ':lua require("utils.lua.telescope").dotfiles()<cr>', nor_s)
 
   -- map("n", "<localleader>gu", ':lua require("utils.lua.telescope").utilities()<cr>', nor_s)
-  map("n", "<localleader>V.", ':lua require("utils.lua.telescope").nvim()<cr>', nor_s)
-  map(
-    "n",
-    "<localleader>Vk",
-    ':lua require("utils.lua.telescope").nvim({path = "lua/config/keybindings"})<cr>',
-    nor_s
-  )
   -- NOTE: you should use ,vc instead
   -- map("n", "<localleader>Vc", ':lua require("utils.lua.telescope").nvim({path = "lua/core/"})<cr>', nor_s)
   -- map("n", "<localleader>VC", ':lua require("utils.lua.telescope").nvim({path = "lua/config/"})<cr>', nor_s)
@@ -98,8 +91,6 @@ M.load_mappings = function()
   map("n", "<a-a>", ':lua require("utils.lua.telescope").find_folders({})<cr>', nor_s)
   map("n", "<a-A>", ':lua require("utils.lua.telescope").find_folders({git=true})<cr>', nor_s)
 
-  map("n", "<localleader>Vp", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
-  map("n", "<localleader>P.", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
 
   -- live_grep
   -- map("n", "<localleader>gn.", ':lua require("utils.lua.telescope").notes_grep()<cr>', nor_s)
@@ -112,10 +103,32 @@ M.load_mappings = function()
 
   -- deprecated 05/01/2022
   -- map('n', '<a-f>', ':lua require("telescope.builtin").file_browser()<cr>',nor_s) https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/3
-
   map("n", "<leader>tt", ":Telescope<cr>", nor_s)
-  -- t core
+  -- t plugins
   map("n", "<leader>t,h", ":Telescope harpoon marks<cr>", nor_s)
+
+  map("n", "<leader>t,p", ":Telescope projects<cr>", nor_s)
+
+  map("n", "<leader>t,P", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
+
+  map("n", "<leader>t,r", ":Telescope refactoring<cr>", nor_s)
+
+  map("n", "<leader>t,dc", ":Telescope dap configurations", nor_s)
+  map("n", "<leader>t,dC", ":Telescope dap commands", nor_s)
+  map("n", "<leader>t,dl", ":Telescope dap list_breakpoints", nor_s)
+  map("n", "<leader>t,dv", ":Telescope dap variables", nor_s)
+  map("n", "<leader>t,df", ":Telescope dap frames", nor_s)
+
+  -- use <c-d> while in this to delete it!
+  map("n", "gwc", ":Telescope git_worktree create_git_worktree<cr>", nor)
+  map("n", "gww", ":Telescope git_worktree git_worktrees<cr>", nor)
+  map("n", "gwC", function()
+    local branch = vim.fn.input("Enter branch name:")
+    local path = vim.split(branch, "/")[2]
+    require("git-worktree").create_worktree(path, branch, "origin")
+    print("Added " .. path .. "!")
+  end, desc("git worktree create with slash"))
+
 
   -- telescope lsp
   map("n", "<leader>tlr", ':lua require("telescope.builtin").lsp_references()<cr>', nor_s)
