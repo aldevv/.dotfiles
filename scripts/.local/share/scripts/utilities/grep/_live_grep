@@ -18,7 +18,8 @@ rg_cmd="$(rg -uuu --color=always --line-number --no-heading --smart-case "${@:-^
 
 preview_inner_cmd='echo {1} | sed "s|^~/\(.*\)|'"$HOME"'/\1|" | cut -d: -f1'
 preview_cmd='bat --style=numbers --color=always $('"$preview_inner_cmd"') --highlight-line {2}  --line-range={2}:+20'
-_file="$(echo "$rg_cmd" | fzf -d ':' --preview "$preview_cmd" --preview-window='50%' --height='50%'  --with-nth 1,3.. --exact)"
+# without the --exact you can use a single quote to match the exact word
+_file="$(echo "$rg_cmd" | fzf -d ':' --preview "$preview_cmd" --preview-window='50%' --height='50%'  --with-nth 1,3..)"
 
 expand() {
   echo "$1" | sed "s|~/\(.*\)|$HOME/\1|"

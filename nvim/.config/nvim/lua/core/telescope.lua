@@ -104,14 +104,13 @@ local vimgrep_arguments = {
   "rg",
   "-uuu",
   "-L",
-  "--hidden", --  remove this for live_grep
   "--color=never",
   "--no-heading",
   "--with-filename",
   "--line-number",
   "--column",
   "--smart-case",
-  "--trim", -- add this value
+  "--trim",
 }
 
 local setup = {
@@ -125,7 +124,8 @@ local setup = {
       layout_config = { width = 0.7 },
     },
     live_grep = {
-      theme = "ivy", -- ivy, dropdown, cursor
+      theme = "ivy",        -- ivy, dropdown, cursor
+      only_sort_text = true -- this is so it matches on filepath too
       -- layout_config = { width = 0.7 }
     },
     grep_string = {
@@ -144,15 +144,24 @@ local setup = {
     vimgrep_arguments = vimgrep_arguments,
   },
   extensions = {
-    fzf = {
-      fuzzy = true,                    -- false will only do exact matching
-      override_generic_sorter = false, -- override the generic sorter
-      override_file_sorter = true,     -- override the file sorter
-      case_mode = "smart_case",        -- or "ignore_case" or "respect_case"
-      -- the default case_mode is "smart_case"
-    },
+    --defaults
+    -- fzf = {
+    --   fuzzy = true,                   -- false will only do exact matching
+    --   override_generic_sorter = true, -- override the generic sorter
+    --   override_file_sorter = true,    -- override the file sorter
+    --   case_mode = "smart_case",       -- or "ignore_case" or "respect_case"
+    --   -- the default case_mode is "smart_case"
+    -- },
   },
   -- other configuration values here
 }
-
 require("telescope").setup(setup)
+require('telescope').load_extension('fzf')
+-- https://github.com/nvim-telescope/telescope-fzf-native.nvim
+-- see fzf goodies like:
+-- 'wild 	exact-match (quoted) 	Items that include wild
+-- ^music 	prefix-exact-match 	Items that start with music
+-- .mp3$ 	suffix-exact-match 	Items that end with .mp3
+-- !fire 	inverse-exact-match 	Items that do not include fire
+-- !^music 	inverse-prefix-exact-match 	Items that do not start with music
+-- !.mp3$ 	inverse-suffix-exact-match 	Items that do not end with .mp3

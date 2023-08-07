@@ -30,7 +30,6 @@
   "gv.vim": { "branch": "master", "commit": "320cc8c477c5acc4fa0e52a460d87b2af54fa051" },
   "harpoon": { "branch": "master", "commit": "21f4c47c6803d64ddb934a5b314dcb1b8e7365dc" },
   "haskell-tools.nvim": { "branch": "1.x.x", "commit": "7154357bc5213656a6af134e2babec1c364aa5e6" },
-  "image.nvim": { "branch": "master", "commit": "5d8b8b3acbe2ec6fcfe782cbda3a8ebdad9c1b51" },
   "impatient.nvim": { "branch": "main", "commit": "47302af74be7b79f002773011f0d8e85679a7618" },
   "indent-blankline.nvim": { "branch": "master", "commit": "7075d7861f7a6bbf0de0298c83f8a13195e6ec01" },
   "kanagawa.nvim": { "branch": "master", "commit": "14a7524a8b259296713d4d77ef3c7f4dec501269" },
