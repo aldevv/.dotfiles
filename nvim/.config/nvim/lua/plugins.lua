@@ -300,8 +300,8 @@ return {
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer", "DBUILastQueryInfo" },
   },
   -- fun
-  -- broken
-  -- { "ThePrimeagen/vim-apm",     cmd = { "VimApm" } },
+  -- NOTE: broken
+  { "aldevv/vim-apm", },
   {
     "ThePrimeagen/vim-be-good",
     cmd = { "VimBeGood" },
@@ -609,16 +609,6 @@ return {
     dependencies = { "kevinhwang91/promise-async", "nvim-treesitter/nvim-treesitter" },
   },
   {
-    "wellle/targets.vim",
-    init = function()
-      vim.g.targets_aiAI = { "a", "l", "A", "L" }
-      vim.g.targets_mapped_aiAI = { "a", "i", "A", "I" }
-      vim.g.targets_nl = { "n", "N" }
-      -- this script lets you apply macros to multiple lines
-      -- vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
-    end,
-  },
-  {
     "ianding1/leetcode.vim",
     build = "pip3 install keyring browser-cookie3 --user",
     config = function()
@@ -628,16 +618,30 @@ return {
       vim.g.leetcode_browser = "firefox"
     end,
   },
+  -- {
+  --   "wellle/targets.vim",
+  --   init = function()
+  --     vim.g.targets_aiAI = { "a", "l", "A", "L" }
+  --     vim.g.targets_mapped_aiAI = { "a", "i", "A", "I" }
+  --     vim.g.targets_nl = { "n", "N" }
+  --     -- this script lets you apply macros to multiple lines
+  --     -- vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
+  --   end,
+  -- },
   -- NOTE: failing for gUlw
-  -- { 'echasnovski/mini.nvim', version = '*', config = function()
-  --   require("mini.ai").setup({
-  --     mappings = {
-  --       inside = "l",
-  --       inside_next = "ln",
-  --       inside_last = "ll"
-  --     }
-  --   })
-  -- end
+  -- NOTE: failing for any lw command
+  -- {
+  --   'echasnovski/mini.nvim',
+  --   version = '*',
+  --   config = function()
+  --     require("mini.ai").setup({
+  --       mappings = {
+  --         inside = "l",
+  --         inside_next = "ln",
+  --         inside_last = "ll"
+  --       }
+  --     })
+  --   end
   -- },
 
   -- {

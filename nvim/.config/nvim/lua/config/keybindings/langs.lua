@@ -72,6 +72,13 @@ M.gopls = function()
     pattern = "*.go",
     command = "GoImport"
   })
+  -- vim.api.nvim_create_autocmd('BufWritePre', {
+  --   pattern = '*.go',
+  --   callback = function()
+  --     vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })
+  --   end,
+  --   silent = true
+  -- })
 end
 M.rust_analyzer = function()
   map("n", "Ei", ":RustToggleInlayHints<cr>", nor_s)

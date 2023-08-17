@@ -342,7 +342,7 @@ alias \
 	gpgls="gpg --list-keys" \
 	rp="gpgconf --kill all" \
 	I="curl -s ifconfig.me | cut -d'%' -f 1" \
-	air="aircrack-ng" \
+	aircrack="aircrack-ng" \
 	qr="qrencode" \
 	qrc='qrencode -o "/tmp/pass" "$(xsel -b -o 2>/dev/null)" && sxiv /tmp/pass; rm /tmp/pass' \
 	nmap_scripts="bb /usr/share/nmap/scripts/script.db"

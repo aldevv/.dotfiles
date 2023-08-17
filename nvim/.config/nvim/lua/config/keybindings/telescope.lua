@@ -14,9 +14,19 @@ M.load_mappings = function()
     -- telescope and then go back to prev folder and do telescope, it will show contents of pwd
     -- and not current dir
     if vim.bo.filetype ~= "netrw" then
-      require("telescope.builtin").find_files({ cwd = vim.fn.expand("%:p:h"), follow = true, hidden = true })
+      require("telescope.builtin").find_files({
+        cwd = vim.fn.expand("%:p:h"),
+        follow = true,
+        hidden = true,
+        sort_last_used = true
+      })
     else
-      require("telescope.builtin").find_files({ cwd = vim.b.netrw_curdir, follow = true, hidden = true })
+      require("telescope.builtin").find_files({
+        cwd = vim.b.netrw_curdir,
+        follow = true,
+        hidden = true,
+        sort_last_used = true
+      })
     end
   end, nor_s)
 
@@ -75,6 +85,7 @@ M.load_mappings = function()
 
   -- folders
   map("n", "<leader>tb", ':lua require("utils.lua.telescope").select_bg()<cr>', nor_s)
+  map("n", "<leader>tn", ':lua require("utils.lua.telescope").sort_notes()<cr>', nor_s)
 
   -- map("n", "<localleader>gf", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
   -- map("n", "<localleader>gF", ':lua require("utils.lua.telescope").files()<cr>', nor_s)

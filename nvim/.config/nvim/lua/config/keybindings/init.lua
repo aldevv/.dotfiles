@@ -65,6 +65,10 @@ map("n", "gk", "gn", nor)
 map({ "n" }, "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
 map({ "n", "x" }, "i", "lzv", nor)
 
+-- useful for targets.vim
+map("x", "l", "i", nor)
+map("o", "l", "i", nor)
+
 -- map("o", "lp", "ip", nor) -- mini.ai doesn't set this, also doesn't work with gulw
 -- map("n", "i", "lzv", nor) -- zv so it also works with folds
 map("", "N", "mzJ`z", nor)
@@ -93,9 +97,9 @@ map("", "<c-d>", "<c-d>zz", nor)
 map("", "<c-u>", "<c-u>zz", nor)
 
 -- files
-map("n", "<leader>fn", "<cmd>call CreateFileEnter()<cr>", nor_s)
-map("n", "<leader>ft", "<cmd>call CreateFileTouch()<cr>", nor_s)
-map("n", "<leader>fd", "<cmd>call CreateDir()<cr>", nor_s)
+map("n", "sfn", "<cmd>call CreateFileEnter()<cr>", nor_s)
+map("n", "sft", "<cmd>call CreateFileTouch()<cr>", nor_s)
+map("n", "sfd", "<cmd>call CreateDir()<cr>", nor_s)
 
 -- s commands
 map("n", "sq", "<cmd>lua require('notify').dismiss()<cr>", nor_s)
@@ -183,6 +187,11 @@ map("t", "<c-s-g>", "<c-\\><c-n>gt", nor_s)
 
 -- folders
 map("n", "<F1>", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
+map("n", "<leader><C-f>", "<cmd>silent !tmux neww nf<CR>", nor_s)
+
+-- delete without saving in register
+
+map({ "n", "v" }, "Q", [["_d]])
 
 -- shortcuts
 -- require("shortcuts")
@@ -211,6 +220,8 @@ map("n", "<c-q>q", ":call ToggleQuickFix(0)<cr>", nor_s)
 map("n", "<c-q>Q", ":call ToggleQuickFix(1)<cr>", nor_s)
 map("n", "<c-q>k", ":cnext<cr>zzzv", nor)
 map("n", "<c-q>K", ":cprev<cr>zzzv", nor)
+map("n", "<c-n>", ":cnext<cr>zzzv", nor)
+map("n", "<c-e>", ":cprev<cr>zzzv", nor)
 
 -- ql
 uv.location_toggle_definition()
@@ -249,7 +260,7 @@ require("config.keybindings.harpoon").load_mappings()
 -- nnoremap <leader>glp :cprev<CR>:call search(_search_term)<CR>-
 
 -- prefix . --> commands
-map("n", "<leader>.vo", ":noautocmd w | luafile %<cr>", nor_s)
+map("n", "<leader>.vz", ":so<cr>", nor_s)
 map("n", "<leader>.vd", ":lua require('osv').launch({port=3333})<cr>", nor_s)
 map("n", "<leader>.vD", ":lua require('osv').run_this()<cr>", nor_s)
 map("n", "<leader>.sb", "ggO#!/bin/bash<escape>", nor_s)
@@ -334,16 +345,16 @@ vmap <leader>,Sr <Plug>SnipRun
 ]])
 
 -- , configuration
-map("n", "<leader>,la", ":Lazy<cr>", nor)
-map("n", "<leader>,ll", ":Lazy log<cr>", nor)
-map("n", "<leader>,lp", ":Lazy profile<cr>", nor)
-map("n", "<leader>,lr", ":Lazy restore<cr>", nor)
+map("n", "<leader>,La", ":Lazy<cr>", nor)
+map("n", "<leader>,Ll", ":Lazy log<cr>", nor)
+map("n", "<leader>,Lp", ":Lazy profile<cr>", nor)
+map("n", "<leader>,Lr", ":Lazy restore<cr>", nor)
 
-map("n", "<leader>,Lr", ":LspRestart<cr>", nor)
-map("n", "<leader>,Li", ":LspInfo<cr>", nor)
-map("n", "<leader>,Ls", ":LspStart ", nor)
-map("n", "<leader>,LS", ":LspStop ", nor)
-map("n", "<leader>,Ll", ":LspLog<cr>", nor)
+map("n", "<leader>,lr", ":LspRestart<cr>", nor)
+map("n", "<leader>,li", ":LspInfo<cr>", nor)
+map("n", "<leader>,ls", ":LspStart ", nor)
+map("n", "<leader>,lS", ":LspStop ", nor)
+map("n", "<leader>,ll", ":LspLog<cr>", nor)
 
 map("n", "<leader>,ni", ":NullLsInfo<cr>", nor)
 map("n", "<leader>,nl", ":NullLsLog<cr>", nor)
@@ -351,6 +362,9 @@ map("n", "<leader>,nl", ":NullLsLog<cr>", nor)
 map("n", "<leader>,Ma", ":Mason<cr>", nor)
 map("n", "<leader>,Ml", ":MasonLog<cr>", nor)
 map("n", "<leader>,Mu", ":MasonUpdate<cr>", nor)
+
+map("c", "<c-b>", ' <C-R><C-V> <C-\\>eexpand("%")<cr>', nor)
+map("c", "<c-s-b>", ' <C-R><C-V> <C-\\>eexpand("%:p:h")<cr>/', nor)
 
 -- map("n", "<leader>,ps", ":PackerSync<cr>", nor)
 -- map("n", "<leader>,pS", ":PackerStatus<cr>", nor)

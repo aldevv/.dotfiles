@@ -104,29 +104,33 @@ local enhance_server_opts = {
     opts.capabilities.offsetEncoding = { "utf-16" }
   end,
   ["gopls"] = function(opts)
+    -- https://github.com/golang/tools/blob/master/gopls/doc/vim.md
     -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
     opts.settings = {
       gopls = {
-        -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md#code-lenses
-        -- codelenses = { gc_details = false, generate = true, regenerate_cgo = true, tidy = true, upgrade_dependency = true, vendor = true },
-        -- https://github.com/golang/tools/blob/master/gopls/doc/inlayHints.md
-        -- hints = {},
-        -- hints = {
-        --   assignVariableTypes = true,
-        --   compositeLiteralFields = true,
-        --   compositeLiteralTypes = true,
-        --   constantValues = true,
-        --   functionTypeParameters = true,
-        -- parameterNames = true,
-        -- parameterNames = true,
-        --   rangeVariableTypes = true,
-        -- },
+        usePlaceholders = false,
         completeUnimported = true,
-        usePlaceholders = false, -- this fills when pressing enter on cmp
       },
     }
+    --     gopls = {
+    --       -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md#code-lenses
+    --       -- codelenses = { gc_details = false, generate = true, regenerate_cgo = true, tidy = true, upgrade_dependency = true, vendor = true },
+    --       -- https://github.com/golang/tools/blob/master/gopls/doc/inlayHints.md
+    --       -- hints = {},
+    --       -- hints = {
+    --       --   assignVariableTypes = true,
+    --       --   compositeLiteralFields = true,
+    --       --   compositeLiteralTypes = true,
+    --       --   constantValues = true,
+    --       --   functionTypeParameters = true,
+    --       -- parameterNames = true,
+    --       -- parameterNames = true,
+    --       --   rangeVariableTypes = true,
+    --       -- },
+    --       completeUnimported = true,
+    --       usePlaceholders = false, -- this fills when pressing enter on cmp
+    --     },
   end,
-  -- end,
   ["lua_ls"] = function(opts)
     opts.root_dir = function(filepath)
       util.root_pattern(".luarc.json", ".luarc.jsonc", ".luacheckrc", ".stylua.toml", "stylua.toml",

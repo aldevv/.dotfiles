@@ -102,7 +102,7 @@ local mappings = {
 }
 local vimgrep_arguments = {
   "rg",
-  "-uuu",
+  "-uu",
   "-L",
   "--color=never",
   "--no-heading",
