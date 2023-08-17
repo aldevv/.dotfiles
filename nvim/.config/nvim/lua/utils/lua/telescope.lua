@@ -207,20 +207,6 @@ M.exploits = function()
   })
 end
 
-M.code = function()
-  t.find_files({
-    prompt_title = "<AL's CODE>",
-    cwd = "$PLAYGROUND/code/",
-  })
-end
-
-M.notes = function()
-  t.find_files({
-    prompt_title = "<AL's NOTES>",
-    cwd = "$NOTES/",
-  })
-end
-
 -- live_grep
 
 M.git_root_or_curdir_parent = function()
@@ -233,12 +219,12 @@ M.git_root_or_curdir_parent = function()
   end
 end
 
-M.notes_grep = function()
-  t.live_grep({
-    prompt_title = "<GREP AL's NOTES>",
-    cwd = "$NOTES/",
-  })
-end
+-- M.notes_grep = function()
+--   t.live_grep({
+--     prompt_title = "<GREP AL's NOTES>",
+--     cwd = "$NOTES/",
+--   })
+-- end
 
 M.projects_grep = function()
   t.live_grep({
@@ -247,25 +233,69 @@ M.projects_grep = function()
   })
 end
 
-M.playground_grep = function()
-  t.live_grep({
-    prompt_title = "<GREP AL's PLAYGROUND>",
-    cwd = "$PLAYGROUND/",
-  })
+local reverseList = function(inputList)
+  local reversedList = {}
+  for i = #inputList, 1, -1 do
+    table.insert(reversedList, inputList[i])
+  end
+  return reversedList
 end
 
-M.code_grep = function()
-  t.live_grep({
-    prompt_title = "<GREP AL's CODE>",
-    cwd = "$PLAYGROUND/code/",
-  })
+local show_from_notes = function(inputString)
+  local targetSubstring = "notes"
+  local startIndex = string.find(inputString, targetSubstring)
+
+  if startIndex then
+    return string.sub(inputString, startIndex + #targetSubstring)
+  end
+  return ""
 end
 
-M.work_grep = function()
-  t.live_grep({
-    prompt_title = "<GREP AL's WORK>",
-    cwd = "$WORK",
+M.sort_notes = function()
+  local curfilepath = vim.fn.expand("%:p:h")
+  local startIndex = string.find(curfilepath, "notes")
+  if not startIndex then
+    curfilepath = os.getenv("NOTES") .. "/work/mega"
+  end
+
+  -- for netrw cases
+  if startIndex and vim.bo.filetype == "netrw" then
+    curfilepath = vim.b.netrw_curdir
+  end
+
+  local notes = vim.split(vim.fn.system({ "sortnotes", curfilepath }), "\n")
+  table.remove(notes) -- remove last item which is empty
+  notes = reverseList(notes)
+  for i, v in ipairs(notes) do
+    notes[i] = curfilepath .. "/" .. v
+  end
+
+
+  local picker = pickers:new({
+    prompt_title = "<SORTNOTES>",
+    finder = finders.new_table({
+      results = notes,
+      entry_maker = function(line)
+        local notes_substring = show_from_notes(line)
+        return {
+          value = line,
+          display = notes_substring,
+          ordinal = notes_substring,
+        }
+      end
+    }),
+    sorter = conf.generic_sorter(opts),
+    attach_mappings = function(prompt_bufnr, map)
+      a.select_default:replace(function()
+        a.close(prompt_bufnr) -- close prompt because you pressed <cr>
+        local content = s.get_selected_entry()
+        vim.cmd("e " .. content["value"])
+      end)
+      return true
+    end,
+    previewer = conf.file_previewer({}),
   })
+  picker:find()
 end
 
 return M

@@ -103,6 +103,9 @@ M.load_mappings = function(client) -- use these on_attach
   map("n", "<leader>oq", ":lua vim.diagnostic.setqflist{ title = 'Workspace diagnostics' }<cr>", nor)
   -- map("n", "<leader>ok", ":lua vim.diagnostic.goto_next()<cr>", nor)
   -- map("n", "<leader>oK", ":lua vim.diagnostic.goto_prev()<cr>", nor)
+  if client == nil then
+    return
+  end
   require("config.keybindings.langs")[client]()
 end
 

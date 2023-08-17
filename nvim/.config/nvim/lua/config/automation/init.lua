@@ -39,7 +39,7 @@ endif
 
 augroup highlight_yank
    autocmd!
-   autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank()
+   autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank({higroup="IncSearch", timeout=40})
 augroup END
 
 autocmd! BufRead,BufNewFile .projections.json  set filetype=projections.json syntax=json

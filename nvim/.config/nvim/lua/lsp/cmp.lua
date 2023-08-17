@@ -67,26 +67,26 @@ cmp.setup({
     format = function(entry, vim_item)
       vim_item.kind = string.format("%s %s", lspkind.presets.default[vim_item.kind], vim_item.kind)
       vim_item.menu = ({
-            -- nvim_lsp = "ﲳ",
-            -- nvim_lsp = "📚",
-            luasnip = "🔥",
-            -- nvim_lua = "[nvim]",
-            nvim_lsp = "[LS]",
-            -- nvim_lua = "[API]",
-            -- treesitter = "",
-            treesitter = "🌲",
-            -- path = "ﱮ",
-            path = "📁",
-            -- buffer = "﬘",
-            buffer = "[BUF]",
-            zsh = "[SH]",
-            -- vsnip = "",
-            -- ultisnips = "🔥",
-            -- spell = "暈",
-            spell = "暈",
-            cmdline = "[CMD]",
-            ["vim-dadbod-completion"] = "[DB]",
-          })[entry.source.name]
+        -- nvim_lsp = "ﲳ",
+        -- nvim_lsp = "📚",
+        luasnip = "🔥",
+        -- nvim_lua = "[nvim]",
+        nvim_lsp = "[LS]",
+        -- nvim_lua = "[API]",
+        -- treesitter = "",
+        treesitter = "🌲",
+        -- path = "ﱮ",
+        path = "📁",
+        -- buffer = "﬘",
+        buffer = "[BUF]",
+        zsh = "[SH]",
+        -- vsnip = "",
+        -- ultisnips = "🔥",
+        -- spell = "暈",
+        spell = "暈",
+        cmdline = "[CMD]",
+        ["vim-dadbod-completion"] = "[DB]",
+      })[entry.source.name]
 
       return vim_item
     end,
@@ -116,7 +116,7 @@ cmp.setup({
         fallback()
       end
     end,
-    ["<s-up>"] = cmp.mapping(cmp.mapping.scroll_docs( -4), { "i", "c" }),
+    ["<s-up>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
     ["<s-down>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
     ["<C-Space>"] = cmp.mapping(function()
       if cmp.visible() then
@@ -132,7 +132,7 @@ cmp.setup({
       --  check for examples https://github.com/hrsh7th/nvim-cmp/wiki/Example-mappings
       -- select = true, -- auto select on enter (even if not selected with <a-n>)
       select = true, -- auto select on enter (even if not selected with <a-n>)
-    }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+    }),              -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
     -- same as <cr> but it auto selects first option
     -- ["<a-y>"] = cmp.mapping.confirm({
     --   behavior = cmp.ConfirmBehavior.Insert,
@@ -163,39 +163,39 @@ cmp.setup({
 
 -- command line
 -- NOTE: has bug with %, where it doesn't complete it correctly
--- cmp.setup.cmdline(":", {
--- 	mapping = cmp.mapping.preset.cmdline(),
--- 	sources = cmp.config.sources({
--- 		--   { name = "path", option = {
--- 		--     ignore_cmds = { "Man", "!" },
--- 		--   } },
---
--- 		{
--- 			name = "cmdline",
--- 			option = {
--- 				ignore_cmds = { "Man", "!" },
--- 			},
--- 		},
--- 	}),
--- })
-
 cmp.setup.cmdline(":", {
+  mapping = cmp.mapping.preset.cmdline(),
   sources = cmp.config.sources({
+    --   { name = "path", option = {
+    --     ignore_cmds = { "Man", "!" },
+    --   } },
 
     {
       name = "cmdline",
       option = {
-        ignore_cmds = { "Man", "!", "edit", "read" },
-      },
-    },
-    {
-      name = "fuzzy_path",
-      option = {
-        fd_cmd = { "fd", "-d", "20", "-p" },
+        ignore_cmds = { "Man", "!" },
       },
     },
   }),
 })
+
+-- cmp.setup.cmdline(":", {
+--   sources = cmp.config.sources({
+--
+--     {
+--       name = "cmdline",
+--       option = {
+--         ignore_cmds = { "Man", "!", "edit", "read" },
+--       },
+--     },
+--     {
+--       name = "fuzzy_path",
+--       option = {
+--         fd_cmd = { "fd", "-d", "20", "-p" },
+--       },
+--     },
+--   }),
+-- })
 
 -- / search
 cmp.setup.cmdline("/", {

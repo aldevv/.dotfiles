@@ -14,7 +14,8 @@
 ccolor="\x1b\[0m"
 tcolor="$ccolor\x1b\[35m"
 ncolor="$ccolor\x1b\[32m"
-rg_cmd="$(rg -uuu --color=always --line-number --no-heading --smart-case "${@:-^[^\n]}" | sed "s|$HOME/\(.*\)|~/\1|" | sed "/^${tcolor}.*${ccolor}:${ncolor}[0-9]*${ccolor}:\$/d")" 
+rg_cmd="$(rg -uuu --color=always --line-number --no-heading --smart-case "${@:-^[^\n]}" \
+  | sed "s|$HOME/\(.*\)|~/\1|" | sed "/^${tcolor}.*${ccolor}:${ncolor}[0-9]*${ccolor}:\$/d")" 
 
 preview_inner_cmd='echo {1} | sed "s|^~/\(.*\)|'"$HOME"'/\1|" | cut -d: -f1'
 preview_cmd='bat --style=numbers --color=always $('"$preview_inner_cmd"') --highlight-line {2}  --line-range={2}:+20'
