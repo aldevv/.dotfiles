@@ -85,7 +85,10 @@ M.load_mappings = function()
 
   -- folders
   map("n", "<leader>tb", ':lua require("utils.lua.telescope").select_bg()<cr>', nor_s)
-  map("n", "<leader>tn", ':lua require("utils.lua.telescope").sort_notes()<cr>', nor_s)
+  map("n", "<leader>tN", ':lua require("utils.lua.telescope").sort_notes()<cr>', nor_s)
+  map("n", "<leader>tn",
+    ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $NOTES>', cwd = '$NOTES', search ='',  shorten_path = true})<CR>",
+    nor_s)
 
   -- map("n", "<localleader>gf", ':lua require("utils.lua.telescope").projects()<cr>', nor_s)
   -- map("n", "<localleader>gF", ':lua require("utils.lua.telescope").files()<cr>', nor_s)
@@ -162,8 +165,15 @@ M.load_mappings = function()
   map("n", "<leader>tgb", ':lua require("telescope.builtin").git_branches()<cr>', nor_s)
   map("n", "<leader>tgs", ':lua require("telescope.builtin").git_status()<cr>', nor_s)
   map("n", "<leader>tgS", ':lua require("telescope.builtin").git_stash()<cr>', nor_s)
+  -- git namespace
+  map("n", "<leader>gtc", ':lua require("telescope.builtin").git_commits()<cr>', nor_s)
+  map("n", "<leader>gtC", ':lua require("telescope.builtin").git_bcommits()<cr>', nor_s)
+  map("n", "<leader>gtb", ':lua require("telescope.builtin").git_branches()<cr>', nor_s)
+  map("n", "<leader>gts", ':lua require("telescope.builtin").git_status()<cr>', nor_s)
+  map("n", "<leader>gtS", ':lua require("telescope.builtin").git_stash()<cr>', nor_s)
 
   map("n", "<leader>tp", ":Telescope projects<cr>", nor)                                        -- recently opened projects!!
+  map("n", "<c-s-s>", ":TodoTelescope<cr>", nor)                                                -- recently opened projects!!
 
   map("n", "<leader>tC", "<cmd>lua require('utils.lua.color_picker').choose_colors()<cr>", nor) -- recently opened porjects!!
 end

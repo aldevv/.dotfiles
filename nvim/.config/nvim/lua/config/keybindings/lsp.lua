@@ -92,12 +92,11 @@ M.load_mappings = function(client) -- use these on_attach
 
   map("n", "<leader>ldD", "<cmd>Lspsaga lsp_finder<cr>", nor)
   map("n", "<leader>oo", ":lua  require('telescope.builtin').diagnostics({bufnr=0})<cr>", nor)
+  map("n", "<c-s>", ":Telescope diagnostics severity_bound=ERROR<cr>", nor)
   map("n", "<leader>oO", ":lua  require('telescope.builtin').diagnostics()<cr>", nor)
   map("n", "<leader>owo", ":lua  require('telescope.builtin').diagnostics()<cr>", nor)
   vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
   vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
-  map("n", "<leader>ok", "<cmd>Lspsaga diagnostic_jump_next<cr>", nor)
-  map("n", "<leader>oK", "<cmd>Lspsaga diagnostic_jump_prev<cr>", nor)
   map("n", "<leader>on", ":lua vim.diagnostic.get_namespace()<cr>", nor)
   map("n", "<leader>ol", ":lua vim.diagnostic.setloclist{ title = 'Buffer diagnostics' }<cr>", nor)
   map("n", "<leader>oq", ":lua vim.diagnostic.setqflist{ title = 'Workspace diagnostics' }<cr>", nor)

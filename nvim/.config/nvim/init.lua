@@ -50,5 +50,6 @@ end
 require("lazy").setup("plugins", {
   dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
 })
+-- if treesitter errors after update, :TSUpdate
 
 require("config")
