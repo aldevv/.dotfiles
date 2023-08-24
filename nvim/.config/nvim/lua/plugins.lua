@@ -7,8 +7,6 @@ local function req(module)
 end
 
 vim.g.mapleader = require("utils.lua.misc").replace_termcodes("<Space>")
--- NOTE: this won't work till you fix conflicts maps like .v and .vv in the shortcuts script
--- vim.g.maplocalleader = require("utils.lua.misc").replace_termcodes("<BS>") -- this is backspace bro don't ask me why
 vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
 vim.keymap.set("n", "<BS>", ":WhichKey <localleader><cr>", { silent = true })
 
@@ -42,13 +40,6 @@ return {
     config = req("core.telescope"),
   },
 
-  {
-    "axkirillov/easypick.nvim",
-    config = req("core.easypick"),
-    dependencies = {
-      "nvim-telescope/telescope.nvim",
-    },
-  },
   {
     "folke/tokyonight.nvim",
     branch = "main",
@@ -138,16 +129,6 @@ return {
       require("luasnip").filetype_extend("all", { "_" })
     end
   },
-  {
-    "nvimdev/lspsaga.nvim",
-    config = req("lsp.lspsaga"),
-    event = "LspAttach",
-    dependencies = {
-      { "nvim-tree/nvim-web-devicons" },
-      --Please make sure you install markdown and markdown_inline parser
-      { "nvim-treesitter/nvim-treesitter" }
-    }
-  },
 
   {
     "jose-elias-alvarez/null-ls.nvim",
@@ -171,15 +152,6 @@ return {
     "numToStr/Comment.nvim",
     config = req("core.comment"),
   },
-  -- {
-  --     "echasnovski/mini.comment",
-  --     config = function()
-  --         require("mini.comment").setup()
-  --     end,
-  -- },
-  --
-  -- -- Lazy loading:
-  -- -- Load on specific commands
   {
     "tpope/vim-dispatch",
   },
@@ -351,14 +323,6 @@ return {
   },
 
   {
-    "frazrepo/vim-rainbow",
-    cmd = "RainbowToggle",
-    init = function()
-      vim.g.rainbow_active = 0
-    end,
-  },
-
-  {
     "tpope/vim-fugitive",
     dependencies = "tpope/vim-rhubarb",
     config = function()
@@ -379,8 +343,6 @@ return {
     config = req("core.neotest"),
     module = "neotest",
   },
-  { "brooth/far.vim",               cmd = { "Far", "Fardo", "Farr" } },
-
   {
     "ThePrimeagen/refactoring.nvim",
     dependencies = {
@@ -391,15 +353,7 @@ return {
     module = "refactoring",
   },
 
-  {
-    "pwntester/octo.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-    },
-    opts = { default_remote = { "origin", "upstream" } },
-  },
-
-  { "Vimjas/vim-python-pep8-indent" }, -- for indentation, treesitter not functional yet 23/01/202,
+  { "Vimjas/vim-python-pep8-indent" }, -- for indentation, treesitter not functional yet 23/01/2022,
   {
     -- this is what you can do
     -- https://nvim-orgmode.github.io/demo.html
@@ -417,7 +371,7 @@ return {
     lazy = true,
   },
   "nyngwang/nvimgelion",
-  { "hachy/eva01.vim", priority = 1000, lazy = false },
+  { "hachy/eva01.vim",              priority = 1000, lazy = false },
   {
     "folke/todo-comments.nvim",
     opts = {
@@ -532,28 +486,13 @@ return {
     -- config = req("core.rest"),
   },
 
-  -- https://github.com/nvim-telescope/telescope-media-files.nvim
-  -- for better go experience
-  -- https://github.com/ray-x/go.nvim
   "navarasu/onedark.nvim",
   -- {
   --   "sourcegraph/sg.nvim",
   --   dependencies = { "nvim-lua/plenary.nvim" },
   --   -- If you have a recent version of lazy.nvim, you don't need to add this!
-  --   -- build = "nvim -l build/init.lua",
+  --   build = "nvim -l build/init.lua",
   -- },
-  -- {
-  --
-  --   "sourcegraph/cody.nvim",
-  --   config = function()
-  --     require("cody").setup({
-  --       accessToken = "access token",
-  --       -- OPTIONAL:
-  --       -- url = "https://your-sourcegraph-instance.com"
-  --     })
-  --   end,
-  -- },
-
   "kana/vim-textobj-user",
   {
     "glts/vim-textobj-comment",
@@ -595,14 +534,6 @@ return {
       wrong_bg = "#FB4934",
     },
   },
-  -- {
-  --   "olexsmir/gopher.nvim",
-  --   -- ft = "go",
-  --   config = function(_, opts)
-  --     require("gopher").setup(opts)
-  --   end,
-  --   build = ":GoInstallDeps",
-  -- },
   {
     "kevinhwang91/nvim-ufo",
     config = req("core.ufo"),
@@ -618,150 +549,36 @@ return {
       vim.g.leetcode_browser = "firefox"
     end,
   },
-  -- {
-  --   "wellle/targets.vim",
-  --   init = function()
-  --     vim.g.targets_aiAI = { "a", "l", "A", "L" }
-  --     vim.g.targets_mapped_aiAI = { "a", "i", "A", "I" }
-  --     vim.g.targets_nl = { "n", "N" }
-  --     -- this script lets you apply macros to multiple lines
-  --     -- vim.cmd("source ~/.config/nvim/modules/visual-at.vim")
-  --   end,
-  -- },
-  -- NOTE: failing for gUlw
-  -- NOTE: failing for any lw command
-  -- {
-  --   'echasnovski/mini.nvim',
-  --   version = '*',
-  --   config = function()
-  --     require("mini.ai").setup({
-  --       mappings = {
-  --         inside = "l",
-  --         inside_next = "ln",
-  --         inside_last = "ll"
-  --       }
-  --     })
-  --   end
-  -- },
+  {
+    "ekickx/clipboard-image.nvim",
+    config = function()
+      local curfilepath = vim.fn.expand("%:p:h")
+      require 'clipboard-image'.setup({
+        -- Default configuration for all filetype
+        default = {
+          img_dir = curfilepath .. "/.files",
+          img_dir_txt = ".files",
+          img_name = function() return os.date('%Y-%m-%d-%H-%M-%S') end, -- Example result: "2021-04-13-10-04-18"
+          affix = "<\n  %s\n>"                                           -- Multi lines affix
+        },
+        -- You can create configuration for ceartain filetype by creating another field (markdown, in this case)
+        -- If you're uncertain what to name your field to, you can run `lua print(vim.bo.filetype)`
+        -- Missing options from `markdown` field will be replaced by options from `default` field
+        -- markdown = {
+        --   img_dir = { "src", "assets", "img" }, -- Use table for nested dir (New feature form PR #20)
+        --   img_dir_txt = "/assets/img",
+        --   img_handler = function(img)   -- New feature from PR #22
+        --     local script = string.format('./image_compressor.sh "%s"', img.path)
+        --     os.execute(script)
+        --   end,
+        -- }
+      })
+    end
 
-  -- {
-  --   "folke/persistence.nvim",
-  --   event = "BufReadPre", -- this will only start session saving when an actual file was opened
-  --   opts = {
-  --     dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"), -- directory where session files are saved
-  --     options = { "buffers", "curdir", "tabpages", "winsize" }, -- sessionoptions used for saving
-  --     pre_save = nil, -- a function to call before saving the session
-  --   }
-  -- }
-  -- {
-  -- 	"napisani/nvim-github-codesearch",
-  -- 	build = "make",
-  -- 	config = function()
-  -- 		-- dependency: apt-get install libluajit-5.1-dev
-  -- 		local f = io.open(vim.env.HOME .. "/.config/tokens/tokens.json", "r")
-  -- 		if not f then
-  -- 			return
-  -- 		end
-  -- 		local contents = f:read("*all")
-  -- 		local decoded = vim.json.decode(contents)
-  -- 		require("nvim-github-codesearch").setup({
-  -- 			github_auth_token = decoded["GITHUB_TOKEN"],
-  -- 		})
-  -- 		f.close()
-  -- 	end,
-  -- },
-  -- "prisma/vim-prisma",
-  -- looks good, have to pay
-  -- {
-  --     "Bryley/neoai.nvim",
-  --     dependencies = {
-  --         "MunifTanjim/nui.nvim",
-  --     },
-  --     cmd = {
-  --         "NeoAI",
-  --         "NeoAIOpen",
-  --         "NeoAIClose",
-  --         "NeoAIToggle",
-  --         "NeoAIContext",
-  --         "NeoAIContextOpen",
-  --         "NeoAIContextClose",
-  --         "NeoAIInject",
-  --         "NeoAIInjectCode",
-  --         "NeoAIInjectContext",
-  --         "NeoAIInjectContextCode",
-  --     },
-  --     keys = {
-  --         { "<leader>as", desc = "summarize text" },
-  --         { "<leader>ag", desc = "generate git message" },
-  --     },
-  --     config = function()
-  --         require("neoai").setup({
-  --             -- Options go here
-  --         })
-  --     end,
-  -- },
-  -- "rawnly/gist.nvim", -- getting error when CreateGist
-  -- {
-  --     "miversen33/netman.nvim",
-  --     config = function()
-  --         require("netman")
-  --     end,
-  -- },
-  -- {
-  --     "esensar/nvim-dev-container",
-  --     config = function()
-  --         require("devcontainer").setup({})
-  --     end,
-  --     dependencies = "nvim-treesitter/nvim-treesitter",
-  -- },
-  -- {
-  --     "jamestthompson3/nvim-remote-containers",
-  --     config = function()
-  --             vim.cmd([[
-  --             hi Container guifg=#BADA55 guibg=Black
-  --             set statusline+=%#Container#%{g:currentContainer}
-  --             ]])
-  --     end,
-  -- },
-
-  -- unstable 02/03/2023
-  -- {
-  --     "stevearc/oil.nvim",
-  --     init = function()
-  --         -- avoid loading netrw
-  --         vim.g.loaded_netrw = 1
-  --         vim.g.loaded_netrwPlugin = 1
-  --
-  --         vim.keymap.set("n", "ss", "<cmd>silent Oil<cr>", { silent = true })
-  --         vim.keymap.set("n", "sS", "<cmd>silent Oil .<cr>", { silent = true })
-  --         vim.keymap.set("n", "st", "<cmd>silent tabnew | Oil<cr>", { silent = true })
-  --         vim.keymap.set("n", "sT", "<cmd>silent tabnew | Oil .<cr>", { silent = true })
-  --         vim.keymap.set("n", "sv", "<cmd>silent topleft vs | vertical resize 35 | Oil<cr>", { silent = true })
-  --         vim.keymap.set("n", "sV", "<cmd>silent topleft vs | vertical resize 35 | Oil .<cr>", { silent = true })
-  --     end,
-  --     config = req("core.oil"),
-  -- },
-
-  -- need to pay lol
-  -- {
-  --     "jackMort/ChatGPT.nvim",
-  --     config = req("core.chatgpt"),
-  --     dependencies = {
-  --         "MunifTanjim/nui.nvim",
-  --         "nvim-lua/plenary.nvim",
-  --         "nvim-telescope/telescope.nvim",
-  --     },
-  -- },
-  -- {
-  --     "j-hui/fidget.nvim",
-  --     config = function()
-  --         require("fidget").setup({})
-  --     end,
-  -- },
-
-  -- too heavy
+  },
   {
     "ray-x/go.nvim",
+    commit = "a8095eb334495caec3099b717cc7f5b1fbc3e628",
     dependencies = { -- optional packages
       "ray-x/guihua.lua",
       "neovim/nvim-lspconfig",
@@ -776,48 +593,4 @@ return {
     ft = { "go", 'gomod' },
     build = ':lua require("go.install").update_all_sync()' -- if you need to install/update all binaries
   },
-  -- not finding luarocks magick install
-  -- {
-  --   "https://github.com/3rd/image.nvim",
-  --   opts = {
-  --     backend = "ueberzugpp"
-  --   },
-  -- init = function()
-  --  package.path = package.path .. ";" .. "/usr/local/share/lua/5.1/?/init.lua;"
-  -- package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua;"
-  -- end,
-  -- },
-
-  -- enable when dadbod completion stops working
-  -- use("nanotee/sqls.nvim")
-
-  -- use({
-  --     "stevearc/overseer.nvim",
-  --     config = req("core.overseer"),
-  --     dependencies = {
-  --         "stevearc/dressing.nvim",
-  --         "nvim-telescope/telescope.nvim",
-  --         "rcarriga/nvim-notify",
-  --     },
-  --     cmd = { "Overseerbuild", "OverseerbuildCmd", "OverseerToggle", "OverseerQuickAction" },
-  -- })
-
-  -- check arpeggio https://github.com/kana/vim-arpeggio
-  -- check sideways https://github.com/AndrewRadev/sideways.vim
-
-  -- not working with sshconfig as of 13 jan 2021
-  -- use({
-  --     "chipsenkbeil/distant.nvim",
-  --     branch = "v0.2",
-  --     config = function()
-  --         require("distant").setup({
-  --             -- Applies Chip's personal settings to every machine you connect to
-  --             --
-  --             -- 1. Ensures that distant servers terminate with no connections
-  --             -- 2. Provides navigation bindings for remote directories
-  --             -- 3. Provides keybinding to jump into a remote file's parent directory
-  --             ["*"] = require("distant.settings").chip_default(),
-  --         })
-  --     end,
-  -- }),
 }

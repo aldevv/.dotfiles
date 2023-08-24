@@ -82,6 +82,9 @@ map("x", "e", "k", nor)
 map("x", "n", "j", nor)
 map("x", "j", "e", nor)
 
+map("v", "N", ":m '>+1<CR>gv=gv")
+map("v", "E", ":m '<-2<CR>gv=gv")
+
 
 -- add e and n movements to the jumplist!
 map("n", "e", '(v:count > 1  ? "m\'" . v:count : "") . \'k\'', nor_e)
@@ -132,12 +135,6 @@ map("x", "p", "pgvy", nor_s)
 -- file path
 map("n", "<leader>sg", ":lua print(vim.fn.expand('%:p'))<cr>", nor)
 
-map("v", "<a-down>", ":m '>+1<cr>gv=gv", nor)
-map("v", "<a-up>", ":m '<-2<cr>gv=gv", nor)
-map("i", "<a-up>", "<esc>:m .-2<cr>==a", nor)
-map("i", "<a-down>", "<esc>:m .+1<cr>==a", nor)
-map("n", "<a-up>", ":m .-2<cr>==", nor)
-map("n", "<a-down>", ":m .+1<cr>==", nor)
 
 -- map("v", "<a-n>", ":m '>+1<cr>gv=gv", nor)
 -- map("v", "<a-e>", ":m '<-2<cr>gv=gv", nor)
@@ -320,9 +317,6 @@ map("v", "sm", ":MaximizerToggle<CR>gv", nor_s)
 
 -- brightest
 map("n", "sb", ":BrightestToggle<cr>", nor)
-
--- rainbow
-map("n", "sr", ":RainbowToggle<cr>", nor)
 
 require("config.keybindings.fugitive")
 
@@ -574,8 +568,7 @@ vim.api.nvim_create_autocmd("CmdwinEnter", {
 map("n", "<c-l><c-l>", ":nohl<cr>")
 
 -- color picker
-map("n", "<C-c>", "<cmd>PickColor<cr>", nor)
-map("i", "<C-c>", "<cmd>PickColorInsert<cr>", nor)
+map("n", "<leader>C", "<cmd>PickColor<cr>", nor)
 
 -- leetcode
 -- used because adding package something in go gives an error when submitting
@@ -600,3 +593,15 @@ end, desc("LeetCodeSubmit"))
 -- vim.keymap.set("n", "<leader>,flt", ":LeetCodeTest<cr>")
 -- vim.keymap.set("n", "<leader>,fls", ":LeetCodeSubmit<cr>")
 vim.keymap.set("n", "<leader>,fli", ":LeetCodeSignIn<cr>")
+
+-- paste image
+map("n", "<leader>,mP", ":PasteImg<cr>")
+map("n", "m<leader>", ":PasteImg<cr>")
+-- map("v", "m<leader>", function()
+--   local selection = require "utils.lua.misc".get_visual_selection()
+--   if selection == nil then
+--     vim.print("no selection")
+--     return
+--   end
+--   return "c[" .. selection .. "](" .. selection .. ")"
+-- end, { expr = true })

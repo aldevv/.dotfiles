@@ -20,4 +20,13 @@ function M.replace_termcodes(str)
   return vim.api.nvim_replace_termcodes(str, true, true, true)
 end
 
+function M.visual()
+  local vstart = vim.fn.getpos("'<")
+  local vend = vim.fn.getpos("'>")
+  local line_start = vstart[2]
+  local line_end = vend[2]
+  -- or use api.nvim_buf_get_lines
+  return vim.fn.getline(line_start, line_end)
+end
+
 return M

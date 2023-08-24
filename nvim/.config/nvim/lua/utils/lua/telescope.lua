@@ -52,10 +52,11 @@ local function is_git_repo()
   return vim.v.shell_error == 0
 end
 
-M.git_files_or_curdir_parent = function()
-  local opts = {}
+M.git_files_or_curdir_parent = function(opts)
+  opts = {} or opts
 
   if is_git_repo() then
+    opts = vim.tbl_extend("keep", opts, { show_untracked = true })
     t.git_files(opts)
   else
     opts = {
