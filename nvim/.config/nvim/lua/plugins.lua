@@ -96,10 +96,6 @@ return {
     build = ":TSUpdate",
     config = req("core.treesitter")
   },
-  -- {
-  --   "nvim-treesitter/nvim-treesitter-textobjects",
-  --   dependencies = { "nvim-treesitter/nvim-treesitter" },
-  -- },
   {
     "nvim-treesitter/nvim-treesitter-context",
     config = function()
@@ -198,7 +194,6 @@ return {
   },
   "tpope/vim-surround",
   "tpope/vim-repeat",
-  "tommcdo/vim-exchange",
   {
     "preservim/vim-markdown",
     dependencies = { "godlygeek/tabular" },
@@ -213,12 +208,10 @@ return {
     config = req("core.truezen"),
     cmd = { "TZMinimalist", "TZFocus", "TZAtaraxis" },
   },
-
   {
     "mbbill/undotree",
     cmd = { "UndotreeToggle" },
   },
-
   {
     "preservim/tagbar",
     init = function()
@@ -228,7 +221,6 @@ return {
     end,
     cmd = { "TagbarToggle" },
   },
-  -- --------------------
   {
     "mattn/emmet-vim",
     init = function()
@@ -244,19 +236,12 @@ return {
     config = req("core.closetags"),
     ft = { "html", "js", "ts", "css", "vue", "svelte", "jsx", "tsx" },
   },
-
-  {
-    "windwp/nvim-autopairs",
-    config = req("core.autopairs"),
-  },
-
   {
     "tpope/vim-projectionist",
     dependencies = { "neovim/nvim-lspconfig" },
     config = req("core.projectionist"),
   },
 
-  -- check if there is a file .env
   {
     "tpope/vim-dotenv",
     dependencies = "neovim/nvim-lspconfig",
@@ -271,17 +256,13 @@ return {
     config = req("core.dadbod"),
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer", "DBUILastQueryInfo" },
   },
-  -- fun
-  -- NOTE: broken
   { "aldevv/vim-apm", },
   {
     "ThePrimeagen/vim-be-good",
     cmd = { "VimBeGood" },
   },
-  {
-    "ThePrimeagen/git-worktree.nvim",
-  },
 
+  "ThePrimeagen/git-worktree.nvim",
   {
     "lewis6991/gitsigns.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -289,15 +270,6 @@ return {
   },
 
   "bkad/CamelCaseMotion",
-
-  {
-    "matze/vim-move",
-    init = function()
-      vim.g.move_key_modifier = "C"
-      vim.g.move_map_keys = 0
-    end,
-  },
-
   {
     "szw/vim-maximizer",
     cmd = "MaximizerToggle",
@@ -312,7 +284,6 @@ return {
   { "osyo-manga/vim-brightest", cmd = "BrightestToggle" },
 
   { "junegunn/gv.vim",          cmd = "GV" },
-
   {
     "rbgrouleff/bclose.vim",
     cmd = "Bclose",
@@ -321,7 +292,6 @@ return {
       vim.g.bclose_no_plugin_maps = 1
     end,
   },
-
   {
     "tpope/vim-fugitive",
     dependencies = "tpope/vim-rhubarb",
@@ -364,7 +334,6 @@ return {
   -- colors
   -- use("dracula/vim")
   "crusoexia/vim-monokai",
-  -- NOTE: do the lazy and priority following docs
   {
     "rebelot/kanagawa.nvim",
     priority = 1000,
@@ -396,9 +365,6 @@ return {
     },
     dependencies = "nvim-lua/plenary.nvim",
   },
-
-  -- use({ "anuvyklack/hydra.nvim", config = req("core.hydra") })
-  -- prettier lsp
   {
     "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
     config = function()
@@ -422,14 +388,6 @@ return {
       vim.keymap.set("", "gO", toggle, { desc = "Toggle lsp_lines" })
     end,
   },
-
-  -- TODO: test this
-  -- use("smolovk/projector.nvim")
-
-  -- TODO: test this to have custom themes per project
-  -- https://muniftanjim.dev/blog/neovim-project-local-config-with-exrc-nvim/
-  -- use("MunifTanjim/exrc.nvim")
-  -- "phaazon/mind.nvim",
   {
     "lukas-reineke/indent-blankline.nvim",
     init = function()
@@ -561,20 +519,8 @@ return {
           img_name = function() return os.date('%Y-%m-%d-%H-%M-%S') end, -- Example result: "2021-04-13-10-04-18"
           affix = "<\n  %s\n>"                                           -- Multi lines affix
         },
-        -- You can create configuration for ceartain filetype by creating another field (markdown, in this case)
-        -- If you're uncertain what to name your field to, you can run `lua print(vim.bo.filetype)`
-        -- Missing options from `markdown` field will be replaced by options from `default` field
-        -- markdown = {
-        --   img_dir = { "src", "assets", "img" }, -- Use table for nested dir (New feature form PR #20)
-        --   img_dir_txt = "/assets/img",
-        --   img_handler = function(img)   -- New feature from PR #22
-        --     local script = string.format('./image_compressor.sh "%s"', img.path)
-        --     os.execute(script)
-        --   end,
-        -- }
       })
     end
-
   },
   {
     "ray-x/go.nvim",
