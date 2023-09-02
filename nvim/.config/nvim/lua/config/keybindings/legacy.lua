@@ -175,6 +175,12 @@ vnoremap  <leader>d  "+d
 nnoremap  <leader>D  "+d$
 nnoremap  <leader>d  "+d
 
+vnoremap  <leader>c  "+c
+nnoremap  <leader>C  "+c$
+nnoremap  <leader>c  "+c
+
+vnoremap  <leader>x  "_d
+
 nnoremap <leader>p "+p
 nnoremap <leader>P "+P
 vnoremap <leader>p "+p
@@ -187,9 +193,6 @@ vnoremap <leader>P "+P
 "useful
 nnoremap Y y$
 nnoremap gl gi
-" nnoremap , ;
-" nnoremap ; ,
-nnoremap <leader>cct :!ctags -R<cr>
 
 
 

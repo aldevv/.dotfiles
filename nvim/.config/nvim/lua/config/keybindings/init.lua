@@ -38,6 +38,8 @@ end
 -- ¿
 -- <leader>N
 -- essential
+-- this is to disalbe <Del> default behaviour
+map("n", "<Del>", "<cmd>WhichKey <Del> <cr>", nor)
 
 -- colemak
 map("n", "n", "j", nor)
@@ -159,6 +161,8 @@ map("i", "<m-\\>", "<Plug>(copilot-suggest)", nor) -- no need to enable copilot 
 map("i", "<a-}>", "<Plug>(copilot-next)", nor)
 map("i", "<a-{>", "<Plug>(copilot-previous)", nor)
 map("i", "<c-}>", "<Plug>(copilot-dismiss)", nor)
+map("n", "Ec", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", desc("Copilot Toggle "))
+map("n", "Ep", ":Copilot panel<cr>", desc("Copilot Panel [[ and ]] to jump solutions")) --use [[ and ]] to jump solutions
 map("n", "<leader>,cc", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", nor)
 map("n", "<leader>,cC", ":Copilot<cr>", nor)
 map("n", "<leader>,cs", ":Copilot status<cr>", nor)
@@ -385,20 +389,19 @@ map("n", "<a-c>", "vip:w !bash<cr>", nor)
 -- markdown
 map("n", "<leader>,mp", "<cmd>MarkdownPreviewToggle<cr>", nor)
 
--- this is to disalbe <Del> default behaviour
-map("n", "<Del>", "<cmd>WhichKey <Del> <cr>", nor)
+
 -- rest.nvim
-map("n", "<Del>rr", "<Plug>RestNvim<cr>", nor)
-map("n", "<Del>rp", "<Plug>RestNvimPreview<cr>", nor)
-map("n", "<Del>rl", "<Plug>RestNvimLast<cr>", nor)
+map("n", "Srr", "<Plug>RestNvim<cr>", nor)
+map("n", "Srp", "<Plug>RestNvimPreview<cr>", nor)
+map("n", "Srl", "<Plug>RestNvimLast<cr>", nor)
 
 -- dadbod
 -- opening it in a new tab
-map("n", "<Del>bd", ":tabedit | DBUI<cr>", {})
-map("n", "<Del>bD", ":DBUIToggle<cr>", {})
-map("n", "<Del>ba", ":DBUIAddConnection<cr>", {})
-map("n", "<Del>bf", ":DBUIFindBuffer<cr>", {})
-map("n", "<Del>bq", ":DBUILastQueryInfo<cr>", {})
+map("n", "Sbd", ":tabedit | DBUI<cr>", {})
+map("n", "SbD", ":DBUIToggle<cr>", {})
+map("n", "Sba", ":DBUIAddConnection<cr>", {})
+map("n", "Sbf", ":DBUIFindBuffer<cr>", {})
+map("n", "Sbq", ":DBUILastQueryInfo<cr>", {})
 -- For queries, filetype is automatically set to sql. Also, two mappings is added for the sql filetype:
 --
 -- W - Permanently save query for later use (<Plug>(DBUI_SaveQuery))

@@ -152,7 +152,6 @@ nnoremap V v$
 nnoremap gl gi
 nnoremap , ;
 nnoremap ; ,
-nnoremap <leader>ct :!ctags -R
 
 
 " noremap gss !python2 -c "import sys; print(sys.stdin.read())"<cr>
