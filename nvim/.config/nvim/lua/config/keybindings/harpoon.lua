@@ -16,6 +16,7 @@ M.load_mappings = function()
   map("n", "<leader>hCh", ":lua require('harpoon.mark').clear_all()<cr>", nor)
 
   map("n", "<c-c>", ":lua require('harpoon.ui').toggle_quick_menu()<cr>", nor_s)
+  map("n", "<c-s-c>", ":lua require('harpoon.cmd-ui').toggle_quick_menu()<cr>", nor_s)
   map("n", "<leader>hh", ":lua require('harpoon.ui').toggle_quick_menu()<cr>", nor_s)
   map("n", "<leader>hH", ":lua require('harpoon.cmd-ui').toggle_quick_menu()<cr>", nor_s)
   map("n", "<leader>hc", ":lua require('harpoon.cmd-ui').toggle_quick_menu()<cr>", nor_s)
@@ -26,8 +27,8 @@ M.load_mappings = function()
   -- clear terminal
   map("n", "<leader>hCt", ":lua require('harpoon.term').clear_all()<cr>", nor_s)
 
-  map("n", "<leader>ht!", ":lua require('harpoon.term').sendCommand(1, 1)<cr>", nor_s)
-  -- map("n", '<leader>ht"', ":lua require('harpoon.term').sendCommand(1, 'ls -la')<cr>", nor_s)
+  -- map("n", "<leader>ht!", ":lua require('harpoon.term').sendCommand(1, 1)<cr>", nor_s)
+  map("n", '<leader>htt', ":lua require('harpoon.tmux').sendCommand(1, 'ls -la')<cr>", nor_s)
   -- map("n", "<leader>ht!", ":lua require('harpoon.term').sendCommand(1, 'ls -la')<cr>", nor_s)
 
   -- you can use <leader>1-9 for commands

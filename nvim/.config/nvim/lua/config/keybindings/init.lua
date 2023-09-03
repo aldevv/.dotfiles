@@ -286,7 +286,6 @@ map("n", "<leader>,fa", ":VimApm<cr>", nor)
 map("n", "<leader>,fA", ":VimApmShutdown<cr>", nor)
 
 map("n", "<leader>u", ":UndotreeToggle<cr>", nor_s)
-map("n", "<leader>sv", ":IndentLinesToggle<cr>", nor_s)
 
 -- map('n', "gp", "<Plug>(ReplaceWithRegisterOperator)", nor_s)
 -- map('n', "gpp", "<Plug>(ReplaceWithRegisterLine)", nor_s)
@@ -375,12 +374,6 @@ require("config.keybindings.refactoring")
 -- require("config.keybindings.lspsaga").load_mappings()
 require("config.keybindings.overseer").load_mappings()
 
--- map("n", "<leader><leader>g", "<cmd>MindOpenMain<cr>", nor)
--- map("n", "<leader><leader>p", "<cmd>MindOpenProject global<cr>", nor)
--- map("n", "<leader><leader>P", "<cmd>MindOpenProject<cr>", nor)
-
-map("n", "<leader>sl", "<cmd>IndentBlanklineToggle<cr>", nor)
--- map("n", "<leader>g", "<cmd>MindOpenProject")
 
 -- curl
 map("n", "<leader>.cb", "vip:w !bash<cr>", nor)
@@ -571,7 +564,7 @@ vim.api.nvim_create_autocmd("CmdwinEnter", {
 map("n", "<c-l><c-l>", ":nohl<cr>")
 
 -- color picker
-map("n", "<leader>C", "<cmd>PickColor<cr>", nor)
+map("n", "<leader>,C", "<cmd>PickColor<cr>", nor)
 
 -- leetcode
 -- used because adding package something in go gives an error when submitting
