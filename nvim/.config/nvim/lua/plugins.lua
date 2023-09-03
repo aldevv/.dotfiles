@@ -60,7 +60,6 @@ return {
   },
   {
     "nvim-lualine/lualine.nvim",
-
     config = req("config.appearance.lualine"),
   },
 
@@ -103,14 +102,9 @@ return {
     end,
     dependencies = { "nvim-treesitter/nvim-treesitter" }
   },
-  -- convert to luasnip using
-  -- - https://github.com/smjonas/snippet-converter.nvim
-  -- and
-  -- - https://cj.rs/blog/ultisnips-to-luasnip/
   {
     "L3MON4D3/LuaSnip",
     config = req("lsp.luasnip"),
-    -- commit = "*",
   },
   {
     "honza/vim-snippets",
@@ -139,7 +133,6 @@ return {
     dependencies = "nvim-treesitter/nvim-treesitter",
     cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
   },
-  -- is this needed??? check for haskell
   {
     "ahmedkhalf/project.nvim",
     config = req("lsp.project"),
@@ -162,7 +155,6 @@ return {
   {
     "mfussenegger/nvim-dap",
     dependencies = {
-      -- { "Pocco81/DAPInstall.nvim", module = "dap-install" },
       { "rcarriga/nvim-dap-ui",             module = "dapui" },
       { "theHamsta/nvim-dap-virtual-text",  module = "nvim-dap-virtual-text" },
       { "nvim-telescope/telescope-dap.nvim" },
@@ -282,8 +274,8 @@ return {
   "vim-scripts/vis",
 
   { "osyo-manga/vim-brightest", cmd = "BrightestToggle" },
-
   { "junegunn/gv.vim",          cmd = "GV" },
+
   {
     "rbgrouleff/bclose.vim",
     cmd = "Bclose",
@@ -521,6 +513,15 @@ return {
         },
       })
     end
+  },
+  {
+    "stevearc/overseer.nvim",
+    config = req("core.overseer")
+  },
+  {
+    "jgdavey/tslime.vim",
+    dependencies = "harpoon",
+    config = req("core.tslime")
   },
   {
     "ray-x/go.nvim",
