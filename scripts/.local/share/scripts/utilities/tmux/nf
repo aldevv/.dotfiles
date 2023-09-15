@@ -18,7 +18,7 @@ fzf_with_nth() {
 	echo "$value"
 }
 
-folders=("$WORK" "$PROJECTS" "$PLAYGROUND/code" "$LEARN" $REPOS/*)
+folders=("$WORK" "$PROJECTS" "$CODE" "$LEARN" $REPOS/*)
 folders_result=""
 if [[ -z "$selected" ]]; then
 	# the -not -path is to ignore hidden folders
@@ -47,7 +47,7 @@ if [[ $manual == 1 ]]; then
 	exit 0
 fi
 
-declare -A types=(["work"]="$WORK" ["projects"]="$PROJECTS" ["code"]="$PLAYGROUND/code" ["learn"]="$LEARN")
+declare -A types=(["work"]="$WORK" ["projects"]="$PROJECTS" ["code"]="$CODE" ["learn"]="$LEARN")
 selected_name=$(basename "$selected" | tr . _)
 for key in "${!types[@]}"; do
 	if grep -o "/$key/" <<<"$selected" &>/dev/null; then

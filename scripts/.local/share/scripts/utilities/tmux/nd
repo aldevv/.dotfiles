@@ -22,7 +22,7 @@ fi
 
 [ -z "$_type" ] && exit 1
 
-declare -A types=(["code"]="$PLAYGROUND/code" ["project"]="$PROJECTS" ["work"]="$WORK" ["tmp"]="/tmp" ["learn"]="$LEARN")
+declare -A types=(["code"]="$CODE" ["project"]="$PROJECTS" ["work"]="$WORK" ["tmp"]="/tmp" ["learn"]="$LEARN")
 
 echo -e -n "\e[34mEnter name: "
 read -r name
