@@ -216,7 +216,7 @@ return {
   {
     "mattn/emmet-vim",
     init = function()
-      vim.g.user_emmet_install_global = 0
+      -- vim.g.user_emmet_install_global = 0
     end,
     config = function()
       vim.keymap.set("i", "€", "<plug>(emmet-expand-abbr)")
@@ -338,8 +338,8 @@ return {
     opts = {
       keywords = {
         FIX = {
-          icon = " ",                              -- icon used for the sign, and in search results
-          color = "error",                            -- can be a hex color, or a named color (see below)
+          icon = " ", -- icon used for the sign, and in search results
+          color = "error", -- can be a hex color, or a named color (see below)
           alt = { "FIXME", "BUG", "FIXIT", "ISSUE" }, -- a set of other keywords that all map to this FIX keywords
           -- signs = false, -- configure signs for some keywords individually
         },
@@ -383,8 +383,8 @@ return {
   {
     "lukas-reineke/indent-blankline.nvim",
     init = function()
+      vim.g.indent_blankline_enabled = false
       vim.g.indentLine_char = "┆"
-      vim.g.indent_blankline_enabled = true
       vim.g.indent_blankline_filetype = { "lua", "javascript", "typescript" }
       local M = require("utils.lua.highlight")
       M.highlight("IndentBlanklineIndent1", { fg = M.colors.dark_red, gui = "nocombine" })
@@ -437,12 +437,10 @@ return {
   },
 
   "navarasu/onedark.nvim",
-  -- {
-  --   "sourcegraph/sg.nvim",
-  --   dependencies = { "nvim-lua/plenary.nvim" },
-  --   -- If you have a recent version of lazy.nvim, you don't need to add this!
-  --   build = "nvim -l build/init.lua",
-  -- },
+  {
+    "sourcegraph/sg.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+  },
   "kana/vim-textobj-user",
   {
     "glts/vim-textobj-comment",

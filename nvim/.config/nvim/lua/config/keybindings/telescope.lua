@@ -54,7 +54,9 @@ M.load_mappings = function()
     require("telescope.builtin").live_grep({ cwd = cwd, hidden = true })
   end, nor_s)
 
-  map("n", "<a-c-r>", ':lua require("telescope.builtin").grep_string()<cr>', nor_s)
+  map("n", "<a-c-r>",
+    ":lua require('telescope.builtin').grep_string({path_display = { 'smart' }, only_sort_text = true, word_match = '-w', search = '',})<cr>",
+    desc("Telescope fuzzy"))
   map(
     "n",
     "<a-b>",

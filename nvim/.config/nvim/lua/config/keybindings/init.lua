@@ -118,7 +118,7 @@ map("n", "sv", "<cmd>silent Vexplore<cr>", s)
 map("n", "sV", "<cmd>silent Vexplore .<cr>", s)
 
 map("n", "sd", "<cmd>bd<cr>", nor_s)
-map("n", "sI", "<cmd>IndentBlanklineToggle<cr>", desc("disable indentlines"))
+map("n", "si", "<cmd>IndentBlanklineToggle<cr>", desc("Toggle indentlines"))
 
 map("n", "som", "set modifiable!", nor)
 map("n", "sow", "set wrap!", nor)
@@ -593,11 +593,6 @@ vim.keymap.set("n", "<leader>,fli", ":LeetCodeSignIn<cr>")
 -- paste image
 map("n", "<leader>,mP", ":PasteImg<cr>")
 map("n", "m<leader>", ":PasteImg<cr>")
--- map("v", "m<leader>", function()
---   local selection = require "utils.lua.misc".get_visual_selection()
---   if selection == nil then
---     vim.print("no selection")
---     return
---   end
---   return "c[" .. selection .. "](" .. selection .. ")"
--- end, { expr = true })
+
+-- sg.nvim
+require("config.keybindings.sg")
