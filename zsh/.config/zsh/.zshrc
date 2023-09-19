@@ -298,4 +298,10 @@ export HISTSIZE=9999999
 export SAVEHIST=$HISTSIZE
 export HISTFILE="$HOME/.cache/zsh/.zsh_history"
 
+# bun completions
+[ -s "/home/kanon/.bun/_bun" ] && source "/home/kanon/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 
