@@ -7,7 +7,7 @@ vim.o.foldlevel = 20
 vim.o.foldenable = true
 
 vim.cmd([[
-let blacklist = ['org']
+let blacklist = ['org', 'OverseerList']
 augroup remember_folds
   autocmd!
   au BufWinLeave ?* if index(blacklist, &ft) < 0 | mkview 1 | endif

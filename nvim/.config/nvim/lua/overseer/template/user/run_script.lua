@@ -18,6 +18,7 @@ return {
       components = {
         { "on_output_quickfix", set_diagnostics = true, open = true },
         "on_result_diagnostics",
+        { "restart_on_save",    delay = 100 },
         "default",
       },
     }

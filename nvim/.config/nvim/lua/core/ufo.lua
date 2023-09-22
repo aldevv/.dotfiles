@@ -35,7 +35,7 @@ require("ufo").setup({
   close_fold_kinds = { "imports", "comment" },
   preview = {
     win_config = {
-      winblend = 0,
+      winblend = 10,
     },
 
     mappings = {

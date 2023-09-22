@@ -214,15 +214,12 @@ map Yp $ cp -rv $f /home/kanon/projects/
 map <backspace2>p. cd /home/kanon/projects/
 map mp. $ mv -v $f /home/kanon/projects/
 map Yp. $ cp -rv $f /home/kanon/projects/
-map <backspace2>c. cd /home/kanon/playground/code
-map mc. $ mv -v $f /home/kanon/playground/code
-map Yc. $ cp -rv $f /home/kanon/playground/code
+map <backspace2>c. cd /home/kanon/code
+map mc. $ mv -v $f /home/kanon/code
+map Yc. $ cp -rv $f /home/kanon/code
 map <backspace2>pp cd ~/Pictures
 map mpp $ mv -v $f ~/Pictures
 map Ypp $ cp -rv $f ~/Pictures
-map <backspace2>pl cd /home/kanon/playground
-map mpl $ mv -v $f /home/kanon/playground
-map Ypl $ cp -rv $f /home/kanon/playground
 map <backspace2>.sf $ $EDITOR ~/.config/shortcuts/sf
 map <backspace2>.sd $ $EDITOR ~/.config/shortcuts/sd
 map <backspace2>.z $ $EDITOR ~/.config/zsh/.zshrc

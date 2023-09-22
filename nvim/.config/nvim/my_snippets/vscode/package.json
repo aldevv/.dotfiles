@@ -61,6 +61,13 @@
         "path": "./javascript.json"
       },
       {
+        "language": [
+          "typescript",
+          "typescriptreact"
+        ],
+        "path": "./typescript.json"
+      },
+      {
         "language": "python",
         "path": "./python.json"
       },

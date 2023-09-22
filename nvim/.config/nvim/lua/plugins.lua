@@ -109,12 +109,13 @@ return {
   {
     "honza/vim-snippets",
     config = function()
-      require("luasnip.loaders.from_snipmate").lazy_load()
+      require("luasnip.loaders.from_snipmate").lazy_load({ exclude = { "javascript", "typescript" } })
     end,
   },
   {
     "rafamadriz/friendly-snippets",
     config = function()
+      -- require("luasnip.loaders.from_vscode").lazy_load({ exclude = { "javascript", "typescript" } })
       require("luasnip.loaders.from_vscode").lazy_load()
       require("luasnip").filetype_extend("all", { "_" })
     end
@@ -221,7 +222,7 @@ return {
     config = function()
       vim.keymap.set("i", "€", "<plug>(emmet-expand-abbr)")
     end,
-    ft = { "html", "js", "ts", "css", "vue", "svelte", "jsx", "tsx" },
+    ft = { "html", "js", "javascriptreact", "typescriptreact", "ts", "css", "vue", "svelte", "jsx", "tsx" },
   },
   {
     "alvan/vim-closetag",
@@ -269,10 +270,6 @@ return {
       vim.g.maximizer_set_default_mapping = 0
     end,
   },
-
-  -- :h vis commands for visual selection
-  "vim-scripts/vis",
-
   { "osyo-manga/vim-brightest", cmd = "BrightestToggle" },
   { "junegunn/gv.vim",          cmd = "GV" },
 
@@ -537,5 +534,11 @@ return {
     event = { "CmdlineEnter" },
     ft = { "go", 'gomod' },
     build = ':lua require("go.install").update_all_sync()' -- if you need to install/update all binaries
+  },
+  {
+    "windwp/nvim-ts-autotag",
+    config = function()
+      require('nvim-ts-autotag').setup()
+    end
   },
 }

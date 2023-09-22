@@ -286,17 +286,13 @@ vim.keymap.set("n", "<localleader>p.", "<cmd>e $PROJECTS/<cr>", {silent=true, no
 vim.keymap.set("n","<localleader>tpp.", ":lua require('telescope.builtin').find_files({prompt_title = '<$PROJECTS/>', cwd = '$PROJECTS/'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<localleader>tlp.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $PROJECTS/>', cwd = '$PROJECTS/', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<localleader>c.", "<cmd>e $PLAYGROUND/code<cr>", {silent=true, noremap=true})
-vim.keymap.set("n","<localleader>tpc.", ":lua require('telescope.builtin').find_files({prompt_title = '<$PLAYGROUND/code>', cwd = '$PLAYGROUND/code'})<cr>", { noremap = true, silent = true })
-vim.keymap.set("n","<localleader>tlc.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $PLAYGROUND/code>', cwd = '$PLAYGROUND/code', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n", "<localleader>c.", "<cmd>e $CODE<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<localleader>tpc.", ":lua require('telescope.builtin').find_files({prompt_title = '<$CODE>', cwd = '$CODE'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<localleader>tlc.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $CODE>', cwd = '$CODE', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<localleader>pp", "<cmd>e ~/Pictures<cr>", {silent=true, noremap=true})
 vim.keymap.set("n","<localleader>tppp", ":lua require('telescope.builtin').find_files({prompt_title = '<~/Pictures>', cwd = '~/Pictures'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<localleader>tlpp", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ~/Pictures>', cwd = '~/Pictures', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
-
-vim.keymap.set("n", "<localleader>pl", "<cmd>e $PLAYGROUND<cr>", {silent=true, noremap=true})
-vim.keymap.set("n","<localleader>tppl", ":lua require('telescope.builtin').find_files({prompt_title = '<$PLAYGROUND>', cwd = '$PLAYGROUND'})<cr>", { noremap = true, silent = true })
-vim.keymap.set("n","<localleader>tlpl", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $PLAYGROUND>', cwd = '$PLAYGROUND', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<localleader>.sf", "<cmd>e ~/.config/shortcuts/sf <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.sd", "<cmd>e ~/.config/shortcuts/sd <cr>", {silent=true, noremap=true})

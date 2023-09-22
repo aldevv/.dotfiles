@@ -10,6 +10,9 @@ vim.diagnostic.config({
 }, neotest_ns)
 
 require("neotest").setup({
+  -- consumers = {
+  --     overseer = require("neotest.consumers.overseer"),
+  --   },
   adapters = {
     -- require("neotest-python")({}), --  need to add env variable options
     require("neotest-vim-test"),
