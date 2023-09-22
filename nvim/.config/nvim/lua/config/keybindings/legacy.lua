@@ -105,7 +105,6 @@ endfunction
 "     " return l:filename
 " endfunction
 
-" nnoremap <leader>Sd  :call GetNameDmenu("something")<cr>
 function! CreateFileTouch()
   let l:filename = GetName('Enter File Name: ')
   if len(l:filename) == 0
@@ -148,10 +147,6 @@ function! CreateDir()
   endif
 
 endfunction
-
-" 'cd' towards the directory in which the current file is edited
-" but only change the path for the current window
-nnoremap <leader>sc :lcd %:h<CR>
 
 " close buffers
 " noremap <leader>sD :bd<cr>
@@ -235,13 +230,10 @@ map <silent> <F11> /\A\zs\a<cr>
 " noremap <TAB> <tab>
 
 
-" nnoremap <leader>ss <c-w>s
-" nnoremap <leader>sv <c-w>v
 
 map <a-o> :w<CR>
 map <a-O> :w !sudo tee %<CR>
 
-" map  <leader>ss :wq<CR>
 " map <leader><F1> :e ~/.config/nvim/init.vim<cr>
 nnoremap <F6> :e $HOME/.config/nvim/init.lua<cr>
 map <leader><F2> :e ~/.zshrc<cr>
@@ -361,10 +353,6 @@ endfunction
 " you need to do gist --login for the first time
 vnoremap <leader>G :w !gist -p -t %:e \| xsel -b<cr>
 nnoremap Q gqip
-" to source your init.vim (only one line)
-vnoremap <silent><leader>S y:execute @@<cr>
-nnoremap <silent><leader>S ^vg_y:execute @@<cr>
-noremap <leader>0 :Colors<cr>
 
 vnoremap <silent><leader>.ss y:lua <c-r>+<cr>
 nnoremap <silent><leader>.ss ^vg_y:lua <c-r>+<cr>

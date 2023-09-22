@@ -40,10 +40,11 @@ fi
 #ZSH_THEME="agnoster"
 # ZSH_THEME="amuse"
 # ZSH_THEME="daivasmara"
-if [[ $(whoami) == root ]]; then
-	ZSH_THEME="afowler"
-else
+if [[ $(whoami) != root ]]; then
 	ZSH_THEME="aussiegeek_edited"
+	# ZSH_THEME="amuse"
+else
+	ZSH_THEME="afowler"
 fi
 
 # Preferred editor for local and remote sessions

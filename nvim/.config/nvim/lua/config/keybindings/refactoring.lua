@@ -1,88 +1,39 @@
--- Remaps for the refactoring operations currently offered by the plugin
-vim.keymap.set(
-  "v",
-  "<leader>ref",
-  [[ <Esc><Cmd>lua require('refactoring').refactor('Extract Function')<CR>]],
-  { noremap = true, silent = true, expr = false }
-)
-vim.keymap.set(
-  "v",
-  "<leader>reF",
-  [[ <Esc><Cmd>lua require('refactoring').refactor('Extract Function To File')<CR>]],
-  { noremap = true, silent = true, expr = false }
-)
-vim.keymap.set(
-  "v",
-  "<leader>rev",
-  [[ <Esc><Cmd>lua require('refactoring').refactor('Extract Variable')<CR>]],
-  { noremap = true, silent = true, expr = false }
-)
-vim.keymap.set(
-  "v",
-  "<leader>ri",
-  [[ <Esc><Cmd>lua require('refactoring').refactor('Inline Variable')<CR>]],
-  { noremap = true, silent = true, expr = false }
-)
+vim.keymap.set("x", "<leader>rf", function() require('refactoring').refactor('Extract Function') end,
+  { desc = "Extract Function" })
+vim.keymap.set("x", "<leader>rF", function() require('refactoring').refactor('Extract Function To File') end,
+  { desc = "Extract Function To File" })
+vim.keymap.set("x", "<leader>rv", function() require('refactoring').refactor('Extract Variable') end,
+  { desc = "Extract Variable" })
+vim.keymap.set({ "n", "x" }, "<leader>ri", function() require('refactoring').refactor('Inline Variable') end,
+  { desc = "Inline Variable" })
 
 -- Extract block doesn't need visual mode
-vim.keymap.set(
-  "n",
-  "<leader>reb",
-  [[ <Cmd>lua require('refactoring').refactor('Extract Block')<CR>]],
-  { noremap = true, expr = false }
-)
+vim.keymap.set("n", "<leader>rb", function() require('refactoring').refactor('Extract Block') end,
+  { desc = "Extract Block" })
+vim.keymap.set("n", "<leader>rB", function() require('refactoring').refactor('Extract Block To File') end,
+  { desc = "Extract Block To File" })
 
-vim.keymap.set(
-  "n",
-  "<leader>reB",
-  [[ <Cmd>lua require('refactoring').refactor('Extract Block To File')<CR>]],
-  { noremap = true, expr = false }
-)
-
--- Inline variable can also pick up the identifier currently under the cursor without visual mode
-vim.keymap.set(
-  "n",
-  "<leader>ri",
-  [[ <Cmd>lua require('refactoring').refactor('Inline Variable')<CR>]],
-  { noremap = true, expr = false }
-)
 
 -- You can also use below = true here to to change the position of the printf
 -- statement (or set two remaps for either one). This remap must be made in normal mode.
 vim.keymap.set(
   "n",
-  "<leader>rpp",
-  ":lua require('refactoring').debug.printf({below = true})<CR>",
-  { noremap = true }
+  "R",
+  function() require('refactoring').debug.printf({ below = true }) end, { desc = "Debug Printf" }
 )
 
 -- Print var
 
--- Remap in normal mode and passing { normal = true } will automatically find the variable under the cursor and print it
-vim.keymap.set(
-  "n",
-  "<leader>rpv",
-  ":lua require('refactoring').debug.print_var({ normal = true })<CR>",
-  { noremap = true }
-)
--- Remap in visual mode will print whatever is in the visual selection
-vim.keymap.set("v", "<leader>rpv", ":lua require('refactoring').debug.print_var({})<CR>", { noremap = true })
+vim.keymap.set({ "x", "n" }, "<leader>V", function() require('refactoring').debug.print_var({}) end,
+  { desc = "Debug Print Var" })
 
 -- Cleanup function: this remap should be made in normal mode
-vim.keymap.set("n", "<leader>rc", ":lua require('refactoring').debug.cleanup({})<CR>", { noremap = true })
+vim.keymap.set("n", "<leader>rc", function() require('refactoring').debug.cleanup({}) end, { desc = "Debug Cleanup" })
 
 -- remap to open the Telescope refactoring menu in visual mode
-
 vim.keymap.set(
-  "n",
-  "<leader>rr",
-  "<Esc><cmd>lua require('telescope').extensions.refactoring.refactors()<CR>",
-  { noremap = true }
-)
-
-vim.keymap.set(
-  "v",
-  "<leader>rr",
-  "<Esc><cmd>lua require('telescope').extensions.refactoring.refactors()<CR>",
-  { noremap = true }
+  { "n", "v" },
+  "<leader>rt",
+  function() require('telescope').extensions.refactoring.refactors() end,
+  { desc = "Telescope Refactors" }
 )

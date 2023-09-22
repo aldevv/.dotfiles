@@ -71,7 +71,6 @@ P       $PROGRAMS/
 P.      $PROGRAMS/
 p       $PROJECTS/
 p.      $PROJECTS/
-c.      $PLAYGROUND/code
+c.      $CODE
 pp      ~/Pictures
-pl      $PLAYGROUND
 # temp shortcuts

@@ -8,27 +8,19 @@ require("config.keybindings.legacy")
 local s = { silent = true }
 local nor = { noremap = true }
 local e = { expr = true }
-local b = { buffer = true }
-local s_e = vim.tbl_extend("keep", s, e)
-local nb = vim.tbl_extend("keep", nor, b)
 
 local nor_s = vim.tbl_extend("keep", nor, s)
 local nor_e = vim.tbl_extend("keep", nor, e)
-local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 
 local map = vim.keymap.set
 local h = "~/.config/nvim"
 
-local desc = function(desc)
-  return vim.tbl_extend("keep", nor_s, { desc = desc })
+local desc = function(text)
+  return vim.tbl_extend("keep", nor_s, { desc = text })
 end
 
-local descv = function(desc)
-  return vim.tbl_extend("keep", nor, { desc = desc })
-end
-
-local descb = function(desc)
-  return vim.tbl_extend("keep", nor, { desc = desc, buffer = true })
+local descv = function(text)
+  return vim.tbl_extend("keep", nor, { desc = text })
 end
 
 -- backlog
@@ -135,7 +127,7 @@ map("n", "sc", "<cmd>lcd %:h<cr>", desc("'cd' towards the directory in which the
 map("x", "p", "pgvy", nor_s)
 
 -- file path
-map("n", "<leader>sg", ":lua print(vim.fn.expand('%:p'))<cr>", nor)
+map("n", "sg", ":lua print(vim.fn.expand('%:p'))<cr>", nor)
 
 
 -- map("v", "<a-n>", ":m '>+1<cr>gv=gv", nor)
@@ -212,7 +204,6 @@ end, nor_s)
 
 -- defaults override
 map("", "gh", ":h <c-r><c-w>|resize 16<cr>", nor) -- select mode, not used
-map("", "<leader>sh", "<c-l>", {})
 
 local uv = require("utils.vanilla.core")
 -- qf
@@ -245,9 +236,6 @@ map("n", "<c-s-h>", ":LSoutlineToggle<cr>", nor_s)
 
 -- telescope
 require("config.keybindings.telescope").load_mappings()
-
--- nvim-tree
-map("n", "<leader>se", ":NvimTreeToggle<cr>", nor_s)
 
 -- treesitter
 map("n", "<leader>,tt", ":TSPlaygroundToggle<cr>", nor_s)
@@ -371,8 +359,6 @@ map("c", "<c-s-b>", ' <C-R><C-V> <C-\\>eexpand("%:p:h")<cr>/', nor)
 -- map("n", "<leader>,pc", ":PackerCompile<cr>", nor)
 
 require("config.keybindings.refactoring")
--- require("config.keybindings.lspsaga").load_mappings()
-require("config.keybindings.overseer").load_mappings()
 
 
 -- curl
@@ -383,38 +369,18 @@ map("n", "<a-c>", "vip:w !bash<cr>", nor)
 map("n", "<leader>,mp", "<cmd>MarkdownPreviewToggle<cr>", nor)
 
 
--- rest.nvim
-map("n", "Srr", "<Plug>RestNvim<cr>", nor)
-map("n", "Srp", "<Plug>RestNvimPreview<cr>", nor)
-map("n", "Srl", "<Plug>RestNvimLast<cr>", nor)
-
--- dadbod
--- opening it in a new tab
-map("n", "Sbd", ":tabedit | DBUI<cr>", {})
-map("n", "SbD", ":DBUIToggle<cr>", {})
-map("n", "Sba", ":DBUIAddConnection<cr>", {})
-map("n", "Sbf", ":DBUIFindBuffer<cr>", {})
-map("n", "Sbq", ":DBUILastQueryInfo<cr>", {})
--- For queries, filetype is automatically set to sql. Also, two mappings is added for the sql filetype:
---
--- W - Permanently save query for later use (<Plug>(DBUI_SaveQuery))
--- E - Edit bind parameters (<Plug>(DBUI_EditBindParameters))
 
 map("n", "<leader>,,", "<cmd>tabedit<cr>", nor)
 
 local function toggle_transparency()
-  local normal = vim.api.nvim_command_output("hi Normal")
-  -- if nil, then is transparent
-  if string.find(normal, "guibg") == nil then
-    local cur_theme = vim.api.nvim_command_output("colorscheme")
-    vim.cmd("colorscheme " .. cur_theme)
+  local normal = vim.api.nvim_exec2("hi Normal", { output = true }).output
+  if string.find(normal, "guibg") ~= nil then
+    vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
     return
   end
-
-  vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
+  local cur_theme = vim.api.nvim_exec2("colorscheme", { output = true }).output
+  vim.cmd("colorscheme " .. cur_theme)
 end
-
--- map("n", "sT", toggle_transparency, nor)
 map("n", "sT", toggle_transparency, nor)
 
 -- float
@@ -450,7 +416,6 @@ map(
 )
 
 -- commands
-
 map(
   "n",
   "<leader><leader>tw",
@@ -594,5 +559,4 @@ vim.keymap.set("n", "<leader>,fli", ":LeetCodeSignIn<cr>")
 map("n", "<leader>,mP", ":PasteImg<cr>")
 map("n", "m<leader>", ":PasteImg<cr>")
 
--- sg.nvim
-require("config.keybindings.sg")
+require("config.keybindings.Sbindings")

@@ -46,7 +46,6 @@ if os.getenv("USER") == "root" then
   return
 end
 
--- require("lazy").setup("plugins")
 require("lazy").setup("plugins", {
   dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
 })

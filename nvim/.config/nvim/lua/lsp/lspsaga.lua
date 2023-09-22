@@ -104,7 +104,7 @@ require("lspsaga").setup({
     title = true,
     -- Border type can be single, double, rounded, solid, shadow.
     border = "single",
-    winblend = 0,
+    winblend = 10,
     expand = "",
     collapse = "",
     code_action = "💡",

@@ -75,8 +75,8 @@ vim.keymap.set({ "i", "s" }, "<a-k>", function()
 end, { silent = true })
 
 vim.keymap.set({ "i", "s" }, "<a-s-k>", function()
-  if ls.jumpable( -1) then
-    ls.jump( -1)
+  if ls.jumpable(-1) then
+    ls.jump(-1)
   end
 end, { silent = true })
 
