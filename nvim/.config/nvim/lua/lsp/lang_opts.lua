@@ -2,14 +2,6 @@ local M = {}
 -- :h lspconfig-root-advanced
 -- :h lspconfig-root-composition
 local util = require("lspconfig.util")
--- local configs = require("lspconfig.configs")
--- local nvim_paths = vim.tbl_extend(
---   "keep",
---   vim.api.nvim_get_runtime_file("", true),
---   { os.getenv("HOME") .. "/.dotfiles/nvim/.config/nvim" }
--- -- { vim.fn.expand("$VIMRUNTIME/lua/vim"), vim.fn.expand("$VIMRUNTIME/lua/vim/lsp") }
--- )
-
 local function copy(opts)
   local tmp = {}
   for k, v in pairs(opts) do
@@ -18,13 +10,6 @@ local function copy(opts)
   return tmp
 end
 
--- local runtime_path = vim.split(package.path, ";")
--- table.insert(runtime_path, "lua/?.lua")
--- table.insert(runtime_path, "lua/?/init.lua")
-
--- local runtime_path = vim.split(package.path, ";")
--- table.insert(runtime_path, "lua/?.lua")
--- table.insert(runtime_path, "lua/?/init.lua")
 local enhance_server_opts = {
   ["bashls"] = function(opts)
     opts.filetypes = { "sh", "zsh", "bash" }

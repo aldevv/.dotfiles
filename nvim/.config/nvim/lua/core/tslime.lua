@@ -37,3 +37,25 @@ vim.keymap.set("n", "ñx", ":Tmux clear<cr>", { desc = "Clear screen", silent = 
 
 vim.keymap.set("n", "ñc", close_pane_below, { desc = "Close pane", silent = true })
 vim.keymap.set("n", "ño", open_pane_below, { desc = "Open pane", silent = true })
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "HarpoonCmdMenu",
+  group = vim.api.nvim_create_augroup("tmux_stuff", { clear = true }),
+  callback = function()
+    vim.print("hello")
+    vim.keymap.set("n", "<s-CR>", function()
+      vim.print("inside map")
+      local line = vim.api.nvim_win_get_cursor(0)[1]
+      run_cmd(line)()
+      vim.cmd("q")
+    end, { remap = true, buffer = true })
+  end
+})
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "harpoon",
+  callback = function()
+    if vim.fn.expand("%") == "harpoon-cmd-menu" then
+      vim.cmd("doautocmd User HarpoonCmdMenu")
+    end
+  end
+})

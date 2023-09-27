@@ -4,21 +4,22 @@ is_dmenu=0
 [[ "$1" == "dmenu" ]] && is_dmenu=1 && shift
 
 pattern="${1:-.}"
-files=$(fd "$pattern" $WIKI/notes -t f -e org)
+ext="org"
+files=$(fd "$pattern" $WIKI/notes -t f -e ${ext})
 
-if [[ "$pattern.org" == "${files##*/}" ]]; then
+if [[ "$pattern.${ext}" == "${files##*/}" ]]; then
     nvim "$files"
     exit 0
 fi
 
 if [[ $is_dmenu == 1 ]]; then
-    chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} .org | dmenu -n)
+    chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} ".${ext}" | dmenu -n)
 else
     #if explicit pattern, don't add new
     if [[ "$pattern" == "." ]]; then
-        chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} .org | fzf --no-preview)
+        chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} ".${ext}" | fzf --no-preview)
     else
-        chosen_file=$(echo -e "$files" | xargs -I {} basename {} .org | fzf --no-preview)
+        chosen_file=$(echo -e "$files" | xargs -I {} basename {} .${ext} | fzf --no-preview)
     fi
 fi
 
@@ -28,7 +29,7 @@ if [[  $chosen_file == "new" ]]; then
     exit 0
 fi
 
-chosen_filepath=$(echo "$files" | grep "/${chosen_file}.org" 2>/dev/null)
+chosen_filepath=$(echo "$files" | grep "/${chosen_file}.${ext}" 2>/dev/null)
 
 if [[  -n $chosen_filepath ]]; then
     if [[ $flag == '?' ]]; then

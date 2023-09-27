@@ -31,6 +31,7 @@ vim.keymap.set("n", "Sg", "<cmd>lua require('sg.extensions.telescope').fuzzy_sea
   { desc = "Sourcegraph search" })
 
 -- overseer
+vim.keymap.set("n", "ñr", ":OverseerRun<cr>", { desc = "Overseer Run" })
 vim.keymap.set("n", "Sor", ":OverseerRun<cr>", { desc = "Overseer Run" })
 vim.keymap.set("n", "SoR",
   function()
@@ -80,3 +81,19 @@ function OpenVerticalOutput()
 end
 
 vim.keymap.set("n", "Sov", OpenVerticalOutput, { desc = "open most recent task output", silent = true })
+
+-- cody
+vim.keymap.set({ "n", "x" }, "Sc", "<cmd>CodyChat<cr>", { desc = "Cody Chat" })
+
+vim.keymap.set({ "n", "x" }, "SCr", "<cmd>CodyTask<cr>", { desc = "Cody Task perform a task on selected text." })
+
+vim.keymap.set({ "n", "x" }, "SCa", "<cmd>CodyAsk<cr>",
+  { desc = "CodyAsk Ask a question about the current selection." })
+
+vim.keymap.set({ "n", "x" }, "SCt", "<cmd>CodyToggle<cr>", { desc = "CodyToggle" })
+
+vim.keymap.set({ "n", "x" }, "SCn", "<cmd>CodyTaskNext<cr>", { desc = "CodyTaskNext" })
+
+vim.keymap.set({ "n", "x" }, "SCe", "<cmd>CodyTaskPrev<cr>", { desc = "CodyTaskPrev" })
+
+vim.keymap.set({ "n", "x" }, "SCR", "<cmd>CodyRestart<cr>", { desc = "CodyRestart" })

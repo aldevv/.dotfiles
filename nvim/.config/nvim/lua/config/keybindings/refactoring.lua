@@ -24,7 +24,7 @@ vim.keymap.set(
 
 -- Print var
 
-vim.keymap.set({ "x", "n" }, "<leader>V", function() require('refactoring').debug.print_var({}) end,
+vim.keymap.set({ "x", "n" }, "<leader>v", function() require('refactoring').debug.print_var({}) end,
   { desc = "Debug Print Var" })
 
 -- Cleanup function: this remap should be made in normal mode

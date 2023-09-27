@@ -10,6 +10,8 @@ vim.g.mapleader = require("utils.lua.misc").replace_termcodes("<Space>")
 vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
 vim.keymap.set("n", "<BS>", ":WhichKey <localleader><cr>", { silent = true })
 
+local ok, err = pcall(require, "magick")
+
 return {
   "lewis6991/impatient.nvim",
   {
@@ -128,12 +130,6 @@ return {
   },
 
   "jayp0521/mason-null-ls.nvim",
-
-  {
-    "nvim-treesitter/playground",
-    dependencies = "nvim-treesitter/nvim-treesitter",
-    cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
-  },
   {
     "ahmedkhalf/project.nvim",
     config = req("lsp.project"),
@@ -141,6 +137,7 @@ return {
   {
     "numToStr/Comment.nvim",
     config = req("core.comment"),
+    dependencies = { "JoosepAlviste/nvim-ts-context-commentstring" } -- better commentstring using treesitter
   },
   {
     "tpope/vim-dispatch",
@@ -181,6 +178,10 @@ return {
   {
     "github/copilot.vim",
     init = function()
+      vim.cmd([[
+        imap <silent><script><expr> <a-y> copilot#Accept("\<a-y>")
+        let g:copilot_no_tab_map = v:true
+      ]])
       vim.g.copilot_filetypes = { ["*"] = false, rust = true, js = true, ts = true, jsx = true }
       vim.cmd("highlight CopilotSuggestion guifg=#AAAAAA ctermfg=8")
     end,
@@ -319,6 +320,26 @@ return {
     "nvim-orgmode/orgmode",
     config = req("core.org"),
   },
+  -- {
+  --   "nvim-neorg/neorg",
+  --   build = ":Neorg sync-parsers",
+  --   dependencies = { "nvim-lua/plenary.nvim" },
+  --   config = function()
+  --     require("neorg").setup {
+  --       load = {
+  --         ["core.defaults"] = {},  -- Loads default behaviour
+  --         ["core.concealer"] = {}, -- Adds pretty icons to your documents
+  --         ["core.dirman"] = {      -- Manages Neorg workspaces
+  --           config = {
+  --             workspaces = {
+  --               notes = "~/.local/share/wiki/notes",
+  --             },
+  --           },
+  --         },
+  --       },
+  --     }
+  --   end,
+  -- },
 
   -- colors
   -- use("dracula/vim")
@@ -437,6 +458,7 @@ return {
   {
     "sourcegraph/sg.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
+    -- opts = { enable_cody = false }
   },
   "kana/vim-textobj-user",
   {
@@ -466,7 +488,7 @@ return {
   {
     "mrcjkb/haskell-tools.nvim",
     config = nil,
-    branch = "1.x.x", -- recommended
+    branch = "2.x.x", -- recommended
     lazy = true,
   },
   {
@@ -495,6 +517,13 @@ return {
     end,
   },
   {
+    -- if not finding magick rock do these
+    -- sudo luarocks install --server=https://luarocks.org/dev luaffi
+    -- sudo apt install libmagickwand-dev
+    "3rd/image.nvim",
+    config = req("core.image")
+  },
+  {
     "ekickx/clipboard-image.nvim",
     config = function()
       local curfilepath = vim.fn.expand("%:p:h")
@@ -504,7 +533,8 @@ return {
           img_dir = curfilepath .. "/.files",
           img_dir_txt = ".files",
           img_name = function() return os.date('%Y-%m-%d-%H-%M-%S') end, -- Example result: "2021-04-13-10-04-18"
-          affix = "<\n  %s\n>"                                           -- Multi lines affix
+          affix =
+          "<\n  %s\n>"                                                   -- Multi lines affix
         },
       })
     end
