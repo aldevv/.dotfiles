@@ -141,13 +141,6 @@ map("n", "sg", ":lua print(vim.fn.expand('%:p'))<cr>", nor)
 -- vim.keymap.set("i", "<a-y>", "copilot#Accept('<a-y>')",
 --   { replace_keycodes = false, silent = true, expr = true, script = true })
 map("i", "<a-cr>", "<cr>")
-map("i", "<a-y>", function()
-  local copilot_keys = vim.fn["copilot#Accept"]()
-  if copilot_keys ~= "	" then
-    vim.api.nvim_feedkeys(copilot_keys, "i", true)
-    return
-  end
-end, nor_s)
 
 map("i", "<m-\\>", "<Plug>(copilot-suggest)", nor) -- no need to enable copilot with this
 map("i", "<a-}>", "<Plug>(copilot-next)", nor)
@@ -183,8 +176,7 @@ map("n", "<F1>", ":e " .. h .. "/lua/config/keybindings/init.lua<cr>", nor_s)
 map("n", "<leader><C-f>", "<cmd>silent !tmux neww nf<CR>", nor_s)
 
 -- delete without saving in register
-
-map({ "n", "v" }, "Q", [["_d]])
+map({ "n", "v" }, "X", [["_d]])
 
 -- shortcuts
 -- require("shortcuts")
@@ -208,6 +200,7 @@ map("", "gh", ":h <c-r><c-w>|resize 16<cr>", nor) -- select mode, not used
 local uv = require("utils.vanilla.core")
 -- qf
 uv.quickfix_toggle_definition()
+map("n", "Q", ":call ToggleQuickFix(0)<cr>", nor_s)
 map("n", "<c-q>q", ":call ToggleQuickFix(0)<cr>", nor_s)
 map("n", "<c-q>Q", ":call ToggleQuickFix(1)<cr>", nor_s)
 map("n", "<c-q>k", ":cnext<cr>zzzv", nor)
@@ -560,3 +553,14 @@ map("n", "<leader>,mP", ":PasteImg<cr>")
 map("n", "m<leader>", ":PasteImg<cr>")
 
 require("config.keybindings.Sbindings")
+
+-- Press o to show the query editor. Write your query like (node) @capture, put the cursor under the capture to highlight the matches.
+map({ "n", "x" }, "<leader>,ih", "<cmd>Inspect<CR>")
+map({ "n", "x" }, "<leader>,it", "<cmd>InspectTree<CR>")
+map({ "n", "x" }, "<leader>,ie", "<cmd>EditQuery<CR>")
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "query",
+  callback = function()
+    map({ "n", "x" }, "<s-cr>", "<cmd>EditQuery<CR>", { buffer = true })
+  end
+})

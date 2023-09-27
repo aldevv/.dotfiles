@@ -85,6 +85,7 @@ cmp.setup({
         -- spell = "暈",
         spell = "暈",
         cmdline = "[CMD]",
+        cody = "[CODY]",
         ["vim-dadbod-completion"] = "[DB]",
       })[entry.source.name]
 
@@ -96,6 +97,14 @@ cmp.setup({
     -- native_menu = true
   },
   mapping = {
+    -- Manually trigger cody completions
+    ["<c-a>"] = cmp.mapping.complete {
+      config = {
+        sources = {
+          { name = "cody" },
+        },
+      },
+    },
     ["<a-e>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
     ["<a-n>"] = cmp.mapping(cmp.mapping.select_next_item(), { "i", "c" }),
     ["<a-u>"] = function(fallback)
