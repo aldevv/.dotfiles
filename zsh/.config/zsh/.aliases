@@ -96,7 +96,6 @@ alias tma="tmux -u new -A -s" # attach or create new one
 alias tmk="tmux kill-server"
 alias tmK="tmux list-keys"
 # for remote connections
-alias fixtmux="echo 'set -g default-terminal \"screen-256color\"  | xsel -b"
 cpF() {
 	cat $1 | xsel -b
 }
