@@ -1,0 +1,15 @@
+#!/bin/bash
+
+default="go"
+ext="${1:-$default}"
+playHome="/tmp/${ext}"
+_file="main.$ext"
+sessionName="play-$ext" 
+
+mkdir -p "$playHome"
+tmux -f ~/.config/tmux/tmux.conf \
+  -u new -A -s "$sessionName" -c "$playHome" -d
+
+tmux send-keys -t "$sessionName" "nvim $_file" Enter
+
+tmux attach -t "$sessionName"

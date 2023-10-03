@@ -218,3 +218,18 @@ require("cmp_git").setup({
   filetypes = { "gitcommit", "octo" },
   remotes = { "origin", "upstream" },
 })
+-- Set configuration for specific filetype.
+cmp.setup.filetype('gitcommit', {
+  sources = cmp.config.sources({
+    { name = 'git' }, -- You can specify the `git` source if [you were installed it](https://github.com/petertriho/cmp-git).
+  }, {
+    { name = 'buffer' },
+  })
+})
+
+cmp.setup.filetype('harpoon', {
+  sources = cmp.config.sources({
+    { name = 'path' },
+    -- { name = 'fuzzy_path' }, -- You can specify the `git` source if [you were installed it](https://github.com/petertriho/cmp-git).
+  })
+})

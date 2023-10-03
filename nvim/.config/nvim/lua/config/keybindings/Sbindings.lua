@@ -32,13 +32,20 @@ vim.keymap.set("n", "Sg", "<cmd>lua require('sg.extensions.telescope').fuzzy_sea
 
 -- overseer
 vim.keymap.set("n", "ñr", ":OverseerRun<cr>", { desc = "Overseer Run" })
+vim.keymap.set("n", "ñR", ":OverseerQuickAction restart<cr>", { desc = "Overseer Restart" })
+vim.keymap.set("n", "ñw", ":OverseerQuickAction watch<cr>", { desc = "Overseer Watch" })
+vim.keymap.set("n", "ñW", ":OverseerQuickAction unwatch<cr>", { desc = "Overseer Unwatch" })
+
 vim.keymap.set("n", "Sor", ":OverseerRun<cr>", { desc = "Overseer Run" })
-vim.keymap.set("n", "SoR",
-  function()
-    local cmd = vim.fn.input("Enter command: ")
-    vim.cmd("OverseerRunCmd " .. cmd)
-  end
-  , { desc = "Overseer Run Cmd" })
+vim.keymap.set("n", "SoR", ":OverseerQuickAction restart<cr>", { desc = "Overseer Restart" })
+vim.keymap.set("n", "Sow", ":OverseerQuickAction watch<cr>", { desc = "Overseer Watch" })
+vim.keymap.set("n", "SoW", ":OverseerQuickAction unwatch<cr>", { desc = "Overseer Unwatch" })
+-- vim.keymap.set("n", "SoR",
+--   function()
+--     local cmd = vim.fn.input("Enter command: ")
+--     vim.cmd("OverseerRunCmd " .. cmd)
+--   end
+--   , { desc = "Overseer Run Cmd" })
 
 vim.keymap.set("n", "Sot", "<cmd>OverseerToggle<cr>", { desc = "Overseer Toggle" })
 vim.keymap.set("n", "Soa", "<cmd>OverseerQuickAction<cr>", { desc = "Overseer Quick Action" })
