@@ -3,4 +3,8 @@ if [[ -z "$(command -v "$1")" ]]; then
     echo "$1 is not a script"
     exit
 fi
+if ! which "$1" &>/dev/null; then
+  echo "script not found"
+  exit 1
+fi
 nvim "$(which "$1")"

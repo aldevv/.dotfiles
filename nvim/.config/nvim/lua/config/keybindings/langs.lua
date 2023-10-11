@@ -98,6 +98,23 @@ M.rust_analyzer = function()
   map("n", "ES", ":RustSSR<cr>", nor_s)
   map("n", "EO", ":RustOpenExternalDocs<cr>", nor_s)
 end
+
+M.pyright = function()
+  map(
+    "n",
+    "Etm",
+    "<cmd>lua require('dap-python').test_method()<cr>",
+    { noremap = true, silent = true }
+  )
+  map(
+    "n",
+    "Etc",
+    "<cmd>lua require('dap-python').test_class()<cr>",
+    { noremap = true, silent = true }
+  )
+end
+
+
 M.load_mappings = function(client_name)
   -- check if client_name exists in M
   if not M[client_name] then

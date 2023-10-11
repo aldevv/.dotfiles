@@ -275,3 +275,4 @@ map <backspace2>.anc $ $EDITOR ~/.local/share/ansible/roles/core/tasks
 map <backspace2>.anr $ $EDITOR ~/.local/share/ansible/README.md
 map <backspace2>.ant $ $EDITOR ~/.local/share/ansible/tasks
 map <backspace2>.anT $ $EDITOR ~/.local/share/ansible/TODO
+map <backspace2>.y $ $EDITOR ~/.config/yazi/yazi.toml

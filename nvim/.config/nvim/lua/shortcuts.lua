@@ -349,3 +349,4 @@ vim.keymap.set("n", "<localleader>.anc", "<cmd>e ~/.local/share/ansible/roles/co
 vim.keymap.set("n", "<localleader>.anr", "<cmd>e ~/.local/share/ansible/README.md <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.ant", "<cmd>e ~/.local/share/ansible/tasks <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<localleader>.anT", "<cmd>e ~/.local/share/ansible/TODO <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<localleader>.y", "<cmd>e ~/.config/yazi/yazi.toml <cr>", {silent=true, noremap=true})

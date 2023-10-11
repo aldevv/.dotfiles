@@ -15,22 +15,17 @@
     "description": "for i in range"
   },
   "ttr": {
-    "prefix": "ttr",
+    "prefix": "tr",
     "body": "True",
     "description": "true"
   },
   "ffa": {
-    "prefix": "ffa",
+    "prefix": "fa",
     "body": "False",
     "description": "true"
   },
-  "ppr": {
-    "prefix": "ppr",
-    "body": "print(f\"${VISUAL}${1}\")",
-    "description": "enclose with print"
-  },
   "iin": {
-    "prefix": "iin",
+    "prefix": "ip",
     "body": "input(\"${VISUAL}${1}\")",
     "description": "enclose with input"
   },

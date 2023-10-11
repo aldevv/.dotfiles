@@ -124,7 +124,8 @@ return {
   },
 
   {
-    "jose-elias-alvarez/null-ls.nvim",
+    -- "jose-elias-alvarez/null-ls.nvim",
+    "nvimtools/none-ls.nvim",
     dependencies = { "nvim-lua/plenary.nvim", "williamboman/mason.nvim" },
     config = req("lsp.formatters"),
   },
@@ -236,13 +237,7 @@ return {
     config = req("core.projectionist"),
   },
 
-  {
-    "tpope/vim-dotenv",
-    dependencies = "neovim/nvim-lspconfig",
-    cond = function()
-      return require("lspconfig.util").root_pattern(".env*")(vim.fn.getcwd()) ~= nil
-    end,
-  },
+  "tpope/vim-dotenv",
 
   {
     "kristijanhusak/vim-dadbod-ui",
@@ -516,12 +511,45 @@ return {
       vim.g.leetcode_browser = "firefox"
     end,
   },
+  -- {
+  --     "kawre/leetcode.nvim",
+  --     build = ":TSUpdate html",
+  --     dependencies = {
+  --         "nvim-treesitter/nvim-treesitter",
+  --         "nvim-telescope/telescope.nvim",
+  --         "nvim-lua/plenary.nvim", -- required by telescope
+  --         "MunifTanjim/nui.nvim",
+  --
+  --         -- optional
+  --         "nvim-tree/nvim-web-devicons",
+  --
+  --         -- recommended
+  --         -- "rcarriga/nvim-notify",
+  --     },
+  --     opts = {
+  --         -- configuration goes here
+  --     },
+  --     config = function(_, opts)
+  --         vim.keymap.set("n", "<leader>lq", "<cmd>LcQuestionTabs<cr>")
+  --         vim.keymap.set("n", "<leader>lm", "<cmd>LcMenu<cr>")
+  --         vim.keymap.set("n", "<leader>lc", "<cmd>LcConsole<cr>")
+  --         vim.keymap.set("n", "<leader>ll", "<cmd>LcLanguage<cr>")
+  --         vim.keymap.set("n", "<leader>ld", "<cmd>LcDescriptionToggle<cr>")
+  --
+  --         require("leetcode").setup(opts)
+  --     end,
+  -- }
   {
     -- if not finding magick rock do these
     -- sudo luarocks install --server=https://luarocks.org/dev luaffi
     -- sudo apt install libmagickwand-dev
     "3rd/image.nvim",
-    config = req("core.image")
+    config = function()
+      if vim.fn.exists('g:neovide') == 1 then
+        return
+      end
+      require("core.image")
+    end
   },
   {
     "ekickx/clipboard-image.nvim",
@@ -571,4 +599,16 @@ return {
       require('nvim-ts-autotag').setup()
     end
   },
+  -- for debugging
+  -- {
+  --   "j-hui/fidget.nvim",
+  --   tag = "legacy",
+  --   event = "LspAttach",
+  --   opts = {
+  --     sources = {
+  --       ["null-ls"] = { ignore = true },
+  --       copilot = { ignore = true }
+  --     }
+  --   },
+  -- }
 }
