@@ -48,15 +48,7 @@ export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 export NIXPKGS_ALLOW_UNFREE=1
 
-# path
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-
-# bob nvim
-export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
-
-
 export CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com/:$PROJECTS"
-
 
 export SCRIPTS="$HOME/.local/share/scripts"
 export SHARED="$SCRIPTS/shared"
@@ -69,7 +61,6 @@ export FILES="$SCRIPTS/files"
 [[ -f $UTILITIES/linux/get_package_manager ]] \
     && export PKG=$($UTILITIES/linux/get_package_manager) \
     && export PKG_INSTALL=$($UTILITIES/linux/get_package_manager "install")
-
 
 export PYENV_ROOT="$HOME/.local/share/.pyenv"
 export WINEPREFIX="$HOME/.local/share/wine"
@@ -153,11 +144,11 @@ export  LESS_TERMCAP_us=$'\e[1;32m'
 #=================================================
 
 # already sourced from xprofile
-# [[ -d "$UTILITIES" ]] && export PATH="$(find -L $UTILITIES -type d | tr '\n' ':')$PATH"
-# [[ -d "$AUTOMATION" ]] && export PATH="$(find -L $AUTOMATION -type d | tr '\n' ':')$PATH"
-# [[ -d "$APPS" ]] && export PATH="$(find -L $APPS -type d | tr '\n' ':')$PATH"
-# [[ -d "$SHARED" ]] && export PATH="$(find -L $SHARED -type d | tr '\n' ':')$PATH"
-# [[ -d "$SCRIPTS/work" ]] && export PATH="$(find -L $SCRIPTS/work -type d | tr '\n' ':')$PATH"
+[[ -d "$UTILITIES" ]] && export PATH="$(find -L $UTILITIES -type d | tr '\n' ':')$PATH"
+[[ -d "$AUTOMATION" ]] && export PATH="$(find -L $AUTOMATION -type d | tr '\n' ':')$PATH"
+[[ -d "$APPS" ]] && export PATH="$(find -L $APPS -type d | tr '\n' ':')$PATH"
+[[ -d "$SHARED" ]] && export PATH="$(find -L $SHARED -type d | tr '\n' ':')$PATH"
+[[ -d "$SCRIPTS/work" ]] && export PATH="$(find -L $SCRIPTS/work -type d | tr '\n' ':')$PATH"
 
 export AWS_PAGER=""
 
