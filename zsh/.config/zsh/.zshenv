@@ -39,3 +39,16 @@ load_fly() {
 }
 [[ -d .fly && -n "$(command -v fly)" ]] && load_fly 
 
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# path
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
+# bob nvim
+export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
