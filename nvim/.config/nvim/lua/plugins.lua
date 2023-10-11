@@ -545,6 +545,11 @@ return {
     -- sudo apt install libmagickwand-dev
     "3rd/image.nvim",
     config = function()
+      -- check if luarocks is executable
+      if vim.fn.executable("luarocks") == 0 then
+        return
+      end
+
       if vim.fn.exists('g:neovide') == 1 then
         return
       end
