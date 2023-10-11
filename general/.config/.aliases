@@ -33,11 +33,11 @@ alias dkritr="docker run -it --rm"
 # programs
 alias srcdirenv='eval "$(direnv hook zsh)"'
 alias srcenv='. _srcenv'
+alias addpath='. _addpath'
 
 alias extract_install='. _extract_install'
 
 # scripts
-alias lg="live_grep"
 alias getlatest=". _getlatest"
 alias clone=". _clone"
 alias clone1=". _clone 1"
@@ -113,11 +113,24 @@ alias ssh_phone="ssh -p 8022 u0_a473@axlknight1-everest.nord"
 alias toasc="ascii-image-converter"
 alias sa="source .venv/bin/activate"
 
+alias lilyflash="util/docker_cmd.sh make lily58:mine:flash"
+alias lilycompile="util/docker_build.sh lily58:mine"
+alias lilyrun="lilycompile && lilyflash"
+
+# alias gnt="grepnotes"
+# alias gwi="grepwiki"
+alias lg="live_grep"
+alias lgnt="lgnotes"
 # functions
 
 nord() {
 	sudo nordvpn set meshnet on
 	sudo nordvpn connect japan
+}
+
+nordcolombia() {
+	# sudo nordvpn set meshnet on
+	sudo nordvpn connect colombia
 }
 
 e.() {
