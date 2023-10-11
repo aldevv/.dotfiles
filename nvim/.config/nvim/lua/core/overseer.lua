@@ -13,6 +13,7 @@ overseer.setup({
       "on_complete_dispose",
       -- open quickfix by default
       { "on_output_quickfix", open = true },
+      -- { "restart_on_save",    delay = 100 },
     },
   },
   task_editor = {

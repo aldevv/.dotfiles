@@ -13,3 +13,6 @@
 	guessRemote = true
 [rebase]
 	autosquash = true
+[commit]
+	gpgsign = false
+	sshsign = true

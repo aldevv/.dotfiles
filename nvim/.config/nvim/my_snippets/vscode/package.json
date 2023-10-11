@@ -96,10 +96,6 @@
         "path": "./json.json"
       },
       {
-        "language": "rust",
-        "path": "./rust.json"
-      },
-      {
         "language": "projections",
         "path": "./projections.json"
       },

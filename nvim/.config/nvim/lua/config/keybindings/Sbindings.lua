@@ -35,6 +35,7 @@ vim.keymap.set("n", "ñr", ":OverseerRun<cr>", { desc = "Overseer Run" })
 vim.keymap.set("n", "ñR", ":OverseerQuickAction restart<cr>", { desc = "Overseer Restart" })
 vim.keymap.set("n", "ñw", ":OverseerQuickAction watch<cr>", { desc = "Overseer Watch" })
 vim.keymap.set("n", "ñW", ":OverseerQuickAction unwatch<cr>", { desc = "Overseer Unwatch" })
+vim.keymap.set("n", "ña", ":OverseerQuickAction<cr>", { desc = "Overseer QuickActions" })
 
 vim.keymap.set("n", "Sor", ":OverseerRun<cr>", { desc = "Overseer Run" })
 vim.keymap.set("n", "SoR", ":OverseerQuickAction restart<cr>", { desc = "Overseer Restart" })

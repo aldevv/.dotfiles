@@ -23,33 +23,9 @@ local enhance_server_opts = {
     end
   end,
   ["tsserver"] = function(opts)
-    -- :h lspconfig-root-advanced
-    -- :h lspconfig-root-composition
-    -- root_dir is a function
-    --
-    -- :h lspconfig-root-dir
     opts.root_dir = function(fname)
       return util.root_pattern("tsconfig.json")(fname)
           or util.root_pattern("package.json", "jsconfig.json", ".git", ".projections.json")(fname)
-    end
-  end,
-  ["pyright"] = function(opts)
-    local tmp = copy(opts)
-    opts.on_attach = function(client, bufnr)
-      tmp.on_attach(client, bufnr)
-      -- TODO: move this to keybindings.languages
-      vim.keymap.set(
-        "n",
-        "<localleader>dlm",
-        "<cmd>lua require('dap-python').test_method()<cr>",
-        { noremap = true, silent = true }
-      )
-      vim.keymap.set(
-        "n",
-        "<localleader>dlc",
-        "<cmd>lua require('dap-python').test_class()<cr>",
-        { noremap = true, silent = true }
-      )
     end
   end,
   ["pylsp"] = function(opts)

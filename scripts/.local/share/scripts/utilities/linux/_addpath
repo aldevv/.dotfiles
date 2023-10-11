@@ -1,0 +1,24 @@
+#!/bin/bash
+
+_add="$1"
+
+if ! echo "$_add" | grep "^/"; then
+  if echo "$_add" | grep "^./"; then
+    _add="$PWD/${1/^\.\//}"
+  else
+    _add="$PWD/$1"
+  fi
+fi
+
+if [[ ! -d "$_add" ]]; then
+  echo "$_add is not a directory"
+  return
+fi
+
+if echo "$PATH" | tr ':' '\n' | grep -w "^${_add}\$"; then
+  echo "this directory is already in the PATH"
+  return
+fi
+
+export PATH="${_add}:${PATH}"
+echo "added to PATH"

@@ -4,6 +4,8 @@
 -- to choose version add a @<version> to the right of the name like hls@2.0.0.0
 local servers = {
   "bashls",
+  -- "pylyzer",
+  -- "pylsp",
   "pyright",
   "clangd",
   "html",

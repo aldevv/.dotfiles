@@ -56,3 +56,4 @@
 .anr      ~/.local/share/ansible/README.md
 .ant     ~/.local/share/ansible/tasks
 .anT     ~/.local/share/ansible/TODO
+.y       ~/.config/yazi/yazi.toml

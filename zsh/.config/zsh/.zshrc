@@ -152,6 +152,15 @@ bindkey -M menuselect 'n' vi-down-line-or-history
 bindkey -v '^?' backward-delete-char
 bindkey '^[.' insert-last-word
 
+bindkey -r  'lw' 
+bindkey -r  'lW' 
+bindkey -r  'la' 
+
+bindkey -M viopp 'lw' select-in-word
+bindkey -M viopp 'lW' select-in-blank-word
+bindkey -M viopp 'la' select-in-shell-word
+
+
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
