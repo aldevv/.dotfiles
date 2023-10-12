@@ -1,8 +1,6 @@
 #!/bin/bash
 
 setxkbmap -layout latam -variant colemak &
-[[ -f $HOME/.config/zsh/.zprofile ]] && . $HOME/.config/zsh/.zprofile
-[[ -f "$HOME/.ghcup/env" ]] && source "$HOME/.ghcup/env" # ghcup-env
 
 ##to import env variables to dbus
 # dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
@@ -27,7 +25,7 @@ fi
 ## custom scripts
 setsid picom &
 # so the user can make connections to the xserver (docker)
-xhost local:root
+xhost local:root &
 [[ $DESKTOP_SESSION = "dwm" ]] && [[ -n $(command -v pacman) ]] &&
 	setsid dwmstatus-pacman &
 
@@ -35,11 +33,11 @@ xhost local:root
 	setsid dwmstatus-apt &
 
 [[ -f ~/.Xresources ]] &&
-	setsid xrdb -merge ~/.Xresources
+	setsid xrdb -merge ~/.Xresources &
 [[ -n $(command -v copyq) ]] &&
 	setsid copyq &
 [[ -n $(command -v clipcatd) ]] &&
-	setsid clipcatd
+	setsid clipcatd &
 [[ -n $(command -v wal) ]] &&
 	wal -R &
 [[ -n $(command -v sxhkd) ]] &&
@@ -50,7 +48,8 @@ xhost local:root
 	setsid autorandr --change &>/dev/null &
 
 rclone_mounts() {
-	[ -f "$HOME/.config/remotes" ] && . "$HOME/.config/remotes"
+	[ -f "$HOME/.config/remotes" ] && \
+    . "$HOME/.config/remotes"
 }
 
 [[ -n $(command -v rclone) ]] &&
@@ -64,8 +63,6 @@ rclone_mounts() {
 	xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'i3lock -F -i $WALL/1559506908863.png' --timer 20000 'systemctl suspend' '' &
 # the last empty string is the canceller, is any command you define that runs after you come back
 
-[[ -n $(command -v startup) ]] &&
-	startup &
 
 if [[ -f /usr/lib/polkit-kde-authentication-agent-1 ]]; then
 	/usr/lib/polkit-kde-authentication-agent-1 &
@@ -75,5 +72,11 @@ else
 	fi
 fi
 
-[[ -f $HOME/.config/.startup_work ]] &&
-	setsid $HOME/.config/.startup_work &
+[[ -n $(command -v startup) ]] && \
+	startup &
+[[ -f "$HOME/.config/.startup_work" ]] && \
+	setsid "$HOME/.config/.startup_work" &
+
+[[ -f "$HOME/.config/zsh/.zprofile" ]] && \
+  . "$HOME/.config/zsh/.zprofile"
+[[ -f "$HOME/.config/zsh/.zshenv" ]] && . "$HOME/.config/zsh/.zshenv"
