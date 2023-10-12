@@ -6,14 +6,13 @@ playHome="/tmp/${ext}"
 _file="main.$ext"
 sessionName="play-$ext" 
 
-mkdir -p "$playHome"
+mkdir -p "$playHome" &>/dev/null
 
 if ! tmux has-session -t "$sessionName" 2>/dev/null; then
   tmux -f ~/.config/tmux/tmux.conf \
     -u new -A -s "$sessionName" -c "$playHome" -d
 
   tmux send-keys -t "$sessionName" "nvim $_file" Enter
-  exit
 fi
 
 if [[ -z $TMUX ]]; then
