@@ -21,7 +21,9 @@ local run_cmd = function(idx)
     local cmds = require("harpoon").get_term_config().cmds
     open_pane_below()
     if cmds[idx] ~= nil then
-      vim.cmd("Tmux " .. cmds[idx])
+      local cmd = cmds[idx]
+      cmd = string.gsub(cmd, "'", '"')
+      vim.cmd("Tmux " .. cmd)
       return
     end
     vim.print("no command set")

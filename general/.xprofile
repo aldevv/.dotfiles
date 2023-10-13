@@ -1,6 +1,8 @@
 #!/bin/bash
 
 setxkbmap -layout latam -variant colemak &
+[[ -f "$HOME/.config/zsh/.zprofile" ]] && \
+  . "$HOME/.config/zsh/.zprofile"
 
 ##to import env variables to dbus
 # dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
@@ -72,11 +74,11 @@ else
 	fi
 fi
 
+[[ -f "$HOME/.config/zsh/.zshenv" ]] && \
+  . "$HOME/.config/zsh/.zshenv"
+
 [[ -n $(command -v startup) ]] && \
 	startup &
 [[ -f "$HOME/.config/.startup_work" ]] && \
 	setsid "$HOME/.config/.startup_work" &
 
-[[ -f "$HOME/.config/zsh/.zprofile" ]] && \
-  . "$HOME/.config/zsh/.zprofile"
-[[ -f "$HOME/.config/zsh/.zshenv" ]] && . "$HOME/.config/zsh/.zshenv"

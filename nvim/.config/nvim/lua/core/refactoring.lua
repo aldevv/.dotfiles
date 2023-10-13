@@ -9,6 +9,9 @@ require("refactoring").setup({
     cpp = {
       'std::cout << "%s" << std::endl;',
     },
+    -- rs = {
+    --   'println!("%s")'
+    -- },
   },
   print_var_statements = {
     -- %% is to escape the %
@@ -18,6 +21,9 @@ require("refactoring").setup({
     cpp = {
       'printf("a custom statement %%s %s", %s)'
     },
+    -- rs = {
+    --   'println!("%s {}", %s)'
+    -- },
   },
 })
 
