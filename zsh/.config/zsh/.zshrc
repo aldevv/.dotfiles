@@ -117,6 +117,14 @@ bindkey "^[[127;2u" backward-delete-char
 bindkey -s "^[[32;2u" " "
 bindkey -s "^[i" "^[OC"
 bindkey -s "^[h" "^[OD"
+# Yank to the system clipboard
+function vi-yank-xclip {
+    zle vi-yank
+   echo "$CUTBUFFER" | xclip -sel clipboard
+}
+
+zle -N vi-yank-xclip
+bindkey -M vicmd 'y' vi-yank-xclip
 
 
 
