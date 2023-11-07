@@ -25,8 +25,6 @@ endif
             :exec '!sudo make clean install'
         endif
     endfunction
-" auto compile latex if no vimtex
-    autocmd BufWritePost,CursorHold,CursorHoldI *.tex :silent call CompileTex()
 
 " auto compile xresources
     autocmd BufWritePost *.Xresources !xrdb -merge ~/.Xresources
@@ -43,7 +41,13 @@ augroup highlight_yank
 augroup END
 
 autocmd! BufRead,BufNewFile .projections.json  set filetype=projections.json syntax=json
+
+function! ExecuteMacroOverVisualRange()
+  echo "@".getcmdline()
+  execute ":'<,'>normal @".nr2char(getchar())
+endfunction
 ]])
+vim.keymap.set("x", "@", ":<C-u>call ExecuteMacroOverVisualRange()<cr>")
 
 
 local patterns = "*.{js,jsx,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua}"
@@ -53,56 +57,6 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     vim.lsp.buf.format()
   end,
 })
-
--- require("config.automation.packer")
-
--- require("config.automation.lsp").diagnostics_in_loclist() --
-
--- so far is working
--- cmd('autocmd BufReadPre *.{html,css,js,jsx,ts} EmmetInstall')
-
---autopairs disabled
--- cmd("autocmd FileType TelescopePrompt let b:autopairs_enabled = 0")
-
-
-cmd([[
-function! ExecuteMacroOverVisualRange()
-  echo "@".getcmdline()
-  execute ":'<,'>normal @".nr2char(getchar())
-endfunction
-]])
-
--- cmd([[
---     augroup Wiki
---         autocmd!
---         autocmd BufWritePost  *.org :!rclone sync $WIKI gd:wiki
---     augroup END
---     ]])
-
--- since spelling commented options is a pain
--- disable if you ever need to build something using lua
-cmd([[
-    augroup MardownAuto
-            autocmd BufReadPre *.{lua} :set nospell
-    augroup END
-]])
-
-cmd([[
-autocmd FileType org nnoremap <leader>ll :VimtexCompile<cr>
-]])
-
--- NOTE: source file after save if is lua
--- cmd([[
---     autocmd BufWritePost *.lua :luafile %
--- ]])
-
-cmd([[
-     autocmd FileType org,markdown,javascript,javascriptreact,typescript,typescriptreact,svelte,vue :set shiftwidth=2 tabstop=2 softtabstop=2
-]])
-
--- cmd([[
---      autocmd BufReadPre *.http :set filetype=http
--- ]])
 
 vim.api.nvim_create_autocmd({ "Filetype" }, {
   pattern = "*",
@@ -133,9 +87,5 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 
 vim.api.nvim_create_autocmd({ "TermOpen" }, {
   pattern = "*",
-  callback = function()
-    -- pcall(vim.cmd, "set background=dark")
-    -- pcall(vim.cmd, "hi Normal guibg=NONE ctermbg=NONE")
-    pcall(vim.cmd, "setlocal nospell")
-  end,
+  command = "setlocal nospell"
 })

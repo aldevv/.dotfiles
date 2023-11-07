@@ -30,7 +30,7 @@ Config { font = "Noto Sans Emoji pixelsize 10"
        , hideOnStart = False
        , iconRoot = "/home/kanon/.config/xmobar/icons/"
        , commands =
-         [ Run UnsafeXPropertyLog "_XMONAD_LOG_0"
+         [ Run XPropertyLog "_XMONAD_LOG_0"
          , Run XPropertyLog "_XMONAD_TRAYPAD"
          , Run Com ".config/xmobar/dates.sh" [] "date" 10
          , Run Com ".config/xmobar/time.sh" [] "time" 10

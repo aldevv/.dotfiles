@@ -35,3 +35,9 @@ let g:brightest#enable_filetypes = {
             \ "_": 1
             \}
 ]])
+
+--fugitive diff
+-- vim.cmd([[
+-- hi diffAdded ctermfg=188 ctermbg=64 cterm=bold guifg=#50FA7B guibg=NONE gui=bold
+-- hi diffRemoved ctermfg=88 ctermbg=NONE cterm=NONE guifg=#FA5057 guibg=NONE gui=NONE
+-- ]])

@@ -29,7 +29,7 @@ while read -r l; do
 		sorted_options="$sorted_options\n$l"
 	fi
 done <<<"$_options"
-_options="$(echo "$sorted_options" | awk '{print $1}')"
+_options="$(echo "$sorted_options" | awk '{print $1}' | uniq)"
 
 _path="$(fzf -d / --with-nth -3,-2,-1 --preview="source $UTILITIES/programming/git/logWorktree &>/dev/null; logWorktree {}" --preview-window="70%:wrap" <<<"$_options")"
 [ -z "$_path" ] && return

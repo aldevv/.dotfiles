@@ -11,11 +11,6 @@ M.date = function()
   vim.api.nvim_feedkeys("o", "n", true)
 end
 
--- TODO: load a yaml file that saves project level files to float (like harpoon)
-M.toggle_float_file = function(file)
-  require("utils.lua.float").float_file(file)
-end
-
 function M.replace_termcodes(str)
   return vim.api.nvim_replace_termcodes(str, true, true, true)
 end

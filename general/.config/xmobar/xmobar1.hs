@@ -18,9 +18,10 @@ Config { font = "Noto Sans Emoji pixelsize 10"
        , border = NoBorder
        , bgColor = "#2B2E37"
        , fgColor = "#cccccc"
-       , alpha = 255
+       -- , alpha = 255
+       , alpha = 200
        , position = TopSize L 100 15
-       , textOffset = 1
+       , textOffset = 0
        , textOffsets = [ 0, 0 ]
        , lowerOnStart = True
        , overrideRedirect = True
@@ -29,8 +30,7 @@ Config { font = "Noto Sans Emoji pixelsize 10"
        , hideOnStart = False
        , iconRoot = "/home/kanon/.config/xmobar/icons/"
        , commands =
-         [ Run UnsafeXPropertyLog "_XMONAD_LOG_0"
-         , Run XPropertyLog "_XMONAD_TRAYPAD"
+         [ Run XPropertyLog "_XMONAD_LOG_1"
          , Run Com ".config/xmobar/dates.sh" [] "date" 10
          , Run Com ".config/xmobar/time.sh" [] "time" 10
          , Run Memory ["-t","<usedratio>ラム"] 10
@@ -44,7 +44,7 @@ Config { font = "Noto Sans Emoji pixelsize 10"
        , sepChar = "%"
        , alignSep = "}{"
        , template = "\
-            \%_XMONAD_LOG_0%\
+            \%_XMONAD_LOG_1%\
             \}\
             \{\
             \  \

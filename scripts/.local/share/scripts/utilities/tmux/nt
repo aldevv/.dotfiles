@@ -23,25 +23,25 @@ sort_and_format() {
 }
 
 find_notes() {
-	flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
+	flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -not -path '*/.notes-obsidian*')
 	[[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
 	sort_and_format "$(find "$1" -mindepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 find_notes_depth() {
-	flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*')
+	flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.archive/*' -not -path '*/.notes-obsidian*')
 	[[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
 	sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 find_include_archive() {
-	flags=(-not -path '*/.git*' -not -path '*/.files*')
+	flags=(-not -path '*/.git*' -not -path '*/.files*' -not -path '*/.notes-obsidian*')
 	[[ $ATOMIC_SEARCH == "0" ]] && flags+=(-not -path '*/atomic*')
 	sort_and_format "$(find "$1" -mindepth 1 -maxdepth 1 "${flags[@]}" -type d -printf '%T@|%p\n' 2>/dev/null)"
 }
 
 save_in_archive_old_notes() {
-	flags=(-not -path '*/.archive*' -not -path '*/.git*' -not -path '*/.files*' -not -path '*/todo*')
+	flags=(-not -path '*/.archive*' -not -path '*/.git*' -not -path '*/.files*' -not -path '*/todo*' -not -path '*/.notes-obsidian*')
 	files_to_archive="$(find "$NOTES" -mindepth 1 "${flags[@]}" -type d -mtime "+$time_limit_to_archive")"
 	for f in $files_to_archive; do
 		local sub=${f%/*}
