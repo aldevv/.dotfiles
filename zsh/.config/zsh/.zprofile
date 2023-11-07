@@ -99,7 +99,7 @@ exp_if_cmd(){
         && export "$*" && return 0
     return 1
 }
-export FZF_CTRL_R_OPTS='--no-preview'
+# export FZF_CTRL_R_OPTS='--no-preview'
 export FZF_COMPLETION_TRIGGER='º'
 
 # export RG_IGNORE_FILE="$XDG_CONFIG_HOME/rg/.ignore"
