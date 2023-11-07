@@ -1,0 +1,6 @@
+#!/bin/bash
+
+script=$(find -L $UTILITIES -type f | fzf --preview="bat --color always {}" --with-nth -2,-1 --delimiter '/')
+
+test -n "$script" && eval "$script"
+

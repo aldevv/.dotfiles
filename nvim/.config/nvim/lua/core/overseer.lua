@@ -10,9 +10,9 @@ overseer.setup({
       "on_output_summarize",
       "on_exit_set_status",
       "on_complete_notify",
-      "on_complete_dispose",
+      -- "on_complete_dispose",
       -- open quickfix by default
-      { "on_output_quickfix", open = true },
+      { "on_output_quickfix", open = false },
       -- { "restart_on_save",    delay = 100 },
     },
   },

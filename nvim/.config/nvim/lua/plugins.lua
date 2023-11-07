@@ -395,36 +395,41 @@ return {
   },
   {
     "lukas-reineke/indent-blankline.nvim",
-    init = function()
-      vim.g.indent_blankline_enabled = false
-      vim.g.indentLine_char = "┆"
-      vim.g.indent_blankline_filetype = { "lua", "javascript", "typescript" }
+    main = "ibl",
+    config = function()
       local M = require("utils.lua.highlight")
-      M.highlight("IndentBlanklineIndent1", { fg = M.colors.dark_red, gui = "nocombine" })
-      M.highlight("IndentBlanklineIndent2", { fg = M.colors.dark_yellow, gui = "nocombine" })
-      M.highlight("IndentBlanklineIndent3", { fg = M.colors.dimm_green, gui = "nocombine" })
-      M.highlight("IndentBlanklineIndent4", { fg = M.colors.dimm_purple, gui = "nocombine" })
-      M.highlight("IndentBlanklineIndent5", { fg = M.colors.white, gui = "nocombine" })
-      M.highlight("IndentBlanklineIndent6", { fg = M.colors.bracket_grey, gui = "nocombine" })
-      M.highlight("IndentBlanklineContextChar", { fg = M.colors.visual_grey, gui = "nocombine" })
-      M.highlight("IndentBlanklineContextStart", { sp = M.colors.dimm_black, gui = "underline" })
-      M.highlight("IndentBlanklineContextSpaceChar", { gui = "nocombine" })
-      M.highlight("Whitespace", { fg = M.colors.cursor_grey })
+      local hooks = require "ibl.hooks"
+      hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
+        vim.api.nvim_set_hl(0, "IndentBlanklineIndent1", { fg = M.colors.dark_red })
+        vim.api.nvim_set_hl(0, "IndentBlanklineIndent2", { fg = M.colors.dark_yellow })
+        vim.api.nvim_set_hl(0, "IndentBlanklineIndent3", { fg = M.colors.dimm_green })
+        vim.api.nvim_set_hl(0, "IndentBlanklineIndent4", { fg = M.colors.dimm_purple })
+        vim.api.nvim_set_hl(0, "IndentBlanklineIndent5", { fg = M.colors.white })
+        vim.api.nvim_set_hl(0, "IndentBlanklineIndent6", { fg = M.colors.bracket_grey })
+        vim.api.nvim_set_hl(0, "IndentBlanklineContextChar", { fg = M.colors.visual_grey })
+        vim.api.nvim_set_hl(0, "IndentBlanklineContextStart", { sp = M.colors.dimm_black })
+        vim.api.nvim_set_hl(0, "IndentBlanklineContextSpaceChar", {})
+        vim.api.nvim_set_hl(0, "Whitespace", { fg = M.colors.cursor_grey })
+      end)
+      require("ibl").setup({
+        indent = {
+          highlight = {
+            "IndentBlanklineIndent1",
+            "IndentBlanklineIndent2",
+            "IndentBlanklineIndent3",
+            "IndentBlanklineIndent4",
+            "IndentBlanklineIndent5",
+            "IndentBlanklineIndent6",
+          },
+          char = "┆"
+        },
+        whitespace = {
+          remove_blankline_trail = true,
+        },
+      })
     end,
-    opts = {
-      show_end_of_line = true,
-      space_char_blankline = " ",
-      show_current_context = true,
-      show_current_context_start = false,
-      char_highlight_list = {
-        "IndentBlanklineIndent1",
-        "IndentBlanklineIndent2",
-        "IndentBlanklineIndent3",
-        "IndentBlanklineIndent4",
-        "IndentBlanklineIndent5",
-        "IndentBlanklineIndent6",
-      },
-    },
+    ft = { "lua", "javascript", "javascriptreact", "typescript" }
+
   },
 
   {
@@ -450,11 +455,11 @@ return {
   },
 
   "navarasu/onedark.nvim",
-  {
-    "sourcegraph/sg.nvim",
-    dependencies = { "nvim-lua/plenary.nvim" },
-    -- opts = { enable_cody = false }
-  },
+  -- {
+  --   "sourcegraph/sg.nvim",
+  --   dependencies = { "nvim-lua/plenary.nvim" },
+  --   -- opts = { enable_cody = false }
+  -- },
   "kana/vim-textobj-user",
   {
     "glts/vim-textobj-comment",
@@ -539,6 +544,7 @@ return {
   --         require("leetcode").setup(opts)
   --     end,
   -- }
+
   {
     -- if not finding magick rock do these
     -- sudo luarocks install --server=https://luarocks.org/dev luaffi
@@ -554,7 +560,8 @@ return {
         return
       end
       require("core.image")
-    end
+    end,
+    ft = "mardown"
   },
   {
     "ekickx/clipboard-image.nvim",
@@ -605,15 +612,15 @@ return {
     end
   },
   -- for debugging
-  -- {
-  --   "j-hui/fidget.nvim",
-  --   tag = "legacy",
-  --   event = "LspAttach",
-  --   opts = {
-  --     sources = {
-  --       ["null-ls"] = { ignore = true },
-  --       copilot = { ignore = true }
-  --     }
-  --   },
-  -- }
+  {
+    "j-hui/fidget.nvim",
+    tag = "legacy",
+    event = "LspAttach",
+    opts = {
+      sources = {
+        ["null-ls"] = { ignore = true },
+        copilot = { ignore = true }
+      }
+    },
+  }
 }

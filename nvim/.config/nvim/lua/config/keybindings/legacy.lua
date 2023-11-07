@@ -327,15 +327,14 @@ endfunction
 vnoremap * :<C-u>call <SID>VSetSearch()<CR>//<CR><c-o>
 vnoremap # :<C-u>call <SID>VSetSearch()<CR>??<CR><c-o>
 " map <silent><leader>,f :silent execute '!formatCode' shellescape(&ft)<cr>
-nnoremap <leader>V V`]
 
 
 " clear search highlights
 noremap <silent><leader>HH :nohlsearch<bar>match none<bar>2match none<bar>3match none<Esc>
 " nnoremap <silent><leader>hh :execute 'match DiffAdd /\<<c-r><c-w>\>/'<cr>
-nnoremap <silent><leader>H1 :execute '3match IncSearch /\<<c-r><c-w>\>/'<cr>
-nnoremap <silent><leader>H2 :execute '2match DiffChange /\<<c-r><c-w>\>/'<cr>
-nnoremap <silent><leader>H3 :execute 'match DiffAdd /\<<c-r><c-w>\>/'<cr>
+" nnoremap <silent><leader>H1 :execute '3match IncSearch /\<<c-r><c-w>\>/'<cr>
+" nnoremap <silent><leader>H2 :execute '2match DiffChange /\<<c-r><c-w>\>/'<cr>
+" nnoremap <silent><leader>H3 :execute 'match DiffAdd /\<<c-r><c-w>\>/'<cr>
 
 " to search only selected text with * and #
 vnoremap * :<C-u>call <SID>VSetSearch()<CR>//<CR><c-o>

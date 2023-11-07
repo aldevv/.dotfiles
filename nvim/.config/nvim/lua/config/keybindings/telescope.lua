@@ -57,6 +57,18 @@ M.load_mappings = function()
   map("n", "<a-c-r>",
     ":lua require('telescope.builtin').grep_string({path_display = { 'smart' }, only_sort_text = true, word_match = '-w', search = '',})<cr>",
     desc("Telescope fuzzy"))
+
+  -- word under cursor
+  map("n", "<a-w>",
+    function()
+      require("telescope.builtin").grep_string({
+        path_display = { "smart" },
+        only_sort_text = true,
+        word_match = "-w",
+        search = vim.fn.expand("<cword>")
+      })
+    end,
+    desc("Telescope fuzzy"))
   map(
     "n",
     "<a-b>",

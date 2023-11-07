@@ -312,8 +312,9 @@ compinit
 setopt EXTENDED_HISTORY
 setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
 setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
-export HISTSIZE=9999999
-export SAVEHIST=$HISTSIZE
 export HISTFILE="$HOME/.cache/zsh/.zsh_history"
-
-
+export HISTSIZE=500000
+export SAVEHIST=$HISTSIZE
+setopt appendhistory
+setopt INC_APPEND_HISTORY  
+setopt SHARE_HISTORY

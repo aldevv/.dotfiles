@@ -38,9 +38,11 @@ set smartcase
 set nowrap
 set noswapfile
 set incsearch
-set relativenumber
-set laststatus=0
 
+set relativenumber
+set number nu " or nonu for 0
+
+set laststatus=0
 " make backspaces more powerfull
 set backspace=indent,eol,start
 

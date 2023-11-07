@@ -1,5 +1,10 @@
 local M = {}
 
+vim.keymap.set("n", "Sdla", function()
+  vim.fn.system("[ ! -d .vscode ] && mkdir .vscode")
+  vim.cmd(":e .vscode/launch.json")
+end)
+
 M.load_mappings = function(client)
   local s = { silent = true }
   local nor = { noremap = true }
@@ -46,7 +51,10 @@ M.load_mappings = function(client)
   map("n", "Sdg", ":lua require'dap'.goto_()<cr>", nor_s) -- not all debuggers support it
   map("n", "Sdh", ":lua require'dap.ui.widgets'.hover()<cr>", nor_s)
   map("n", "SdP", ":lua require'dap'.pause()<cr>", nor_s)
-  map("n", "Sdc", ":lua require'dap'.continue()<cr>", nor_s)
+  vim.keymap.set("n", "Sdc", function()
+    require("dap.ext.vscode").load_launchjs()
+    require('dap').continue()
+  end)
   map("n", "SdC", ":lua require'dap'.reverse_continue()<cr>", nor_s) -- Continues execution reverse in time until last breakpoint. Debug adapter must support reverse debugging.
   -- map("n", "Scdr", ":lua require'dap'.run()<cr>", nor_s) -- continue already calls this
   map("n", "Sdr", ":lua require'dap'.run_last()<cr>", nor_s)
@@ -76,5 +84,6 @@ M.load_mappings = function(client)
     map("n", "Edl", ":lua require('dap-go').debug_last_test()<cr>", nor_s)
   end
 end
+
 
 return M

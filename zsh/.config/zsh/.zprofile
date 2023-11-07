@@ -55,7 +55,6 @@ export SHARED="$SCRIPTS/shared"
 export UTILITIES="$SCRIPTS/utilities"
 export AUTOMATION="$SCRIPTS/automation"
 export APPS="$SCRIPTS/apps"
-export OS="$SCRIPTS/os/bootstrap"
 export FILES="$SCRIPTS/files"
 
 [[ -f $UTILITIES/linux/get_package_manager ]] \
@@ -76,8 +75,6 @@ export UNCRUSTIFY_CONFIG="$XDG_CONFIG_HOME/uncristify/config.cfg"
 #======================================
 # WORK
 #======================================
-# export CARGO_HOME="$HOME/.local/share/rust/cargo"
-# export RUSTUP_HOME="$HOME/.local/share/rust/rustup"
 export GOPATH=$HOME/.local/share/go
 # export GEM_HOME=$HOME/.local/share/gem
 # export PIPENV_VENV_IN_PROJECT="enabled"

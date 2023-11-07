@@ -56,7 +56,7 @@ map("n", "gk", "gn", nor)
 
 -- ===================
 
-map({ "n" }, "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
+map("n", "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
 map({ "n", "x" }, "i", "lzv", nor)
 
 -- useful for targets.vim
@@ -115,8 +115,8 @@ map("n", "si", "<cmd>IndentBlanklineToggle<cr>", desc("Toggle indentlines"))
 map("n", "som", "set modifiable!", nor)
 map("n", "sow", "set wrap!", nor)
 map("n", "sos", "set wrapscan!", nor)
-map("n", "syfp", ":let @+=expand('%:p')<cr>", descv("yank filepath"))
-map("n", "syfP", ":let @+=expand('%')<cr>", descv("yank relative filepath"))
+map("n", "syf", ":let @+=expand('%:p')<cr>", descv("yank relative filepath"))
+map("n", "syF", ":let @+=expand('%:p')<cr>", descv("yank filepath"))
 map("n", "syp", ":let @+=execute('pwd')->split('\\n')[0]<cr>", descv("yank pwd")) -- doing the split because it removes the newline prefix
 
 -- 'cd' towards the directory in which the current file is edited
@@ -185,11 +185,6 @@ if not ok then
   require("notify")("failed to load shortcuts: \n" .. err, "error")
 end
 
--- opening config file (using shortcuts script now)
-map("n", "<leader>,la", function()
-  vim.fn.system("[ ! -d .vscode ] && mkdir .vscode")
-  vim.cmd(":e .vscode/launch.json")
-end, nor_s)
 
 -- -- moving to folder (using shortcuts script now)
 -- map("n", "<localleader>v.", "<cmd>cd " .. h .. "<cr> | <cmd>e .<cr>", nor_s)
@@ -229,10 +224,6 @@ map("n", "<c-s-h>", ":LSoutlineToggle<cr>", nor_s)
 
 -- telescope
 require("config.keybindings.telescope").load_mappings()
-
--- treesitter
-map("n", "<leader>,tt", ":TSPlaygroundToggle<cr>", nor_s)
-map("n", "<leader>,th", ":TSHighlightCapturesUnderCursor<cr>", nor_s)
 
 -- harpoon
 require("config.keybindings.harpoon").load_mappings()
@@ -307,8 +298,6 @@ require("config.keybindings.fugitive")
 map("n", "<leader>,sf", ":source %<cr>", nor)
 map("n", "<leader>,ss", ":source ~/.config/nvim/lua/lsp/luasnip.lua<cr>", nor)
 
--- macro range
-map("x", "@", ":<C-u>call ExecuteMacroOverVisualRange()<cr>", nor_s)
 
 -- sniprun
 --keymaps not working
@@ -382,29 +371,39 @@ map("n", "sT", toggle_transparency, nor)
 
 map(
   "n",
+  "<leader>sm",
+  function()
+    -- require('utils.lua.float').toggle('Makefile', { height = 40, width = 100 })
+    require('utils.lua.float').toggle('Makefile')
+  end,
+  desc("Open Makefile file in a floating window")
+)
+
+map(
+  "n",
   "<leader>sp",
-  "<cmd>lua require('utils.lua.misc').toggle_float_file('package.json')<cr>",
+  "<cmd>lua require('utils.lua.float').toggle('package.json')<cr>",
   desc("Open package.json file in a floating window")
 )
 
 map(
   "n",
   "<leader>sP",
-  "<cmd>lua require('utils.lua.misc').toggle_float_file('.projections.json')<cr>",
+  "<cmd>lua require('utils.lua.float').toggle('.projections.json')<cr>",
   desc("Open .projections.json file in a floating window")
 )
 
 map(
   "n",
   "<leader>sr",
-  "<cmd>lua require('utils.lua.misc').toggle_float_file('requirements.txt')<cr>",
+  "<cmd>lua require('utils.lua.float').toggle('requirements.txt')<cr>",
   desc("Open requirements.txt file in a floating window")
 )
 
 map(
   "n",
   "<leader>sc",
-  "<cmd>lua require('utils.lua.misc').toggle_float_file('Cargo.toml')<cr>",
+  "<cmd>lua require('utils.lua.float').toggle('Cargo.toml')<cr>",
   desc("Open Cargo.toml file in a floating window")
 )
 
@@ -554,10 +553,11 @@ map("n", "m<leader>", ":PasteImg<cr>")
 
 require("config.keybindings.Sbindings")
 
+-- treesitter
 -- Press o to show the query editor. Write your query like (node) @capture, put the cursor under the capture to highlight the matches.
-map({ "n", "x" }, "<leader>,ih", "<cmd>Inspect<CR>")
-map({ "n", "x" }, "<leader>,it", "<cmd>InspectTree<CR>")
-map({ "n", "x" }, "<leader>,ie", "<cmd>EditQuery<CR>")
+map({ "n", "x" }, "<leader>,ti", "<cmd>Inspect<CR>")
+map({ "n", "x" }, "<leader>,tt", "<cmd>InspectTree<CR>")
+map({ "n", "x" }, "<leader>,te", "<cmd>EditQuery<CR>")
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "query",
   callback = function()

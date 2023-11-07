@@ -125,8 +125,8 @@ cmp.setup({
         fallback()
       end
     end,
-    ["<s-up>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
-    ["<s-down>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
+    ["<a-S-e>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
+    ["<a-S-n>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
     ["<C-Space>"] = cmp.mapping(function()
       if cmp.visible() then
         cmp.close()

@@ -1,38 +1,50 @@
 #!/bin/bash
 
 file_name=$1
-folder=$2
+source=$2
 destination="${3:-.}"
 
-files=$(find -L $folder -maxdepth 1 -type d -exec basename {} \; | tail -n +2)
-file=$(echo "$files" | fzf --height=75% --preview="[[ ! -f $folder/{}/$file_name ]] && echo '\"{}\" has sub-directories' || (bat --color always $folder/{}/$file_name)" --preview-window="90%:wrap")
-env_file="$folder/$file/.env"
+_file() {
+  # shellcheck disable=SC2086
+  dirs=$(find -L $1 -maxdepth 1 -type d 2>/dev/null | tail -n +2)
+
+  dirs_files=""
+  for f in $dirs; do
+    dirs_files+="$f $(basename "$f")\n"
+  done
+  dirs_files=$(echo -e "$dirs_files")
+  file=$(echo "$dirs_files" | fzf --with-nth 2 --height=75% --preview="[[ ! -f {1}/$file_name ]] && echo '\"{2}\" has sub-directories' || (bat --color always {1}/$file_name)" --preview-window="80%:wrap")
+  echo "$file"
+}
+
+folder_file=$(_file "$source")
+folder="$(echo "$folder_file" | awk '{print $1}')"
+file="$(echo "$folder_file" | awk '{print $2}')"
+
 
 [ -z "$file" ] && exit
 
-path="$folder/$file"
-while [[ ! -f "$path/$file_name" ]]; do
-	files=$(find -L "$path" -maxdepth 1 -type d -exec basename {} \; | tail -n +2)
-	file=$(echo -e "$files" | fzf --height=75% --preview="bat --color always $path/{}/$file_name" --preview-window="90%:wrap")
+while [[ ! -f "$folder/$file_name" ]]; do
+  folder_file=$(_file "$folder")
+  folder="$(echo "$folder_file" | awk '{print $1}')"
+  file="$(echo "$folder_file" | awk '{print $2}')"
 	if [[ -z $file ]]; then
 		exit
 	fi
-	path="$path/$file"
-	env_file="$path/$file/.env"
 done
-
+#
 [[ "$destination" != "." && ! -d "$destination" ]] &&
 	mkdir "$destination"
 
-if [[ -f "$path/$file_name" ]]; then
-	cp "$path/$file_name" "$destination"
-	echo -e "\e[35mcopied $file_name"
-else
-	cp "$folder/$file/$file_name" "$destination"
-	echo -e "\e[35mcopied $file_name"
+if [[ ! -f "$folder/$file_name" ]]; then
+  exit
 fi
 
-if [[ "$file_name" != ".env" && -f "$env_file" ]]; then
-	echo -e "\e[35mcopied .env file"
-	cp "$env_file" .
+cp "$folder/$file_name" "$destination"
+echo -e "\e[35mcopied $file_name"
+
+if [[ -f "$folder/.env" ]]; then
+  cp "$folder/.env" .
+  echo -e "\e[35mcopied .env file"
 fi
+

@@ -52,8 +52,8 @@ local mappings = {
     ["<a-s-u>"] = actions.cycle_history_next,
     ["<a-s-d>"] = actions.cycle_history_prev,
 
-    ["<c-u>"] = actions.preview_scrolling_up,
-    ["<c-d>"] = actions.preview_scrolling_down,
+    ["<c-e>"] = actions.preview_scrolling_up,
+    ["<c-n>"] = actions.preview_scrolling_down,
 
     ["<a-d>"] = function(prompt_bufnr)
       for _ = 1, 2, 1 do
