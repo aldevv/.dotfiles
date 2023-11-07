@@ -54,3 +54,4 @@ export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 
 [[ -f "$HOME/.turso/turso" ]] && export PATH="$HOME/.turso:$PATH"
+

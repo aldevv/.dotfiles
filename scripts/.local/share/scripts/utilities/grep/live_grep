@@ -1,3 +1,12 @@
 #!/bin/bash
 
-_live_grep "" "$@" 
+# for no path add --column
+RG_PREFIX="rg --line-number --color=always --smart-case "
+INITIAL_QUERY="${*:-}"
+: | fzf --ansi --disabled --query "$INITIAL_QUERY" \
+    --bind "start:reload:$RG_PREFIX {q}" \
+    --bind "change:reload:sleep 0.1; $RG_PREFIX {q} || true" \
+    --delimiter : \
+    --preview 'bat --color=always {1} --highlight-line {2}' \
+    --preview-window 'right,60%,border-bottom,+{2}+3/3,~3' \
+    --bind 'enter:become(nvim {1} +{2})'

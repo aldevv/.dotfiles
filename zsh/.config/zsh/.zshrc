@@ -91,10 +91,12 @@ plugins=(
 	git
 	docker
 	docker-compose
-    zsh-autosuggestions
-    zsh-syntax-highlighting
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+  fzf-zsh-plugin
 )
-. $ZSH/oh-my-zsh.sh
+
+. "$ZSH/oh-my-zsh.sh"
 
 #==============
 # KEYBINDINGS
@@ -238,7 +240,6 @@ bindkey -s 'j' 'gwts^M' # projects and work
 # bindkey -s '.' 'setsid st &>/dev/null^M'
 bindkey -s 'r' 'live_grep^M'
 bindkey -s 'R' 'setsid st ranger &>/dev/null^M'
-bindkey '^R' history-incremental-search-backward
 
 _fzf_compgen_path() {
 	fd --hidden --follow . "$1"
