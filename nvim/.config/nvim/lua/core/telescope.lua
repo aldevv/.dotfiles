@@ -157,7 +157,7 @@ local setup = {
 }
 require("telescope").setup(setup)
 
-if vim.fn.executable("fzf") then
+if vim.fn.executable("fzf") and vim.loop.os_uname().sysname == "Linux" then
   require("telescope").load_extension("fzf")
 end
 
