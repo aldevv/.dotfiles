@@ -1,20 +1,26 @@
 #!/bin/bash
 
 # show only text files
-FZF_DEFAULT_COMMAND="fd --type f --follow  --hidden "
+# FZF_DEFAULT_COMMAND="fd --type f --follow  --hidden "
 
-if [[ -z $1 ]]; then
-	name=$(fzf -d / --with-nth -5,-4,-3,-2,-1 --preview-window=60%:wrap)
-	[ -n "$name" ] && exec nvim "$name"
-    exit
+name=$(fzf)
+if [[ -z $name ]]; then 
+  exit 0
 fi
+exec nvim "$name"
 
-if [[ -d $1 ]]; then
-    FZF_DEFAULT_COMMAND="fd --type f  --search-path $1 --follow --hidden -x grep -Il . {}"
-
-    name=$(fd . "$1" | fzf -d / --with-nth -5,-4,-3,-2,-1 --preview-window=60%:wrap)
-    [ -n "$name" ] && exec nvim "$name"
-else
-    name=$(fzf --query "$1")
-    [ -n "$name" ] && exec nvim "$name"
-fi
+# if [[ -z $1 ]]; then
+# 	name=$(fzf -d / --with-nth -5,-4,-3,-2,-1 --preview-window=60%:wrap)
+# 	[ -n "$name" ] && exec nvim "$name"
+#     exit
+# fi
+#
+# if [[ -d $1 ]]; then
+#     FZF_DEFAULT_COMMAND="fd --type f  --search-path $1 --follow --hidden -x grep -Il . {}"
+#
+#     name=$(fd . "$1" | fzf -d / --with-nth -5,-4,-3,-2,-1 --preview-window=60%:wrap)
+#     [ -n "$name" ] && exec nvim "$name"
+# else
+#     name=$(fzf --query "$1")
+#     [ -n "$name" ] && exec nvim "$name"
+# fi

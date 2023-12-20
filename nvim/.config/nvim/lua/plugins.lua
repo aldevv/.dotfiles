@@ -7,8 +7,8 @@ local function req(module)
 end
 
 vim.g.mapleader = require("utils.lua.misc").replace_termcodes("<Space>")
-vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
-vim.keymap.set("n", "<BS>", ":WhichKey <localleader><cr>", { silent = true })
+-- vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
+-- vim.keymap.set("n", "<BS>", ":WhichKey <localleader><cr>", { silent = true })
 
 local ok, err = pcall(require, "magick")
 
@@ -359,6 +359,7 @@ return {
         TODO = { icon = " ", color = "info" },
         HACK = { icon = " ", color = "warning", alt = { "ERROR" } },
         WARN = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
+        DEPRECATED = { icon = " ", color = "warning", alt = { "DEPRECATED", "XXX" } },
         PERF = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
         NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
         TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },

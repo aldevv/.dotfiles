@@ -1,3 +1,7 @@
+-- for better performance
+if vim.loader then
+  vim.loader.enable()
+end
 -- telescope.nvim
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"

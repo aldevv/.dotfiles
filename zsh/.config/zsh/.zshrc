@@ -1,3 +1,11 @@
+# Per-command profiling:
+
+# zmodload zsh/datetime
+# setopt promptsubst
+# PS4='+$EPOCHREALTIME %N:%i> '
+# exec 3>&2 2> startlog.$$
+# setopt xtrace prompt_subst
+
 # work
 [[ -f ~/.config/.aliases_work ]] && . ~/.config/.aliases_work
 
@@ -231,7 +239,8 @@ bindkey -s 'D' 'vf $HOME/.config ^M'
 # bindkey -s 'z' 'vf  "$LEARN"^M'
 # bindkey -s 'z' '. cf  "$LEARN"^M'
 bindkey -s 'm' 'scripts^M'
-bindkey -s 'M' '. cf  "$SCRIPTS"^M'
+bindkey -s 'M' 'runscript^M'
+# bindkey -s 'M' '. cf  "$SCRIPTS"^M'
 bindkey -s 'o' '**	'
 bindkey -s 'j' 'gwts^M' # projects and work
 # tested, this shows stderr correctly on new terminal window
@@ -305,10 +314,6 @@ unset less_ver
 [[ -f ~/.opam/ ]] && eval $(opam env)
 
 
-# enable autocomplete function
-autoload -U compinit
-compinit
-
 # put settings here, since oh-my-zsh sets it's own settings
 setopt EXTENDED_HISTORY
 setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
@@ -319,3 +324,12 @@ export SAVEHIST=$HISTSIZE
 setopt appendhistory
 setopt INC_APPEND_HISTORY  
 setopt SHARE_HISTORY
+
+#
+# End profiling (uncomment when necessary)
+#
+
+# Per-command profiling:
+
+# unsetopt xtrace
+# exec 2>&3 3>&-

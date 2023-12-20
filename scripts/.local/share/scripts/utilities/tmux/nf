@@ -24,7 +24,8 @@ if [[ -z "$selected" ]]; then
 	# the -not -path is to ignore hidden folders
 	# find_args=(-L "${folders[@]}" -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d -printf "%T@ %Tc %p\n")
 	for f in "${folders[@]}"; do
-		find_args=(-L "$f" -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d -printf "%T@ %Tc %p\n")
+    # %A@ access time in seconds
+		find_args=(-L "$f" -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d -printf "%A@ %Ac %p\n")
 		if [[ -n $folders_result ]]; then
 			folders_result="${folders_result}\n$(find "${find_args[@]}" | sort -nr | awk '{print $NF}')"
 		else

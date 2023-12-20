@@ -39,8 +39,8 @@
 .a      ~/.config/.aliases
 .aa      ~/.config/.aliases
 .aw      ~/.config/.aliases_work
+.su      $AUTOMATION/startup/startup
 .sw      ~/.config/.startup_work
-.ss      $AUTOMATION/startup/startup
 .sng      ~/.config/nvim/my_snippets/snipmate/go.snippets
 .snl      ~/.config/nvim/my_snippets/snipmate/lua.snippets
 .snp      ~/.config/nvim/my_snippets/snipmate/python.snippets
