@@ -11,6 +11,7 @@ bK      $BOOKS/ln
 ba      $BACKUPS
 ll      $LEARN
 l.      $LEARN
+b.      $BUILDS
 T.      $TRASH
 Tt      $TRASH
 Tr       $HOME/Downloads/torrents

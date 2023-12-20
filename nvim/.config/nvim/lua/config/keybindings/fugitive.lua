@@ -65,6 +65,7 @@ map("n", "<leader>g0M", ":G! log % ", nor)
 map("n", "<leader>g0v", ":GV!<CR>", nor) -- only list commits current file
 
 -- old way
+map("n", "g0", ":0Gclog!<cr>", nor)
 map("n", "<leader>gl0<space>", ":0Gclog ", descv("git log current file <0Gclog>"))
 map("n", "<leader>gl0g", ":0Gclog!<cr>", nor)
 map("n", "<leader>gl0G", ":G log --decorate=short --all %<cr>", nor)

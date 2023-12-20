@@ -65,7 +65,6 @@ require("which-key").setup({
     v = { "j", "k" },
   },
   triggers = "auto", -- automatically setup triggers
-  -- triggers = { "<leader>", "<localleader>", "E" }, -- automatically setup triggers
   -- triggers = {"<leader>"} -- or specify a list manually
   triggers_nowait = {
     "E",

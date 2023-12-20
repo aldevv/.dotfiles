@@ -34,6 +34,9 @@ map Yll $ cp -rv $f /home/kanon/learn
 map <backspace2>l. cd /home/kanon/learn
 map ml. $ mv -v $f /home/kanon/learn
 map Yl. $ cp -rv $f /home/kanon/learn
+map <backspace2>b. cd /home/kanon/.local/builds
+map mb. $ mv -v $f /home/kanon/.local/builds
+map Yb. $ cp -rv $f /home/kanon/.local/builds
 map <backspace2>T. cd /home/kanon/.local/share/Trash/files
 map mT. $ mv -v $f /home/kanon/.local/share/Trash/files
 map YT. $ cp -rv $f /home/kanon/.local/share/Trash/files
@@ -260,8 +263,8 @@ map <backspace2>.st $ $EDITOR /home/kanon/programs/suckless/st/config.h
 map <backspace2>.a $ $EDITOR ~/.config/.aliases
 map <backspace2>.aa $ $EDITOR ~/.config/.aliases
 map <backspace2>.aw $ $EDITOR ~/.config/.aliases_work
+map <backspace2>.su $ $EDITOR /home/kanon/.local/share/scripts/automation/startup/startup
 map <backspace2>.sw $ $EDITOR ~/.config/.startup_work
-map <backspace2>.ss $ $EDITOR /home/kanon/.local/share/scripts/automation/startup/startup
 map <backspace2>.sng $ $EDITOR ~/.config/nvim/my_snippets/snipmate/go.snippets
 map <backspace2>.snl $ $EDITOR ~/.config/nvim/my_snippets/snipmate/lua.snippets
 map <backspace2>.snp $ $EDITOR ~/.config/nvim/my_snippets/snipmate/python.snippets
