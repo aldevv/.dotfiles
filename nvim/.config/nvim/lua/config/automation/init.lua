@@ -69,8 +69,9 @@ vim.api.nvim_create_autocmd({ "Filetype" }, {
   end,
 })
 
+local notes_path = os.getenv("NOTES") or ""
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-  pattern = os.getenv("NOTES") .. "/*.md",
+  pattern = notes_path .. "/*.md",
   command = "Dispatch! . _dgp $NOTES $(stamp)",
 })
 
