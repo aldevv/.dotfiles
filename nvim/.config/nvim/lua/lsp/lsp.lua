@@ -26,6 +26,10 @@ local servers = {
   "emmet_ls",
 }
 
+if os.getenv("NVIM_MINIMAL") ~= "" then
+  servers = {}
+end
+
 
 local default_opts = require("lsp.defaults_opts")
 local get_opts = function()
