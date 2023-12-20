@@ -245,7 +245,6 @@ return {
     config = req("core.dadbod"),
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer", "DBUILastQueryInfo" },
   },
-  { "aldevv/vim-apm", },
   {
     "ThePrimeagen/vim-be-good",
     cmd = { "VimBeGood" },
