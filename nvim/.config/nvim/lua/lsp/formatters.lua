@@ -67,7 +67,7 @@ local handlers = {
 }
 require("mason-null-ls").setup({
   ensure_installed = ensure_installed,
-  automatic_installation = true,
+  automatic_installation = false,
   handlers = handlers,
 })
 
