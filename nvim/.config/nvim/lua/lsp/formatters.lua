@@ -36,6 +36,12 @@ local ensure_code_actions = {
   "refactoring",
 }
 
+if os.getenv("NVIM_MINIMAL") ~= "" then
+  ensure_format_servers = {}
+  ensure_diagnostic_servers = {}
+  ensure_code_actions = {}
+end
+
 local ensure_installed = vim.tbl_extend("force", ensure_format_servers, ensure_diagnostic_servers, ensure_code_actions)
 
 local conf = {
