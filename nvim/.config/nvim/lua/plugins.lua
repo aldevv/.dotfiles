@@ -40,9 +40,6 @@ return {
       {
         "nvim-telescope/telescope-fzf-native.nvim",
         build = "make",
-        enabled = function()
-          return vim.fn.executable("fzf") and vim.loop.os_uname().sysname == "Linux"
-        end
       },
     },
     config = req("core.telescope"),
