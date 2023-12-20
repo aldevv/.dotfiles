@@ -91,7 +91,13 @@ return {
           "hrsh7th/cmp-buffer",
           "hrsh7th/cmp-cmdline",
           "petertriho/cmp-git",
-          { "tzachar/cmp-fuzzy-path", dependencies = "tzachar/fuzzy.nvim" },
+          {
+            "tzachar/cmp-fuzzy-path",
+            dependencies = "tzachar/fuzzy.nvim",
+            enabled = function()
+              return vim.fn.executable("fzf")
+            end
+          },
         },
       },
     },
