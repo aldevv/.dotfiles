@@ -93,17 +93,7 @@ return {
           "petertriho/cmp-git",
           {
             "tzachar/cmp-fuzzy-path",
-            dependencies = {
-              {
-                "tzachar/fuzzy.nvim",
-                enabled = function()
-                  return vim.fn.executable("fzf")
-                end
-              }
-            },
-            enabled = function()
-              return vim.fn.executable("fzf")
-            end
+            dependencies = "tzachar/fuzzy.nvim",
           },
         },
       },
