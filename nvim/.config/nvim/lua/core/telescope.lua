@@ -157,7 +157,7 @@ local setup = {
 }
 require("telescope").setup(setup)
 
-if vim.fn.executable("fzf") then
+if vim.fn.executable("fzf") == 1 then
   require("telescope").load_extension("fzf")
 end
 
