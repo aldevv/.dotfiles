@@ -156,7 +156,11 @@ local setup = {
   -- other configuration values here
 }
 require("telescope").setup(setup)
-require('telescope').load_extension('fzf')
+
+if vim.fn.executable("fzf") then
+  require("telescope").load_extension("fzf")
+end
+
 -- https://github.com/nvim-telescope/telescope-fzf-native.nvim
 -- see fzf goodies like:
 -- 'wild 	exact-match (quoted) 	Items that include wild
