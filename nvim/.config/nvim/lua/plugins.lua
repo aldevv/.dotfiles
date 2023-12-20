@@ -41,7 +41,7 @@ return {
         "nvim-telescope/telescope-fzf-native.nvim",
         build = "make",
         enabled = function()
-          return vim.fn.executable("fzf")
+          return vim.fn.executable("fzf") and vim.loop.os_uname().sysname == "Linux"
         end
       },
     },
@@ -94,6 +94,9 @@ return {
           {
             "tzachar/cmp-fuzzy-path",
             dependencies = "tzachar/fuzzy.nvim",
+            enabled = function()
+              return vim.loop.os_uname().sysname == "Linux"
+            end
           },
         },
       },
