@@ -12,7 +12,6 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   end
 })
 
-vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
 -- copilot
 M.toggle_copilot = function()
   if vim.b.copilot_enabled == true then
