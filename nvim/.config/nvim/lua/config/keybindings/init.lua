@@ -30,9 +30,6 @@ end
 -- ¿
 -- <leader>N
 -- essential
--- this is to disalbe <Del> default behaviour
-map("n", "<Del>", "<cmd>WhichKey <Del> <cr>", nor)
-
 -- colemak
 map("n", "n", "j", nor)
 map("n", "e", "k", nor)

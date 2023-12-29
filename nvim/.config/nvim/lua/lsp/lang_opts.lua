@@ -61,7 +61,14 @@ local enhance_server_opts = {
     opts.handlers = nil
     opts.capabilities = nil
   end,
+  ["bufls"] = function(opts)
+    opts.root_dir = function(fname)
+      pwd = vim.fn.getcwd()
+      return pwd
+    end
+  end,
   ["clangd"] = function(opts)
+    opts.filetypes = { "c", "cpp", "objc", "objcpp" }
     opts.capabilities.offsetEncoding = { "utf-16" }
   end,
   ["gopls"] = function(opts)

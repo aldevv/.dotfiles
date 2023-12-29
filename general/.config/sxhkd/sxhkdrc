@@ -58,7 +58,7 @@ super + F9
     mountDrive
 
 super + F10
-    unmountDrive
+    umountDrive
 
 control + shift + space
     $UTILITIES/misc/toggle_layout

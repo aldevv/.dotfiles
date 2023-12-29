@@ -188,12 +188,12 @@ return {
   {
     "github/copilot.vim",
     init = function()
+      vim.cmd("highlight CopilotSuggestion guifg=#AAAAAA ctermfg=8")
       vim.cmd([[
         imap <silent><script><expr> <a-y> copilot#Accept("\<a-y>")
         let g:copilot_no_tab_map = v:true
       ]])
-      vim.g.copilot_filetypes = { ["*"] = false, rust = true, js = true, ts = true, jsx = true }
-      vim.cmd("highlight CopilotSuggestion guifg=#AAAAAA ctermfg=8")
+      vim.g.copilot_filetypes = { ["*"] = false, lua = true, go = true, rust = true, js = true, ts = true, jsx = true }
     end,
   },
   "tpope/vim-surround",
