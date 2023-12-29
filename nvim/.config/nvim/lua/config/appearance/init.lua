@@ -11,6 +11,8 @@ end
 vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
 vim.cmd("hi LineNr gui=bold guifg=darkyellow ctermbg=NONE")
 
+vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
+
 require("config.appearance.legacy")
 require("config.appearance.colors")
 require("config.appearance.lsp")

@@ -188,7 +188,6 @@ return {
   {
     "github/copilot.vim",
     init = function()
-      vim.cmd("highlight CopilotSuggestion guifg=#AAAAAA ctermfg=8")
       vim.cmd([[
         imap <silent><script><expr> <a-y> copilot#Accept("\<a-y>")
         let g:copilot_no_tab_map = v:true
