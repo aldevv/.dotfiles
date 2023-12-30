@@ -1,9 +1,24 @@
+local harpoon = require("harpoon");
+local extensions = require("harpoon.extensions");
+
+local one_list_per_project = true
 local cfg = {
-  global_settings = {
-    enter_on_sendcmd = true,
-    -- set marks specific to each git branch inside git repository
-    -- mark_branch = false,
-  },
+  settings = {
+    save_on_toggle = true,
+    sync_on_ui_close = false,
+    key = function()
+      local is_git_repo = vim.fn.system("git rev-parse --is-inside-work-tree 2> /dev/null") == "true\n"
+      if is_git_repo then
+        if one_list_per_project then
+          return vim.fn.system("git config --get remote.origin.url")
+        else
+          -- one list per branch
+          return vim.fn.system("git rev-parse --abbrev-ref HEAD")
+        end
+      end
+      return vim.loop.cwd()
+    end,
+  }
 }
 local ok, work = pcall(require, "work")
 if ok then
@@ -12,92 +27,34 @@ if ok then
   cfg = vim.tbl_extend("keep", cfg, projects)
 end
 
-require("harpoon").setup(cfg)
+harpoon:setup(cfg)
 
-local ok, telescope = pcall(require, "telescope")
-if not ok then
-  return
-end
-telescope.load_extension("harpoon")
--- projects = {
---     ["$HOME/work/project/{}"] = {
---         mark = {
---             marks = {
---                 {
---                     col = 44,
---                     row = 21,
---                     filename = "folder1/file1.go",
---                 },
---                 {
---                     col = 6,
---                     row = 458,
---                     filename = "folder2/file2.go",
---                 },
---                 {
---                     col = 29,
---                     row = 22,
---                     filename = "folder3/file3.go",
---                 },
---                 {
---                     col = 0,
---                     row = 32,
---                     filename = "test/folder4/file4.go",
---                 },
---                 {
---                     col = 1,
---                     row = 79,
---                     filename = "test/folder5/file5.go",
---                 },
---             },
---         },
---         term = {
---             cmds = {
---                 "make",
---                 "make install",
---             },
---         },
---     },
--- },
+-- runs a vim command
+-- harpoon:extend(extensions.builtins.command_on_nav('echo "hi"'));
 
--- require("harpoon").setup({
---     -- sets harpoon to run the command immediately as it's passed to the terminal when calling `sendCommand`.
---     global_settings = {
---         -- sets the marks upon calling `toggle` on the ui, instead of require `:w`.
---         save_on_toggle = false,
---
---         -- saves the harpoon file upon every change. disabling is unrecommended.
---         save_on_change = true,
---
---         -- sets harpoon to run the command immediately as it's passed to the terminal when calling `sendCommand`.
---         enter_on_sendcmd = false,
---
---         -- closes any tmux windows harpoon that harpoon creates when you close Neovim.
---         tmux_autoclose_windows = false,
---
---         -- filetypes that you want to prevent from adding to the harpoon list menu.
---         excluded_filetypes = { "harpoon" },
---
---         -- set marks specific to each git branch inside git repository
---         mark_branch = false,
---     },
---
---     nav_first_in_list = true,
---     projects = {
---         -- Yes $HOME works
---         ["$PROJECTS/main/"] = {
---             term = {
---                 cmds = {
---                     "yarn dev",
---                 },
---             },
---         },
---         ["$PROJECTS/micro/"] = {
---             term = {
---                 cmds = {
---                     "yarn dev",
---                 },
---             },
---         },
---     },
--- })
---
+-- extension to add keybindings for the harpoon menu
+harpoon:extend({
+  UI_CREATE = function(cx)
+    vim.keymap.set("n", "<C-v>", function()
+      harpoon.ui:select_menu_item({ vsplit = true })
+    end, { buffer = cx.bufnr })
+
+    vim.keymap.set("n", "<C-x>", function()
+      harpoon.ui:select_menu_item({ split = true })
+    end, { buffer = cx.bufnr })
+
+    vim.keymap.set("n", "<C-t>", function()
+      harpoon.ui:select_menu_item({ tabedit = true })
+    end, { buffer = cx.bufnr })
+  end,
+  -- same as command_on_nav
+  -- NAVIGATE = function()
+  --     vim.cmd(cmd)
+  -- end,
+})
+
+-- local ok, telescope = pcall(require, "telescope")
+-- if not ok then
+--   return
+-- end
+-- telescope.load_extension("harpoon")
