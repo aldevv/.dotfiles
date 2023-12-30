@@ -111,6 +111,10 @@ vim.o.backupdir = vim.fn.stdpath("cache") .. "/backups"
 vim.o.undodir = vim.fn.stdpath("cache") .. "/undodir"
 vim.o.autochdir = false -- for netrw
 
+-- add vertical line
+vim.o.colorcolumn = "100"
+-- colorcolumn transparent
+
 vim.opt.timeoutlen = 700
 vim.opt.laststatus = 3
 vim.opt.pumblend = 10
