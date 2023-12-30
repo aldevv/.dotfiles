@@ -8,8 +8,15 @@ if require("utils.lua.lazy").is_plugin_loaded(colorscheme) then
 end
 
 -- transparency
-vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
-vim.cmd("hi LineNr gui=bold guifg=darkyellow ctermbg=NONE")
+vim.cmd([[
+
+set cursorline
+set cursorcolumn
+
+  hi Normal guibg=NONE ctermbg=NONE
+  hi LineNr gui=bold guifg=darkyellow ctermbg=NONE
+  hi ColorColumn guibg=#262626 ctermbg=235
+]])
 
 vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
 

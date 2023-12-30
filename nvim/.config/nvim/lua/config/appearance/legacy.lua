@@ -3,8 +3,6 @@ vim.cmd([[
 "for transparent vim
 "===================
 highlight clear SignColumn
-set cursorline
-set cursorcolumn
 " use this to FOLLOW links in highlight groups (can make persistent in
 " colorscheme changes)
 function! g:HighGet(name)

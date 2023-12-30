@@ -592,11 +592,6 @@ return {
     "stevearc/overseer.nvim",
     config = req("core.overseer")
   },
-  -- {
-  --   "jgdavey/tslime.vim",
-  --   dependencies = "harpoon",
-  --   config = req("core.tslime")
-  -- },
   {
     "ray-x/go.nvim",
     commit = "a8095eb334495caec3099b717cc7f5b1fbc3e628",
