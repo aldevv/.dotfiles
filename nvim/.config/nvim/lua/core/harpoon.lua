@@ -20,6 +20,7 @@ local cfg = {
     end,
   }
 }
+cfg = vim.tbl_extend("keep", cfg, require("core.harpoon_lists"))
 local ok, work = pcall(require, "work")
 if ok then
   local projects = {}
@@ -52,9 +53,3 @@ harpoon:extend({
   --     vim.cmd(cmd)
   -- end,
 })
-
--- local ok, telescope = pcall(require, "telescope")
--- if not ok then
---   return
--- end
--- telescope.load_extension("harpoon")
