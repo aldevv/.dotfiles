@@ -1,10 +1,4 @@
 vim.cmd([[
-" testing inclusiveness (these work)
-" nnoremap db dvb
-" nnoremap dB dvB
-" colemak movement
-" ---------------- -- putting this in lua, breaks targets.vim (because the order of sourcing)
-" migrate targets.vim first then this
 noremap gj ge
 noremap gJ gE
 noremap gn gj
@@ -30,17 +24,11 @@ nnoremap <S-UP> :m .-2<cr>==
 nnoremap <S-DOWN> :m .+1<cr>==
 vnoremap <S-UP> :m '<-2<cr>gv=gv
 vnoremap <S-DOWN> :m '>+1<cr>gv=gv
-
-" vnoremap E :m '<-2<cr>gv=gv
-" vnoremap N :m '>+1<cr>gv=gv
 "
 noremap J E
 
 vnoremap L I
 
-
-" noremap N i<cr><esc>k$
-" vnoremap N : s/\n/ /g<cr>$x
 
 " gN is free
 noremap ' `
@@ -63,32 +51,14 @@ nnoremap º <c-^>
 noremap <silent><c-w>º :vsp #<cr>
 noremap <silent><c-w>V :vsp #<cr>
 noremap <silent><c-w>S :sp #<cr>
-" noremap <a-n> <c-n>
-" noremap <a-e> <c-p>
-" nnoremap <CR> o<Esc>
-" nnoremap <S-CR> O<Esc>
-" nnoremap [13;2u o
 
 noremap - /
 vnoremap - /
-" noremap / -
 
 " for folds
 nnoremap <leader>Z zMzvzz
 
 let g:extension = expand('%:e')
-" nnoremap <silent> <leader>z :call ToggleFMethod()<cr>
-" function ToggleFMethod()
-"   let method=&foldmethod
-"   if method == "expr"
-"     set foldmethod=manual
-"   else
-"     set foldmethod=expr
-"   endif
-" endfunction
-
-" this didnt work because it needs to be put down lower, but is a good example
-" of how to obtain input for a command
 "
 function! GetName(detail)
     call inputsave()
@@ -97,13 +67,6 @@ function! GetName(detail)
     return l:filename
 endfunction
 
-" function! GetNameDmenu(detail)
-"   " call inputsave()
-"   let l:filename = system('dmenu -p ' . shellescape(a:detail))
-"   echo l:filename
-"     " call inputrestore()
-"     " return l:filename
-" endfunction
 
 function! CreateFileTouch()
   let l:filename = GetName('Enter File Name: ')
@@ -119,7 +82,6 @@ function! CreateFileTouch()
   if !SpecialWindow()
     w
   endif
-
 endfunction
 
 function! CreateFileEnter()
@@ -142,7 +104,7 @@ function! CreateDir()
   endif
   exe ':!mkdir -p '. expand('%:p:h'). '/' . l:dir_name
 
-  if !SpecialWindow()
+  if !&buftype == 'quickfix' || &buftype == 'nofile'
     w
   endif
 
@@ -254,139 +216,56 @@ cnoremap <a-e> <Up>
 cnoremap <a-n> <Down>
 cnoremap <a-i> <Right>
 
-" map <silent> <leader>RR :call Runner()<cr>
-" autocmd FileType python map <silent> <cr> :call Runner()<cr>
-" autocmd FileType python nnoremap <buffer> <s-cr> :silent w<bar>only<bar>vsp<bar>term ipython3 -i %<cr>
-noremap <silent><leader><cr> :silent call RunnerTerminal()<cr>
-" nnoremap <silent><buffer><cr> :silent call RunnerEnter()<cr>
 
-function! SpecialWindow()
-  return &buftype == 'quickfix' || &buftype == 'nofile'
-endfunction
 
-function! RunnerEnter()
-  " if bufname('%') == '' || &buftype == 'quickfix' || &buftype == 'nofile'
-  if SpecialWindow() || bufname('%') == ''
-    silent execute "normal! \<CR>"
-  else
-    silent call Runner()
-  endif
-endfunction
 
 
 " dispatch takes values from the global projections file
 " /home/kanon/.local/share/myScripts/files/projections/global/.projections.json
-function! Runner()
-  exec 'silent w'
-  let l:runner = 'Dispatch! '
-  let l:special_cases = ['java', 'rs', 'go']
-  if index(l:special_cases, g:extension) >= 0 " si esta en el arreglo
-    let l:runner = 'Dispatch!'
-  else
-    let l:runner = 'Dispatch '
-  endif
-  silent execute l:runner
-  execute 'Copen'
-  execute "normal! \<c-w>k"
-endfunction
 
-function! RunnerTerminal()
-  exec 'silent w'
-  let l:runnerCommand = projectionist#query('dispatch')[0][1]
-  let l:runner = 'T '
-  execute l:runner . l:runnerCommand
-  " execute "normal! \<c-w>k"
-endfunction
 
-"debugging python, needs pip install ipdb
-func! s:SetBreakpoint()
-  cal append('.', repeat(' ', strlen(matchstr(getline('.'), '^\s*'))) . 'import ipdb; ipdb.set_trace()')
-endf
-
-func! s:RemoveBreakpoint()
-  exe 'silent! g/^\s*import\sipdb\;\?\n*\s*ipdb.set_trace()/d'
-endf
-
-func! s:ToggleBreakpoint()
-  if getline('.')=~#'^\s*import\sipdb' | cal s:RemoveBreakpoint() | el | cal s:SetBreakpoint() | en
-endf
-" nnoremap <F6> :call <SID>ToggleBreakpoint()<CR>
 
 "====================
 " ABBREVIATIONS
 "====================
-
-" use * in visual mode
-function! s:VSetSearch()
-  let temp = @@
-  norm! gvy
-  let @/ = '\V' . substitute(escape(@@, '\'), '\n', '\\n', 'g')
-  let @@ = temp
-endfunction
-
-vnoremap * :<C-u>call <SID>VSetSearch()<CR>//<CR><c-o>
-vnoremap # :<C-u>call <SID>VSetSearch()<CR>??<CR><c-o>
-" map <silent><leader>,f :silent execute '!formatCode' shellescape(&ft)<cr>
-
-
 " clear search highlights
-noremap <silent><leader>HH :nohlsearch<bar>match none<bar>2match none<bar>3match none<Esc>
-" nnoremap <silent><leader>hh :execute 'match DiffAdd /\<<c-r><c-w>\>/'<cr>
-" nnoremap <silent><leader>H1 :execute '3match IncSearch /\<<c-r><c-w>\>/'<cr>
-" nnoremap <silent><leader>H2 :execute '2match DiffChange /\<<c-r><c-w>\>/'<cr>
-" nnoremap <silent><leader>H3 :execute 'match DiffAdd /\<<c-r><c-w>\>/'<cr>
-
-" to search only selected text with * and #
-vnoremap * :<C-u>call <SID>VSetSearch()<CR>//<CR><c-o>
-vnoremap # :<C-u>call <SID>VSetSearch()<CR>??<CR><c-o>
-
-function! s:VSetSearch()
-  let temp = @@
-  norm! gvy
-  let @/ = '\V' . substitute(escape(@@, '\'),'\n','\\n','g')
-  let @@ = temp
-endfunction
-
-" GIST
-" requires gist installed
-" you need to do gist --login for the first time
-vnoremap <leader>G :w !gist -p -t %:e \| xsel -b<cr>
-nnoremap Q gqip
+noremap <silent><leader>H :nohlsearch<bar>match none<bar>2match none<bar>3match none<Esc>
 
 vnoremap <silent><leader>.ss y:lua <c-r>+<cr>
 nnoremap <silent><leader>.ss ^vg_y:lua <c-r>+<cr>
 
-" help current word
-" nnoremap gw :h <c-r>=expand('<cword>')<cr><bar>resize 15<cr>
-
-" nnoremap <silent><leader>cp :silent call FormatMyCode()<cr>
-" nnoremap <silent><leader>cP :silent call FormatMyCode()<cr>
-" autocmd BufNewFile *.cpp,*.c,*.java call FormatMyCode()
-
-" function! FormatMyCode()
-"   execute '!$APPS/nvim/programming/formatCode ' . g:extension .' '. expand('%:p')
-"     :LspRestart
-" endfunction
-
-cnoreabbrev Sne CocCommand snippets.editSnippets
-
-" this is to exit select mode when using snips
-snoremap <Esc> <c-c>
-
-function! QuicktypeFunc(lang)
-  normal mm
-  let code = execute("!xclip -sel c -o | quicktype --lang " . a:lang)
-  silent put =code
-  normal! 'mjjdd
+function! Left()
+  let line = getcmdline()
+  let pos = getcmdpos()
+  let next = 1
+  let nextnext = 1
+  let i = 2
+  while nextnext < pos
+    let next = nextnext
+    let nextnext = match(line, '\<\S\|\>\S\|\s\zs\S\|^\|$', 0, i) + 1
+    let i += 1
+  endwhile
+  return repeat("\<Left>", pos - next)
 endfunction
 
-command! -bang -nargs=? Quicktype call QuicktypeFunc(<q-args>)
-
-function! Dump(cmd)
-  let result = trim(execute(a:cmd))
-  put! =result
-  1
+function! Abstract_right(command)
+  let line = getcmdline()
+  let pos = getcmdpos()
+  let next = 1
+  let i = 2
+  while next <= pos && next > 0
+    let next = match(line, '\<\S\|\>\S\|\s\zs\S\|^\|$', 0, i) + 1
+    let i += 1
+  endwhile
+  return repeat(a:command, next - pos)
 endfunction
-command! -nargs=* -complete=command Dump call Dump(<q-args>)
+
+function! Right()
+  return Abstract_right("\<Right>")
+endfunction
+
+cnoremap <expr> <M-w> Left()
+cnoremap <expr> <M-b> Right()
+
 
 ]])
