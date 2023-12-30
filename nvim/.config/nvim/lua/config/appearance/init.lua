@@ -20,7 +20,6 @@ set cursorcolumn
 
 vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
 
-require("config.appearance.legacy")
 require("config.appearance.colors")
 require("config.appearance.lsp")
 require("config.appearance.folding")
