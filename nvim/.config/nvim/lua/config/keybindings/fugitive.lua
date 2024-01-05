@@ -96,14 +96,10 @@ map("n", "<leader>glM", ":Gclog! ", descv("Gclog! _"))
 map("v", "<leader>glm", ":Gclog! ", nor)
 map("v", "<leader>gl<space>", ":Gclog! ", descv("Gclog! _"))
 
-map("n", "<leader>gp<space>", ":G push ", descv("G push _"))
-map("n", "<leader>gpm", ":G push ", descv("G push _"))
-map("n", "<leader>gpp", ":G push -u origin HEAD<cr>", descv("G push -u origin HEAD"))
-map("n", "<leader>gpf", ":G push -f<cr>", descv("G push -f"))
+map("n", "<leader>gp", ":G push -u origin HEAD<cr>", descv("G push -u origin HEAD"))
+map("n", "<leader>gP", ":G pull<CR>", desc("G pull"))
+map("n", "<leader>gL", ":G pull<CR>", desc("G pull"))
 
-map("n", "<leader>gLl", ":G pull<CR>", desc("G pull"))
-map("n", "<leader>gL<space>", ":G pull ", nor)
-map("n", "<leader>gf", ":G fetch", nor)
 
 map("n", "<leader>gb", ":G blame<CR>", nor)
 map("n", "<leader>gB", ":GBrowse<CR>", nor)

@@ -8,11 +8,11 @@ M.load_mappings = function()
 
   local harpoon = require("harpoon")
 
-  map("n", "<leader><esc>", function() harpoon:list():append() end)
-  map("n", "<leader><s-esc>", function() harpoon:list():clear() end)
-
+  map("n", "<a-esc>", function() harpoon:list():append() end)
   map("n", "<C-c>", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)
-  map("n", "<C-s-c>", function() harpoon.ui:toggle_quick_menu(harpoon:list("term")) end)
+  map("n", "<C-s-c>", function() harpoon.ui:toggle_quick_menu(harpoon:list("second")) end)
+  map("n", "ñc", function() harpoon.ui:toggle_quick_menu(harpoon:list("term")) end)
+  map("n", "ñC", function() harpoon.ui:toggle_quick_menu(harpoon:list("tests")) end)
   map("n", "<C-s-l>", function() harpoon.ui:toggle_quick_menu(harpoon:list("vimcmd")) end)
 
   map("n", "<a-s>", function() harpoon:list():select(1) end)
@@ -29,6 +29,11 @@ M.load_mappings = function()
   map("n", "ñt", function() harpoon:list("term"):select(2) end)
   map("n", "ñn", function() harpoon:list("term"):select(3) end)
   map("n", "ñe", function() harpoon:list("term"):select(4) end)
+
+  map("n", "ñS", function() harpoon:list("tests"):select(1) end)
+  map("n", "ñT", function() harpoon:list("tests"):select(2) end)
+  map("n", "ñN", function() harpoon:list("tests"):select(3) end)
+  map("n", "ñE", function() harpoon:list("tests"):select(4) end)
 end
 
 return M

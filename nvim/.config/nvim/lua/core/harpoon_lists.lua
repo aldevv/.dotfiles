@@ -62,6 +62,34 @@ local term = {
 
 }
 
+local tests = {
+  select = function(list_item, list, option)
+    -- row not working
+    -- local window_name = "term" .. list_item.context.row
+
+    -- get the list_item position in the list
+    local list_item_idx = -1
+    for i, v in ipairs(list.items) do
+      if v.value == list_item.value then
+        list_item_idx = i
+        break
+      end
+    end
+
+    local window_name = "tests" .. list_item_idx
+
+    local window_exists = vim.fn.system("tmux list-windows -F '#{window_name}' | grep '^" .. window_name .. "' | wc -l")
+        :gsub("\n", "") == "1"
+
+    if not window_exists then
+      vim.fn.system("tmux neww -n " .. window_name .. " -d")
+    end
+    vim.fn.system("tmux send-keys -t '" .. window_name .. "' '" .. list_item.value .. "' Enter")
+    vim.fn.system("tmux select-window -t " .. window_name)
+  end
+
+}
+
 return {
   vimcmd = vimcmd,
   term = term
