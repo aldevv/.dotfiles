@@ -32,7 +32,6 @@ local on_attach = function(client, bufnr)
   require("config.keybindings.langs").load_mappings(client.name)
   require("config.keybindings.dap").load_mappings(client.name)
   require("config.keybindings.lsp").load_mappings()
-  require("config.automation.lsp").diagnostics_in_loclist()
 end
 
 M.capabilities = capabilities

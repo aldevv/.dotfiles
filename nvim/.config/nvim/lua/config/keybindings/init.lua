@@ -340,10 +340,6 @@ map("c", "<c-s-b>", ' <C-R><C-V> <C-\\>eexpand("%:p:h")<cr>/', nor)
 require("config.keybindings.refactoring")
 
 
--- curl
-map("n", "<leader>.cb", "vip:w !bash<cr>", nor)
-map("n", "<a-c>", "vip:w !bash<cr>", nor)
-
 -- markdown
 map("n", "<leader>,mp", "<cmd>MarkdownPreviewToggle<cr>", nor)
 

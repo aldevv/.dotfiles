@@ -95,13 +95,9 @@ M.load_mappings = function() -- use these on_attach
   map("n", "<c-s>", ":Telescope diagnostics severity_bound=ERROR<cr>", nor)
   map("n", "<leader>oO", ":lua  require('telescope.builtin').diagnostics()<cr>", nor)
   map("n", "<leader>owo", ":lua  require('telescope.builtin').diagnostics()<cr>", nor)
-  vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
-  vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
   map("n", "<leader>on", ":lua vim.diagnostic.get_namespace()<cr>", nor)
   map("n", "<leader>ol", ":lua vim.diagnostic.setloclist{ title = 'Buffer diagnostics' }<cr>", nor)
   map("n", "<leader>oq", ":lua vim.diagnostic.setqflist{ title = 'Workspace diagnostics' }<cr>", nor)
-  -- map("n", "<leader>ok", ":lua vim.diagnostic.goto_next()<cr>", nor)
-  -- map("n", "<leader>oK", ":lua vim.diagnostic.goto_prev()<cr>", nor)
 end
 
 return M

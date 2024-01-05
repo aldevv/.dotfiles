@@ -264,8 +264,9 @@ function! Right()
   return Abstract_right("\<Right>")
 endfunction
 
-cnoremap <expr> <M-w> Left()
-cnoremap <expr> <M-b> Right()
+" move by words in the command mode
+cnoremap <expr> <M-w> Right()
+cnoremap <expr> <M-b> Left()
 
 
 ]])
