@@ -1,4 +1,6 @@
 #!/bin/bash
+#first: <folder>/some_name
+#second: some_name/<folder>
 
 git_dir="$(git rev-parse --git-dir)"
 cur_dir="$(pwd)"
@@ -64,7 +66,7 @@ folder="${prefix}${folder}"
 base_branch="$3"
 if [[ -z $base_branch ]]; then
 	if [[ $exists_in_remote == 1 ]]; then
-		git worktree add "$folder" || return 3
+		git worktree add "$folder" "$branch" || return 3
 	else
 		git worktree add -b "$branch" "$folder" || return 3
 	fi

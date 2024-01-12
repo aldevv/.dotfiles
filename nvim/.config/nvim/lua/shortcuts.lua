@@ -298,6 +298,10 @@ vim.keymap.set("n", "<backspace>pp", "<cmd>e ~/Pictures<cr>", {silent=true, nore
 vim.keymap.set("n","<s-backspace>ppp", ":lua require('telescope.builtin').find_files({prompt_title = '<~/Pictures>', cwd = '~/Pictures', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<s-backspace>rpp", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ~/Pictures>', cwd = '~/Pictures', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
+vim.keymap.set("n", "<backspace>xm.", "<cmd>e ~/.config/xmonad<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<s-backspace>pxm.", ":lua require('telescope.builtin').find_files({prompt_title = '<~/.config/xmonad>', cwd = '~/.config/xmonad', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<s-backspace>rxm.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ~/.config/xmonad>', cwd = '~/.config/xmonad', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+
 vim.keymap.set("n", "<backspace>.sf", "<cmd>e ~/.config/shortcuts/sf <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.sd", "<cmd>e ~/.config/shortcuts/sd <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.z", "<cmd>e ~/.config/zsh/.zshrc <cr>", {silent=true, noremap=true})

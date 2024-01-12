@@ -74,4 +74,5 @@ p       $PROJECTS/
 p.      $PROJECTS/
 c.      $CODE
 pp      ~/Pictures
+xm.     ~/.config/xmonad
 # temp shortcuts

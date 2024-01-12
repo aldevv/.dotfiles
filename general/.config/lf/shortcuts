@@ -223,6 +223,9 @@ map Yc. $ cp -rv $f /home/kanon/code
 map <backspace2>pp cd ~/Pictures
 map mpp $ mv -v $f ~/Pictures
 map Ypp $ cp -rv $f ~/Pictures
+map <backspace2>xm. cd ~/.config/xmonad
+map mxm. $ mv -v $f ~/.config/xmonad
+map Yxm. $ cp -rv $f ~/.config/xmonad
 map <backspace2>.sf $ $EDITOR ~/.config/shortcuts/sf
 map <backspace2>.sd $ $EDITOR ~/.config/shortcuts/sd
 map <backspace2>.z $ $EDITOR ~/.config/zsh/.zshrc
