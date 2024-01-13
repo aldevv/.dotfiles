@@ -60,10 +60,20 @@ return {
     "github/copilot.vim",
     init = function()
       vim.cmd([[
-        imap <silent><script><expr> <a-y> copilot#Accept("\<a-y>")
         let g:copilot_no_tab_map = v:true
+        imap <silent><script><expr> <a-y> copilot#Accept("\<a-y>")
       ]])
-      vim.g.copilot_filetypes = { ["*"] = false, lua = true, go = true, rust = true, js = true, ts = true, jsx = true }
+      vim.g.copilot_filetypes = {
+        ["*"] = false,
+        lua = true,
+        go = true,
+        rust = true,
+        js = true,
+        ts = true,
+        jsx = true,
+        tsx = true,
+        python = true
+      }
     end,
   },
   {

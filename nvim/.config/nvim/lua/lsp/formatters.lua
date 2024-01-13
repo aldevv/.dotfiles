@@ -29,6 +29,7 @@ local ensure_diagnostic_servers = {
   -- "shellcheck",
   "flake8",
   "vint", -- for vim
+  "luacheck",
 }
 local ensure_code_actions = {
   -- "shellcheck",
