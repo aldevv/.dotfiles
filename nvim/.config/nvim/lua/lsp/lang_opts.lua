@@ -110,22 +110,30 @@ local enhance_server_opts = {
     --   end
     --   return util.root_pattern("apm.csv")() or def_env()
     -- end
+
     opts.settings = {
+      -- enable diagnostics
+      -- diagnostics = {
+      --   enable = true,
+      --   -- get the language server to recognize the `vim` global
+      --   globals = { "vim" },
+      -- },
+
       Lua = {
         -- annoying lenses
         -- hint = {
         --   enable = true
         -- },
 
-        -- runtime = {
-        --   --   path = os.getenv("HOME") .. "/.dotfiles/nvim/.config/nvim/lua"
-        --   -- path = runtime_path,
-        --   version = "LuaJIT",
-        --   path = nvim_paths,
-        -- },
-        -- diagnostics = {
-        --   globals = { "vim" },
-        -- },
+        runtime = {
+          --   --   path = os.getenv("HOME") .. "/.dotfiles/nvim/.config/nvim/lua"
+          --   -- path = runtime_path,
+          version = "LuaJIT",
+          --   path = nvim_paths,
+          -- },
+          -- diagnostics = {
+          --   globals = { "vim" },
+        },
         workspace = {
           checkThirdParty = false,
           -- library = vim.api.nvim_get_runtime_file("", true),

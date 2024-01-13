@@ -29,24 +29,20 @@ local descv = function(desc)
   return vim.tbl_extend("keep", nor, { desc = desc })
 end
 
-local map = vim.api.nvim_set_keymap
+local map = vim.keymap.set
 
 -- use d2o and d3o
 map("n", "<leader>g ", ":G ", nor)
-map("n", "<leader>gdi", ":echo 'use d3o'<cr>", nor)
-map("n", "<leader>gdh", ":echo 'use d2o'<cr>", nor)
 map("v", "<leader>gdi", ":diffget //3<CR>", nor)
 map("v", "<leader>gdh", ":diffget //2<CR>", nor)
 
 map("n", "<leader>gd<space>", ":Gvdiffsplit @~", descv("Gdiffsplit @~_"))
-map("n", "<leader>gdm", ":Gvdiffsplit @~", desc("Gdiffsplit @~ (no <CR>)"))
-map("n", "<leader>gdM", ":G diff @~", desc("G diff @~ (show normal git diff in preview)"))
+map("n", "<leader>gdd", ":Gvdiffsplit @~", descv("Gdiffsplit @~_"))
+map("n", "<leader>gdq", ":G difftool @~", descv("Gdiffsplit @~_"))
+map("n", "<leader>gdv", ":Gvdiffsplit! @~", descv("Gdiffsplit @~_"))
 
-map("n", "<leader>gdd", ":Gvdiffsplit<CR>", desc("Gdiffsplit"))
-map("n", "<leader>gdD", ":G! diff<CR>", desc("G! diff"))
-map("n", "<leader>gdv", ":Gvdiffsplit!<CR>", desc("Gdiffsplit!")) -- three way split
-
-map("n", "<leader>gdt", ":G! difftool ", desc("G! difftool (G! means only open qfx without moving to first file)"))
+map("n", "gV", ":Gvdiffsplit! @~", descv("Gdiffsplit @~_"))
+map("n", "gQ", ":G difftool @~", descv("diff to quickfix list"))
 
 map("n", "gs", ":G<CR>", nor)
 map("n", "<leader>gSs", ":G stash<CR>", nor)
