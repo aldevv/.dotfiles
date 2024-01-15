@@ -51,11 +51,4 @@ return {
       "hrsh7th/nvim-cmp",
     },
   },
-  { "simrat39/rust-tools.nvim", lazy = true },
-  {
-    "mrcjkb/haskell-tools.nvim",
-    config = nil,
-    branch = "2.x.x", -- recommended
-    lazy = true,
-  },
 }

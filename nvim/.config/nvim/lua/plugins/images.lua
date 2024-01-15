@@ -1,3 +1,4 @@
+-- local ok, err = pcall(require, "magick")
 return {
 }
 -- return {

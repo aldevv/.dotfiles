@@ -26,6 +26,7 @@ augroup TestType
     autocmd User ProjectionistActivate call <SID>get_testrunner()
 augroup END
 
+let g:extension = expand('%:e')
 function s:get_testrunner()
   " better way to do this? FileType autocmd didnt work
 

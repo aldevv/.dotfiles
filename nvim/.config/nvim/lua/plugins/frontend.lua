@@ -31,4 +31,10 @@ return {
     config = req("core.closetags"),
     ft = { "html", "js", "ts", "css", "vue", "svelte", "jsx", "tsx" },
   },
+  {
+    "windwp/nvim-ts-autotag",
+    config = function()
+      require('nvim-ts-autotag').setup()
+    end
+  },
 }

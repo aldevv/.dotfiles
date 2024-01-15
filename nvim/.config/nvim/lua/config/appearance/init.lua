@@ -20,6 +20,9 @@ set cursorcolumn
 
 vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
 
-require("config.appearance.colors")
-require("config.appearance.lsp")
+-- transparent float
+vim.cmd([[
+    execute 'hi! NormalFloat guibg=0'
+]])
+
 require("config.appearance.folding")
