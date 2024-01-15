@@ -9,7 +9,6 @@ end
 
 -- transparency
 vim.cmd([[
-
 set cursorline
 set cursorcolumn
 
@@ -23,6 +22,14 @@ vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
 -- transparent float
 vim.cmd([[
     execute 'hi! NormalFloat guibg=0'
+]])
+
+vim.cmd([[
+    augroup cmp
+        execute 'hi! CmpItemAbbr guifg=LightGreen'
+        "execute 'hi! CmpItemAbbrMatch guifg=Pink'
+        "execute 'hi! CmpItemAbbrMatch guifg='. HighGet("String")
+    augroup END
 ]])
 
 require("config.appearance.folding")
