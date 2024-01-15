@@ -70,7 +70,7 @@ myKeys =
   , ("M-r", spawn "st -e ranger")
   , ("M-q", kill)
   , -- ("M-f", sendMessage (Toggle "M")),
-    ("M-f", sendMessage (Toggle "F"))
+    ("M-f", sendMessage (Toggle "S"))
   , ("M-s", windows copyToAll)
   , ("M-S-s", killAllOtherCopies)
   , ("M-t", toggleWindowSpacingEnabled >> toggleScreenSpacingEnabled)
