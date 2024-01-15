@@ -1,4 +1,3 @@
-vim.cmd([[command! -nargs=+ Put :put=execute('<args>')]])
 require("config.settings")
 require("config.appearance")
 require("config.keybindings")

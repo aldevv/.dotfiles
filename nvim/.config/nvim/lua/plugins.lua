@@ -20,7 +20,6 @@ return {
     branch = "harpoon2",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = req("core.harpoon"),
-    module = "harpoon",
   },
   {
     "kevinhwang91/nvim-ufo",
@@ -105,7 +104,6 @@ return {
       { "nvim-treesitter/nvim-treesitter" },
     },
     config = req("core.refactoring"),
-    module = "refactoring",
   },
   {
     "nvim-orgmode/orgmode",

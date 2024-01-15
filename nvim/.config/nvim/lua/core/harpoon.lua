@@ -7,16 +7,18 @@ local cfg = {
     save_on_toggle = true,
     sync_on_ui_close = false,
     key = function()
-      local is_git_repo = vim.fn.system("git rev-parse --is-inside-work-tree 2> /dev/null") == "true\n"
-      if is_git_repo then
-        if one_list_per_project then
-          return vim.fn.system("git config --get remote.origin.url")
-        else
-          -- one list per branch
-          return vim.fn.system("git rev-parse --abbrev-ref HEAD")
-        end
+      local obj = vim.system({ "git", "config", "--get", "remote.origin.url" }, { text = true }):wait()
+
+      if obj.code == 1 then
+        return vim.loop.cwd()
       end
-      return vim.loop.cwd()
+
+      if one_list_per_project then
+        return obj.stdout
+      end
+
+      -- one list per branch
+      return vim.fn.system("git rev-parse --abbrev-ref HEAD")
     end,
   }
 }

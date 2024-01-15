@@ -557,3 +557,5 @@ vim.api.nvim_create_autocmd("FileType", {
     map({ "n", "x" }, "<s-cr>", "<cmd>EditQuery<CR>", { buffer = true })
   end
 })
+
+vim.cmd([[command! -nargs=+ Put :put=execute('<args>')]])

@@ -90,7 +90,10 @@ vim.o.autochdir = false -- for netrw
 vim.o.colorcolumn = "100"
 -- colorcolumn transparent
 
-vim.opt.timeoutlen = 1000
+vim.opt.updatetime = 250
+vim.opt.timeoutlen = 300
+vim.o.termguicolors = true
+
 vim.opt.shiftwidth = 2
 
 vim.opt.pumblend = 10
