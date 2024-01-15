@@ -113,10 +113,9 @@ plugins=(
 KEYTIMEOUT=1 
 # so you can use backspace after esc
 # Enable Ctrl-x-e to edit command line
-autoload -U edit-command-line
 # Vi style:
-zle -N edit-command-line
 bindkey -v
+# autoload -U edit-command-line
 
 #to fix the backspace problem
 bindkey "^?" backward-delete-char
@@ -135,7 +134,6 @@ function vi-yank-xclip {
 
 zle -N vi-yank-xclip
 bindkey -M vicmd 'y' vi-yank-xclip
-
 
 
 
@@ -177,6 +175,9 @@ bindkey -r  'la'
 bindkey -M viopp 'lw' select-in-word
 bindkey -M viopp 'lW' select-in-blank-word
 bindkey -M viopp 'la' select-in-shell-word
+
+bindkey -M vicmd "v" visual-mode
+bindkey -M vicmd "" edit-command-line
 
 
 # Compilation flags
@@ -221,7 +222,9 @@ doge() {
 # echo "opening $file" &&
 # xdg-open "$file"
 
+# control
 bindkey -s "^n" "stn^M"
+# alt
 bindkey -s 'w' 'nw^M' # wiki
 bindkey -s 'N' '$UTILITIES/grep/lgnotes^M' # projects and work
 bindkey -s 'f' '$UTILITIES/tmux/nf^M' # projects and work
