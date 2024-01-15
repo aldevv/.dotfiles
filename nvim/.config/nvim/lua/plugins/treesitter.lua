@@ -7,7 +7,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    config = req("core.treesitter")
+    config = req("plugins.config.treesitter")
   },
   {
     "nvim-treesitter/nvim-treesitter-context",

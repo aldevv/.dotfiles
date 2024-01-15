@@ -15,7 +15,7 @@ return {
       "nvim-neotest/neotest-go",
       "nvim-neotest/neotest-python",
     },
-    config = req("core.neotest"),
+    config = req("plugins.config.neotest"),
     module = "neotest",
   },
 }
