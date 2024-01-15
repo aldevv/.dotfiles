@@ -1,9 +1,6 @@
--- for better performance
-if vim.loader then
-  vim.loader.enable()
-end
--- telescope.nvim
+vim.loader.enable()
 
+-- install lazy
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
@@ -22,28 +19,8 @@ if os.getenv("DEBUG_NVIM") then
   return
 end
 
--- refactor.lua
--- navigator.lua
--- NOTE: extract impatient to other file
-function loadrequire(module)
-  local function requiref(module)
-    -- require(module).enable_profile()
-    require(module)
-  end
-
-  res = pcall(requiref, module)
-  if not res then
-    -- Do Stuff when no module
-  end
-end
-
-loadrequire("impatient")
-vim.cmd("set t_Co=256")
-vim.cmd("let IS_MINE=isdirectory($SUCKLESS)")
-CONFIG_HOME = "~/.config"
 
 require("utils.lua.globals")
-
 if os.getenv("USER") == "root" then
   require("config.appearance")
   require("config.automation")
@@ -53,6 +30,4 @@ end
 require("lazy").setup("plugins", {
   dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
 })
--- if treesitter errors after update, :TSUpdate
-
 require("config")

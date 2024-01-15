@@ -15,7 +15,7 @@ augroup remember_folds
 augroup END
 ]])
 
--- NOTE: check foldopen in the options.txt for options on how to open a fold
+-- go to next and prev fold
 vim.cmd([[
 set foldopen =hor,search,tag,undo,quickfix,percent,mark,insert
 
@@ -44,25 +44,3 @@ function! NextClosedFold(dir)
     endif
 endfunction
 ]])
-
--- is line folded
--- let a = foldclosed(lnum)
-
--- get all folds
-
--- function! CollectFolds() abort
---   if !exists('g:folds')
---     let g:folds = []
---   endif
---   const line = line('.')
---   const end = foldclosedend(line)
---   if !exists('g:prev_end') " first one
---     let g:prev_end = end
---     call add(g:folds, [line, end])
---   elseif end isnot# g:prev_end " new fold
---     call add(g:folds, [line, end])
---     let g:prev_end = end
---   endif
--- endfunction
---
--- command! PrintFolds execute 'folddoclosed call CollectFolds()' | echo g:folds | unlet g:folds g:prev_end
