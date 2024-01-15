@@ -8,7 +8,7 @@ return {
 
   {
     "L3MON4D3/LuaSnip",
-    config = req("lsp.luasnip"),
+    config = req("plugins.config.luasnip"),
   },
   {
     "honza/vim-snippets",

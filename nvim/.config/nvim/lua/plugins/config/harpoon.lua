@@ -22,7 +22,7 @@ local cfg = {
     end,
   }
 }
-cfg = vim.tbl_extend("keep", cfg, require("core.harpoon_lists"))
+cfg = vim.tbl_extend("keep", cfg, require("plugins.config.harpoon_lists"))
 local ok, work = pcall(require, "work")
 if ok then
   local projects = {}

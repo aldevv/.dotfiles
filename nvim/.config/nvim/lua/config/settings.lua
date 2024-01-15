@@ -91,7 +91,7 @@ vim.o.colorcolumn = "100"
 -- colorcolumn transparent
 
 vim.opt.updatetime = 250
-vim.opt.timeoutlen = 300
+vim.opt.timeoutlen = 700
 vim.o.termguicolors = true
 
 vim.opt.shiftwidth = 2

@@ -31,7 +31,7 @@ if os.getenv("NVIM_MINIMAL") ~= "" then
 end
 
 
-local default_opts = require("lsp.defaults_opts")
+local default_opts = require("plugins.config.lsp.defaults_opts")
 local get_opts = function()
   local opts = vim.deepcopy(default_opts)
   return {
@@ -40,7 +40,7 @@ local get_opts = function()
     on_attach = opts.on_attach,
   }
 end
-local lang_opts = require("lsp.lang_opts")
+local lang_opts = require("plugins.config.lsp.lang_opts")
 local enhance_server = function(server, opts)
   if lang_opts.enhanceable(server) then
     lang_opts.enhance(server, opts)
