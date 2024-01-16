@@ -6,14 +6,14 @@ end
 return {
   {
     "neovim/nvim-lspconfig",
-    config = req("plugins.config.lsp.lsp"),
+    config = req("config.plugins.lsp.lsp"),
     dependencies = {
       { "williamboman/mason.nvim", build = ":MasonUpdate" },
       "williamboman/mason-lspconfig.nvim",
       "folke/neodev.nvim",
       {
         "hrsh7th/nvim-cmp",
-        config = req("plugins.config.lsp.cmp"),
+        config = req("config.plugins.lsp.cmp"),
         dependencies = {
           "saadparwaiz1/cmp_luasnip",
           "nvim-lua/plenary.nvim",
@@ -39,13 +39,13 @@ return {
   {
     "nvimtools/none-ls.nvim",
     dependencies = { "nvim-lua/plenary.nvim", "williamboman/mason.nvim" },
-    config = req("plugins.config.lsp.formatters"),
+    config = req("config.plugins.lsp.formatters"),
   },
 
   "jayp0521/mason-null-ls.nvim",
   {
     "ray-x/lsp_signature.nvim",
-    config = req("plugins.config.lsp.lsp-signature"),
+    config = req("config.plugins.lsp.lsp-signature"),
     dependencies = {
       "neovim/nvim-lspconfig",
       "hrsh7th/nvim-cmp",

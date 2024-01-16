@@ -21,12 +21,11 @@
 .vu     ~/.config/nvim/lua/utils/lua/telescope.lua
 .vk     ~/.config/nvim/lua/config/keybindings/init.lua
 .vK     ~/.config/nvim/lua/config/keybindings/dap.lua
-.vd     ~/.config/nvim/lua/plugins/config/dap/dap.lua
-.vl     ~/.config/nvim/lua/plugins/config/lsp/lsp.lua
-.vL     ~/.config/nvim/lua/plugins/config/lsp/lang_opts.lua
+.vd     ~/.config/nvim/lua/config/plugins/dap/dap.lua
+.vl     ~/.config/nvim/lua/config/plugins/lsp/lsp.lua
+.vL     ~/.config/nvim/lua/config/plugins/lsp/lang_opts.lua
 .vp     ~/.config/nvim/lua/plugins.lua
-.vP     ~/.config/nvim/lua/plugins-debug.lua
-.vf     ~/.config/nvim/lua/plugins/config/lsp/formatters.lua
+.vf     ~/.config/nvim/lua/config/plugins/lsp/formatters.lua
 .X      ~/.config/sxhkd/sxhkdrc
 .A     ~/.config/awesome/rc.lua
 .xm     ~/.config/xmonad/xmonad.hs

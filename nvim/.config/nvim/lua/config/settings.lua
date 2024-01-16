@@ -26,11 +26,6 @@ vim.opt.listchars = vim.opt.listchars + "extends:»" -- RIGHT-POINTING DOUBLE AN
 vim.opt.listchars = vim.opt.listchars + "precedes:«" -- LEFT-POINTING DOUBLE ANGLE QUOTATION MARK (U+00AB, UTF-8: C2 AB)
 vim.opt.listchars = vim.opt.listchars + "trail:•"
 vim.opt.listchars = vim.opt.listchars + "eol:↲"
--- tab and eol colors
-vim.cmd([[
-  execute 'hi WhiteSpace guifg=gray'
-  execute 'hi NonText guifg=gray'
-]])
 
 -- expand tab to spaces
 vim.opt.expandtab = true

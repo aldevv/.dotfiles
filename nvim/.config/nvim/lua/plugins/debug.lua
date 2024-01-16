@@ -18,7 +18,7 @@ return {
       "williamboman/mason.nvim",
     },
     -- module = "dap",
-    config = req("plugins.config.dap.dap"),
+    config = req("config.plugins.dap.dap"),
     module = "dap",
   },
   "jayp0521/mason-nvim-dap.nvim",
