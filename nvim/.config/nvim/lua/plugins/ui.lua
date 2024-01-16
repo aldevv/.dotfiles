@@ -7,7 +7,7 @@ return {
   {
     "rcarriga/nvim-notify",
     config = function()
-      require("plugins.config.notify")
+      require("config.plugins.notify")
       vim.notify = require("notify")
     end,
   },
@@ -24,7 +24,7 @@ return {
   },
   {
     "nvim-lualine/lualine.nvim",
-    config = req("plugins.config.lualine"),
+    config = req("config.plugins.lualine"),
   },
   "folke/trouble.nvim",
   config = function()
@@ -43,7 +43,7 @@ return {
       , { noremap = true, silent = true, desc = "Previous diagnostic Trouble" })
   end,
   opts = {
-    icons = false,                  -- use devicons for filenames
+    icons = true,                   -- use devicons for filenames
     mode = "workspace_diagnostics", -- "workspace_diagnostics", "document_diagnostics", "quickfix", "lsp_references", "loclist"
   },
   {

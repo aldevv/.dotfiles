@@ -15,24 +15,25 @@ return {
   "tpope/vim-repeat",
   "mbbill/undotree",
   "bkad/CamelCaseMotion",
+  "nvim-tree/nvim-web-devicons",
   {
     "ThePrimeagen/harpoon",
     branch = "harpoon2",
     dependencies = { "nvim-lua/plenary.nvim" },
-    config = req("plugins.config.harpoon"),
+    config = req("config.plugins.harpoon"),
   },
   {
     "kevinhwang91/nvim-ufo",
-    config = req("plugins.config.ufo"),
+    config = req("config.plugins.ufo"),
     dependencies = { "kevinhwang91/promise-async", "nvim-treesitter/nvim-treesitter" },
   },
   {
     "stevearc/overseer.nvim",
-    config = req("plugins.config.overseer")
+    config = req("config.plugins.overseer")
   },
   {
     "ahmedkhalf/project.nvim",
-    config = req("plugins.config.project"),
+    config = req("config.plugins.project"),
   },
   {
     "szw/vim-maximizer",
@@ -43,7 +44,7 @@ return {
   },
   {
     "numToStr/Comment.nvim",
-    config = req("plugins.config.comment"),
+    config = req("config.plugins.comment"),
     dependencies = { "JoosepAlviste/nvim-ts-context-commentstring" } -- better commentstring using treesitter
   },
   {
@@ -90,7 +91,7 @@ return {
   {
     "kristijanhusak/vim-dadbod-ui",
     dependencies = { "tpope/vim-dadbod", "tpope/vim-dotenv", "kristijanhusak/vim-dadbod-completion" },
-    config = req("plugins.config.dadbod"),
+    config = req("config.plugins.dadbod"),
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer", "DBUILastQueryInfo" },
   },
   {
@@ -103,11 +104,11 @@ return {
       { "nvim-lua/plenary.nvim" },
       { "nvim-treesitter/nvim-treesitter" },
     },
-    config = req("plugins.config.refactoring"),
+    config = req("config.plugins.refactoring"),
   },
   {
     "nvim-orgmode/orgmode",
-    config = req("plugins.config.org"),
+    config = req("config.plugins.org"),
   },
   {
     "akinsho/toggleterm.nvim",
