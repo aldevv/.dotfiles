@@ -39,5 +39,7 @@ vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
 -- -- transparent float for harpoon
 vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "FloatBorder", { bg = "NONE" })
+vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "NONE" })
+vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "NONE" })
 
 require("ui.folding")
