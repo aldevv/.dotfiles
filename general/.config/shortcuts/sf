@@ -16,11 +16,11 @@
 .la      .vscode/launch.json
 .vv     ~/.config/nvim/init.lua
 .vA     ~/.config/nvim/lua/config/automation/init.lua
-.va     ~/.config/nvim/lua/config/appearance/init.lua
+.va     ~/.config/nvim/lua/ui/init.lua
 .vs     ~/.config/nvim/lua/config/settings.lua
 .vu     ~/.config/nvim/lua/utils/lua/telescope.lua
-.vk     ~/.config/nvim/lua/config/keybindings/init.lua
-.vK     ~/.config/nvim/lua/config/keybindings/dap.lua
+.vk     ~/.config/nvim/lua/keybindings/init.lua
+.vK     ~/.config/nvim/lua/keybindings/dap.lua
 .vd     ~/.config/nvim/lua/config/plugins/dap/dap.lua
 .vl     ~/.config/nvim/lua/config/plugins/lsp/lsp.lua
 .vL     ~/.config/nvim/lua/config/plugins/lsp/lang_opts.lua

@@ -19,14 +19,17 @@ if os.getenv("DEBUG_NVIM") then
   return
 end
 
-
 require("utils.lua.globals")
 if os.getenv("USER") == "root" then
-  require("config.appearance")
+  require("ui")
   require("config.automation")
   return
 end
+require("config")
+
 require("lazy").setup("plugins", {
   dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
 })
-require("config")
+
+require("keybindings")
+require("ui")

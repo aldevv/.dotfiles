@@ -20,11 +20,11 @@ f.      $XDG_CONFIG_HOME
 v.      $XDG_CONFIG_HOME/nvim
 vl      $XDG_CONFIG_HOME/nvim/lua/config/plugins/lsp
 va      $XDG_CONFIG_HOME/nvim/lua/config/automation
-vt      $XDG_CONFIG_HOME/nvim/lua/config/appearance/themes
+vt      $XDG_CONFIG_HOME/nvim/lua/ui/themes
 vc      $XDG_CONFIG_HOME/nvim/lua/config/plugins
 vC      $XDG_CONFIG_HOME/nvim/lua/config
 vu      $XDG_CONFIG_HOME/nvim/lua/utils
-vk      $XDG_CONFIG_HOME/nvim/lua/config/keybindings
+vk      $XDG_CONFIG_HOME/nvim/lua/keybindings
 sn      ~/.config/nvim/my_snippets/snipmate/
 sN      ~/.config/nvim/my_snippets/luasnips
 vL      ~/.config/nvim/lua/config/plugins/lsp/snippets
