@@ -1,6 +1,5 @@
 -- local ok, err = pcall(require, "magick")
-return {
-}
+return {}
 -- return {
 -- {
 --   "3rd/image.nvim",

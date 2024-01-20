@@ -179,6 +179,13 @@ bindkey -M viopp 'la' select-in-shell-word
 bindkey -M vicmd "v" visual-mode
 bindkey -M vicmd "" edit-command-line
 
+# insert mode
+bindkey '^H' backward-kill-word
+
+# in visual mode move right with i
+bindkey -M visual "i" vi-forward-char
+bindkey -M visual "l" vi-insert
+
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"

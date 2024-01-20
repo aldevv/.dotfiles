@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-
-tmux neww bash -c "chatgpt"
+while true; do
+  read -p "Ask: " -r query
+  tgpt "$query"
+done
 tmux swap-window -t -1
