@@ -1,7 +1,7 @@
-vim.cmd [[
+vim.cmd([[
 filetype plugin on
 set number nu
-]]
+]])
 
 -- split window will put the new window right of the current one
 vim.opt.splitright = true
@@ -26,7 +26,6 @@ vim.opt.listchars = vim.opt.listchars + "extends:»" -- RIGHT-POINTING DOUBLE AN
 vim.opt.listchars = vim.opt.listchars + "precedes:«" -- LEFT-POINTING DOUBLE ANGLE QUOTATION MARK (U+00AB, UTF-8: C2 AB)
 vim.opt.listchars = vim.opt.listchars + "trail:•"
 vim.opt.listchars = vim.opt.listchars + "eol:↲"
-
 vim.opt.cursorline = true
 vim.opt.cursorcolumn = true
 
@@ -71,18 +70,18 @@ vim.o.wildmode = "full"
 -- " set wildmode=longest,list,full
 
 vim.o.backup = true
-vim.o.backupdir = vim.fn.stdpath "cache" .. "/backups"
+vim.o.backupdir = vim.fn.stdpath("cache") .. "/backups"
 vim.o.undofile = true
-vim.o.undodir = vim.fn.stdpath "cache" .. "/undodir"
+vim.o.undodir = vim.fn.stdpath("cache") .. "/undodir"
 vim.o.inccommand = "nosplit"
 --Make backup before overwriting the current buffer
 vim.o.writebackup = true
 -- Overwrite the original backup file
 vim.o.backupcopy = "no"
 -- Meaningful backup name, ex: filename@2015-04-05.14:59
-vim.cmd [[
+vim.cmd([[
     au BufWritePre * let &bex = "@" . strftime("%F.%H:%M")
-]]
+]])
 vim.o.autochdir = false -- for netrw
 
 -- add vertical line
@@ -100,18 +99,18 @@ vim.opt.statusline = "%t"
 vim.opt.spell = true
 
 -- general diagnostics
-vim.diagnostic.config {
-    virtual_text = {
-        spacing = 2,
-        severity_limit = "Warning",
-    },
-    -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
-    -- update_in_insert = true,
-    update_in_insert = false,
-    float = {
-        -- source = "if_many",
-        source = true,
-    },
-}
+vim.diagnostic.config({
+  virtual_text = {
+    spacing = 2,
+    severity_limit = "Warning",
+  },
+  -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
+  -- update_in_insert = true,
+  update_in_insert = false,
+  float = {
+    -- source = "if_many",
+    source = true,
+  },
+})
 
 vim.opt.jumpoptions = "stack"

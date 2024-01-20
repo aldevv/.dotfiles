@@ -2,6 +2,41 @@
 -- LSPKIND
 -- ========
 
+local lspkind = require("lspkind")
+lspkind.init({
+	-- preset: 'default' or  'codicons'
+	-- preset = "default",
+	-- with_text = true,
+	mode = "symbol_text",
+	symbol_map = {
+		Text = "󰉿",
+		Method = "󰆧",
+		Function = "󰊕",
+		Constructor = "",
+		Field = "󰜢",
+		Variable = "󰀫",
+		Class = "󰠱",
+		Interface = "",
+		Module = "",
+		Property = "󰜢",
+		Unit = "󰑭",
+		Value = "󰎠",
+		Enum = "",
+		Keyword = "󰌋",
+		Snippet = "",
+		Color = "󰏘",
+		File = "󰈙",
+		Reference = "󰈇",
+		Folder = "󰉋",
+		EnumMember = "",
+		Constant = "󰏿",
+		Struct = "󰙅",
+		Event = "",
+		Operator = "󰆕",
+		TypeParameter = "🔥",
+	},
+})
+
 -- ==========
 -- COMPLETION
 -- ==========
@@ -10,7 +45,6 @@ local luasnip = require("luasnip")
 
 vim.api.nvim_set_option_value("completeopt", "menu,menuone,noselect", {})
 
-local lspkind = require("lspkind")
 cmp.setup({
 	preselect = cmp.PreselectMode.None, -- so it doesn't select lsp automatically, and lets me choose manually
 	snippet = {
@@ -23,99 +57,35 @@ cmp.setup({
 		documentation = cmp.config.window.bordered(),
 	},
 	formatting = {
-		format = lspkind.cmp_format({
-			mode = "text_symbol", -- show only symbol annotations
-			maxwidth = 50, -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
-			-- can also be a function to dynamically calculate max width such as
-			-- maxwidth = function() return math.floor(0.45 * vim.o.columns) end,
-			ellipsis_char = "...", -- when popup menu exceed maxwidth, the truncated part would show ellipsis_char instead (must define maxwidth first)
-			show_labelDetails = true, -- show labelDetails in menu. Disabled by default
-			symbol_map = {
-				Text = "󰉿",
-				Method = "󰆧",
-				Function = "󰊕",
-				Constructor = "",
-				Field = "󰜢",
-				Variable = "󰀫",
-				Class = "󰠱",
-				Interface = "",
-				Module = "",
-				Property = "󰜢",
-				Unit = "󰑭",
-				Value = "󰎠",
-				Enum = "",
-				Keyword = "󰌋",
-				Snippet = "",
-				Color = "󰏘",
-				File = "󰈙",
-				Reference = "󰈇",
-				Folder = "󰉋",
-				EnumMember = "",
-				Constant = "󰏿",
-				Struct = "󰙅",
-				Event = "",
-				Operator = "󰆕",
-				TypeParameter = "🔥",
-			},
 
-			-- The function below will be called before any actual modifications from lspkind
-			-- so that you can provide more controls on popup customization. (See [#30](https://github.com/onsails/lspkind-nvim/pull/30))
-			before = function(entry, vim_item)
-				vim_item.kind = string.format("%s %s", lspkind.presets.default[vim_item.kind], vim_item.kind)
-				vim_item.menu = ({
-					-- nvim_lsp = "ﲳ",
-					-- nvim_lsp = "📚",
-					luasnip = "🔥",
-					-- nvim_lua = "[nvim]",
-					nvim_lsp = "[LS]",
-					-- nvim_lua = "[API]",
-					-- treesitter = "",
-					treesitter = "🌲",
-					-- path = "ﱮ",
-					path = "📁",
-					-- buffer = "﬘",
-					buffer = "[BUF]",
-					zsh = "[SH]",
-					-- vsnip = "",
-					-- ultisnips = "🔥",
-					-- spell = "暈",
-					spell = "暈",
-					cmdline = "[CMD]",
-					cody = "[CODY]",
-					["vim-dadbod-completion"] = "[DB]",
-				})[entry.source.name]
-				return vim_item
-			end,
-		}),
+		format = function(entry, vim_item)
+			vim_item.kind = string.format("%s %s", lspkind.presets.default[vim_item.kind], vim_item.kind)
+			vim_item.menu = ({
+				-- nvim_lsp = "ﲳ",
+				-- nvim_lsp = "📚",
+				luasnip = "🔥",
+				-- nvim_lua = "[nvim]",
+				nvim_lsp = "[LS]",
+				-- nvim_lua = "[API]",
+				-- treesitter = "",
+				treesitter = "🌲",
+				-- path = "ﱮ",
+				path = "📁",
+				-- buffer = "﬘",
+				buffer = "[BUF]",
+				zsh = "[SH]",
+				-- vsnip = "",
+				-- ultisnips = "🔥",
+				-- spell = "暈",
+				spell = "暈",
+				cmdline = "[CMD]",
+				cody = "[CODY]",
+				["vim-dadbod-completion"] = "[DB]",
+			})[entry.source.name]
+
+			return vim_item
+		end,
 	},
-	-- format = function(entry, vim_item)
-	-- 	vim_item.kind = string.format("%s %s", lspkind.presets.default[vim_item.kind], vim_item.kind)
-	-- 	vim_item.menu = ({
-	-- 		-- nvim_lsp = "ﲳ",
-	-- 		-- nvim_lsp = "📚",
-	-- 		luasnip = "🔥",
-	-- 		-- nvim_lua = "[nvim]",
-	-- 		nvim_lsp = "[LS]",
-	-- 		-- nvim_lua = "[API]",
-	-- 		-- treesitter = "",
-	-- 		treesitter = "🌲",
-	-- 		-- path = "ﱮ",
-	-- 		path = "📁",
-	-- 		-- buffer = "﬘",
-	-- 		buffer = "[BUF]",
-	-- 		zsh = "[SH]",
-	-- 		-- vsnip = "",
-	-- 		-- ultisnips = "🔥",
-	-- 		-- spell = "暈",
-	-- 		spell = "暈",
-	-- 		cmdline = "[CMD]",
-	-- 		cody = "[CODY]",
-	-- 		["vim-dadbod-completion"] = "[DB]",
-	-- 	})[entry.source.name]
-	--
-	-- 	return vim_item
-	-- end,
-	-- },
 	experimental = {
 		ghost_text = true,
 		-- native_menu = true
@@ -123,7 +93,6 @@ cmp.setup({
 	mapping = {
 		-- Manually trigger cody completions
 		["<c-a>"] = cmp.mapping.complete({
-
 			config = {
 				sources = {
 					{ name = "cody" },
@@ -174,9 +143,9 @@ cmp.setup({
 		-- }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
 	},
 	-- nvim-cmp by defaults disables autocomplete for prompt buffers
-	enabled = function()
-		return vim.api.nvim_get_option_value("buftype", { buf = 0 }) ~= "prompt" or require("cmp_dap").is_dap_buffer()
-	end,
+	-- enabled = function()
+	--   return vim.api.nvim_get_option_value("buftype", { buf = 0 }) ~= "prompt" or require("cmp_dap").is_dap_buffer()
+	-- end,
 	sources = {
 		{ name = "luasnip", priority = 1 },
 		-- { name = "nvim_lua" },
