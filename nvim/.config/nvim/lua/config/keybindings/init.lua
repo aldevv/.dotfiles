@@ -16,11 +16,11 @@ local map = vim.keymap.set
 local h = "~/.config/nvim"
 
 local desc = function(text)
-  return vim.tbl_extend("keep", nor_s, { desc = text })
+	return vim.tbl_extend("keep", nor_s, { desc = text })
 end
 
 local descv = function(text)
-  return vim.tbl_extend("keep", nor, { desc = text })
+	return vim.tbl_extend("keep", nor, { desc = text })
 end
 
 -- backlog
@@ -76,7 +76,6 @@ map("x", "j", "e", nor)
 map("v", "N", ":m '>+1<CR>gv=gv")
 map("v", "E", ":m '<-2<CR>gv=gv")
 
-
 -- add e and n movements to the jumplist!
 map("n", "e", '(v:count > 1  ? "m\'" . v:count : "") . \'k\'', nor_e)
 map("n", "n", '(v:count > 1  ? "m\'" . v:count : "") . \'j\'', nor_e)
@@ -126,7 +125,6 @@ map("x", "p", "pgvy", nor_s)
 -- file path
 map("n", "sg", ":lua print(vim.fn.expand('%:p'))<cr>", nor)
 
-
 -- map("v", "<a-n>", ":m '>+1<cr>gv=gv", nor)
 -- map("v", "<a-e>", ":m '<-2<cr>gv=gv", nor)
 -- map("i", "<a-e>", "<esc>:m .-2<cr>==a", nor)
@@ -152,7 +150,7 @@ map("n", "<leader>,cS", ":Copilot setup<cr>", nor)
 map("n", "<leader>,cp", ":Copilot panel<cr>", nor) --use [[ and ]] to jump solutions
 
 map("n", "<leader>,sn", function()
-  vim.cmd(":e ~/.config/nvim/my_snippets/luasnips/" .. vim.bo.ft .. ".lua")
+	vim.cmd(":e ~/.config/nvim/my_snippets/luasnips/" .. vim.bo.ft .. ".lua")
 end, descv("edit snippet"))
 
 -- terminal
@@ -179,9 +177,8 @@ map({ "n", "v" }, "X", [["_d]])
 -- require("shortcuts")
 local ok, err = pcall(require, "shortcuts")
 if not ok then
-  require("notify")("failed to load shortcuts: \n" .. err, "error")
+	require("notify")("failed to load shortcuts: \n" .. err, "error")
 end
-
 
 -- -- moving to folder (using shortcuts script now)
 -- map("n", "<localleader>v.", "<cmd>cd " .. h .. "<cr> | <cmd>e .<cr>", nor_s)
@@ -233,17 +230,14 @@ require("config.keybindings.harpoon").load_mappings()
 map("n", "<leader>.vz", ":so<cr>", nor_s)
 map("n", "<leader>.vd", ":lua require('osv').launch({port=3333})<cr>", nor_s)
 map("n", "<leader>.vD", ":lua require('osv').run_this()<cr>", nor_s)
-map("n", "<leader>.sb", "ggO#!/bin/bash<escape>", nor_s)
-map("n", "<leader>.sB", "ggO#!/bin/bash<escape>", nor_s)
+map("n", "<leader>.sb", "ggO#!/usr/bin/env bash<escape>", nor_s)
+
+map("n", "<leader>.sB", "ggO#!/usr/bin/env bash<escape>", nor_s)
 map("n", "<leader>.vf", ":luafile %<cr>", nor)
-map("v", "<leader>!", ":w !", nor)
-map("n", "Ñ", ":w !", nor)
-map("v", "Ñ", ":w !", nor)
-map("n", "!q", ":!", nor)
-map("v", "!q", ":!", nor)
+map("n", "!w", ":w !", nor)
+map("v", "!w", ":w !", nor)
 
 require("config.keybindings.text-objs")
-
 
 -- <Enter> - switches to that worktree
 -- <c-d> - deletes that worktree
@@ -287,14 +281,10 @@ vmap <right> <Plug>MoveBlockRight
 map("n", "sm", ":MaximizerToggle<CR>", nor_s)
 map("v", "sm", ":MaximizerToggle<CR>gv", nor_s)
 
--- brightest
-map("n", "sb", ":BrightestToggle<cr>", nor)
-
 require("config.keybindings.fugitive")
 
 map("n", "<leader>,sf", ":source %<cr>", nor)
 map("n", "<leader>,ss", ":source ~/.config/nvim/lua/lsp/luasnip.lua<cr>", nor)
-
 
 -- sniprun
 --keymaps not working
@@ -339,22 +329,19 @@ map("c", "<c-s-b>", ' <C-R><C-V> <C-\\>eexpand("%:p:h")<cr>/', nor)
 
 require("config.keybindings.refactoring")
 
-
 -- markdown
 map("n", "<leader>,mp", "<cmd>MarkdownPreviewToggle<cr>", nor)
-
-
 
 map("n", "<leader>,,", "<cmd>tabedit<cr>", nor)
 
 local function toggle_transparency()
-  local normal = vim.api.nvim_exec2("hi Normal", { output = true }).output
-  if string.find(normal, "guibg") ~= nil then
-    vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
-    return
-  end
-  local cur_theme = vim.api.nvim_exec2("colorscheme", { output = true }).output
-  vim.cmd("colorscheme " .. cur_theme)
+	local normal = vim.api.nvim_exec2("hi Normal", { output = true }).output
+	if string.find(normal, "guibg") ~= nil then
+		vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
+		return
+	end
+	local cur_theme = vim.api.nvim_exec2("colorscheme", { output = true }).output
+	vim.cmd("colorscheme " .. cur_theme)
 end
 map("n", "sT", toggle_transparency, nor)
 
@@ -362,62 +349,57 @@ map("n", "sT", toggle_transparency, nor)
 
 -- map("n", "<leader>ss", ":e .projections.json<cr>", {})
 
+map("n", "<leader>sm", function()
+	-- require('utils.lua.float').toggle('Makefile', { height = 40, width = 100 })
+	require("utils.lua.float").toggle("Makefile")
+end, desc("Open Makefile file in a floating window"))
+
 map(
-  "n",
-  "<leader>sm",
-  function()
-    -- require('utils.lua.float').toggle('Makefile', { height = 40, width = 100 })
-    require('utils.lua.float').toggle('Makefile')
-  end,
-  desc("Open Makefile file in a floating window")
+	"n",
+	"<leader>sp",
+	"<cmd>lua require('utils.lua.float').toggle('package.json')<cr>",
+	desc("Open package.json file in a floating window")
 )
 
 map(
-  "n",
-  "<leader>sp",
-  "<cmd>lua require('utils.lua.float').toggle('package.json')<cr>",
-  desc("Open package.json file in a floating window")
+	"n",
+	"<leader>sP",
+	"<cmd>lua require('utils.lua.float').toggle('.projections.json')<cr>",
+	desc("Open .projections.json file in a floating window")
 )
 
 map(
-  "n",
-  "<leader>sP",
-  "<cmd>lua require('utils.lua.float').toggle('.projections.json')<cr>",
-  desc("Open .projections.json file in a floating window")
+	"n",
+	"<leader>sr",
+	"<cmd>lua require('utils.lua.float').toggle('requirements.txt')<cr>",
+	desc("Open requirements.txt file in a floating window")
 )
 
 map(
-  "n",
-  "<leader>sr",
-  "<cmd>lua require('utils.lua.float').toggle('requirements.txt')<cr>",
-  desc("Open requirements.txt file in a floating window")
-)
-
-map(
-  "n",
-  "<leader>sc",
-  "<cmd>lua require('utils.lua.float').toggle('Cargo.toml')<cr>",
-  desc("Open Cargo.toml file in a floating window")
+	"n",
+	"<leader>sc",
+	"<cmd>lua require('utils.lua.float').toggle('Cargo.toml')<cr>",
+	desc("Open Cargo.toml file in a floating window")
 )
 
 -- commands
 map(
-  "n",
-  "<leader><leader>tw",
-  ':topleft 40vs $ATOMIC/todo/work/<c-r>=system("stamp")<cr><cr>',
-  desc("create work todo")
+	"n",
+	"<leader><leader>tw",
+	':topleft 40vs $ATOMIC/todo/work/<c-r>=system("stamp")<cr><cr>',
+	desc("create work todo")
 )
 map(
-  "n",
-  "<leader><leader>tp",
-  ':topleft 40vs $ATOMIC/todo/projects/<c-r>=system("stamp")<cr><cr>',
-  desc("create work todo")
+	"n",
+	"<leader><leader>tp",
+	':topleft 40vs $ATOMIC/todo/projects/<c-r>=system("stamp")<cr><cr>',
+	desc("create work todo")
 )
 map(
-  "n",
-  "<leader><leader>tl",
-  ':topleft 40vs $ATOMIC/todo/learn/<c-r>=system("stamp")<cr><cr>',
-  desc("create work todo")
+	"n",
+	"<leader><leader>tl",
+	':topleft 40vs $ATOMIC/todo/learn/<c-r>=system("stamp")<cr><cr>',
+	desc("create work todo")
 )
 
 map("n", "<leader>.dgpa", "<cmd>Start . _dgpa<cr>", descv("push all my stuff"))
@@ -430,17 +412,17 @@ map("n", "<leader>.anT", ":Spawn st -e bash -c 'ant '<left>", descv("create cust
 map("n", "<leader>.br", ":e README.md<cr>", descv("open README.md"))
 
 map(
-  "n",
-  "<leader>.st",
-  "<cmd>Spawn st -e bash -c 'cd $(dirname %); zsh'<cr>",
-  desc("terminal instance in current folder")
+	"n",
+	"<leader>.st",
+	"<cmd>Spawn st -e bash -c 'cd $(dirname %); zsh'<cr>",
+	desc("terminal instance in current folder")
 )
 
 map(
-  "n",
-  "<leader>.r",
-  "<cmd>Spawn st -e bash -c 'ranger $(dirname %); zsh'<cr>",
-  desc("create ranger instance in current folder")
+	"n",
+	"<leader>.r",
+	"<cmd>Spawn st -e bash -c 'ranger $(dirname %); zsh'<cr>",
+	desc("create ranger instance in current folder")
 )
 
 -- language specific
@@ -453,27 +435,27 @@ map("n", "<leader><leader>S", ":Start! ", descv("Start! _"))
 
 -- run entr
 map("n", "<leader><leader>r", function()
-  local cmd = vim.fn.input("Enter the command entr will run: ")
-  vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
+	local cmd = vim.fn.input("Enter the command entr will run: ")
+	vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
 end, nor_s)
 map("n", "<leader><leader>R", function()
-  local cmd = vim.fn.input("Enter the command entr will run: ")
-  vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
+	local cmd = vim.fn.input("Enter the command entr will run: ")
+	vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en " .. cmd .. "' Enter; tmux select-pane -L")
 end, nor_s)
 
 -- go
 map("n", "<leader><leader>g", function()
-  vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
+	vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
 end, nor_s)
 map("n", "<leader><leader>G", function()
-  vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
+	vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en go run .' Enter; tmux select-pane -L")
 end, nor_s)
 
 map("n", "<leader><leader>p", function()
-  vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
+	vim.cmd("silent !tmux split-window -h -p 45; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
 end, nor_s)
 map("n", "<leader><leader>P", function()
-  vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
+	vim.cmd("silent !tmux split-window -v -p 35; tmux send-keys -t 2 'en python %' Enter; tmux select-pane -L")
 end, nor_s)
 
 -- resize
@@ -497,18 +479,18 @@ map("n", "<S-Left>", "5<c-w><", nor_s)
 map({ "n", "v" }, "<CR>", "za")
 map({ "n", "v" }, "<s-CR>", "zA")
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = "qf",
-  callback = function()
-    map({ "n", "v" }, "<CR>", "<CR>", { buffer = true })
-  end
+	pattern = "qf",
+	callback = function()
+		map({ "n", "v" }, "<CR>", "<CR>", { buffer = true })
+	end,
 })
 
 -- for command line window
 vim.api.nvim_create_autocmd("CmdwinEnter", {
-  callback = function()
-    map({ "n", "v" }, "<CR>", "<CR>", { noremap = true, buffer = true })
-    map({ "n", "v" }, "<C-c>", "<C-c>", { noremap = true, buffer = true })
-  end
+	callback = function()
+		map({ "n", "v" }, "<CR>", "<CR>", { noremap = true, buffer = true })
+		map({ "n", "v" }, "<C-c>", "<C-c>", { noremap = true, buffer = true })
+	end,
 })
 
 map("n", "<c-l><c-l>", ":nohl<cr>")
@@ -519,22 +501,22 @@ map("n", "<leader>,C", "<cmd>PickColor<cr>", nor)
 -- leetcode
 -- used because adding package something in go gives an error when submitting
 local no_first_line_cmd = function(cmd)
-  local bufnr = vim.api.nvim_get_current_buf()
-  local first_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)
-  vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
-  vim.cmd(cmd)
-  vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, first_line)
-  local cw = require("utils.lua.misc").replace_termcodes("<c-w>")
-  local cr = require("utils.lua.misc").replace_termcodes("<cr>")
-  vim.api.nvim_feedkeys(cw .. "e:w" .. cr .. cw .. "n", "m", true)
+	local bufnr = vim.api.nvim_get_current_buf()
+	local first_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)
+	vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "" })
+	vim.cmd(cmd)
+	vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, first_line)
+	local cw = require("utils.lua.misc").replace_termcodes("<c-w>")
+	local cr = require("utils.lua.misc").replace_termcodes("<cr>")
+	vim.api.nvim_feedkeys(cw .. "e:w" .. cr .. cw .. "n", "m", true)
 end
 
 vim.keymap.set("n", "<leader>,fll", ":LeetCodeList<cr>")
 vim.keymap.set("n", "<leader>,flt", function()
-  no_first_line_cmd("LeetCodeTest")
+	no_first_line_cmd("LeetCodeTest")
 end, desc("LeetCodeTest"))
 vim.keymap.set("n", "<leader>,fls", function()
-  no_first_line_cmd("LeetCodeSubmit")
+	no_first_line_cmd("LeetCodeSubmit")
 end, desc("LeetCodeSubmit"))
 -- vim.keymap.set("n", "<leader>,flt", ":LeetCodeTest<cr>")
 -- vim.keymap.set("n", "<leader>,fls", ":LeetCodeSubmit<cr>")
@@ -552,10 +534,15 @@ map({ "n", "x" }, "<leader>,ti", "<cmd>Inspect<CR>")
 map({ "n", "x" }, "<leader>,tt", "<cmd>InspectTree<CR>")
 map({ "n", "x" }, "<leader>,te", "<cmd>EditQuery<CR>")
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = "query",
-  callback = function()
-    map({ "n", "x" }, "<s-cr>", "<cmd>EditQuery<CR>", { buffer = true })
-  end
+	pattern = "query",
+	callback = function()
+		map({ "n", "x" }, "<s-cr>", "<cmd>EditQuery<CR>", { buffer = true })
+	end,
 })
 
 vim.cmd([[command! -nargs=+ Put :put=execute('<args>')]])
+
+-- [d for prev diagnostics
+-- ]d for next diagnostics
+map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
+map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<cr>", nor)

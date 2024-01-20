@@ -9,7 +9,7 @@ vim.opt.splitright = true
 vim.opt.splitbelow = true
 -- the title of the window will be set to the filepath
 vim.opt.title = true
-vim.opt.titlestring = "%{expand(\"%:p:~\")}%a%r%m"
+vim.opt.titlestring = '%{expand("%:p:~")}%a%r%m'
 
 -- maximum width of text that is inserted, after which the text is broken
 vim.opt.textwidth = 95
@@ -27,9 +27,13 @@ vim.opt.listchars = vim.opt.listchars + "precedes:«" -- LEFT-POINTING DOUBLE AN
 vim.opt.listchars = vim.opt.listchars + "trail:•"
 vim.opt.listchars = vim.opt.listchars + "eol:↲"
 
+vim.opt.cursorline = true
+vim.opt.cursorcolumn = true
+
 -- expand tab to spaces
 vim.opt.expandtab = true
 -- enable smartcase when searching/substituting
+vim.opt.ignorecase = true
 vim.opt.smartcase = true
 -- disable wrapping lines
 vim.opt.wrap = false
@@ -95,20 +99,19 @@ vim.opt.pumblend = 10
 vim.opt.statusline = "%t"
 vim.opt.spell = true
 
-
 -- general diagnostics
 vim.diagnostic.config({
-  virtual_text = {
-    spacing = 2,
-    severity_limit = "Warning",
-  },
-  -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
-  -- update_in_insert = true,
-  update_in_insert = false,
-  float = {
-    -- source = "if_many",
-    source = true,
-  },
+	virtual_text = {
+		spacing = 2,
+		severity_limit = "Warning",
+	},
+	-- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
+	-- update_in_insert = true,
+	update_in_insert = false,
+	float = {
+		-- source = "if_many",
+		source = true,
+	},
 })
 
 vim.opt.jumpoptions = "stack"
