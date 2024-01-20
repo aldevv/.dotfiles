@@ -1,4 +1,4 @@
-vim.cmd([[
+vim.cmd [[
 noremap gj ge
 noremap gJ gE
 noremap gn gj
@@ -269,4 +269,4 @@ cnoremap <expr> <M-w> Right()
 cnoremap <expr> <M-b> Left()
 
 
-]])
+]]

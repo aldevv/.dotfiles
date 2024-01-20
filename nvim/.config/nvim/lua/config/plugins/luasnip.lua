@@ -37,53 +37,53 @@
 -- 	local parse = require("luasnip.util.parser").parse_snippet
 -- 	local ms = require("luasnip.nodes.multiSnippet").new_multisnippet
 
-local ls = require("luasnip")
-local types = require("luasnip.util.types")
+local ls = require "luasnip"
+local types = require "luasnip.util.types"
 
-ls.config.setup({
-	-- snip_env =
-	-- This tells LuaSnip to remember to keep around the last snippet.
-	-- You can jump back into it even if you move outside of the selection
-	history = true,
-	-- This one is cool cause if you have dynamic snippets, it updates as you type!
-	updateevents = "TextChanged,TextChangedI",
-	-- Autosnippets:
-	enable_autosnippets = true,
-	-- Crazy highlights!!
-	-- #vid3
-	-- ext_opts = nil,
-	ext_opts = {
-		[types.choiceNode] = {
-			active = {
-				virt_text = { { " « ", "NonTest" } },
-			},
-		},
-	},
-})
+ls.config.setup {
+    -- snip_env =
+    -- This tells LuaSnip to remember to keep around the last snippet.
+    -- You can jump back into it even if you move outside of the selection
+    history = true,
+    -- This one is cool cause if you have dynamic snippets, it updates as you type!
+    updateevents = "TextChanged,TextChangedI",
+    -- Autosnippets:
+    enable_autosnippets = true,
+    -- Crazy highlights!!
+    -- #vid3
+    -- ext_opts = nil,
+    ext_opts = {
+        [types.choiceNode] = {
+            active = {
+                virt_text = { { " « ", "NonTest" } },
+            },
+        },
+    },
+}
 
 -- keymaps
 vim.keymap.set({ "i", "s" }, "<a-l>", function()
-	if ls.expand_or_jumpable() then
-		ls.expand_or_jump()
-	end
+    if ls.expand_or_jumpable() then
+        ls.expand_or_jump()
+    end
 end, { silent = true })
 
 vim.keymap.set({ "i", "s" }, "<a-k>", function()
-	if ls.jumpable(1) then
-		ls.jump(1)
-	end
+    if ls.jumpable(1) then
+        ls.jump(1)
+    end
 end, { silent = true })
 
 vim.keymap.set({ "i", "s" }, "<a-s-k>", function()
-	if ls.jumpable(-1) then
-		ls.jump(-1)
-	end
+    if ls.jumpable(-1) then
+        ls.jump(-1)
+    end
 end, { silent = true })
 
 vim.keymap.set({ "i", "s" }, "<a-s-l>", function()
-	if ls.choice_active() then
-		ls.change_choice(1)
-	end
+    if ls.choice_active() then
+        ls.change_choice(1)
+    end
 end)
 
 -- local s = ls.snippet
@@ -103,8 +103,8 @@ end)
 -- https://github.com/L3MON4D3/LuaSnip/blob/master/DOC.md#loaders
 -- https://www.ejmastnak.com/tutorials/vim-latex/luasnip/#files
 -- https://www.ejmastnak.com/tutorials/vim-latex/luasnip/#loading
-require("luasnip.loaders.from_lua").lazy_load({ paths = "./my_snippets/luasnips" })
-require("luasnip.loaders.from_vscode").lazy_load({ paths = "./my_snippets/vscode" })
+require("luasnip.loaders.from_lua").lazy_load { paths = "./my_snippets/luasnips" }
+require("luasnip.loaders.from_vscode").lazy_load { paths = "./my_snippets/vscode" }
 -- snipmate docs
 -- https://github.com/garbas/vim-snipmate/blob/master/doc/SnipMate.txt
-require("luasnip.loaders.from_snipmate").lazy_load({ paths = "./my_snippets/snipmate" })
+require("luasnip.loaders.from_snipmate").lazy_load { paths = "./my_snippets/snipmate" }
