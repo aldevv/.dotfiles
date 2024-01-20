@@ -6,17 +6,17 @@ vim.o.foldexpr = "nvim_treesitter#foldexpr()"
 vim.o.foldlevel = 20
 vim.o.foldenable = true
 
-vim.cmd([[
+vim.cmd [[
 let blacklist = ['org', 'OverseerList']
 augroup remember_folds
   autocmd!
   au BufWinLeave ?* if index(blacklist, &ft) < 0 | mkview 1 | endif
   au BufWinEnter ?* if index(blacklist, &ft) < 0 | silent! loadview 1 | endif
 augroup END
-]])
+]]
 
 -- go to next and prev fold
-vim.cmd([[
+vim.cmd [[
 set foldopen =hor,search,tag,undo,quickfix,percent,mark,insert
 
 nnoremap <silent> zn :<c-u>call RepeatCmd('call NextClosedFold("j")')<cr>
@@ -43,4 +43,4 @@ function! NextClosedFold(dir)
         call winrestview(view)
     endif
 endfunction
-]])
+]]

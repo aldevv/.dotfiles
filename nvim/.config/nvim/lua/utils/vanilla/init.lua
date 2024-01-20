@@ -1,1 +1,1 @@
-require("utils.vanilla.core")
+require "utils.vanilla.core"
