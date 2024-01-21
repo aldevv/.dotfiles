@@ -1,4 +1,8 @@
 -- put hover signature_help and cmp help transparent
+local colorscheme = "kanagawa"
+-- local colorscheme = "tokyonight"
+-- local colorscheme = "eva01"
+vim.cmd("colorscheme " .. colorscheme)
 
 -- this is so is not overwritten by my colorscheme
 -- vim.cmd([[

@@ -35,8 +35,4 @@ require("lazy").setup("plugins", {
 })
 
 require("keybindings")
-local colorscheme = "kanagawa"
--- local colorscheme = "tokyonight"
--- local colorscheme = "eva01"
-vim.cmd("colorscheme " .. colorscheme)
 require("ui")
