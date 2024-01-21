@@ -2,6 +2,7 @@ return {
 
 	{
 		"ellisonleao/gruvbox.nvim",
+		priority = 1000,
 		lazy = false,
 		config = function()
 			-- vim.g.gruvbox_material_foreground = "original" -- can be material and mix
@@ -15,6 +16,8 @@ return {
 
 	{
 		"folke/tokyonight.nvim",
+		priority = 1000,
+		lazy = false,
 		branch = "main",
 		config = function()
 			-- vim.o.background == "dark"
@@ -30,6 +33,8 @@ return {
 
 	{
 		"catppuccin/nvim",
+		priority = 1000,
+		lazy = false,
 		config = function()
 			require("catppuccin").setup({
 
@@ -46,9 +51,13 @@ return {
 	{
 		"rebelot/kanagawa.nvim",
 		priority = 1000,
-		lazy = true,
+		lazy = false,
 	},
 	"nyngwang/nvimgelion",
-	{ "hachy/eva01.vim", branch = "main" },
+	{
+		"hachy/eva01.vim",
+		priority = 1000,
+		branch = "main",
+	},
 	"navarasu/onedark.nvim",
 }
