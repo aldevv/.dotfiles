@@ -1,4 +1,6 @@
-vim.loader.enable()
+if vim.loader then
+  vim.loader.enable()
+end
 
 -- install lazy
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -23,6 +25,7 @@ require("utils.lua.globals")
 if os.getenv("USER") == "root" then
   require("ui")
   require("config.automation")
+  require("keybindings")
   return
 end
 require("config")
@@ -32,4 +35,8 @@ require("lazy").setup("plugins", {
 })
 
 require("keybindings")
+local colorscheme = "kanagawa"
+-- local colorscheme = "tokyonight"
+-- local colorscheme = "eva01"
+vim.cmd("colorscheme " .. colorscheme)
 require("ui")

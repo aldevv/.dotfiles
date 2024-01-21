@@ -24,10 +24,6 @@
 --     autocmd ColorScheme * call CmpColors()
 --   augroup END
 -- ]])
-local colorscheme = "kanagawa"
--- local colorscheme = "tokyonight"
--- local colorscheme = "eva01"
-vim.cmd("colorscheme " .. colorscheme)
 
 -- transparency
 vim.api.nvim_set_hl(0, "Normal", { bg = "NONE", ctermbg = "NONE" })
