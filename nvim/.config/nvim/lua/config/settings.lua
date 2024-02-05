@@ -100,17 +100,17 @@ vim.opt.spell = true
 
 -- general diagnostics
 vim.diagnostic.config({
-  virtual_text = {
-    spacing = 2,
-    severity_limit = "Warning",
-  },
-  -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
-  -- update_in_insert = true,
-  update_in_insert = false,
-  float = {
-    -- source = "if_many",
-    source = true,
-  },
+	virtual_text = {
+		spacing = 2,
+		severity_limit = "Warning",
+	},
+	-- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
+	-- update_in_insert = true,
+	update_in_insert = false,
+	float = {
+		-- source = "if_many",
+		source = true,
+	},
 })
 
 vim.opt.jumpoptions = "stack"
