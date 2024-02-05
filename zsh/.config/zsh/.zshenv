@@ -1,5 +1,8 @@
 if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
+# path
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
 if command -v pmy &>/dev/null; then
     eval "$(pmy init)"
 fi
@@ -47,8 +50,6 @@ load_fly() {
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# path
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # bob nvim
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"

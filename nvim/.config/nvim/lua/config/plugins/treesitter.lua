@@ -1,5 +1,7 @@
 -- register zsh ft to use bash
-vim.treesitter.language.register("bash", "zsh")
+if vim.treesitter.language.register then
+	vim.treesitter.language.register("bash", "zsh")
+end
 local ensure_installed = {
 	"bash",
 	"python",
