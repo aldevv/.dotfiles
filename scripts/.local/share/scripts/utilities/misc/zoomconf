@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# this is only for flatpak zoom installation, otherwise use ~/.config/zoomus.conf
+nvim ~/.var/app/us.zoom.Zoom/config/zoomus.conf
