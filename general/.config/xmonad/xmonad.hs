@@ -200,6 +200,7 @@ myManageHook =
       , className =? "Insomnia" --> doShift (myWorkspaces !! 3)
       , className =? "discord" --> doShift (myWorkspaces !! 6)
       , className =? "firefox" --> doShift (myWorkspaces !! 0)
+      , className =? "zoom" --> doShift (myWorkspaces !! 4)
       , -- className =? "zoom " --> doFloat,
         className =? "SimpleScreenRecorder" --> doFloat
       , isDialog --> doFloat

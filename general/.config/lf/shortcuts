@@ -247,6 +247,8 @@ map <backspace2>.va $ $EDITOR ~/.config/nvim/lua/ui/init.lua
 map <backspace2>.vs $ $EDITOR ~/.config/nvim/lua/config/settings.lua
 map <backspace2>.vu $ $EDITOR ~/.config/nvim/lua/utils/lua/telescope.lua
 map <backspace2>.vk $ $EDITOR ~/.config/nvim/lua/keybindings/init.lua
+map <backspace2>.vt $ $EDITOR ~/.config/nvim/lua/plugins/telescope.lua
+map <backspace2>.vh $ $EDITOR ~/.config/nvim/lua/config/plugins/harpoon.lua
 map <backspace2>.vK $ $EDITOR ~/.config/nvim/lua/keybindings/dap.lua
 map <backspace2>.vd $ $EDITOR ~/.config/nvim/lua/config/plugins/dap/dap.lua
 map <backspace2>.vl $ $EDITOR ~/.config/nvim/lua/config/plugins/lsp/lsp.lua

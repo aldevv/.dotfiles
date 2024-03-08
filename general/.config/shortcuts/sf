@@ -20,6 +20,8 @@
 .vs     ~/.config/nvim/lua/config/settings.lua
 .vu     ~/.config/nvim/lua/utils/lua/telescope.lua
 .vk     ~/.config/nvim/lua/keybindings/init.lua
+.vt     ~/.config/nvim/lua/plugins/telescope.lua
+.vh     ~/.config/nvim/lua/config/plugins/harpoon.lua
 .vK     ~/.config/nvim/lua/keybindings/dap.lua
 .vd     ~/.config/nvim/lua/config/plugins/dap/dap.lua
 .vl     ~/.config/nvim/lua/config/plugins/lsp/lsp.lua

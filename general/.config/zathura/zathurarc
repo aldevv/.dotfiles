@@ -22,7 +22,7 @@ map - feedkeys /
 map + feedkeys ?
 map { zoom out
 map } zoom in
-map <A-o> feedkeys ":exec okular %<Return>"
+map <A-o> feedkeys ":exec okular $FILE<Return>"
 map N scroll half-down
 map E scroll half-up
 

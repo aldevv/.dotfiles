@@ -4,24 +4,40 @@ wk.register({
     name = "Programming utils",
     d = { name = "DAP" },
     b = { name = "DBUI" },
-    r = { name = "RestNvim" },
     t = { name = "NeoTest" },
     o = { name = "Overseer" },
   },
 })
 
--- rest.nvim
-vim.keymap.set("n", "Srr", "<Plug>RestNvim<cr>")
-vim.keymap.set("n", "Srp", "<Plug>RestNvimPreview<cr>")
-vim.keymap.set("n", "Srl", "<Plug>RestNvimLast<cr>")
+-- neotest
+vim.keymap.set("n", "<leader>n", ":lua require('neotest').run.run()<cr>") -- run nearest
+vim.keymap.set("n", "<leader>N", ":lua require('neotest').run.run({suite=true})<cr>")
+
+vim.keymap.set("n", "Stp", ":lua require('neotest').output_panel.toggle()<cr>", { desc = "Test: output_panel" })
+vim.keymap.set("n", "Stn", ":lua require('neotest').run.run()<cr>")  -- run nearest
+vim.keymap.set("n", "Stx", ":lua require('neotest').run.stop()<cr>") -- run nearest
+vim.keymap.set("n", "Stf", ":lua require('neotest').run.run(vim.fn.expand('%'))<cr>")
+vim.keymap.set("n", "Sts", ":lua require('neotest').summary.toggle()<cr>")
+vim.keymap.set("n", "Sto", ":lua require('neotest').output.open({enter = false})<cr>")
+vim.keymap.set("n", "StO", ":lua require('neotest').output.open({enter = true})<cr>")
+vim.keymap.set("n", "Stl", ":lua require('neotest').run.run_last()<cr>")
+vim.keymap.set("n", "Stk", ":lua require('neotest').jump.next({status = 'failed'})<cr>")
+vim.keymap.set("n", "StK", ":lua require('neotest').jump.prev({status = 'failed'})<cr>")
+vim.keymap.set("n", "Stt", ":lua require('neotest').run.run({suite = true})<cr>")
+vim.keymap.set("n", "StS", ":lua require('neotest').run.run({suite = true})<cr>")
+vim.keymap.set("n", "Stg", ":TestVisit<cr>")
+vim.cmd([[cnoreabbrev Tn TestNearest]])
+vim.cmd([[cnoreabbrev Ts TestSuite]])
+vim.cmd([[cnoreabbrev Tf TestFile]])
+vim.cmd([[cnoreabbrev Tl TestLast]])
 
 -- dadbod
 -- opening it in a new tab
-vim.keymap.set("n", "Sbd", ":tabedit | DBUI<cr>")
-vim.keymap.set("n", "SbD", ":DBUIToggle<cr>")
-vim.keymap.set("n", "Sba", ":DBUIAddConnection<cr>")
-vim.keymap.set("n", "Sbf", ":DBUIFindBuffer<cr>")
-vim.keymap.set("n", "Sbq", ":DBUILastQueryInfo<cr>")
+vim.keymap.set("n", "Sb", ":tabedit | DBUI<cr>")
+vim.keymap.set("n", "SBd", ":DBUIToggle<cr>")
+vim.keymap.set("n", "SBa", ":DBUIAddConnection<cr>")
+vim.keymap.set("n", "SBf", ":DBUIFindBuffer<cr>")
+vim.keymap.set("n", "SBq", ":DBUILastQueryInfo<cr>")
 -- For queries, filetype is automatically set to sql. Also, two vim.keymap.setpings is added for the sql filetype:
 --
 -- W - Permanently save query for later use (<Plug>(DBUI_SaveQuery))

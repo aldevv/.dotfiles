@@ -55,6 +55,10 @@ return {
       ]])
       vim.g.copilot_filetypes = {
         ["*"] = false,
+        ["docker-compose"] = true,
+        dockerfile = true,
+        json = true,
+        yaml = true,
         sh = true,
         lua = true,
         go = true,
@@ -116,11 +120,6 @@ return {
       require("toggleterm").setup()
     end,
     cmd = "ToggleTerm",
-  },
-  {
-    "rest-nvim/rest.nvim",
-    dev = true,
-    dependencies = "nvim-lua/plenary.nvim",
   },
   {
     "ianding1/leetcode.vim",
