@@ -105,3 +105,8 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 	pattern = "javascriptreact",
 	command = "setlocal nospell",
 })
+
+vim.api.nvim_create_autocmd({ "BufRead" }, {
+	pattern = ".envrc",
+	command = "set ft=bash",
+})

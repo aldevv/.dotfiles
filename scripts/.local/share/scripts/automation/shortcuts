@@ -37,7 +37,7 @@ lf_dir='{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =
 # neovim dir
 basic='{shortcut=""; for ( i = 2; i <= NF; i++ ) if (shortcut != "") shortcut =shortcut"\\ "$i; else shortcut=$i}; {print"'
 change_dir='vim.keymap.set(\"n\", \"<backspace>"$1"\", \"<cmd>e "shortcut"<cr>\", {silent=true, noremap=true})\n'
-telescope='vim.keymap.set(\"n\",\"<s-backspace>p"$1"\", \":lua require('\''telescope.builtin'\'').find_files({prompt_title = '\''<"shortcut">'\'', cwd = '\''"shortcut"'\'', hidden = '\''true'\''})<cr>\", { noremap = true, silent = true })\n'
+telescope='vim.keymap.set(\"n\",\"<backspace><a-p>"$1"\", \":lua require('\''telescope.builtin'\'').find_files({prompt_title = '\''<"shortcut">'\'', cwd = '\''"shortcut"'\'', hidden = '\''true'\''})<cr>\", { noremap = true, silent = true })\n'
 
 # this uses live_grep
 # telescope_grep='vim.keymap.set(\"n\",\"<localleader>tl"$1"\", \":lua require('\''telescope.builtin'\'').live_grep({prompt_title = '\''<LIVE GREP "shortcut">'\'', cwd = '\''"shortcut"'\''})<cr>\", { noremap = true, silent = true })\n'
@@ -45,7 +45,7 @@ telescope='vim.keymap.set(\"n\",\"<s-backspace>p"$1"\", \":lua require('\''teles
 # this uses grep_string
 # you can exact match using a single quote
 # https://github.com/nvim-telescope/telescope-fzf-native.nvim
-telescope_grep='vim.keymap.set(\"n\",\"<s-backspace>r"$1"\", \":lua require('\''telescope.builtin'\'').grep_string({prompt_title = '\''<LIVE GREP "shortcut">'\'', cwd = '\''"shortcut"'\'', search ='\'''\'',  shorten_path = true})<cr>\", { noremap = true, silent = true })\n'
+telescope_grep='vim.keymap.set(\"n\",\"<backspace><a-r>"$1"\", \":lua require('\''telescope.builtin'\'').grep_string({prompt_title = '\''<LIVE GREP "shortcut">'\'', cwd = '\''"shortcut"'\'', search ='\'''\'',  shorten_path = true})<cr>\", { noremap = true, silent = true })\n'
 end='"}'
 
 # directory shortcuts
