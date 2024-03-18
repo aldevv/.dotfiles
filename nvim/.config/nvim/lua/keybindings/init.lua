@@ -36,6 +36,7 @@ map("n", "e", "k", nor)
 map("n", "j", "e", nor)
 
 map("n", "gk", "gn", nor)
+map("n", "cj", "ce", nor)
 
 -- ===================
 -- map("n", "l", "i", nor)
@@ -209,9 +210,6 @@ map("n", "<c-l>K", ":lprev<cr>zzzv", nor)
 -- tagbar
 map("n", "<c-h>", ":TagbarToggle<cr>", nor_s)
 map("n", "<c-s-h>", ":LSoutlineToggle<cr>", nor_s)
--- hop
--- map("n", "s", ":HopChar1<cr>", nor_s)
--- map("o", "S", ":HopChar1<cr>", nor_s)
 
 -- leader commands
 -- -----------------
@@ -354,12 +352,13 @@ map("n", "<leader>sm", function()
 	require("utils.lua.float").toggle("Makefile")
 end, desc("Open Makefile file in a floating window"))
 
-map(
-	"n",
-	"<leader>sp",
-	"<cmd>lua require('utils.lua.float').toggle('package.json')<cr>",
-	desc("Open package.json file in a floating window")
-)
+map("n", "<leader>sp", function()
+	require("utils.lua.float").toggle("package.json")
+end, desc("Open package.json file in a floating window"))
+
+map("n", "<leader>se", function()
+	require("utils.lua.float").toggle("../.envrc")
+end, desc("Open .envrc file in a floating window"))
 
 map(
 	"n",
