@@ -357,7 +357,7 @@ map("n", "<leader>sp", function()
 end, desc("Open package.json file in a floating window"))
 
 map("n", "<leader>se", function()
-	require("utils.lua.float").toggle("../.envrc")
+	require("utils.lua.float").toggle("../.envrc", { width = 80, height = 50 })
 end, desc("Open .envrc file in a floating window"))
 
 map(
@@ -543,5 +543,8 @@ vim.cmd([[command! -nargs=+ Put :put=execute('<args>')]])
 
 -- [d for prev diagnostics
 -- ]d for next diagnostics
-map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
 map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<cr>", nor)
+map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
+
+map("n", "<Del>", "<cmd>lua vim.diagnostic.goto_next()<cr>", nor)
+map("n", "<S-Del>", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
