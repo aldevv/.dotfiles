@@ -1,4 +1,9 @@
+-- harpoon not working in windows
+if vim.fn.has("win32") == 1 then
+  return
+end
 local harpoon = require("harpoon")
+local extensions = require("harpoon.extensions")
 
 local cfg = {
   settings = {
@@ -52,12 +57,6 @@ end
 harpoon:setup(cfg)
 
 -- runs a vim command
--- if windows don't do this
--- if vim.fn.has("win32") == 0 then
---   local extensions = require("harpoon.extensions")
--- else
---   local extensions = {}
--- end
 -- harpoon:extend(extensions.builtins.command_on_nav('echo "hi"'));
 
 -- extension to add keybindings for the harpoon menu
