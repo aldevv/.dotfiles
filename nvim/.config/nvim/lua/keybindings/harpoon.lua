@@ -18,15 +18,6 @@ M.load_mappings = function()
   map("n", "<C-c>", function()
     harpoon.ui:toggle_quick_menu(harpoon:list())
   end)
-  if vim.fn.has("win32") == 1 then
-    map("n", "<leader>hh", function()
-      harpoon.ui:toggle_quick_menu(harpoon:list())
-    end)
-
-    map("n", "<leader>ha", function()
-      harpoon:list():append()
-    end)
-  end
 
   map("n", "<C-s-c>", function()
     harpoon.ui:toggle_quick_menu(harpoon:list("second"))
@@ -145,6 +136,30 @@ M.load_mappings = function()
   map("n", "Ñe", function()
     run_in_tmux("tests", 4)
   end, { desc = "tmux run harpoon tests 4" })
+
+  -- windows keybindings
+  if vim.fn.has("win32") == 1 then
+    map("n", "<leader>hh", function()
+      harpoon.ui:toggle_quick_menu(harpoon:list())
+    end)
+
+    map("n", "<leader>ha", function()
+      harpoon:list():append()
+    end)
+
+    map("n", "<leader>s", function()
+      harpoon:list():select(1)
+    end)
+    map("n", "<leader>t", function()
+      harpoon:list():select(2)
+    end)
+    map("n", "<leader>n", function()
+      harpoon:list():select(3)
+    end)
+    map("n", "<leader>e", function()
+      harpoon:list():select(4)
+    end)
+  end
 end
 
 return M
