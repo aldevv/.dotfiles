@@ -1,6 +1,7 @@
 require("orgmode").setup_ts_grammar()
 require("orgmode").setup({
-  org_startup_indented = true,
+  -- org_startup_indented = true,
+  org_indent_mode = "indent",
   org_edit_src_content_indentation = 0,
   mappings = {
     text_objects = {
