@@ -18,6 +18,12 @@ M.load_mappings = function()
 	map("n", "<C-c>", function()
 		harpoon.ui:toggle_quick_menu(harpoon:list())
 	end)
+	if vim.fn.has("win32") == 1 then
+		map("n", "<leader>h", function()
+			harpoon.ui:toggle_quick_menu(harpoon:list())
+		end)
+	end
+
 	map("n", "<C-s-c>", function()
 		harpoon.ui:toggle_quick_menu(harpoon:list("second"))
 	end)
