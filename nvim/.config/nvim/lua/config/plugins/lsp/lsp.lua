@@ -26,7 +26,7 @@ local servers = {
   "emmet_ls",
 }
 
-if os.getenv("NVIM_MINIMAL") ~= "" then
+if os.getenv("NVIM_MINIMAL") ~= nil then
   servers = {}
 end
 
