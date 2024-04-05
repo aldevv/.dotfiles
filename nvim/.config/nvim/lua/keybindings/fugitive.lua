@@ -22,11 +22,11 @@ local nor_e = vim.tbl_extend("keep", nor, e)
 local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 
 local desc = function(desc)
-	return vim.tbl_extend("keep", nor_s, { desc = desc })
+  return vim.tbl_extend("keep", nor_s, { desc = desc })
 end
 
 local descv = function(desc)
-	return vim.tbl_extend("keep", nor, { desc = desc })
+  return vim.tbl_extend("keep", nor, { desc = desc })
 end
 
 local map = vim.keymap.set
@@ -69,7 +69,7 @@ map("n", "<leader>gl0m", ":0Gclog! ", nor)
 map("n", "<leader>gl0M", ":G! log % ", nor)
 map("n", "<leader>gl0v", ":GV!<CR>", nor) -- only list commits current file
 
-map("n", "gC", ":G commit<CR>", nor) -- only list commits current file
+map("n", "gC", ":G commit<CR>", nor)      -- only list commits current file
 
 -- while in the git log you can do:
 -- coo to checkout that commit!
@@ -79,7 +79,7 @@ map("n", "gC", ":G commit<CR>", nor) -- only list commits current file
 -- <cr> to enter commit
 map("n", "<leader>glt", ":Telescope git_commits<CR>", descv("Telescope git log <Telescope git_commits>"))
 map("n", "<leader>glg", ":G log --decorate=short<CR>", descv("G log <normal>"))
-map("n", "<leader>glm", ":G log ", descv("G log _")) -- you could do % to view log of file
+map("n", "<leader>glm", ":G log ", descv("G log _"))       -- you could do % to view log of file
 map("n", "<leader>gl<space>", ":G log ", descv("G log _")) -- you could do % to view log of file
 
 map("n", "<leader>glG", ":Gclog!<CR>", descv("Gclog <quickfix>"))
@@ -94,10 +94,10 @@ map("v", "<leader>gl<space>", ":Gclog! ", descv("Gclog! _"))
 
 map("n", "<leader>gp", ":G push -u origin HEAD<cr>", descv("G push -u origin HEAD"))
 map(
-	"n",
-	"<leader>gP",
-	":G push --force-with-lease --force-if-includes<cr>",
-	descv("G push --force-with-lease --force-if-includes")
+  "n",
+  "<leader>gP",
+  ":G push --force-with-lease --force-if-includes<cr>",
+  descv("G push --force-with-lease --force-if-includes")
 )
 map("n", "<leader>gL", ":G pull<CR>", desc("G pull"))
 
@@ -108,11 +108,11 @@ map("n", "<leader>gcc", ":G! commit<CR>", descv("G! commit"))
 map("n", "<leader>gc<space>", ":G! commit ", descv("G! commit _"))
 map("n", "<leader>gco", ":Telescope git_branches<CR>", descv("Telescope git checkout<Telescope git_branches>"))
 map("n", "<leader>gcO", ":G! checkout -<CR>", descv("git checkout previous<G checkout ->"))
-map("n", "<leader>gr", ":Gread<CR>", nor) -- use index
+map("n", "<leader>gr", ":Gread<CR>", nor)   -- use index
 map("n", "<leader>gR", ":Gread -<CR>", nor) -- use commit
 map("n", "<leader>gw", ":Gwrite<CR>", nor)
 map("n", "<leader>ge", ":Gedit<CR>", nor)
-map("n", "<leader>gs", ":Gsplit @~", nor)
+map("n", "<leader>gS", ":Gsplit @~", nor)
 map("n", "<leader>gv", ":Gvsplit @~", nor)
 
 -- GV
@@ -123,15 +123,15 @@ map("n", "<leader>gv", ":Gvsplit @~", nor)
 -- ]] and [[ to move between commits
 -- . to start command-line with :Git [CURSOR] SHA à la fugitive
 -- q or gq to close
-map("n", "<leader>glvv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
+map("n", "<leader>glvv", ":GV<CR>", nor)  -- other plugin to visualize repo, you can use visual mode too
 map("n", "<leader>glv?", ":GV!<CR>", nor) -- location list fill
-map("v", "<leader>glvv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
+map("v", "<leader>glvv", ":GV<CR>", nor)  -- other plugin to visualize repo, you can use visual mode too
 map("v", "<leader>glv0", ":GV!<CR>", nor) -- only list commits current file
 map("v", "<leader>glv?", ":GV!<CR>", nor) -- location list fill
 
-map("n", "<leader>gVv", ":GV<CR>", nor) -- commit history
-map("n", "<leader>gV0", ":GV!<CR>", nor) -- commit history current file
-map("v", "<leader>gVv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
-map("v", "<leader>gV0", ":GV!<CR>", nor) -- only list commits current file
+map("n", "<leader>gVv", ":GV<CR>", nor)   -- commit history
+map("n", "<leader>gV0", ":GV!<CR>", nor)  -- commit history current file
+map("v", "<leader>gVv", ":GV<CR>", nor)   -- other plugin to visualize repo, you can use visual mode too
+map("v", "<leader>gV0", ":GV!<CR>", nor)  -- only list commits current file
 
 map("n", "<leader>gv", ":Gvsplit @~", nor)
