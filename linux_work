@@ -9,4 +9,6 @@ fi
 
 STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/install
 
+echo "modify the .gitconfig file so it uses your work email"
+
 
