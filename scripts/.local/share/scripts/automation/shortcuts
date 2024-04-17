@@ -1,9 +1,9 @@
 #!/bin/zsh
 
 # Config locations
-GENERAL_PATH="${DOTFILES:-~/.dotfiles}/general/.config"
-NVIM_PATH="${DOTFILES:-~/.dotfiles}/nvim/.config/nvim"
-ZSH_PATH="${DOTFILES:-~/.dotfiles}/zsh/.config/zsh"
+GENERAL_PATH="${DOTFILES:-$HOME/.dotfiles}/general/.config"
+NVIM_PATH="${DOTFILES:-$HOME/.dotfiles}/nvim/.config/nvim"
+ZSH_PATH="${DOTFILES:-$HOME/.dotfiles}/zsh/.config/zsh"
 folders="$GENERAL_PATH/shortcuts/sd"
 files="$GENERAL_PATH/shortcuts/sf"
 
