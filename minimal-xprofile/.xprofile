@@ -1,0 +1,5 @@
+#!/bin/bash
+
+[[ -f "$HOME/.config/zsh/.zprofile" ]] && \
+  . "$HOME/.config/zsh/.zprofile"
+
