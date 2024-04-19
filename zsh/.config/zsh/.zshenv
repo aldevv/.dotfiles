@@ -2,19 +2,15 @@ if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc
 
 # path
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-
+#
 if command -v pmy &>/dev/null; then
     eval "$(pmy init)"
 fi
 
 
-if [[ -d $HOME/.local/share/fnm ]]; then
-    export PATH=$HOME/.local/share/fnm:$PATH
-    eval "`fnm env`"
-fi
 
 
-if [[ -f  "$CARGO_HOME/env" ]]; then 
+if [[ -n $CARGO_HOME ]] && [[ -f  "$CARGO_HOME/env" ]]; then 
     CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
     . "$CARGO_HOME/env"
 fi
@@ -40,7 +36,15 @@ load_fly() {
     export FLYCTL_INSTALL="/home/kanon/.fly"
     export PATH="$FLYCTL_INSTALL/bin:$PATH"
 }
-[[ -d .fly && -n "$(command -v fly)" ]] && load_fly 
+
+load_fnm() { 
+    export PATH=$HOME/.local/share/fnm:$PATH
+    eval "$(fnm env --use-on-cd)" 2>/dev/null
+}
+
+[[ -d $HOME/.local/share/fnm ]] && load_fnm
+
+[[ -d $HOME/.fly  ]] && [[ -n "$(command -v fly)" ]] && load_fly 
 
 
 # bun completions

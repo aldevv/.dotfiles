@@ -1,6 +1,6 @@
 #!/bin/bash
 if [[ -z $STOW_FOLDERS ]]; then
-    STOW_FOLDERS="nvim,general,zsh,scripts"
+    STOW_FOLDERS="nvim,general,zsh,scripts,minimal-xprofile"
 fi
 
 if [[ -z $DOTFILES ]]; then

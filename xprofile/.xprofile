@@ -1,8 +1,9 @@
 #!/bin/bash
 
-setxkbmap -layout latam -variant colemak &
+
 [[ -f "$HOME/.config/zsh/.zprofile" ]] && \
   . "$HOME/.config/zsh/.zprofile"
+
 
 ##to import env variables to dbus
 # dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
@@ -25,13 +26,17 @@ fi
 	setsid feh --bg-fill ~/Pictures/ktutch4wg7ba1.png 2>/dev/null &
 
 ## custom scripts
-setsid picom &
-# so the user can make connections to the xserver (docker)
-xhost local:root &
-[[ $DESKTOP_SESSION = "dwm" ]] && [[ -n $(command -v pacman) ]] &&
+[[ -n $(command -v picom) ]] && setsid picom &
+
+# check if docker still works with xserver 19/04/24
+# # so the user can make connections to the xserver (docker)
+# xhost local:root &
+
+
+[[ $DESKTOP_SESSION = "dwm" ]] && [[ -n $(command -v pacman) ]] && \
 	setsid dwmstatus-pacman &
 
-[[ $DESKTOP_SESSION = "dwm" ]] && [[ -n $(command -v apt) ]] &&
+[[ $DESKTOP_SESSION = "dwm" ]] && [[ -n $(command -v apt) ]] && \
 	setsid dwmstatus-apt &
 
 [[ -f ~/.Xresources ]] &&
@@ -77,8 +82,19 @@ fi
 [[ -f "$HOME/.config/zsh/.zshenv" ]] && \
   . "$HOME/.config/zsh/.zshenv"
 
-[[ -n $(command -v startup) ]] && \
-	startup &
+
+startup() {
+  if [[ -z "$DISPLAY" ]]; then
+  	return
+  fi
+  setxkbmap -layout latam -variant colemak &
+  xset r rate 600 20 
+  remove_dead_keys 
+  sleep 0.1
+  xmodmap ~/.Xmodmap 
+}
+startup
+
 [[ -f "$HOME/.config/.startup_work" ]] && \
 	setsid "$HOME/.config/.startup_work" &
 
