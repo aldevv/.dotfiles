@@ -4,6 +4,21 @@
 [[ -f "$HOME/.config/zsh/.zprofile" ]] && \
   . "$HOME/.config/zsh/.zprofile"
 
+startup() {
+  if [[ -z "$DISPLAY" ]]; then
+  	return
+  fi
+  setxkbmap -layout latam -variant colemak &
+  xset r rate 600 20 
+  remove_dead_keys 
+  sleep 0.1
+  xmodmap ~/.Xmodmap 
+}
+startup
+
+[[ -f "$HOME/.config/.startup_work" ]] && \
+	setsid "$HOME/.config/.startup_work" &
+
 
 ##to import env variables to dbus
 # dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
@@ -23,7 +38,7 @@ if [[ -n $(command -v fcitx) ]]; then
 fi
 
 [[ -n $(command -v feh) ]] &&
-	setsid feh --bg-fill ~/Pictures/ktutch4wg7ba1.png 2>/dev/null &
+	setsid feh --bg-fill ~/Pictures/wp/2024.jpg 2>/dev/null &
 
 ## custom scripts
 [[ -n $(command -v picom) ]] && setsid picom &
@@ -83,18 +98,4 @@ fi
   . "$HOME/.config/zsh/.zshenv"
 
 
-startup() {
-  if [[ -z "$DISPLAY" ]]; then
-  	return
-  fi
-  setxkbmap -layout latam -variant colemak &
-  xset r rate 600 20 
-  remove_dead_keys 
-  sleep 0.1
-  xmodmap ~/.Xmodmap 
-}
-startup
-
-[[ -f "$HOME/.config/.startup_work" ]] && \
-	setsid "$HOME/.config/.startup_work" &
 
