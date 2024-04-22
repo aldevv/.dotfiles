@@ -18,7 +18,11 @@ fzf_with_nth() {
 	echo "$value"
 }
 
-folders=("$WORK" "$PROJECTS" "$CODE" "$LEARN" $REPOS/*)
+
+# folders=("$WORK" "$PROJECTS" "$CODE" "$LEARN" $REPOS/*)
+folders=("$WORK" "$PROJECTS" "$CODE" "$LEARN")
+[[ -d $REPOS ]] && [[ -n $(ls -A $REPOS) ]] && folders+=($REPOS/*)
+
 folders_result=""
 if [[ -z "$selected" ]]; then
 	# the -not -path is to ignore hidden folders

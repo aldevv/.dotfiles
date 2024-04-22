@@ -58,5 +58,8 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 # bob nvim
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 
+# golang
+export PATH="/usr/local/go/bin:$PATH"
+
 [[ -f "$HOME/.turso/turso" ]] && export PATH="$HOME/.turso:$PATH"
 
