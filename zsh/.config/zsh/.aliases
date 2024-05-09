@@ -866,60 +866,60 @@ alias dkmS='docker-machine stop '
 # Docker Compose (c)
 alias dkc.l='bat docker-compose.local.yml'
 alias dkc.='bat docker-compose.yml'
-alias dkc='docker-compose '
-alias dkcC='docker-compose config '
-alias dkcb='docker-compose build '
-alias dkcB='docker-compose build --no-cache '
-alias dkcd='docker-compose down '
-alias dkcD='docker-compose down --volumes '
-alias dkce='docker-compose exec'
-alias dkck='docker-compose kill '
-alias dkclg='docker-compose logs --follow '
-alias dkclG='docker-compose logs -f '
-alias dkcls='docker-compose ps '
-alias dkcz='docker-compose pause '
-alias dkcZ='docker-compose unpause '
-alias dkcP='docker-compose pull '
-alias dkcp='docker-compose push '
-alias dkcps='docker-compose ps '
-alias dkcr='docker-compose run -e COLUMNS=`tput cols` -e LINES=`tput lines` '
-alias dkcR='docker-compose run -e COLUMNS=`tput cols` -e LINES=`tput lines` --rm '
-alias dkcrm='docker-compose rm '
-alias dkcs='docker-compose start '
-alias dkcsc='docker-compose scale '
-alias dkcx='docker-compose restart '
-alias dkcu='docker-compose up '
-alias dkcU='docker-compose up -d '
-alias dkc..='nvim docker-compose.yml '
-alias dkcS='docker-compose stop '
+alias dkc='docker compose '
+alias dkcC='docker compose config '
+alias dkcb='docker compose build '
+alias dkcB='docker compose build --no-cache '
+alias dkcd='docker compose down '
+alias dkcD='docker compose down --volumes '
+alias dkce='docker compose exec'
+alias dkck='docker compose kill '
+alias dkclg='docker compose logs --follow '
+alias dkclG='docker compose logs -f '
+alias dkcls='docker compose ps '
+alias dkcz='docker compose pause '
+alias dkcZ='docker compose unpause '
+alias dkcP='docker compose pull '
+alias dkcp='docker compose push '
+alias dkcps='docker compose ps '
+alias dkcr='docker compose run -e COLUMNS=`tput cols` -e LINES=`tput lines` '
+alias dkcR='docker compose run -e COLUMNS=`tput cols` -e LINES=`tput lines` --rm '
+alias dkcrm='docker compose rm '
+alias dkcs='docker compose start '
+alias dkcsc='docker compose scale '
+alias dkcx='docker compose restart '
+alias dkcu='docker compose up '
+alias dkcU='docker compose up -d '
+alias dkc..='nvim docker compose.yml '
+alias dkcS='docker compose stop '
 
-alias dkcz='docker-compose down && docker compose up -d '
-alias dkcR='docker-compose build && docker compose down && docker compose up -d '
+alias dkcz='docker compose down && docker compose up -d '
+alias dkcR='docker compose build && docker compose down && docker compose up -d '
 
-alias dkclgl='docker-compose -f docker-compose.local.yml logs --follow'
-alias dkcul='docker-compose -f docker-compose.local.yml up'
-alias dkcUl='docker-compose -f docker-compose.local.yml up -d'
-alias dkcDl='docker-compose -f docker-compose.local.yml down -v'
-alias dkcul='docker-compose -f docker-compose.local.yml down'
-alias dkcel='docker-compose -f docker-compose.local.yml exec'
+alias dkclgl='docker compose -f docker-compose.local.yml logs --follow'
+alias dkcul='docker compose -f docker-compose.local.yml up'
+alias dkcUl='docker compose -f docker-compose.local.yml up -d'
+alias dkcDl='docker compose -f docker-compose.local.yml down -v'
+alias dkcul='docker compose -f docker-compose.local.yml down'
+alias dkcel='docker compose -f docker-compose.local.yml exec'
 
 dkcue() {
 	args="${@:2}"
-	docker-compose --env-file=$1 up $args
+	docker compose --env-file=$1 up $args
 }
 
 dkcee() {
 	args="${@:2}"
-	docker-compose --env-file=$1 exec -e COLUMNS=$(tput cols) -e LINES=$(tput lines) $args
+	docker compose --env-file=$1 exec -e COLUMNS=$(tput cols) -e LINES=$(tput lines) $args
 }
 
 dkcUe() {
 	args="${@:2}"
-	docker-compose --env-file=$1 up "$args" -d
+	docker compose --env-file=$1 up "$args" -d
 }
 
 dkceb() {
-	docker-compose exec "$1" bash
+	docker compose exec "$1" bash
 }
 
 #=======

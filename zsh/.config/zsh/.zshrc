@@ -343,3 +343,4 @@ setopt SHARE_HISTORY
 
 # unsetopt xtrace
 # exec 2>&3 3>&-
+
