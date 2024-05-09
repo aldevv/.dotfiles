@@ -45,7 +45,7 @@ super + shift + Escape
 super + o
     simplescreenrecorder
 
-super + shift +  p
+super + shift + p
     xrandr-dmenu
 
 super + F1

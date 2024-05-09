@@ -61,11 +61,11 @@ for key in "${!types[@]}"; do
 		prefix="${key:0:1}"
 	fi
 done
-noprefix=0
-[[ -z $prefix ]] && noprefix=1
+useprefix=true
+[[ -z $prefix ]] && useprefix=false
 
-if [[ $noprefix == 1 ]]; then
-	tmux-sessionizer "$selected" "$selected_name"
-else
+if [[ $useprefix == true ]]; then
 	tmux-sessionizer "$selected" "$prefix-$selected_name"
+else
+	tmux-sessionizer "$selected" "$selected_name"
 fi

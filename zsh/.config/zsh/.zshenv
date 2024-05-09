@@ -63,3 +63,4 @@ export PATH="/usr/local/go/bin:$PATH"
 
 [[ -f "$HOME/.turso/turso" ]] && export PATH="$HOME/.turso:$PATH"
 
+[[ -d "$HOME/.pulumi/bin" ]] && export PATH="$HOME/.pulumi/bin:$PATH"
