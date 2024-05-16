@@ -48,7 +48,7 @@ set autoindent
 set undofile
 set incsearch
 set relativenumber
-set laststatus=0
+"set laststatus=0
 set cmdheight=1
 " to  select and move cursor
 set mouse=a

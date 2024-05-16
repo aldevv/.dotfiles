@@ -69,6 +69,16 @@ vim.o.wildmenu = true
 vim.o.wildmode = "full"
 -- " set wildmode=longest,list,full
 
+-- remove command line
+vim.o.cmdheight = 0
+
+-- remove --INSERT from the status line
+vim.o.showmode = false
+
+-- make unique status line for each buffer, if want global use 3, or the global option in
+-- lualine
+vim.o.laststatus = 2
+
 vim.o.backup = true
 vim.o.backupdir = vim.fn.stdpath("cache") .. "/backups"
 vim.o.undofile = true
@@ -100,17 +110,17 @@ vim.opt.spell = true
 
 -- general diagnostics
 vim.diagnostic.config({
-	virtual_text = {
-		spacing = 2,
-		severity_limit = "Warning",
-	},
-	-- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
-	-- update_in_insert = true,
-	update_in_insert = false,
-	float = {
-		-- source = "if_many",
-		source = true,
-	},
+  virtual_text = {
+    spacing = 2,
+    severity_limit = "Warning",
+  },
+  -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
+  -- update_in_insert = true,
+  update_in_insert = false,
+  float = {
+    -- source = "if_many",
+    source = true,
+  },
 })
 
 vim.opt.jumpoptions = "stack"
