@@ -43,11 +43,6 @@ return {
 		end,
 	},
 	{
-		"numToStr/Comment.nvim",
-		config = req("config.plugins.comment"),
-		dependencies = { "JoosepAlviste/nvim-ts-context-commentstring" }, -- better commentstring using treesitter
-	},
-	{
 		"github/copilot.vim",
 		init = function()
 			vim.cmd([[
