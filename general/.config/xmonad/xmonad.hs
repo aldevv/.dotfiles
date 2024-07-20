@@ -237,6 +237,8 @@ myLogHook =
  where
   fadeAmount = 1 -- > sets opacity for unfocused windows
 
+-- TODO: check if commenting this fixes multi monitor
+-- TODO: check if is the bar itself that is messing with the multi monitor
 myStartupHook :: X ()
 myStartupHook = do
   let colorTrayer = "--tint 0x2B2E37"

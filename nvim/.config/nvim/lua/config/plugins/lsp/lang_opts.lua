@@ -129,11 +129,11 @@ local enhance_server_opts = {
 
 		opts.settings = {
 			-- enable diagnostics
-			-- diagnostics = {
-			--   enable = true,
-			--   -- get the language server to recognize the `vim` global
-			--   globals = { "vim" },
-			-- },
+			diagnostics = {
+				enable = true,
+				-- get the language server to recognize the `vim` global
+				globals = { "vim" },
+			},
 
 			Lua = {
 				-- annoying lenses
