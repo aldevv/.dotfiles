@@ -1069,11 +1069,6 @@ alias rcmg='rclone mount --daemon gd: $REMOTES/gd'
 alias dup='duplicity --encrypt-key=D3501299'
 alias dupr='duplicity restore'
 
-#============
-# KUBERNETES
-#============
-
-alias k='kubectl'
 
 #===========
 # RSYNC

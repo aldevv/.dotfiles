@@ -1,28 +1,35 @@
 #!/bin/bash
 
-[[ -z "$1" ]] && return
+input="$1"
+[[ -z "$input" ]] && return
 
-if ! git ls-remote "$1" 1>/dev/null; then
+# if only given author/repo
+count=$(grep -o "/" <<<"$input" | wc -l)
+if [[ $count -eq 1 ]]; then
+  input="https://github.com/$input"
+fi
+
+if ! git ls-remote "$input" 1>/dev/null; then
 	return
 fi
 
 shallow=0
-if [[ $1 =~ ^[1-9]$ ]]; then
-	shallow=$1
+if [[ "$input" =~ ^[1-9]$ ]]; then
+	shallow=$input
 	shift
 fi
 
 get_service() {
 	# returns service name, like github.com
 
-	if [[ "$1" == "ssh" ]]; then
+	if [[ "$input" == "ssh" ]]; then
 		# remove author and repo from link
 		service="${link/:$info/}"
 		# remove git@
 		echo "${service##*@}"
 	fi
 
-	if [[ "$1" == "https" ]]; then
+	if [[ "$input" == "https" ]]; then
 
 		# remove author and repo from link
 		service="${link/\/$info/}"
@@ -31,7 +38,7 @@ get_service() {
 	fi
 }
 
-link="$1"
+link="$input"
 if ! grep "@" <<<"$link"; then
 	info=$(cut -d / -f 4,5 <<<"$link")
 	author=$(cut -d / -f 1 <<<"$info")

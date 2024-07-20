@@ -11,6 +11,7 @@ return {
 		config = req("config.plugins.treesitter"),
 	},
 	{
+		-- failing for angular
 		"nvim-treesitter/nvim-treesitter-context",
 		config = function()
 			vim.cmd("hi TreesitterContextLineNumber gui=bold guifg=orange")

@@ -42,6 +42,10 @@ load_fnm() {
     eval "$(fnm env --use-on-cd)" 2>/dev/null
 }
 
+load_ng() { 
+  source <(ng completion script)
+}
+
 [[ -d $HOME/.local/share/fnm ]] && load_fnm
 
 [[ -d $HOME/.fly  ]] && [[ -n "$(command -v fly)" ]] && load_fly 
@@ -64,3 +68,4 @@ export PATH="/usr/local/go/bin:$PATH"
 [[ -f "$HOME/.turso/turso" ]] && export PATH="$HOME/.turso:$PATH"
 
 [[ -d "$HOME/.pulumi/bin" ]] && export PATH="$HOME/.pulumi/bin:$PATH"
+
