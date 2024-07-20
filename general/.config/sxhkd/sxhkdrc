@@ -37,7 +37,7 @@ super + shift + x
 	st -e nvim ~/.config/xmonad/xmonad.hs
 
 super + Escape
-    nw dmenu 
+     nw dmenu 
 
 super + shift + Escape
     bookpractice -d 

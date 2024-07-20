@@ -102,9 +102,9 @@ vim.keymap.set("n", "<backspace>vk", "<cmd>e $XDG_CONFIG_HOME/nvim/lua/keybindin
 vim.keymap.set("n","<backspace><a-p>vk", ":lua require('telescope.builtin').find_files({prompt_title = '<$XDG_CONFIG_HOME/nvim/lua/keybindings>', cwd = '$XDG_CONFIG_HOME/nvim/lua/keybindings', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>vk", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $XDG_CONFIG_HOME/nvim/lua/keybindings>', cwd = '$XDG_CONFIG_HOME/nvim/lua/keybindings', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<backspace>sn", "<cmd>e ~/.config/nvim/my_snippets/snipmate/<cr>", {silent=true, noremap=true})
-vim.keymap.set("n","<backspace><a-p>sn", ":lua require('telescope.builtin').find_files({prompt_title = '<~/.config/nvim/my_snippets/snipmate/>', cwd = '~/.config/nvim/my_snippets/snipmate/', hidden = 'true'})<cr>", { noremap = true, silent = true })
-vim.keymap.set("n","<backspace><a-r>sn", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ~/.config/nvim/my_snippets/snipmate/>', cwd = '~/.config/nvim/my_snippets/snipmate/', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n", "<backspace>sn", "<cmd>e ~/.config/nvim/my_snippets/<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>sn", ":lua require('telescope.builtin').find_files({prompt_title = '<~/.config/nvim/my_snippets/>', cwd = '~/.config/nvim/my_snippets/', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>sn", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ~/.config/nvim/my_snippets/>', cwd = '~/.config/nvim/my_snippets/', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<backspace>sN", "<cmd>e ~/.config/nvim/my_snippets/luasnips<cr>", {silent=true, noremap=true})
 vim.keymap.set("n","<backspace><a-p>sN", ":lua require('telescope.builtin').find_files({prompt_title = '<~/.config/nvim/my_snippets/luasnips>', cwd = '~/.config/nvim/my_snippets/luasnips', hidden = 'true'})<cr>", { noremap = true, silent = true })

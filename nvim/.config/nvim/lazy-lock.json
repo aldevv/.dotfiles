@@ -67,7 +67,7 @@
   "nvimgelion": { "branch": "main", "commit": "28f3b71f8545ff002a1c08ca928799cdf660eccf" },
   "one-small-step-for-vimkind": { "branch": "main", "commit": "730189c92c6fd80eb92bb6c1886392a142dba273" },
   "onedark.nvim": { "branch": "master", "commit": "fae34f7c635797f4bf62fb00e7d0516efa8abe37" },
-  "orgmode": { "branch": "master", "commit": "93ab75f1633dd7264cbb27bfd7bbcd6c1c4e3fc8" },
+  "orgmode": { "branch": "master", "commit": "c0584ec5fbe472ad7e7556bc97746b09aa7b8221" },
   "overseer.nvim": { "branch": "master", "commit": "87526babdb563b9e2f0646b420359389732326dc" },
   "plenary.nvim": { "branch": "master", "commit": "a3e3bc82a3f95c5ed0d7201546d5d2c19b20d683" },
   "project.nvim": { "branch": "main", "commit": "8c6bad7d22eef1b71144b401c9f74ed01526a4fb" },
