@@ -76,9 +76,9 @@ map Yvu $ cp -rv $f /home/kanon/.config/nvim/lua/utils
 map <backspace2>vk cd /home/kanon/.config/nvim/lua/keybindings
 map mvk $ mv -v $f /home/kanon/.config/nvim/lua/keybindings
 map Yvk $ cp -rv $f /home/kanon/.config/nvim/lua/keybindings
-map <backspace2>sn cd ~/.config/nvim/my_snippets/snipmate/
-map msn $ mv -v $f ~/.config/nvim/my_snippets/snipmate/
-map Ysn $ cp -rv $f ~/.config/nvim/my_snippets/snipmate/
+map <backspace2>sn cd ~/.config/nvim/my_snippets/
+map msn $ mv -v $f ~/.config/nvim/my_snippets/
+map Ysn $ cp -rv $f ~/.config/nvim/my_snippets/
 map <backspace2>sN cd ~/.config/nvim/my_snippets/luasnips
 map msN $ mv -v $f ~/.config/nvim/my_snippets/luasnips
 map YsN $ cp -rv $f ~/.config/nvim/my_snippets/luasnips
