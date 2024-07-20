@@ -51,6 +51,7 @@ local ensure_installed = {
   "git_config",
   "csv",
   "c_sharp",
+  "angular",
 }
 if os.getenv("NVIM_MINIMAL") ~= nil then
   ensure_installed = {}
