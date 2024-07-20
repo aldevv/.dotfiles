@@ -109,10 +109,6 @@ return {
 		cmd = { "TagbarToggle" },
 	},
 	{
-		"folke/which-key.nvim",
-		config = req("config.plugins.whichkey"),
-	},
-	{
 		"kristijanhusak/vim-dadbod-ui",
 		dependencies = { "tpope/vim-dadbod", "tpope/vim-dotenv", "kristijanhusak/vim-dadbod-completion" },
 		config = req("config.plugins.dadbod"),
