@@ -57,9 +57,8 @@ end
 harpoon:setup({
 	settings = {
 		key = function()
-			-- only works in nightly
 			local pipe = vim.system({ "git", "config", "--get", "remote.origin.url" }, { text = true }):wait()
-			if pipe.stderr then
+			if pipe.stderr ~= "" then
 				return vim.loop.cwd()
 			end
 

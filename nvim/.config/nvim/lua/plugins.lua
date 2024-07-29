@@ -21,8 +21,8 @@ return {
 		-- https://github.com/ThePrimeagen/harpoon/commit/2cd4e03372f7ee5692c8caa220f479ea07970f17
 		-- waiting for https://github.com/ThePrimeagen/harpoon/pull/557 to be merged
 		-- custom key function makes harpoon useless atm (22/07/2024)
-		branch = "harpoon2",
-		-- commit = "2cd4e03372f7ee5692c8caa220f479ea07970f17",
+		-- branch = "harpoon2",
+		commit = "2cd4e03372f7ee5692c8caa220f479ea07970f17",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		config = req("config.plugins.harpoon"),
 	},
