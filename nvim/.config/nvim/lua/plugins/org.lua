@@ -22,7 +22,7 @@ return {
 			vim.api.nvim_create_autocmd("FileType", {
 				pattern = "org",
 				callback = function()
-					vim.keymap.set("n", "<c-i>", "za", { silent = true })
+					vim.keymap.set("n", "<cr>", "za", { silent = true })
 					vim.keymap.set(
 						"n",
 						"zM",

@@ -3,6 +3,7 @@ if vim.treesitter.language.register then
 	vim.treesitter.language.register("bash", "zsh")
 end
 local ensure_installed = {
+	"vimdoc",
 	"bash",
 	"python",
 	"c",
@@ -61,7 +62,26 @@ vim.defer_fn(function()
 	require("nvim-treesitter.configs").setup({
 		-- One of "all", "maintained" (parsers with maintainers), or a list of languages
 		-- ensure_installed = "all",
-		-- textobjects = textobjects,
+
+		-- textobjects sucks because 1. can't add counts to them, 2. bugs for around and inner in
+		-- visual mode, not respecting keymap set
+		-- textobjects = {
+		-- 	select = {
+		-- 		enable = true,
+		--
+		-- 		-- Automatically jump forward to textobj, similar to targets.vim
+		-- 		lookahead = true,
+		-- 		keymaps = {
+		-- 			["af"] = "@function.outer",
+		-- 			["lf"] = "@function.inner",
+		-- 			["aC"] = "@class.outer",
+		-- 			["lC"] = "@class.inner",
+		-- 			-- doesnt work well, same with parameters
+		-- 			-- ["lc"] = "@comment.inner",
+		-- 			-- ["ac"] = "@comment.outer",
+		-- 		},
+		-- 	},
+		-- },
 		ensure_installed = ensure_installed,
 		-- parser_install_dir = vim.fn.stdpath("data") .. "/treesitter_parsers",
 		-- Install languages synchronously (only applied to `ensure_installed`)
