@@ -24,6 +24,7 @@ local servers = {
   -- "hls@2.0.0.0", -- mason is not installing it correctly as of 10/06/23
   "hls",
   "emmet_ls",
+  "terraformls",
 }
 
 if os.getenv("NVIM_MINIMAL") ~= nil then
@@ -81,7 +82,7 @@ require("mason").setup({
   -- by default the path is extended to here
   -- install_root_dir = path.concat { vim.fn.stdpath "data", "mason" },
   -- useful for package installation errors
-  log_level = vim.log.levels.INFO,
+  -- log_level = vim.log.levels.INFO,
   -- Where Mason should put its bin location in your PATH. Can be one of:
   -- - "prepend" (default, Mason's bin location is put first in PATH)
   -- - "append" (Mason's bin location is put at the end of PATH)

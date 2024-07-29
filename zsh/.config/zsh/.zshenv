@@ -69,3 +69,4 @@ export PATH="/usr/local/go/bin:$PATH"
 
 [[ -d "$HOME/.pulumi/bin" ]] && export PATH="$HOME/.pulumi/bin:$PATH"
 
+[[ -d "$HOME/.tfenv/bin" ]] && export PATH="$HOME/.tfenv/bin:$PATH"
