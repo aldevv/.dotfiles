@@ -302,9 +302,14 @@ vim.keymap.set("n", "<backspace>xm.", "<cmd>e ~/.config/xmonad<cr>", {silent=tru
 vim.keymap.set("n","<backspace><a-p>xm.", ":lua require('telescope.builtin').find_files({prompt_title = '<~/.config/xmonad>', cwd = '~/.config/xmonad', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>xm.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ~/.config/xmonad>', cwd = '~/.config/xmonad', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
+vim.keymap.set("n", "<backspace>k.", "<cmd>e $HOME/qmk_firmware<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>k.", ":lua require('telescope.builtin').find_files({prompt_title = '<$HOME/qmk_firmware>', cwd = '$HOME/qmk_firmware', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>k.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $HOME/qmk_firmware>', cwd = '$HOME/qmk_firmware', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+
 vim.keymap.set("n", "<backspace>.sf", "<cmd>e ~/.config/shortcuts/sf <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.sd", "<cmd>e ~/.config/shortcuts/sd <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.z", "<cmd>e ~/.config/zsh/.zshrc <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<backspace>.ze", "<cmd>e ~/.config/zsh/.zshenv <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.zz", "<cmd>e ~/.config/zsh/.zshrc <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.zp", "<cmd>e ~/.config/zsh/.zprofile <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.pi", "<cmd>e ~/.config/picom/picom.conf <cr>", {silent=true, noremap=true})

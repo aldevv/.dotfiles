@@ -3,9 +3,10 @@ if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc
 # path
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 #
-if command -v pmy &>/dev/null; then
-    eval "$(pmy init)"
-fi
+# what was this for again?
+# if command -v pmy &>/dev/null; then
+#     eval "$(pmy init)"
+# fi
 
 
 
@@ -70,3 +71,4 @@ export PATH="/usr/local/go/bin:$PATH"
 [[ -d "$HOME/.pulumi/bin" ]] && export PATH="$HOME/.pulumi/bin:$PATH"
 
 [[ -d "$HOME/.tfenv/bin" ]] && export PATH="$HOME/.tfenv/bin:$PATH"
+

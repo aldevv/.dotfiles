@@ -23,7 +23,11 @@ config_file="$HOME/.cache/.bookpractice.yml";
 [[ ! -f "$config_file" ]] && touch "$config_file";
 
 names="$(yq -r 'keys | .[]' "$config_file")"
-name="$(dmenu <<< "$names")";
+if [ -z "$names" ]; then
+    notify-send "no practice books found in $HOME/.cache/.bookpractice.yml";
+    exit 1
+fi
+name="$(dmenu -p "book practice: " <<< "$names")";
 [ -z "$name" ] && exit
 book="$(yq -r ".$name | .book " "$config_file" | envsubst)";
 project="$(yq -r ".$name | .project " "$config_file" | envsubst)";

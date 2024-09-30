@@ -2,6 +2,9 @@
 local colorscheme = "kanagawa"
 -- local colorscheme = "tokyonight"
 -- local colorscheme = "eva01"
+if not pcall(require, colorscheme) then
+  return
+end
 vim.cmd("colorscheme " .. colorscheme)
 
 -- this is so is not overwritten by my colorscheme

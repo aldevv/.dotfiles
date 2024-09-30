@@ -1,5 +1,8 @@
 super + w
-   firefox
+    firefox
+
+super + x
+    firefox excalidraw.com
 
 super + space
    st 2>/dev/null
@@ -32,7 +35,6 @@ super + shift + o
 mode_switch + shift + e
 	emoji
 
-# lsp not working
 super + shift + x
 	st -e nvim ~/.config/xmonad/xmonad.hs
 
@@ -40,7 +42,7 @@ super + Escape
      nw dmenu 
 
 super + shift + Escape
-    bookpractice -d 
+    browseCheatsheets
 
 super + o
     simplescreenrecorder
@@ -49,7 +51,7 @@ super + shift + p
     xrandr-dmenu
 
 super + F1
-    browseCheatsheets
+    bookpractice -d 
 
 control + shift + Escape
     pskill

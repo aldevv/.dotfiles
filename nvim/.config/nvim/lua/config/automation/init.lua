@@ -71,7 +71,7 @@ vim.api.nvim_create_autocmd({ "BufWritePost" }, {
 	command = "!killall -s SIGUSR1 sxhkd",
 })
 
-local patterns = "*.{js,jsx,mjs,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua}"
+local patterns = "*.{js,jsx,mjs,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua,tf,tfvars}"
 vim.api.nvim_create_autocmd("BufWritePre", {
 	pattern = patterns,
 	callback = function()
@@ -102,7 +102,7 @@ vim.api.nvim_create_autocmd({ "TermOpen" }, {
 })
 
 vim.api.nvim_create_autocmd({ "FileType" }, {
-	pattern = "javascriptreact",
+	pattern = { "javascriptreact", "typescriptreact" },
 	command = "setlocal nospell",
 })
 

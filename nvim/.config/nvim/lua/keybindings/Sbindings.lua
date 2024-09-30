@@ -1,38 +1,42 @@
 vim.cmd("noremap S <Nop>")
+if not pcall(require, "which-key") then
+  return
+end
 local wk = require("which-key")
+
 wk.add({
-	{ "S", group = "Programming Utils" },
-	{ "Sd", group = "DAP" },
-	{ "SB", group = "DBUI" },
-	{ "Sc", group = "Copilot" },
-	{ "SC", group = "Cody" },
-	{ "St", group = "NeoTest" },
+  { "S",  group = "Programming Utils" },
+  { "Sd", group = "DAP" },
+  { "SB", group = "DBUI" },
+  { "Sc", group = "Copilot" },
+  { "SC", group = "Cody" },
+  { "St", group = "NeoTest" },
 })
 local function source_tests_env()
-	local tests_env = ".envtests"
-	if vim.fn.filereadable(tests_env) == 1 then
-		vim.cmd("Dotenv " .. tests_env)
-	end
-	if vim.fn.filereadable("../" .. tests_env) == 1 then
-		vim.cmd("Dotenv ../" .. tests_env)
-	end
+  local tests_env = ".envtests"
+  if vim.fn.filereadable(tests_env) == 1 then
+    vim.cmd("Dotenv " .. tests_env)
+  end
+  if vim.fn.filereadable("../" .. tests_env) == 1 then
+    vim.cmd("Dotenv ../" .. tests_env)
+  end
 end
 
 -- neotest
 vim.keymap.set("n", "<leader>n", function()
-	source_tests_env()
-	require("neotest").run.run()
-	-- require("neotest").run.run({ extra_args = { "-v" } })
+  source_tests_env()
+  require("neotest").run.run()
+  -- require("neotest").run.run({ extra_args = { "-v" } })
 end, { desc = "run nearest test" })
 
 vim.keymap.set("n", "<leader>N", function()
-	source_tests_env()
-	require("neotest").run.run({ strategy = "dap" })
+  source_tests_env()
+  require("neotest").run.run({ strategy = "dap" })
 end, { desc = "run nearest test with dap" })
 
 vim.keymap.set("n", "<leader>e", function()
-	source_tests_env()
-	require("neotest").output.open({ enter = true })
+  source_tests_env()
+  require("neotest").output.open({ enter = true })
 end, { desc = "open test hover" })
 
 vim.keymap.set("n", "<leader>N", ":lua require('neotest').run.run({suite=true})<cr>")
@@ -42,7 +46,7 @@ vim.cmd([[cnoreabbrev Tf TestFile]])
 vim.cmd([[cnoreabbrev Tl TestLast]])
 
 vim.keymap.set("n", "Stp", ":lua require('neotest').output_panel.toggle()<cr>", { desc = "Test: output_panel" })
-vim.keymap.set("n", "Stn", ":lua require('neotest').run.run()<cr>") -- run nearest
+vim.keymap.set("n", "Stn", ":lua require('neotest').run.run()<cr>")  -- run nearest
 vim.keymap.set("n", "Stx", ":lua require('neotest').run.stop()<cr>") -- run nearest
 vim.keymap.set("n", "Stf", ":lua require('neotest').run.run(vim.fn.expand('%'))<cr>")
 vim.keymap.set("n", "Sts", ":lua require('neotest').summary.toggle()<cr>")
@@ -70,23 +74,30 @@ vim.keymap.set({ "n", "x" }, "SCe", "<cmd>CodyTaskPrev<cr>", { desc = "CodyTaskP
 vim.keymap.set({ "n", "x" }, "SCR", "<cmd>CodyRestart<cr>", { desc = "CodyRestart" })
 
 vim.keymap.set(
-	{ "n", "x" },
-	"SCa",
-	"<cmd>CodyAsk<cr>",
-	{ desc = "CodyAsk Ask a question about the current selection." }
+  { "n", "x" },
+  "SCa",
+  "<cmd>CodyAsk<cr>",
+  { desc = "CodyAsk Ask a question about the current selection." }
 )
 
 vim.keymap.set(
-	"n",
-	"Sg",
-	"<cmd>lua require('sg.extensions.telescope').fuzzy_search_results()<CR>",
-	{ desc = "Sourcegraph search" }
+  "n",
+  "Sg",
+  "<cmd>lua require('sg.extensions.telescope').fuzzy_search_results()<CR>",
+  { desc = "Sourcegraph search" }
 )
 
 vim.keymap.set("i", "<m-\\>", "<Plug>(copilot-suggest)", nor) -- no need to enable copilot with this
 vim.keymap.set("i", "<a-}>", "<Plug>(copilot-next)", nor)
 vim.keymap.set("i", "<a-{>", "<Plug>(copilot-previous)", nor)
 vim.keymap.set("i", "<c-}>", "<Plug>(copilot-dismiss)", nor)
+
+vim.keymap.set("v", "Scc", ":CopilotChat<cr>", nor)
+vim.keymap.set("v", "Sc<space>", ":CopilotChat", nor)
+vim.keymap.set("v", "Sce", ":CopilotChatExplain<cr>", nor)
+vim.keymap.set("v", "Sct", ":CopilotChatTests<cr>", nor)
+
+vim.keymap.set("n", "Sc<space>", ":CopilotChat", { desc = "Copilot Chat" })
 
 vim.keymap.set("n", "Sct", ":lua require('utils.lua.copilot').toggle_copilot()<cr>", { desc = "Copilot Toggle " })
 vim.keymap.set("n", "Scc", ":CopilotChat", { desc = "Copilot Chat" })
