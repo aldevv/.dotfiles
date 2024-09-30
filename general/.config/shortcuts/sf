@@ -2,6 +2,7 @@
 .sf     ~/.config/shortcuts/sf
 .sd     ~/.config/shortcuts/sd
 .z      ~/.config/zsh/.zshrc
+.ze      ~/.config/zsh/.zshenv
 .zz      ~/.config/zsh/.zshrc
 .zp     ~/.config/zsh/.zprofile
 .pi      ~/.config/picom/picom.conf

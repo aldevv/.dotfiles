@@ -226,9 +226,13 @@ map Ypp $ cp -rv $f ~/Pictures
 map <backspace2>xm. cd ~/.config/xmonad
 map mxm. $ mv -v $f ~/.config/xmonad
 map Yxm. $ cp -rv $f ~/.config/xmonad
+map <backspace2>k. cd /home/kanon/qmk_firmware
+map mk. $ mv -v $f /home/kanon/qmk_firmware
+map Yk. $ cp -rv $f /home/kanon/qmk_firmware
 map <backspace2>.sf $ $EDITOR ~/.config/shortcuts/sf
 map <backspace2>.sd $ $EDITOR ~/.config/shortcuts/sd
 map <backspace2>.z $ $EDITOR ~/.config/zsh/.zshrc
+map <backspace2>.ze $ $EDITOR ~/.config/zsh/.zshenv
 map <backspace2>.zz $ $EDITOR ~/.config/zsh/.zshrc
 map <backspace2>.zp $ $EDITOR ~/.config/zsh/.zprofile
 map <backspace2>.pi $ $EDITOR ~/.config/picom/picom.conf

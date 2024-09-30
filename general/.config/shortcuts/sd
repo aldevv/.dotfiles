@@ -75,4 +75,5 @@ p.      $PROJECTS/
 c.      $CODE
 pp      ~/Pictures
 xm.     ~/.config/xmonad
+k.      $HOME/qmk_firmware
 # temp shortcuts

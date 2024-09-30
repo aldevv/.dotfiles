@@ -16,11 +16,6 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-if os.getenv("DEBUG_NVIM") then
-	require("lazy").setup("plugins-debug")
-	return
-end
-
 require("utils.lua.globals")
 if os.getenv("USER") == "root" then
 	require("ui")
@@ -28,11 +23,19 @@ if os.getenv("USER") == "root" then
 	require("keybindings")
 	return
 end
+
+if os.getenv("NVIM_DEBUG") == "true" then
+	require("lazy").setup("plugins-debug")
+	return
+end
+
 require("config")
 
-require("lazy").setup("plugins", {
-	dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
-})
+-- require("lazy").setup("plugins", {
+-- 	dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
+-- })
+
+require("lazy").setup("plugins")
 
 require("keybindings")
 require("ui")

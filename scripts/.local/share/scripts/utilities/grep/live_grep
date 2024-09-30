@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# NOTE:  if it fails check that fzf is working
+
 # for no path add --column
 RG_PREFIX="rg --line-number --color=always --smart-case "
 INITIAL_QUERY="${*:-}"
