@@ -98,4 +98,7 @@ fi
   . "$HOME/.config/zsh/.zshenv"
 
 
-
+# disable autofocus on w4sd camera
+if command -v v4l2-ctl &>/dev/null && [[ "$(ls -l /dev/video4 2>/dev/null)" != "" ]]; then
+  v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
+fi
