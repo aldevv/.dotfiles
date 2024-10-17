@@ -12,7 +12,7 @@ import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.InsertPosition (Focus (Newer), Position (Master), insertPosition)
 import XMonad.Hooks.ManageDocks
-import XMonad.Hooks.ManageHelpers (isDialog)
+import XMonad.Hooks.ManageHelpers (doCenterFloat, isDialog)
 import XMonad.Hooks.Rescreen
 import XMonad.Hooks.StatusBar
 import XMonad.Hooks.StatusBar.PP
@@ -195,8 +195,9 @@ myManageHook =
         className =? "Insomnia" --> doShift (myWorkspaces !! 3),
         className =? "discord" --> doShift (myWorkspaces !! 6),
         className =? "firefox" --> doShift (myWorkspaces !! 0),
+        -- pattern that has zoom
         className =? "zoom" --> doShift (myWorkspaces !! 4),
-        -- className =? "zoom " --> doFloat,
+        title =? "Zoom" --> doFloat,
         className =? "SimpleScreenRecorder" --> doFloat,
         isDialog --> doFloat
       ]
@@ -264,9 +265,9 @@ main :: IO ()
 main = do
   xmonad
     . rescreenHook myRescreenCfg
+    . dynamicSBs myStatusBarSpawner
     . ewmhFullscreen
     . ewmh
-    . dynamicSBs myStatusBarSpawner
     . docks
     $ def
       { workspaces = myWorkspaces,
