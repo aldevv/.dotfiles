@@ -110,8 +110,14 @@ exp_if_cmd "fd" FZF_DEFAULT_COMMAND=$FD_DEFAULT_FOR_FZF
 
 # export FZF_DEFAULT_OPTS='--bind=ctrl-e:up,ctrl-n:down'
 FZF_BINDS="alt-g:first,alt-G:last,alt-E:preview-up,alt-N:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept"
-FZF_PREV="if file {} | grep -i 'text'; then bat --style=numbers --color=always {}; else echo \"{} is a binary file\"; fi"
-export FZF_DEFAULT_OPTS="--ansi --height=75% --layout=reverse --multi --bind=$FZF_BINDS --preview=$FZF_PREV --preview-window=50%:wrap"
+FZF_PREV="'[[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file || (bat --style=numbers --color=always {} || cat {}) > /dev/null | head -199'"
+export FZF_DEFAULT_OPTS="
+--ansi --height=75% --layout=reverse --multi 
+--bind "$FZF_BINDS"
+--preview "$FZF_PREV" 
+--preview-window 50%:wrap
+"
+
 # to unhide preview window, change to --preview-window=right:hidden:wrap"
 # for prompt at the bottom, change layout to "default"
 

@@ -13,6 +13,7 @@ import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.InsertPosition (Focus (Newer), Position (Master), insertPosition)
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers (isDialog)
+import XMonad.Hooks.Rescreen
 import XMonad.Hooks.StatusBar
 import XMonad.Hooks.StatusBar.PP
 import XMonad.Hooks.WindowSwallowing (swallowEventHook)
@@ -246,9 +247,26 @@ myStartupHook = do
   -- spawn ("killall trayer; trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 1 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l") -- kill current trayer and xmobar on each restart
   spawn ("sleep 2 && xsetroot -cursor_name left_ptr") -- for mouse pointer
 
+myAfterRescreenHook :: X ()
+myAfterRescreenHook = do
+  spawn "killall trayer; trayer --monitor 1 --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --transparent true --alpha 0 --height 15 -l" -- kill current trayer and xmobar on each restart
+  spawn "sleep 2 && xsetroot -cursor_name left_ptr" -- for mouse pointer
+
+-- invoke autorandr
+myRandrChangeHook :: X ()
+myRandrChangeHook = do
+  spawn "autorandr --change"
+
+myRescreenCfg =
+  def
+    { afterRescreenHook = myAfterRescreenHook,
+      randrChangeHook = myRandrChangeHook
+    }
+
 main :: IO ()
 main = do
   xmonad
+    . rescreenHook myRescreenCfg
     . ewmhFullscreen
     . ewmh
     . dynamicSBs myStatusBarSpawner
