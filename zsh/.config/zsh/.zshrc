@@ -122,9 +122,11 @@ KEYTIMEOUT=1
 # Enable Ctrl-x-e to edit command line
 # Vi style:
 bindkey -v
+
+[[ -f ~/.fzf/bin/fzf ]] && eval "$(fzf --zsh)"
 # bindkey '^R' history-incremental-search-backward
 # use this for patterns, globs etc
-bindkey '^R' history-incremental-pattern-search-backward
+# bindkey '^R' history-incremental-pattern-search-backward
 
 #to fix the backspace problem
 bindkey "^?" backward-delete-char
