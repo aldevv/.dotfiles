@@ -38,7 +38,7 @@ if [[ -n $(command -v fcitx) ]]; then
 fi
 
 [[ -n $(command -v feh) ]] &&
-	setsid feh --bg-fill ~/Pictures/wp/2024.jpg 2>/dev/null &
+	set_wall # uses ~/Pictures/current_wall as wallpaper
 
 ## custom scripts
 [[ -n $(command -v picom) ]] && setsid picom &

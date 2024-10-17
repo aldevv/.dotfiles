@@ -58,3 +58,4 @@
 .ant     ~/.local/share/ansible/tasks
 .anT     ~/.local/share/ansible/TODO
 .y       ~/.config/yazi/yazi.toml
+.cw     ~/Pictures/current_wall

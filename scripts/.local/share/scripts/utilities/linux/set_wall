@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+default="$(cat $HOME/Pictures/current_wall)"
+wall=${1:-$default}
+
+# expand the path
+wall="$(eval "echo $wall")"
+
+
+setsid feh --bg-fill $wall 2>/dev/null &
+
