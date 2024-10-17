@@ -117,19 +117,15 @@ mySpacing i = spacingRaw True (Border i i i i) True (Border i i i i) True
 customLayout =
   lessBorders Screen -- this is so no borders when only one window in screen
     . avoidStruts
-    -- . toggleMonocle
     . toggleSimplest
     $ tiled
       ||| mirrorTiled
       ||| threeCol
   where
-    -- \||| Simplest
-
     -- https://betweentwocommits.com/blog/xmonad-layouts-guide
     tiled = renamed [Replace "T"] $ mySpacing 10 $ Tall nmaster delta ratio
     mirrorTiled = smartBorders $ Mirror tiled
     threeCol = renamed [Replace "W"] $ mySpacing 10 $ magnifiercz 1.3 (ThreeColMid nmaster delta ratio)
-    -- toggleMonocle = toggleLayouts $ renamed [Replace "M"] $ noBorders Full
     toggleSimplest = toggleLayouts $ renamed [Replace "S"] $ noBorders Simplest -- monocle one over other
     nmaster = 1 -- Default number of windows in the master pane
     ratio = 1 / 2 -- Default proportion of screen occupied by master pane
@@ -250,7 +246,10 @@ myStartupHook = do
 myAfterRescreenHook :: X ()
 myAfterRescreenHook = do
   spawn "killall trayer; trayer --monitor 1 --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --transparent true --alpha 0 --height 15 -l" -- kill current trayer and xmobar on each restart
-  spawn "sleep 2 && xsetroot -cursor_name left_ptr" -- for mouse pointer
+  spawn "sleep 2 && xsetroot -cursor_name left_ptr" -- for mouse pointer --TODO: is this needed?
+  spawn "set_wall"
+  -- spawn "notify-send 'Xmonad' 'Rescreened'"
+  spawn "xmonad --restart"
 
 -- invoke autorandr
 myRandrChangeHook :: X ()
