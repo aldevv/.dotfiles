@@ -264,11 +264,11 @@ myRescreenCfg =
 main :: IO ()
 main = do
   xmonad
-    . rescreenHook myRescreenCfg
+    . docks
     . dynamicSBs myStatusBarSpawner
+    . rescreenHook myRescreenCfg
     . ewmhFullscreen
     . ewmh
-    . docks
     $ def
       { workspaces = myWorkspaces,
         modMask = mod4Mask,
