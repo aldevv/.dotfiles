@@ -24,7 +24,7 @@ if os.getenv("USER") == "root" then
 	return
 end
 
-if os.getenv("NVIM_DEBUG") == "true" then
+if os.getenv("NVIM_DEBUG") then
 	require("lazy").setup("plugins-debug")
 	return
 end

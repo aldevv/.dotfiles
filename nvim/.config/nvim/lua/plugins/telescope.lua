@@ -4,7 +4,7 @@ local config = function()
   local previewers = require("telescope.previewers")
   local Job = require("plenary.job")
   -- for ignoring binarys in preview
-  local new_maker = function(filepath, bufnr, opts)
+  local new_preview_maker = function(filepath, bufnr, opts)
     if vim.fn.has("win32") == 1 then
       return
     end
@@ -146,7 +146,7 @@ local config = function()
       -- Example: { "%.npz" } -- ignore all npz files
       file_ignore_patterns = { "^vendor/" }, -- or just add it to the ~/.ignore file, doesn't work for git files
       -- file_ignore_patterns = { "node_modules" }, -- or just add it to the ~/.ignore file
-      buffer_previewer_maker = new_maker,
+      buffer_previewer_maker = new_preview_maker,
       -- rg is needed for live_grep to work
       vimgrep_arguments = vimgrep_arguments,
     },

@@ -102,7 +102,7 @@ plugins=(
 	docker-compose
   zsh-autosuggestions
   zsh-syntax-highlighting
-  fzf-zsh-plugin
+  fzf-zsh-plugin # to update version, delete the ~/.fzf folder
   kube-ps1
 )
 . "$ZSH/oh-my-zsh.sh"
@@ -122,7 +122,9 @@ KEYTIMEOUT=1
 # Enable Ctrl-x-e to edit command line
 # Vi style:
 bindkey -v
-# autoload -U edit-command-line
+# bindkey '^R' history-incremental-search-backward
+# use this for patterns, globs etc
+bindkey '^R' history-incremental-pattern-search-backward
 
 #to fix the backspace problem
 bindkey "^?" backward-delete-char
@@ -206,36 +208,6 @@ doge() {
 	)
 }
 
-# rga-fzf() {
-# 	RG_PREFIX="rga --files-with-matches"
-# 	local file
-# 	file="$(
-# 		FZF_DEFAULT_COMMAND="$RG_PREFIX '$1'" \
-# 			fzf --sort --preview="[[ ! -z {} ]] && rga --pretty --context 5 {q} {}" \
-# 				--phony -q "$1" \
-# 				--bind "change:reload:$RG_PREFIX {q}" \
-# 				--preview-window="70%:wrap"
-# 	)" &&
-# 	echo "opening $file" &&
-# 	xdg-open "$file"
-# }
-
-# ripgrep-all with preview
-# check bat-extras : https://github.com/eth-p/bat-extras
-# .r() {
-# 	RG_PREFIX="rga --files-with-matches"
-# fzf --sort --preview="[[ ! -z {} ]] && rga --pretty --context 5 {q} {}" \
-# local file
-# file="$(
-# FZF_DEFAULT_COMMAND="$RG_PREFIX '$1'" \
-# fzf --sort --preview="[[ ! -z {} ]] && bat --color always {} | rg --pretty --context 5 {q} 2>/dev/null" \
-# --phony -q "$1" \
-# --bind "change:reload:$RG_PREFIX {q}" \
-# --preview-window="70%:wrap"
-# )" &&
-# echo "opening $file" &&
-# xdg-open "$file"
-
 # control
 bindkey -s "^n" "stn^M"
 # alt
@@ -251,7 +223,6 @@ bindkey -s 'I' '$UTILITIES/tmux/ant ideas^M' # notes
 bindkey -s 'g' '$UTILITIES/tmux/nf ~/repos 3^M' # projects and work
 bindkey -s 'p' 'vf ^M'
 bindkey -s 'P' 'vfg ^M'
-bindkey -s 'a' '. cf ^M'
 bindkey -s 'D' 'vf $HOME/.config ^M'
 # bindkey -s 'z' 'vf  "$LEARN"^M'
 # bindkey -s 'z' '. cf  "$LEARN"^M'
@@ -274,10 +245,6 @@ _fzf_compgen_path() {
 _fzf_compgen_dir() {
 	fd --type d --hidden --follow . "$1"
 }
-
-# plugins
-[ -f /usr/share/fzf/key-bindings.zsh ] && . /usr/share/fzf/key-bindings.zsh
-[ -f /usr/share/fzf/completion.zsh ] && . /usr/share/fzf/completion.zsh
 
 # ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE
 #ZSH_AUTOSUGGEST_STRATEGY
@@ -318,9 +285,6 @@ unset less_ver
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
 
-# fzf keybindings
-[[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && . /usr/share/doc/fzf/examples/key-bindings.zsh
-
 # shellcheck source=/dev/null
 [[ -f "$ZDOTDIR/.aliases" ]] && . "$ZDOTDIR/.aliases" # old aliases
 [[ -n "$ZDOTDIR" ]] && fpath=($ZDOTDIR/completions $fpath)  
@@ -350,8 +314,6 @@ setopt SHARE_HISTORY
 
 # unsetopt xtrace
 # exec 2>&3 3>&-
-
-fpath=(/home/kanon/.oh-my-zsh/custom/completions /home/kanon/.config/zsh/completions /home/kanon/.oh-my-zsh/custom/plugins/fzf-zsh-plugin/completions /home/kanon/.oh-my-zsh/custom/plugins/fzf-zsh-plugin /home/kanon/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting /home/kanon/.oh-my-zsh/custom/plugins/zsh-autosuggestions /home/kanon/.oh-my-zsh/plugins/docker-compose /home/kanon/.oh-my-zsh/plugins/docker /home/kanon/.oh-my-zsh/plugins/git /home/kanon/.oh-my-zsh/functions /home/kanon/.oh-my-zsh/completions /home/kanon/.oh-my-zsh/cache/completions /usr/local/share/zsh/site-functions /usr/share/zsh/vendor-functions /usr/share/zsh/vendor-completions /usr/share/zsh/functions/Calendar /usr/share/zsh/functions/Chpwd /usr/share/zsh/functions/Completion /usr/share/zsh/functions/Completion/AIX /usr/share/zsh/functions/Completion/BSD /usr/share/zsh/functions/Completion/Base /usr/share/zsh/functions/Completion/Cygwin /usr/share/zsh/functions/Completion/Darwin /usr/share/zsh/functions/Completion/Debian /usr/share/zsh/functions/Completion/Linux /usr/share/zsh/functions/Completion/Mandriva /usr/share/zsh/functions/Completion/Redhat /usr/share/zsh/functions/Completion/Solaris /usr/share/zsh/functions/Completion/Unix /usr/share/zsh/functions/Completion/X /usr/share/zsh/functions/Completion/Zsh /usr/share/zsh/functions/Completion/openSUSE /usr/share/zsh/functions/Exceptions /usr/share/zsh/functions/MIME /usr/share/zsh/functions/Math /usr/share/zsh/functions/Misc /usr/share/zsh/functions/Newuser /usr/share/zsh/functions/Prompts /usr/share/zsh/functions/TCP /usr/share/zsh/functions/VCS_Info /usr/share/zsh/functions/VCS_Info/Backends /usr/share/zsh/functions/Zftp /usr/share/zsh/functions/Zle)
 
 if command -v aws_completer &>/dev/null; then
     autoload bashcompinit && bashcompinit
