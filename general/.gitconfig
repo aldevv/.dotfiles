@@ -3,8 +3,6 @@
 	name = Alejandro Bernal
 [init]
 	defaultBranch = main
-[includeIf "gitdir:~/work/"]
-    path = ~/work/.gitconfig
 [push]
 	autoSetupRemote = true
 [checkout]
@@ -20,6 +18,8 @@
 	tool = nvimdiff2
 	conflictStyle = diff3
 [alias]
-	appraise = !/home/kanon/.local/share/go/bin/git-appraise
+	appraise = !~/.local/share/go/bin/git-appraise
 [rerere]
 	enabled = true
+[includeIf "gitdir:~/work/"]
+    path = ~/work/.gitconfig
