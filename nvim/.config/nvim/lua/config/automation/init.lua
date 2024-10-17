@@ -71,14 +71,6 @@ vim.api.nvim_create_autocmd({ "BufWritePost" }, {
 	command = "!killall -s SIGUSR1 sxhkd",
 })
 
-local patterns = "*.{js,jsx,mjs,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua,tf,tfvars}"
-vim.api.nvim_create_autocmd("BufWritePre", {
-	pattern = patterns,
-	callback = function()
-		vim.lsp.buf.format()
-	end,
-})
-
 local notes_path = os.getenv("NOTES") or ""
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
 	pattern = notes_path .. "/*.md",
@@ -109,4 +101,13 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 vim.api.nvim_create_autocmd({ "BufRead" }, {
 	pattern = ".envrc",
 	command = "set ft=bash",
+})
+
+-- slows down saving
+local patterns = "*.{js,jsx,mjs,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua,tf,tfvars}"
+vim.api.nvim_create_autocmd("BufWritePre", {
+	pattern = patterns,
+	callback = function()
+		vim.lsp.buf.format()
+	end,
 })
