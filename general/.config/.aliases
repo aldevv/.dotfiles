@@ -2,6 +2,8 @@
 # programs
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
+alias vf="source _vf"
+alias wezterm='flatpak run org.wezfurlong.wezterm'
 
 alias irssi="irssi --home=~/.config/irssi --config=~/.config/irssi/config"
 alias lynx="lynx -cfg=~/.config/lynx/lynx.cfg -lss=~/.config/lynx/lynx.lss"
@@ -34,6 +36,40 @@ alias dkritr="docker run -it --rm"
 alias srcdirenv='eval "$(direnv hook zsh)"'
 alias srcenv='. _srcenv'
 alias addpath='. _addpath'
+alias G="lazygit"
+
+# kubernetes
+alias watch='watch ' # so it catches aliases
+alias kx='kubectx'
+alias kns='kubens'
+alias k='kubectl'
+alias kc='kubectl create'
+alias ka='kubectl apply'
+alias kg='kubectl get'
+alias kga='kubectl get all'
+alias kgA='kubectl get all --all-namespaces'
+alias kgn='kubectl get nodes'
+alias kgp='kubectl get pods'
+alias kgd='kubectl get deployments'
+alias kgN='kubectl get namespaces'
+alias kgs='kubectl get svc'
+alias kgi='kubectl get ingress'
+alias kgr='kubectl get replicasets'
+alias kD='kubectl delete'
+alias kd='kubectl describe'
+alias kdp='kubectl describe pod'
+alias kdd='kubectl describe deployment'
+alias kds='kubectl describe service'
+alias kdi='kubectl describe ingress'
+
+alias kgpo='kubectl get pods -o wide'
+alias kgpy='kubectl get pods -o yaml'
+alias kgdy='kubectl get deployments -o yaml'
+alias kgsy='kubectl get services -o yaml'
+alias kgiy='kubectl get ingress -o yaml'
+alias kgny='kubectl get namespaces -o yaml'
+
+
 
 alias extract_install='. _extract_install'
 
@@ -47,6 +83,9 @@ alias c="cat"
 alias f="find"
 
 # git
+alias gt="git tag"
+alias gn="git notes"
+alias gna="git notes add"
 alias gca="git commit --amend"
 alias gce="git commit --amend --no-edit"
 alias gR="git reset"
@@ -56,8 +95,28 @@ alias grso="git remote set-url origin"
 alias grao="git remote add origin"
 alias grg="git remote get-url origin"
 alias gcsr="git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'"
+alias cop="gh copilot suggest -t shell"
+alias coP="gh copilot explain"
+alias yt="cd ~/.local/bin/ && yt"
 
 alias gwts=". _gwts"
+
+function ghp() {
+  GH_FORCE_TTY=100% gh pr list | fzf --ansi --preview 'GH_FORCE_TTY=100% gh pr view {1}' --preview-window down --header-lines 3 | awk '{print $1}' | xargs gh pr diff
+}
+
+function ghpnvim() {
+  pr_num="$(GH_FORCE_TTY=100% gh pr list | fzf --ansi --preview 'GH_FORCE_TTY=100% gh pr view {1}' --preview-window down --header-lines 3 | awk '{print $1}' | tr -d '#')"
+  branch_name="$(gh pr list --json number --json headRefName | jq | grep -B 1 "$pr_num" | head -n 1 | awk '{print $2}' | tr -d '"' | tr -d ',')"
+  git difftool --no-prompt "$branch_name"
+}
+
+function ghpo() {
+  GH_FORCE_TTY=100% gh pr list | fzf --ansi --preview 'GH_FORCE_TTY=100% gh pr view {1}' --preview-window down --header-lines 3 | awk '{print $1}' | xargs gh pr checkout
+}
+
+# you can also use git show -U 25 <commit> to show more context on these patches
+alias grbp="grb --show-current-patch"  # equivalent of git show REBASE_HEAD
 
 gclb() {
 	repo_dirty="${1##*/}"
@@ -90,8 +149,9 @@ alias nixfit="nix flake init -t " #templates#simpleContainer
 alias nixd="nix develop"
 alias nix-s="nix-shell -p" # nix-shell -p cowsay --command "cowsay hello"
 alias localstack="docker run --rm  -dit -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack"
-alias Q="chatgpt"
-alias q="quick_examples"
+alias q="tgpt -i"
+alias Q="quick"
+alias proto="protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative"
 
 # tmux
 alias tms="tmux-sessionizer"
@@ -154,3 +214,10 @@ nixs() {
 nixi() {
 	nix-env -iA nixpkgs.$1
 }
+
+
+
+# v4l2-ctl --list-devices
+# check the one you want, then do
+# v4l2-ctl --device=<chosen> -c=<what you want>
+# v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
