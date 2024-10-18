@@ -70,7 +70,7 @@ fi
 	setsid autorandr --change &>/dev/null &
 
 rclone_mounts() {
-	[ -f "$HOME/.config/remotes" ] && \
+	[ -f "$HOME/.config/remotes" ] && 
     . "$HOME/.config/remotes"
 }
 
@@ -80,6 +80,9 @@ rclone_mounts() {
 # 30 minutes, you can do dim or dimblur
 # this
 # xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'betterlockscreen -l blur -t "i feel forgotten"' --timer 20000 'betterlockscreen -s blur -t "i was just taking a nap"' - &
+
+[[ -n $(command -v xscreensaver) ]] &&
+  setsid xscreensaver &>/dev/null &
 
 [[ -n $(command -v xidlehook) ]] &&
 	xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'i3lock -F -i $WALL/1559506908863.png' --timer 20000 'systemctl suspend' '' &
