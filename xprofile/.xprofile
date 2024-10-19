@@ -66,8 +66,10 @@ fi
 	setsid sxhkd &
 [[ -n $(command -v flameshot) ]] &&
 	setsid flameshot 2>/dev/null &
-[[ -n $(command -v autorandr) ]] &&
-	setsid autorandr --change &>/dev/null &
+
+# NOTE: the systemd should do this
+# [[ -n $(command -v autorandr) ]] &&
+# 	setsid autorandr --change &>/dev/null &
 
 rclone_mounts() {
 	[ -f "$HOME/.config/remotes" ] && 

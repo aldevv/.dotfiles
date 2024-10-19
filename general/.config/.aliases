@@ -28,6 +28,10 @@ alias cr="bb README.md"
 alias br="bb README.md"
 alias Br="b README.md"
 
+alias pom1="pomo start 1h"
+alias pom2="pomo start 2h"
+alias pom3="pomo start 3h"
+
 # docker
 alias dkrit="docker run -it"
 alias dkritr="docker run -it --rm"
