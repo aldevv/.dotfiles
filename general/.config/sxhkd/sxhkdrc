@@ -24,7 +24,8 @@ super + alt + shift + n
     ant dmenu
 
 Print + shift
-	flameshot gui
+  SESSION_MANAGER="" flameshot gui 2>/dev/null
+  # flameshot gui
 
 mode_switch + c
 	copyq toggle
