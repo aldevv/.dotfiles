@@ -13,6 +13,18 @@ super + p
 mode_switch + shift + 0
     sh -c 'sleep 0.5; xdotool type "$(xclip -o -selection primary)"'
 
+super + alt + 1
+  pomo start 1h
+
+super + alt + 2
+  pomo start 2h
+
+super + alt + 3
+  pomo start 3h
+
+super + alt + 0
+  pomo stop
+
 # bug with npm
 super + r
     st -e bash -c "ranger 2>/dev/null; $SHELL"

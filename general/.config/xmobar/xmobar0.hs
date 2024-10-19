@@ -40,9 +40,9 @@ Config
         Run Com ".config/xmobar/gpu_temp.sh" [] "gpu" 10,
         Run Com ".config/xmobar/available_updates.sh" [] "updates" 10,
         Run Com ".config/xmobar/volume.sh" [] "volume" 10,
-        Run Com ".config/xmobar/battery.sh" [] "battery" 10,
+        Run Com ".config/xmobar/battery.sh" [] "battery" 10, -- every second
         Run Com ".config/xmobar/disable_notifications_when_share_screen_zoom.sh" ["&"] "notifications_disable" 1000,
-        Run Com ".config/xmobar/pomo.sh" [] "pomo" 300000, -- 5 minutes
+        Run Com ".config/xmobar/pomo.sh" [] "pomo" 3000, -- 5 minutes
         Run Com ".config/xmobar/bluetooth.sh" [] "bluetooth" 10,
         Run Com "/home/kanon/.config/xmobar/wifi.sh" [] "network" 10
       ],
