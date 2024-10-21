@@ -1,17 +1,19 @@
 #!/bin/bash
 
+
 input="$1"
 [[ -z "$input" ]] && return
-
-# if only given author/repo
-count=$(grep -o "/" <<<"$input" | wc -l)
-if [[ $count -eq 1 ]]; then
-  input="https://github.com/$input"
-fi
 
 if ! git ls-remote "$input" 1>/dev/null; then
 	return
 fi
+
+# if only given author/repo
+count=$(grep -o "/" <<<"$input" | wc -l)
+if [[ $count -eq 1 ]] && ! grep "@" <<< "$input" &>/dev/null; then
+  input="https://github.com/$input"
+fi
+
 
 shallow=0
 if [[ "$input" =~ ^[1-9]$ ]]; then
@@ -19,40 +21,18 @@ if [[ "$input" =~ ^[1-9]$ ]]; then
 	shift
 fi
 
-get_service() {
-	# returns service name, like github.com
-
-	if [[ "$input" == "ssh" ]]; then
-		# remove author and repo from link
-		service="${link/:$info/}"
-		# remove git@
-		echo "${service##*@}"
-	fi
-
-	if [[ "$input" == "https" ]]; then
-
-		# remove author and repo from link
-		service="${link/\/$info/}"
-		# remove https://
-		echo "${service##*/}"
-	fi
-}
-
-link="$input"
-if ! grep "@" <<<"$link"; then
-	info=$(cut -d / -f 4,5 <<<"$link")
-	author=$(cut -d / -f 1 <<<"$info")
-	repo=$(cut -d / -f 2 <<<"$info")
-	service="$(get_service "https")"
+if grep "@" &>/dev/null <<<"$input"; then
+	author_and_repo="$(cut -d':' -f2 <<< "$input" | cut -d'.' -f1 )"
+	service="$(sed -E 's#git@([^:]+):.*#\1#' <<<"$input")"
 else
-	info=$(cut -d : -f 2 <<<"$link")
-	author=$(cut -d / -f 1 <<<"$info")
-	repo=$(cut -d / -f 2 <<<"$info")
-	repo="${repo%.*}"
-	service="$(get_service "ssh")"
+	author_and_repo="$(cut -d'/' -f4- <<< "$input")"
+	service="$(sed -E 's#https?://([^/]+).*#\1#' <<< "$input")"
 fi
 
-_path="$REPOS/$service/$author/$repo"
+
+
+
+_path="$REPOS/$service/$author_and_repo"
 echo "path: $_path"
 if [[ ! -d "$_path" ]]; then
 	mkdir -p "$_path"
