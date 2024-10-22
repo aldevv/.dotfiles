@@ -32,11 +32,17 @@ if [[ -z "$selected" ]]; then
     # %C@ change time in seconds
 		# find_args=(-L "$f" -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d -printf "%A@ %Ac %p\n")
 		find_args=(-L "$f" -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d -printf "%C@ %Cc %p\n")
-		if [[ -n $folders_result ]]; then
-			folders_result="${folders_result}\n$(find "${find_args[@]}" | sort -nr | awk '{print $NF}')"
-		else
-			folders_result="$(find "${find_args[@]}" | sort -nr | awk '{print $NF}')"
-		fi
+		next_folder="$(find "${find_args[@]}" | sort -nr | awk '{print $NF}')"
+
+    if [[ -z $next_folder ]]; then
+      continue
+    fi
+
+    if [[ -z $folders_result ]]; then
+      folders_result="$next_folder"
+    else
+      folders_result="${folders_result}\n$next_folder"
+    fi
 	done
 	selected=$(echo -e "$folders_result" | fzf --preview="ls {} --color=always" --delimiter / --with-nth -2,-1 --preview-window=60%:wrap | awk '{print $NF}')
 else
