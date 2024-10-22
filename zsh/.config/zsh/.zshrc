@@ -103,8 +103,10 @@ plugins=(
   zsh-autosuggestions
   zsh-syntax-highlighting
   fzf-zsh-plugin # to update version, delete the ~/.fzf folder
-  kube-ps1
 )
+if [[ "$(hostname)" != "hagane" ]]; then
+    plugins+=('kube-ps1')
+fi
 . "$ZSH/oh-my-zsh.sh"
 
 
