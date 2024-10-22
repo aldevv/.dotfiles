@@ -1,6 +1,0 @@
-#!/bin/bash
-if ! grep -qi "zoom" <<<$(flatpak list); then
-	flatpak install flathub us.zoom.Zoom
-fi
-
-flatpak run us.zoom.Zoom
