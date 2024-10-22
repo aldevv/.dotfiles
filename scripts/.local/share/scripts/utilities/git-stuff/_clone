@@ -4,15 +4,16 @@
 input="$1"
 [[ -z "$input" ]] && return
 
-if ! git ls-remote "$input" 1>/dev/null; then
-	return
-fi
-
 # if only given author/repo
 count=$(grep -o "/" <<<"$input" | wc -l)
 if [[ $count -eq 1 ]] && ! grep "@" <<< "$input" &>/dev/null; then
   input="https://github.com/$input"
 fi
+
+if ! git ls-remote "$input" 1>/dev/null; then
+	return
+fi
+
 
 
 shallow=0
