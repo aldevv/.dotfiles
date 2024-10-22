@@ -197,7 +197,7 @@ myManageHook =
         className =? "firefox" --> doShift (myWorkspaces !! 0),
         -- pattern that has zoom
         className =? "zoom" --> doShift (myWorkspaces !! 4),
-        title =? "Zoom" --> doFloat,
+        className =? "zoom" --> doFloat,
         className =? "SimpleScreenRecorder" --> doFloat,
         isDialog --> doFloat
       ]
