@@ -1,5 +1,5 @@
 super + w
-    firefox
+    chromium
 
 super + x
     firefox excalidraw.com

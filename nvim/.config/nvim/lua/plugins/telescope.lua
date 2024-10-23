@@ -121,6 +121,8 @@ local config = function()
 
   setup = {
     pickers = {
+      -- use different layout
+
       git_branches = {
         mappings = {
           i = {
@@ -137,12 +139,20 @@ local config = function()
         layout_config = { width = 0.7 },
       },
       live_grep = {
-        theme = "ivy",         -- ivy, dropdown, cursor
+        layout_config = {
+          preview_cutoff = 0,
+          vertical = { width = 0.9, height = 0.9 },
+        },
+        layout_strategy = "vertical",
         only_sort_text = true, -- this is so it matches on filepath too
         -- layout_config = { width = 0.7 }
       },
       grep_string = {
-        theme = "ivy", -- ivy, dropdown, cursor
+        layout_config = {
+          preview_cutoff = 0,
+          vertical = { width = 0.9, height = 0.9 },
+        },
+        layout_strategy = "vertical",
       },
     },
     defaults = {

@@ -47,6 +47,7 @@ return {
         PERFORMANCE = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
         NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
         TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
+        DONE = { icon = "✔️ ", color = "test" },
       },
       gui_style = {
         fg = "NONE", -- The gui style to use for the fg highlight group.
