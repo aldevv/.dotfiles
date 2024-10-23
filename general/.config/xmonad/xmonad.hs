@@ -21,6 +21,7 @@ import XMonad.Layout.Gaps
 import XMonad.Layout.IndependentScreens (marshallPP, withScreens)
 import XMonad.Layout.Magnifier (magnifiercz)
 import XMonad.Layout.NoBorders (Ambiguity (OnlyScreenFloat, Screen), lessBorders, noBorders, smartBorders)
+import XMonad.Hooks.UrgencyHook (NoUrgencyHook (NoUrgencyHook), clearUrgents, focusUrgent, withUrgencyHook)
 import XMonad.Layout.Renamed
 import XMonad.Layout.Simplest
 import XMonad.Layout.Spacing
@@ -195,9 +196,10 @@ myManageHook =
         className =? "Insomnia" --> doShift (myWorkspaces !! 3),
         className =? "discord" --> doShift (myWorkspaces !! 6),
         className =? "firefox" --> doShift (myWorkspaces !! 0),
+        className =? "Chromium" --> doShift (myWorkspaces !! 0),
         -- pattern that has zoom
         className =? "zoom" --> doShift (myWorkspaces !! 4),
-        className =? "zoom" --> doFloat,
+        -- className =? "zoom" --> doFloat,
         className =? "SimpleScreenRecorder" --> doFloat,
         isDialog --> doFloat
       ]
@@ -261,15 +263,7 @@ myRescreenCfg =
       randrChangeHook = myRandrChangeHook
     }
 
-main :: IO ()
-main = do
-  xmonad
-    . docks
-    . dynamicSBs myStatusBarSpawner
-    . rescreenHook myRescreenCfg
-    . ewmhFullscreen
-    . ewmh
-    $ def
+myConfig = def
       { workspaces = myWorkspaces,
         modMask = mod4Mask,
         terminal = "st",
@@ -282,3 +276,14 @@ main = do
       `additionalKeys` myKeysGranular
       `additionalKeysP` myKeys
       `removeKeysP` removeDefaultKeys
+
+main :: IO ()
+main = do
+  xmonad
+    . docks
+    . rescreenHook myRescreenCfg
+    . ewmh
+    . ewmhFullscreen
+    . withUrgencyHook NoUrgencyHook
+    . dynamicSBs myStatusBarSpawner
+    $ myConfig

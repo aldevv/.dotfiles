@@ -40,6 +40,9 @@ fi
 [[ -n $(command -v feh) ]] &&
 	set_wall # uses ~/Pictures/current_wall as wallpaper
 
+[[ -n $(command -v feh)  ]] && [[ "$(hostname)" == "hagane" ]] &&
+	set_wall "$(cat $HOME/Pictures/current_wall2)"
+
 ## custom scripts
 [[ -n $(command -v picom) ]] && setsid picom &
 

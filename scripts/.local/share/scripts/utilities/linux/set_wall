@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-default="$(cat $HOME/Pictures/current_wall)"
+default="$(cat $HOME/Pictures/Wallpapers/current_wall)"
 wall=${1:-$default}
 
 # expand the path
