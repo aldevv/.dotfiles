@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if ! command -v pomo &> /dev/null; then
+  exit 1
+fi
+
+value="$(pomo)"
+
+if [[ -z "$value" ]]; then
+  exit 0
+fi
+
+if grep -q "💢" <<< "$value"; then
+  notify-send -u critical "Pomo" "Time's up!"
+fi
+
+echo "$value"

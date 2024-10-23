@@ -1,33 +1,27 @@
 #!/bin/bash
 
 
-input="$1"
-[[ -z "$input" ]] && return
+url="$1"
+[[ -z "$url" ]] && return
 
 # if only given author/repo
-count=$(grep -o "/" <<<"$input" | wc -l)
-if [[ $count -eq 1 ]] && ! grep "@" <<< "$input" &>/dev/null; then
-  input="https://github.com/$input"
+count=$(grep -o "/" <<<"$url" | wc -l)
+if [[ $count -eq 1 ]] && ! grep "@" <<< "$url" &>/dev/null; then
+  url="https://github.com/$url"
 fi
-
-if ! git ls-remote "$input" 1>/dev/null; then
-	return
-fi
-
-
 
 shallow=0
-if [[ "$input" =~ ^[1-9]$ ]]; then
-	shallow=$input
+if [[ "$url" =~ ^[1-9]$ ]]; then
+	shallow=$url
 	shift
 fi
 
-if grep "@" &>/dev/null <<<"$input"; then
-	author_and_repo="$(cut -d':' -f2 <<< "$input" | cut -d'.' -f1 )"
-	service="$(sed -E 's#git@([^:]+):.*#\1#' <<<"$input")"
+if grep "@" &>/dev/null <<<"$url"; then
+	author_and_repo="$(cut -d':' -f2 <<< "$url" | cut -d'.' -f1 )"
+	service="$(sed -E 's#git@([^:]+):.*#\1#' <<<"$url")"
 else
-	author_and_repo="$(cut -d'/' -f4- <<< "$input")"
-	service="$(sed -E 's#https?://([^/]+).*#\1#' <<< "$input")"
+	author_and_repo="$(cut -d'/' -f4- <<< "$url")"
+	service="$(sed -E 's#https?://([^/]+).*#\1#' <<< "$url")"
 fi
 
 
@@ -35,10 +29,11 @@ fi
 
 _path="$REPOS/$service/$author_and_repo"
 echo "path: $_path"
+
 if [[ ! -d "$_path" ]]; then
 	mkdir -p "$_path"
 else
-	echo -e "\e[31m the $author/$repo repo already exists, overwrite? [y,N]\e[0m"
+	echo -e "\e[31m the $author_and_repo repo already exists, overwrite? [y,N]\e[0m"
 	read -r ans
 	if [[ -n "$ans" && "$ans" != "n" && "$ans" != "no" && "$ans" != "N" && "$ans" != "NO" ]]; then
 		echo "removing: $_path"
@@ -55,9 +50,9 @@ if [[ "$(pwd)" == "$_path" ]]; then
 fi
 
 if [[ $shallow != 0 ]]; then
-	git clone --depth "$shallow" --recursive "$link" "$_path"
+	git clone --depth "$shallow" --recursive "$url" "$_path"
 else
-	git clone --recursive "$link" "$_path"
+	git clone --recursive "$url" "$_path"
 fi
 
 cd "$_path" || return
