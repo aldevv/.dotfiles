@@ -127,6 +127,8 @@ local config = function()
         mappings = {
           i = {
             ["<cr>"] = actions.git_switch_branch,
+            ["<a-a>"] = actions.git_create_branch,
+            ["<a-d>"] = actions.git_delete_branch,
           },
         },
       },
