@@ -136,9 +136,19 @@ local config = function()
       find_files = {
         follow = true,
       },
+
       buffers = {
         theme = "cursor", -- ivy, dropdown, cursor
         layout_config = { width = 0.7 },
+      },
+      lsp_references = {
+        fname_width = 85,
+
+        layout_config = {
+          preview_cutoff = 0,
+          vertical = { width = 0.90, height = 0.90 },
+        },
+        layout_strategy = "vertical",
       },
       live_grep = {
         layout_config = {
