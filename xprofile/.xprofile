@@ -19,6 +19,22 @@ startup
 [[ -f "$HOME/.config/.startup_work" ]] && \
 	setsid "$HOME/.config/.startup_work" &
 
+if [[ $DESKTOP_SESSION = "ubuntu-xorg" ]]; then
+  [[ -n $(command -v flameshot) ]] && setsid flameshot &>/dev/null &
+  return
+fi
+
+[[ -n $(command -v picom) ]] && 
+  setsid picom &>/dev/null &
+
+if [[ -n $(command -v feh) ]]; then
+  case "$(hostname)" in
+    hagane)
+      setsid set_wall 2 ;;
+    *)
+      setsid set_wall ;;
+  esac
+fi
 
 ##to import env variables to dbus
 # dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
@@ -27,6 +43,7 @@ startup
 ## the display manager is also taken care of by dbus, in case you want to change to startx, havent tested
 [[ -n $(command -v dunst) ]] &&
 	setsid dunst &
+
 
 if [[ -n $(command -v fcitx) ]]; then
 	export GTK_IM_MODULE=fcitx
@@ -65,6 +82,7 @@ fi
 # [[ -n $(command -v autorandr) ]] &&
 # 	setsid autorandr --change &>/dev/null &
 
+
 rclone_mounts() {
 	[ -f "$HOME/.config/remotes" ] && 
     . "$HOME/.config/remotes"
@@ -73,13 +91,15 @@ rclone_mounts() {
 [[ -n $(command -v rclone) ]] &&
 	rclone_mounts &
 
+[[ -f "$HOME/.config/zsh/.zshenv" ]] && \
+  . "$HOME/.config/zsh/.zshenv"
+
+[[ -n $(command -v xscreensaver) ]] && [[ $DESKTOP_SESSION = "xmonad" ]] &&
+  setsid xscreensaver --no-splash &>/dev/null &
+
 # 30 minutes, you can do dim or dimblur
 # this
 # xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'betterlockscreen -l blur -t "i feel forgotten"' --timer 20000 'betterlockscreen -s blur -t "i was just taking a nap"' - &
-
-[[ -n $(command -v xscreensaver) ]] &&
-  setsid xscreensaver --no-splash &>/dev/null &
-
 [[ -n $(command -v xidlehook) ]] &&
 	xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'i3lock -F -i $WALL/1559506908863.png' --timer 20000 'systemctl suspend' '' &
 # the last empty string is the canceller, is any command you define that runs after you come back
@@ -93,25 +113,7 @@ else
 	fi
 fi
 
-[[ -f "$HOME/.config/zsh/.zshenv" ]] && \
-  . "$HOME/.config/zsh/.zshenv"
-
-
 # disable autofocus on w4sd camera
 if command -v v4l2-ctl &>/dev/null && [[ "$(ls -l /dev/video4 2>/dev/null)" != "" ]]; then
   v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
 fi
-
-if [[ -n $(command -v feh) ]]; then
-  case "$(hostname)" in
-    hagane)
-      setsid set_wall 2 ;;
-    *)
-      setsid set_wall ;;
-  esac
-fi
-#
-#
-# ## custom scripts
-[[ -n $(command -v picom) ]] && 
-  setsid picom &>/dev/null &
