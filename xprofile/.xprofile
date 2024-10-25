@@ -37,15 +37,6 @@ if [[ -n $(command -v fcitx) ]]; then
 	setsid fcitx --replace -d &>/dev/null &
 fi
 
-[[ -n $(command -v feh) ]] &&
-	set_wall # uses ~/Pictures/current_wall as wallpaper
-
-[[ -n $(command -v feh)  ]] && [[ "$(hostname)" == "hagane" ]] &&
-	set_wall "$(cat $HOME/Pictures/current_wall2)"
-
-## custom scripts
-[[ -n $(command -v picom) ]] && setsid picom >/dev/null 2>/dev/null &
-
 # check if docker still works with xserver 19/04/24
 # # so the user can make connections to the xserver (docker)
 # xhost local:root &
@@ -110,3 +101,17 @@ fi
 if command -v v4l2-ctl &>/dev/null && [[ "$(ls -l /dev/video4 2>/dev/null)" != "" ]]; then
   v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
 fi
+
+if [[ -n $(command -v feh) ]]; then
+  case "$(hostname)" in
+    hagane)
+      setsid set_wall 2 ;;
+    *)
+      setsid set_wall ;;
+  esac
+fi
+#
+#
+# ## custom scripts
+[[ -n $(command -v picom) ]] && 
+  setsid picom &>/dev/null &
