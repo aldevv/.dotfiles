@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
 
-default="$(cat $HOME/Pictures/wallpapers/current_wall)"
-wall=${1:-$default}
+option="$1"
+case $option in
+  1)
+    wall="$HOME/Pictures/wallpapers/current_wall" ;;
+  2)
+    wall="$HOME/Pictures/wallpapers/current_wall2" ;;
+  3)
+    wall="$HOME/Pictures/wallpapers/current_wall3" ;;
+  *)
+    wall="$HOME/Pictures/wallpapers/current_wall" ;;
+
+esac
+
+content="$(cat "$wall")"
 
 # expand the path
-wall="$(eval "echo $wall")"
-
-
-setsid feh --bg-fill $wall 2>/dev/null &
+wall="$(eval "echo $content")"
+feh --bg-fill "$wall" 2>/dev/null &
 
