@@ -44,7 +44,7 @@ fi
 	set_wall "$(cat $HOME/Pictures/current_wall2)"
 
 ## custom scripts
-[[ -n $(command -v picom) ]] && setsid picom &
+[[ -n $(command -v picom) ]] && setsid picom >/dev/null 2>/dev/null &
 
 # check if docker still works with xserver 19/04/24
 # # so the user can make connections to the xserver (docker)

@@ -13,15 +13,16 @@ import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.InsertPosition (Focus (Newer), Position (Master), insertPosition)
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers (doCenterFloat, isDialog)
+import XMonad.Hooks.OnPropertyChange
 import XMonad.Hooks.Rescreen
 import XMonad.Hooks.StatusBar
 import XMonad.Hooks.StatusBar.PP
+import XMonad.Hooks.UrgencyHook (NoUrgencyHook (NoUrgencyHook), clearUrgents, focusUrgent, withUrgencyHook)
 import XMonad.Hooks.WindowSwallowing (swallowEventHook)
 import XMonad.Layout.Gaps
 import XMonad.Layout.IndependentScreens (marshallPP, withScreens)
 import XMonad.Layout.Magnifier (magnifiercz)
 import XMonad.Layout.NoBorders (Ambiguity (OnlyScreenFloat, Screen), lessBorders, noBorders, smartBorders)
-import XMonad.Hooks.UrgencyHook (NoUrgencyHook (NoUrgencyHook), clearUrgents, focusUrgent, withUrgencyHook)
 import XMonad.Layout.Renamed
 import XMonad.Layout.Simplest
 import XMonad.Layout.Spacing
@@ -184,25 +185,45 @@ myXmobarPP s =
     red = xmobarColor "#ff5555" ""
     lowWhite = xmobarColor "#646464" ""
 
+myProgramHooks =
+  composeAll
+    [ className =? "Gimp" --> doFloat,
+      className =? "copyq" --> doFloat,
+      className =? "Slack" --> doShift (myWorkspaces !! 5),
+      className =? "Insomnia" --> doShift (myWorkspaces !! 3),
+      className =? "discord" --> doShift (myWorkspaces !! 6),
+      className =? "firefox" --> doShift (myWorkspaces !! 0),
+      className =? "Chromium" --> doShift (myWorkspaces !! 0),
+      -- pattern that has zoom
+      className =? "zoom" --> doShift (myWorkspaces !! 4),
+      className =? "SimpleScreenRecorder" --> doFloat,
+      isDialog --> doFloat
+    ]
+
+manageZoomHook =
+  composeAll $
+    [ (className =? zoomClassName) <&&> shouldFloat <$> title --> doFloat,
+      (className =? zoomClassName) <&&> shouldSink <$> title --> doSink
+    ]
+  where
+    zoomClassName = "zoom"
+    tileTitles =
+      [ "Zoom - Free Account", -- main window
+        "Zoom - Licensed Account", -- main window
+        "Zoom", -- meeting window on creation
+        "Zoom Meeting" -- meeting window shortly after creation
+      ]
+    shouldFloat title = title `notElem` tileTitles
+    shouldSink title = title `elem` tileTitles
+    doSink = (ask >>= doF . W.sink) <+> doF W.swapDown
+
 myManageHook :: ManageHook
 myManageHook =
   insertPosition -- this is so new windows open in the master area
     Master
     Newer
-    <+> composeAll
-      [ className =? "Gimp" --> doFloat,
-        className =? "copyq" --> doFloat,
-        className =? "Slack" --> doShift (myWorkspaces !! 5),
-        className =? "Insomnia" --> doShift (myWorkspaces !! 3),
-        className =? "discord" --> doShift (myWorkspaces !! 6),
-        className =? "firefox" --> doShift (myWorkspaces !! 0),
-        className =? "Chromium" --> doShift (myWorkspaces !! 0),
-        -- pattern that has zoom
-        className =? "zoom" --> doShift (myWorkspaces !! 4),
-        -- className =? "zoom" --> doFloat,
-        className =? "SimpleScreenRecorder" --> doFloat,
-        isDialog --> doFloat
-      ]
+    <+> manageZoomHook
+    <+> myProgramHooks
     <+> manageSpawn
     <+> namedScratchpadManageHook scratchpads
     <+> manageDocks
@@ -263,19 +284,28 @@ myRescreenCfg =
       randrChangeHook = myRandrChangeHook
     }
 
-myConfig = def
-      { workspaces = myWorkspaces,
-        modMask = mod4Mask,
-        terminal = "st",
-        startupHook = myStartupHook,
-        layoutHook = customLayout,
-        manageHook = myManageHook,
-        logHook = myLogHook,
-        handleEventHook = swallowEventHook (className =? "Alacritty" <||> className =? "st-256color" <||> className =? "XTerm") (return True) <> Hacks.trayerPaddingXmobarEventHook
-      }
-      `additionalKeys` myKeysGranular
-      `additionalKeysP` myKeys
-      `removeKeysP` removeDefaultKeys
+handleSwallowHook =
+  swallowEventHook (className =? "Alacritty" <||> className =? "St" <||> className =? "XTerm") (return True) <> Hacks.trayerPaddingXmobarEventHook
+
+-- when zoom window titles are created, their titles change, to watch those property changes,
+-- use this
+myHandleEventHook =
+  onXPropertyChange "WM_NAME" manageZoomHook <> handleSwallowHook
+
+myConfig =
+  def
+    { workspaces = myWorkspaces,
+      modMask = mod4Mask,
+      terminal = "st",
+      startupHook = myStartupHook,
+      layoutHook = customLayout,
+      manageHook = myManageHook,
+      logHook = myLogHook,
+      handleEventHook = myHandleEventHook
+    }
+    `additionalKeys` myKeysGranular
+    `additionalKeysP` myKeys
+    `removeKeysP` removeDefaultKeys
 
 main :: IO ()
 main = do
