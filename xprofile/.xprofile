@@ -20,6 +20,7 @@ startup
 	setsid "$HOME/.config/.startup_work" &
 
 if [[ $DESKTOP_SESSION = "ubuntu-xorg" ]]; then
+  [[ -n $(command -v sxhkd) ]] && setsid sxhkd &
   [[ -n $(command -v flameshot) ]] && setsid flameshot &>/dev/null &
   return
 fi
