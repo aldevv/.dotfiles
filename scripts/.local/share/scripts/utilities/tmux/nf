@@ -21,7 +21,17 @@ fzf_with_nth() {
 
 # folders=("$WORK" "$PROJECTS" "$CODE" "$LEARN" $REPOS/*)
 folders=("$WORK" "$PROJECTS" "$CODE" "$LEARN")
-[[ -d $REPOS ]] && [[ -n $(ls -A $REPOS) ]] && folders+=($REPOS/*)
+if [[ -d $REPOS ]] && [[ -n $(ls -A $REPOS) ]]; then
+    for org in "$REPOS"/*; do
+        if [[ -d $org ]]; then
+            for author in "$org"/*; do
+                if [[ -d $author ]]; then
+                            folders+=("$author")
+                fi
+            done
+        fi
+    done
+fi
 
 folders_result=""
 if [[ -z "$selected" ]]; then

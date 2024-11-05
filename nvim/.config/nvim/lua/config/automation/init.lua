@@ -9,21 +9,22 @@ cmd([[
             echo name
             :exec '!changeWallpaperKeepBorders'
         else
-            :exec 'cd '. name
-            :exec '!sudo make clean install'
+            :exec 'cd '. _path
+            :exec '!sudo make PREFIX=$HOME/.local/builds/st clean install '
         endif
     endfunction
 ]])
+-- :exec '!sudo make clean install '
 
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-	pattern = "config.h",
-	command = "call CompileSuck()",
+  pattern = "config.h",
+  command = "call CompileSuck()",
 })
 
 -- " auto compile status bar dwm
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-	pattern = "dwmstatus",
-	command = "!killall dwmstatus; setsid dwmstatus &",
+  pattern = "dwmstatus",
+  command = "!killall dwmstatus; setsid dwmstatus &",
 })
 
 vim.cmd([[
@@ -50,64 +51,64 @@ vim.cmd([[
 vim.keymap.set("x", "@", ":<C-u>call ExecuteMacroOverVisualRange()<cr>")
 
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-	pattern = ".projections.json",
-	command = "set filetype=projections.json syntax=json",
+  pattern = ".projections.json",
+  command = "set filetype=projections.json syntax=json",
 })
 
 -- " auto shortcuts
 vim.api.nvim_create_autocmd({ "BufWritePost", "TextChanged" }, {
-	pattern = "sf,sd",
-	command = "!$AUTOMATION/shortcuts",
+  pattern = "sf,sd",
+  command = "!$AUTOMATION/shortcuts",
 })
 
 -- " auto compile xresources
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-	pattern = "*.Xresources",
-	command = "!xrdb -merge ~/.Xresources",
+  pattern = "*.Xresources",
+  command = "!xrdb -merge ~/.Xresources",
 })
 -- " auto compile sxhkd
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-	pattern = "*sxhkdrc",
-	command = "!killall -s SIGUSR1 sxhkd",
+  pattern = "*sxhkdrc",
+  command = "!killall -s SIGUSR1 sxhkd",
 })
 
 local notes_path = os.getenv("NOTES") or ""
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-	pattern = notes_path .. "/*.md",
-	command = "Dispatch! . _dgp $NOTES $(stamp)",
+  pattern = notes_path .. "/*.md",
+  command = "Dispatch! . _dgp $NOTES $(stamp)",
 })
 
 -- NOTE: this is because the file appears with wrong highlighting, fault of the lsp
 vim.api.nvim_create_autocmd({ "LspAttach" }, {
-	pattern = "*/dwm-flexipatch/config.h",
-	command = "LspStop",
+  pattern = "*/dwm-flexipatch/config.h",
+  command = "LspStop",
 })
 
 vim.api.nvim_create_autocmd({ "FileType" }, {
-	pattern = { "TelescopePrompt*", "TelescopeResults" },
-	command = "setlocal nocursorline",
+  pattern = { "TelescopePrompt*", "TelescopeResults" },
+  command = "setlocal nocursorline",
 })
 
 vim.api.nvim_create_autocmd({ "TermOpen" }, {
-	pattern = "*",
-	command = "setlocal nospell",
+  pattern = "*",
+  command = "setlocal nospell",
 })
 
 vim.api.nvim_create_autocmd({ "FileType" }, {
-	pattern = { "javascriptreact", "typescriptreact" },
-	command = "setlocal nospell",
+  pattern = { "javascriptreact", "typescriptreact" },
+  command = "setlocal nospell",
 })
 
 vim.api.nvim_create_autocmd({ "BufRead" }, {
-	pattern = ".envrc",
-	command = "set ft=bash",
+  pattern = ".envrc",
+  command = "set ft=bash",
 })
 
 -- slows down saving
 local patterns = "*.{js,jsx,mjs,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua,tf,tfvars}"
 vim.api.nvim_create_autocmd("BufWritePre", {
-	pattern = patterns,
-	callback = function()
-		vim.lsp.buf.format()
-	end,
+  pattern = patterns,
+  callback = function()
+    vim.lsp.buf.format()
+  end,
 })

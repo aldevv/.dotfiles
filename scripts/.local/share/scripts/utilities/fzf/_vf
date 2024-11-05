@@ -15,7 +15,7 @@ if [[ -d $name ]]; then
 fi
 
 [ -n "$name" ] &&
-exec nvim "$name"
+nvim "$name"
 
 # if [[ -z $1 ]]; then
 # 	name=$(fzf -d / --with-nth -5,-4,-3,-2,-1 --preview-window=60%:wrap)
