@@ -24,9 +24,7 @@ alias \?r="noglob ?r"
 alias \?s="noglob ?s"
 alias dummypsql="docker run -e POSTGRES_PASSWORD=lol --name=pg -d -p 5432:5432 --rm aldevv/omdb"
 
-alias cr="bb README.md"
-alias br="bb README.md"
-alias Br="b README.md"
+alias Br="bb README.md"
 
 alias pom1="pomo start 1h"
 alias pom2="pomo start 2h"
@@ -41,6 +39,19 @@ alias srcdirenv='eval "$(direnv hook zsh)"'
 alias srcenv='. _srcenv'
 alias addpath='. _addpath'
 alias G="lazygit"
+
+alias getgi="git forgit ignore" # create git ignore 
+alias qmkr="make lily58:mine && make lily58:mine:flash"
+
+
+alias fa="git forgit add"
+alias fD="git forgit diff"
+alias fco="git forgit checkout_branch"
+alias fcO="git forgit checkout_file"
+alias flg="git forgit log"
+alias fR="git forgit reset_head"
+alias frf="git forgit reflog"
+alias fcp="git forgit cherry_pick" 
 
 # kubernetes
 alias watch='watch ' # so it catches aliases
@@ -84,7 +95,6 @@ alias clone1=". _clone 1"
 
 # builtin
 alias c="cat"
-alias f="find"
 
 # git
 alias gt="git tag"

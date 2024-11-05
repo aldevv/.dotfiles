@@ -17,12 +17,17 @@ RGBLIGHT_ENABLE = yes       # Enable WS2812 RGB underlight.
 SWAP_HANDS_ENABLE = no      # Enable one-hand typing
 LEADER_ENABLE = no
 SPACE_CADET_ENABLE = yes
-TAP_DANCE_ENABLE = yes
-COMBO_ENABLE = yes
 KEY_LOCK_ENABLE = yes
 OLED_ENABLE = yes
-OLED_DRIVER = SSD1306
+OLED_DRIVER = ssd1306
 LTO_ENABLE = yes
+
+COMBO_ENABLE = no
+# enable if combos enabled
+# INTROSPECTION_KEYMAP_C = combos.c
+
+TAP_DANCE_ENABLE = no
+
 
 # Do not enable SLEEP_LED_ENABLE. it uses the same timer as BACKLIGHT_ENABLE
 SLEEP_LED_ENABLE = no    # Breathing sleep LED during USB suspend

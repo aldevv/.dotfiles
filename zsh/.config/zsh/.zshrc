@@ -104,9 +104,10 @@ plugins=(
   zsh-syntax-highlighting
   fzf-zsh-plugin # to update version, delete the ~/.fzf folder
 )
-if [[ "$(hostname)" != "hagane" ]]; then
+if [[ "$(hostname)" != "titan" ]]; then
     plugins+=('kube-ps1')
 fi
+
 . "$ZSH/oh-my-zsh.sh"
 
 
@@ -323,4 +324,5 @@ if command -v aws_completer &>/dev/null; then
     autoload bashcompinit && bashcompinit
     complete -C '/usr/local/bin/aws_completer' aws
 fi
-
+#
+# source $HOME/programs/forgit/forgit.plugin.zsh

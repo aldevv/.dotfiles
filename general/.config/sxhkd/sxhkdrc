@@ -10,7 +10,7 @@ super + space
 super + p
     dmenu_run
 
-mode_switch + shift + 0
+mod5 + shift + 0
     sh -c 'sleep 0.5; xdotool type "$(xclip -o -selection primary)"'
 
 super + alt + 1
@@ -39,13 +39,13 @@ Print + shift
   SESSION_MANAGER="" flameshot gui 2>/dev/null
   # flameshot gui
 
-mode_switch + c
+mod5 + c
 	copyq toggle
 
 super + shift + o
     passmenu
 
-mode_switch + shift + e
+mod5 + shift + e
 	emoji
 
 super + shift + x
