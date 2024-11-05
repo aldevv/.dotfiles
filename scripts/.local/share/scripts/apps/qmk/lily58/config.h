@@ -42,8 +42,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define LEADER_PER_KEY_TIMING
 #define LEADER_TIMEOUT 400
 #define COMBO_COUNT 4
-#define COMBO_TERM 160
-#define TAPPING_TERM 165
+
+// these are for version 16,working from 2020 to 2024
+// #define COMBO_TERM 160
+// #define TAPPING_TERM 165
+
+#define TAPPING_TERM 110
+
 /* #define */
 // KC_TRNS for no tap mod
 // it doesn't read the colemak redefinitions
