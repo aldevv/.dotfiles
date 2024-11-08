@@ -1030,6 +1030,7 @@ alias vgrm='vagrant box remove '
 alias vgRM='vagrant box list | cut -f 1 -d ' ' | xargs -L 1 vagrant box remove -f '
 alias vgls='vagrant box list '
 alias vgst='vagrant status '
+alias vgsta="VBoxManage list runningvms"
 # same as start
 alias vgu='vagrant up '
 # same as stop

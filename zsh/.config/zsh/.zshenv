@@ -47,6 +47,13 @@ load_ng() {
   source <(ng completion script)
 }
 
+
+load_brew() {
+ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+}
+
+[[ -d "/home/linuxbrew/.linuxbrew/bin" ]] && load_brew
+
 [[ -d $HOME/.local/share/fnm ]] && load_fnm
 
 [[ -d $HOME/.fly  ]] && [[ -n "$(command -v fly)" ]] && load_fly 

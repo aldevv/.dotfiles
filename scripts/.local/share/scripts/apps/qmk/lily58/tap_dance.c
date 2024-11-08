@@ -47,31 +47,6 @@ void CIRC_PLUS(tap_dance_state_t *state, void *user_data);
 /* SS_RGUI(string), SS_RCMD(string) or SS_RWIN(string) */
 /* https://beta.docs.qmk.fm/using-qmk/advanced-keycodes/feature_macros */
 
-// MY HOLD AND TAP TIMINGS
-uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
-  case LALT_T(KC_ENT):
-    return TAPPING_TERM - 10;
-
-    /* case TD(TD_PLUS): */
-    /*     return TAPPING_TERM + 40; */
-
-  case KC_LSPO:
-    return TAPPING_TERM - 20;
-  case KC_RSPC:
-    return TAPPING_TERM - 50;
-  case LT(_LOWER, KC_SPC):
-    return TAPPING_TERM - 10;
-
-  /* case TD(TD_HTTP_TYPE): */
-  /*     return TAPPING_TERM + 50; */
-  /* case LT(1, KC_GRV): */
-  /*     return 130; */
-  default:
-    return TAPPING_TERM;
-  }
-}
-
 // ============
 // DANCE TAPS
 // ============
