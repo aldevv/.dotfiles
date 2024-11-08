@@ -37,8 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define USE_SERIAL_PD2
 
-#define TAPPING_FORCE_HOLD
-#define TAPPING_TERM_PER_KEY
+
 #define LEADER_PER_KEY_TIMING
 #define LEADER_TIMEOUT 400
 #define COMBO_COUNT 4
@@ -47,7 +46,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define COMBO_TERM 160
 // #define TAPPING_TERM 165
 
-#define TAPPING_TERM 115
+// #define TAPPING_TERM 105  // more or less good
+
+//https://github.com/qmk/qmk_firmware/blob/master/docs/tap_hold.md
+#define TAPPING_FORCE_HOLD
+#define TAPPING_TERM_PER_KEY
+// #define QUICK_TAP_TERM 0 // 100 by default
+#define TAPPING_TERM 100
+#define RETRO_TAPPING
 
 /* #define */
 // KC_TRNS for no tap mod

@@ -41,7 +41,7 @@ alias addpath='. _addpath'
 alias G="lazygit"
 
 alias getgi="git forgit ignore" # create git ignore 
-alias qmkr="make lily58:mine && make lily58:mine:flash"
+alias qmkr="cd $HOME/qmk_firmware && make lily58:mine && make lily58:mine:flash; cd -"
 
 
 alias fa="git forgit add"
@@ -166,6 +166,11 @@ alias localstack="docker run --rm  -dit -p 4566:4566 -p 4510-4559:4510-4559 loca
 alias q="tgpt -i"
 alias Q="quick"
 alias proto="protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative"
+
+# run ubuntu and let it run in the background
+ubuntu() {
+docker run -d --name "$1" ubuntu tail -f /dev/null
+}
 
 # tmux
 alias tms="tmux-sessionizer"
