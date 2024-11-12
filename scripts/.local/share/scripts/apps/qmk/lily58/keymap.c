@@ -451,15 +451,15 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     /*     return TAPPING_TERM + 40; */
 
   case SC_LSPO:
-    return TAPPING_TERM + 10;
+    return TAPPING_TERM + 30;
   case SC_RSPC:
     /* return TAPPING_TERM - 50; */
-    return TAPPING_TERM + 10;
+    return TAPPING_TERM + 30;
   case LT(_LOWER, KC_SPC):
 
     /* return TAPPING_TERM - 10; */
     //NOTE: important one
-    return TAPPING_TERM + 20;  // 20 was not so bad
+    return TAPPING_TERM + 40;  // 20 was not so bad
 
   case LALT_T(KC_ENT):
     /* return TAPPING_TERM - 10; */
