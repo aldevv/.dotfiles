@@ -47,6 +47,11 @@ down)
 	;;
 toggle)
 	amixer -D pulse sset Master toggle &>/dev/null
+  if is_mute; then
+    dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "Muted"
+  else
+    dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "UnMuted"
+  fi
 	# for i in Master Headphone PCM Front Surround Center LFE Side; do
 	# 	amixer -D pulse sset $i toggle &>/dev/null
 	# done
