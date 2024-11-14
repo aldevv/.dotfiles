@@ -25,8 +25,9 @@ if [[ $DESKTOP_SESSION = "ubuntu-xorg" ]]; then
   return
 fi
 
-[[ -n $(command -v picom) ]] && 
+if command -v picom &>/dev/null; then  
   setsid picom &>/dev/null &
+fi
 
 if [[ -n $(command -v feh) ]]; then
   case "$(hostname)" in
