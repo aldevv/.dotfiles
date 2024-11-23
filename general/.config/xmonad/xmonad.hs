@@ -109,7 +109,7 @@ myKeys =
     -- , ("M-,",    prevWS)
   ]
 
-removeDefaultKeys = ["M-S-p"]
+removeDefaultKeys = ["M-S-p", "M-<Backspace>", "M-<Space>"]
 
 -- https://hackage.haskell.org/package/xmonad-contrib-0.17.0/docs/XMonad-Layout-Spacing.html
 mySpacing i = spacingRaw True (Border i i i i) True (Border i i i i) True

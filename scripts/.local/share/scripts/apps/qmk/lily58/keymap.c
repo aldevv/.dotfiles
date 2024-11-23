@@ -65,7 +65,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,    LCM_Q,  LCM_W,   LCM_F,   LCM_P,    LCM_G,                          LCM_J,    LCM_L,    LCM_U,    LCM_Y,    LCM_NTIL,  KC_LBRC, \
   KC_ESC,    LCM_A,  LCM_R,   LCM_S,   LCM_T,    LCM_D,                          LCM_H,    LCM_N,    LCM_E,    LCM_I,    LCM_O,     LCM_QUOT, \
   SC_LSPO,   LCM_Z,  LCM_X,   LCM_C,   LCM_V,    LCM_B, OSL(_QWERTY),  KC_AMPR,  LCM_K,    LCM_M,    LCM_COMM, LCM_DOT,  LCM_MINS,  SC_RSPC,\
-          LT(_ADJUST, KC_F12), OSL(_RAISE), CTL_T(KC_BSPC), LALT_T(KC_DEL),   LGUI_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_LCTL) \
+          LT(_ADJUST, KC_F11), OSL(_RAISE), CTL_T(KC_BSPC), LALT_T(KC_DEL),   LGUI_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_F12) \
 ),
 
 /* LOWER
