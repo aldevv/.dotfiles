@@ -131,9 +131,9 @@ cmp.setup({
         },
       },
     }),
-    ["<a-e>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
-    ["<a-n>"] = cmp.mapping(cmp.mapping.select_next_item(), { "i", "c" }),
-    ["<a-u>"] = function(fallback)
+    ["<c-e>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
+    ["<c-n>"] = cmp.mapping(cmp.mapping.select_next_item(), { "i", "c" }),
+    ["<c-u>"] = function(fallback)
       if cmp.visible() then
         for _ = 1, 2 do
           cmp.select_prev_item()
@@ -142,7 +142,7 @@ cmp.setup({
         fallback()
       end
     end,
-    ["<a-d>"] = function(fallback)
+    ["<c-d>"] = function(fallback)
       if cmp.visible() then
         for _ = 1, 2 do
           cmp.select_next_item()
@@ -151,8 +151,8 @@ cmp.setup({
         fallback()
       end
     end,
-    ["<a-S-e>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
-    ["<a-S-n>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
+    ["<c-S-e>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
+    ["<c-S-n>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
     ["<C-Space>"] = cmp.mapping(function()
       if cmp.visible() then
         cmp.close()
