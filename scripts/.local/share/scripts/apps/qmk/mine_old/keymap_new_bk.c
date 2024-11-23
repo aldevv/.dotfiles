@@ -65,7 +65,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,    LCM_Q,  LCM_W,   LCM_F,   LCM_P,    LCM_G,                          LCM_J,    LCM_L,    LCM_U,    LCM_Y,    LCM_NTIL,  KC_LBRC, \
   KC_ESC,    LCM_A,  LCM_R,   LCM_S,   LCM_T,    LCM_D,                          LCM_H,    LCM_N,    LCM_E,    LCM_I,    LCM_O,     LCM_QUOT, \
   SC_LSPO,   LCM_Z,  LCM_X,   LCM_C,   LCM_V,    LCM_B, OSL(_QWERTY),  KC_AMPR,  LCM_K,    LCM_M,    LCM_COMM, LCM_DOT,  LCM_MINS,  SC_RSPC,\
-          LT(_ADJUST, KC_F12), OSL(_RAISE), CTL_T(KC_BSPC), LALT_T(KC_DEL),   LGUI_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_LCTL) \
+          KC_LGUI, OSL(_RAISE), LALT_T(KC_ENT), CTL_T(KC_DEL),      KC_BSPC, LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_DEL) \
 ),
 
 /* LOWER
@@ -87,7 +87,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______, KC_EXLM, KC_AT,   KC_HASH,  KC_DLR,   KC_PERC,                       KC_CIRC,   KC_AMPR,   KC_ASTR,   KC_LPRN,   KC_RPRN,  LCM_GRV, \
   _______, KC_1,    KC_2,    KC_3,     KC_4,     KC_5,                          KC_6,      KC_7,      KC_8,      KC_9,      KC_0,     LCM_IQUE, \
   _______, LCM_LABK, LCM_AT, LCM_RABK, LCM_CIRC, LCM_TILD, _______,    _______, LCM_BSLS,  LCM_PIPE,  COMM_SPC,  LCM_DOT ,  LCM_PLUS, _______, \
-              _______, _______, LCTL(KC_BSPC), LCTL(KC_DEL),                  _______,  _______, _______, _______\
+                             _______, _______, _______, _______,                  _______,  _______, _______, _______\
 ),
 /* RAISE
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -308,20 +308,16 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
 
   case SC_LSPO:
-    return TAPPING_TERM + 30;
+    return TAPPING_TERM + 60;
   case SC_RSPC:
-    return TAPPING_TERM + 30;
-
+    return TAPPING_TERM + 60;
   case LT(_LOWER, KC_SPC):
-    return TAPPING_TERM + 50;  
-  case CTL_T(KC_BSPC) + 15:
-    return TAPPING_TERM;
-  case LGUI_T(KC_ENT):
+    return TAPPING_TERM + 80;  
+  case LALT_T(KC_ENT):
+    return TAPPING_TERM + 60;
+  case CTL_T(KC_DEL):
     return TAPPING_TERM + 30;
-  case LALT_T(KC_DEL):
-    return TAPPING_TERM ;
   default:
     return TAPPING_TERM;
   }
 }
-
