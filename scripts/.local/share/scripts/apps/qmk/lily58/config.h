@@ -20,54 +20,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-//#define USE_MATRIX_I2C
+#define QUICK_TAP_TERM 0
+#define TAPPING_TERM 90
+#define TAPPING_TERM_PER_KEY //for get_tapping_term
+//default
+// #define TAPPING_TERM 100 
 
-/* Select hand configuration */
+#undef RGBLIGHT_LED_COUNT
+#define RGBLIGHT_EFFECT_BREATHING
+#define RGBLIGHT_EFFECT_RAINBOW_MOOD
+#define RGBLIGHT_EFFECT_RAINBOW_SWIRL
+#define RGBLIGHT_EFFECT_SNAKE
+#define RGBLIGHT_EFFECT_KNIGHT
+#define RGBLIGHT_EFFECT_CHRISTMAS
+#define RGBLIGHT_EFFECT_STATIC_GRADIENT
+#define RGBLIGHT_EFFECT_RGB_TEST
+#define RGBLIGHT_EFFECT_ALTERNATING
+#define RGBLIGHT_EFFECT_TWINKLE
+#define RGBLIGHT_LED_COUNT 27
+#define RGBLIGHT_LIMIT_VAL 120
+#define RGBLIGHT_HUE_STEP 10
+#define RGBLIGHT_SAT_STEP 17
+#define RGBLIGHT_VAL_STEP 17
 
- // #define SPLIT_USB_DETECT
-#define MASTER_LEFT
-// #define MASTER_RIGHT
-// needed to flash with make lily58:mine-def:avrdude-split-left with only left side connected
-// needed to flash with make lily58:mine-def:avrdude-split-right with only right side connected
-// then it can detect the master alone
-// #define EE_HANDS  // this is so that any of both sides can be master
-// #define SPLIT_WPM_ENABLE
-
-#define OLED_DRIVER
-
-#define USE_SERIAL_PD2
-
-
-#define LEADER_PER_KEY_TIMING
-#define LEADER_TIMEOUT 400
-#define COMBO_COUNT 4
-
-// these are for version 16,working from 2020 to 2024
-// #define COMBO_TERM 160
-// #define TAPPING_TERM 165
-
-// #define TAPPING_TERM 105  // more or less good
-
-//https://github.com/qmk/qmk_firmware/blob/master/docs/tap_hold.md
-#define TAPPING_FORCE_HOLD
-#define TAPPING_TERM_PER_KEY
-// #define QUICK_TAP_TERM 0 // 100 by default
-#define TAPPING_TERM 100
-#define RETRO_TAPPING
-
-/* #define */
-// KC_TRNS for no tap mod
-// it doesn't read the colemak redefinitions
-
-// KC_8 = (
-// KC_9 = )
-/* #define LSPO_KEYS KC_LSFT, KC_LSFT, KC_8 */
-/* #define RSPC_KEYS KC_RSFT, KC_LSFT, KC_9 */
-// quot = [
-// bsls = ]
-/* #define LSPO_KEYS KC_LSFT, KC_LSFT, KC_QUOT */
-/* #define RSPC_KEYS KC_RSFT, KC_LSFT, KC_BSLS */
-// quot = {
-// bsls = }
 #define LSPO_KEYS KC_LSFT, KC_TRNS, KC_QUOT
 #define RSPC_KEYS KC_RSFT, KC_TRNS, KC_BSLS
+
+// Underglow
+/*
+#undef RGBLIGHT_LED_COUNT
+#define RGBLIGHT_LED_COUNT 14    // Number of LEDs
+#define RGBLIGHT_SLEEP
+*/
