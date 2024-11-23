@@ -4,7 +4,8 @@ super + w
 super + x
     firefox excalidraw.com
 
-super + space
+# key names can be found in xev
+super + BackSpace
    st 2>/dev/null
     
 super + p
