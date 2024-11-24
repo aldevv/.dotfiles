@@ -27,18 +27,20 @@ enum my_macros {
   CAPS_EMU,
 };
 
+/*
 enum custom_keycodes {
   CTL_C = LT(10, LCM_C),
   CTL_V = LT(10, LCM_V),
 };
+*/
 
 enum layer_number {
   _COLEMAK = 0,
-  _COLEMAK_EMU,
-  _MAC,
   _LOWER,
   _RAISE,
   _ADJUST,
+  _COLEMAK_EMU,
+  _MAC,
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -62,12 +64,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                   | F11  |      |BackSP|/ DEL  /         \      \ | Lower|      | F12  |
  *                   `-------------------''-------'           '------''--------------------'
  */
- [_COLEMAK] = LAYOUT( \
-  CAPS_EMU,  WK1,    WK2,     WK3,     WK4,      WK5,                                 WK6,      WK7,      WK8,      WK9,      WK0,       KC_MUTE, \
-  KC_TAB,    LCM_Q,  LCM_W,   LCM_F,   LCM_P,    LCM_G,                               LCM_J,    LCM_L,    LCM_U,    LCM_Y,    LCM_NTIL,  KC_LBRC, \
-  KC_ESC,    LCM_A,  LCM_R,   LCM_S,   LCM_T,    LCM_D,                               LCM_H,    LCM_N,    LCM_E,    LCM_I,    LCM_O,     LCM_QUOT, \
-  SC_LSPO,   LCM_Z,  LCM_X,   LCM_C,   LCM_V,    LCM_B, DF(_COLEMAK_EMU),  DF(_MAC),  LCM_K,    LCM_M,    LCM_COMM, LCM_DOT,  LCM_MINS,  SC_RSPC,\
-          LT(_ADJUST, KC_F11), OSL(_RAISE), CTL_T(KC_BSPC), LALT_T(KC_DEL),   LGUI_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_F12) \
+ [_COLEMAK] = LAYOUT(
+  CAPS_EMU,  WK1,    WK2,     WK3,     WK4,      WK5,                                 WK6,      WK7,      WK8,      WK9,      WK0,       KC_MUTE,
+  KC_TAB,    LCM_Q,  LCM_W,   LCM_F,   LCM_P,    LCM_G,                               LCM_J,    LCM_L,    LCM_U,    LCM_Y,    LCM_NTIL,  KC_LBRC,
+  KC_ESC,    LCM_A,  LCM_R,   LCM_S,   LCM_T,    LCM_D,                               LCM_H,    LCM_N,    LCM_E,    LCM_I,    LCM_O,     LCM_QUOT,
+  SC_LSPO,   LCM_Z,  LCM_X,   LCM_C,   LCM_V,    LCM_B, DF(_COLEMAK_EMU),  DF(_MAC),  LCM_K,    LCM_M,    LCM_COMM, LCM_DOT,  LCM_MINS,  SC_RSPC,
+          LT(_ADJUST, KC_F11), OSL(_RAISE), CTL_T(KC_BSPC), LALT_T(KC_DEL),   LGUI_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), MO(_ADJUST)
 ),
 
 /* LOWER
@@ -84,13 +86,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                   |      |      |      |/       /         \      \ |      |      |      |
  *                   `----------------------------'           '------''--------------------'
  */
-[_LOWER] = LAYOUT(
-  _______, _______, _______, _______, _______, _______,                         _______,   _______,   _______,   _______,   _______,  _______,\
-  _______, KC_EXLM, KC_AT,   KC_HASH,  KC_DLR,   KC_PERC,                       KC_CIRC,   KC_AMPR,   KC_ASTR,   KC_LPRN,   KC_RPRN,  LCM_GRV, \
-  _______, KC_1,    KC_2,    KC_3,     KC_4,     KC_5,                          KC_6,      KC_7,      KC_8,      KC_9,      KC_0,     LCM_IQUE, \
-  _______, LCM_LABK, LCM_AT, LCM_RABK, LCM_CIRC, LCM_TILD, _______,    _______, LCM_BSLS,  LCM_PIPE,  COMM_SPC,  LCM_DOT ,  LCM_PLUS, _______, \
-              _______, _______, LCTL(KC_BSPC), LCTL(KC_DEL),                  _______,  _______, _______, _______\
-),
+ [_LOWER] = LAYOUT(
+   _______, _______, _______, _______, _______, _______,                         _______,   _______,   _______,   _______,   _______,  _______,
+   _______, KC_EXLM, KC_AT,   KC_HASH,  KC_DLR,   KC_PERC,                       KC_CIRC,   KC_AMPR,   KC_ASTR,   KC_LPRN,   KC_RPRN,  LCM_GRV,
+   _______, KC_1,    KC_2,    KC_3,     KC_4,     KC_5,                          KC_6,      KC_7,      KC_8,      KC_9,      KC_0,     LCM_IQUE,
+   _______, LCM_LABK, LCM_AT, LCM_RABK, LCM_CIRC, LCM_TILD, _______,    _______, LCM_BSLS,  LCM_PIPE,  COMM_SPC,  LCM_DOT ,  LCM_PLUS, _______,
+               _______, _______, LCTL(KC_BSPC), LCTL(KC_DEL),                  _______,  _______, _______, _______
+ ),
 /* RAISE
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
@@ -106,13 +108,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                   `----------------------------'           '------''--------------------'
  */
 
-[_RAISE] = LAYOUT(
-  _______,  _______,  _______,          _______,              _______,      _______,                            _______,  _______,  _______,   _______,   _______,  _______, \
-  XXXXXXX,  KC_F1,    KC_F2,            KC_F3,                KC_F4,        KC_F5,                              KC_F6,    KC_F7,    KC_F8,     KC_F9,     KC_F10,   XXXXXXX, \
-  XXXXXXX,  XXXXXXX,  XXXXXXX,          KC_F11,               KC_F12,       LSFT(KC_PSCR),                      KC_LEFT,  KC_DOWN,  KC_UP,     KC_RGHT,   XXXXXXX,  XXXXXXX, \
-  _______,  XXXXXXX,  KC_MEDIA_SELECT,  KC_MEDIA_PLAY_PAUSE,  LALT(KC_F4),  _______,        _______,  _______,  XXXXXXX,  XXXXXXX,  SCLN_END,  COLN_END,  _______,  _______, \
-                             _______, _______, _______,  _______,               _______, RCTL_T(KC_SPC),  LT(_ADJUST,KC_SPC), _______ \
-),
+ [_RAISE] = LAYOUT(
+   _______,  _______,  _______,          _______,              _______,      _______,                            _______,  _______,  _______,   _______,   _______,  _______,
+   XXXXXXX,  KC_F1,    KC_F2,            KC_F3,                KC_F4,        KC_F5,                              KC_F6,    KC_F7,    KC_F8,     KC_F9,     KC_F10,   XXXXXXX,
+   XXXXXXX,  XXXXXXX,  XXXXXXX,          KC_F11,               KC_F12,       LSFT(KC_PSCR),                      KC_LEFT,  KC_DOWN,  KC_UP,     KC_RGHT,   XXXXXXX,  XXXXXXX,
+   _______,  XXXXXXX,  KC_MEDIA_SELECT,  KC_MEDIA_PLAY_PAUSE,  LALT(KC_F4),  _______,        _______,  _______,  XXXXXXX,  XXXXXXX,  SCLN_END,  COLN_END,  _______,  _______,
+                              _______, _______, _______,  _______,               _______, RCTL_T(KC_SPC),  LT(_ADJUST,KC_SPC), _______
+ ),
 /* ADJUST
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
@@ -127,13 +129,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                   |      |      |      |/       /         \      \ |      |      |      |
  *                   `----------------------------'           '------''--------------------'
  */
-  [_ADJUST] = LAYOUT(
-  XXXXXXX,           XXXXXXX,          XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,                       XXXXXXX,   XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX, \
-  KC_SYSTEM_POWER,   KC_SYSTEM_SLEEP,  XXXXXXX,  KC_BRID,  KC_BRIU,  XXXXXXX,                       XXXXXXX,   XXXXXXX,  KC_INS,   XXXXXXX,  XXXXXXX,  XXXXXXX, \
-  KC_CAPS,           XXXXXXX,          KC_MUTE,  KC_VOLD,  KC_VOLU,  KC_CLEAR,                      KC_HOME,   KC_PGDN,  KC_PGUP,  KC_END,   XXXXXXX,  KC_LSFT, \
-  _______,           XXXXXXX,          XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,   XXXXXXX,  XXXXXXX,   XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  _______,\
-                                                _______, _______, _______, _______,           _______,  _______, _______, _______ \
-  ),
+ [_ADJUST] = LAYOUT(
+  XXXXXXX,           XXXXXXX,          XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,                       XXXXXXX,   XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,
+  KC_SYSTEM_POWER,   KC_SYSTEM_SLEEP,  XXXXXXX,  KC_BRID,  KC_BRIU,  XXXXXXX,                       XXXXXXX,   XXXXXXX,  KC_INS,   XXXXXXX,  XXXXXXX,  XXXXXXX,
+  KC_CAPS,           XXXXXXX,          KC_MUTE,  KC_VOLD,  KC_VOLU,  KC_CLEAR,                      KC_HOME,   KC_PGDN,  KC_PGUP,  KC_END,   XXXXXXX,  KC_LSFT,
+  _______,           XXXXXXX,          XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,   XXXXXXX,  XXXXXXX,   XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  _______,
+                                               _______, _______, _______, _______,           _______,  _______, _______, _______
+ ),
 /* QWERTY
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | ESC  |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  |  `   |
@@ -150,12 +152,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
  [_COLEMAK_EMU] = LAYOUT(
-  CAPS_EMU,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                          KC_6,    KC_7,    KC_8,    KC_9,    KC_0,     KC_GRV,  \
-  KC_TAB,     KC_Q,   KC_W,    KC_F,    KC_P,    KC_G,                          KC_J,    KC_L,    KC_U,    KC_Y,    KC_SCLN,  KC_LBRC, \
-  KC_ESC,     KC_A,   KC_R,    KC_S,    KC_T,    KC_D,                          KC_H,    KC_N,    KC_E,    KC_I,    KC_O,     KC_QUOT, \
-  SC_LSPO,    KC_Z,   KC_X,    KC_C,    KC_V,    KC_B, DF(_COLEMAK),  KC_BSLS, KC_K,    KC_M,    KC_COMM, KC_DOT,   KC_MINS,  SC_RSPC, \
-  LT(_ADJUST, KC_F11), OSL(_RAISE), CTL_T(KC_BSPC), LALT_T(KC_DEL),   LGUI_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_F12) \
-  ),
+  CAPS_EMU,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                          KC_6,    KC_7,    KC_8,    KC_9,    KC_0,     KC_GRV,
+  KC_TAB,     KC_Q,   KC_W,    KC_F,    KC_P,    KC_G,                          KC_J,    KC_L,    KC_U,    KC_Y,    KC_SCLN,  KC_LBRC,
+  KC_ESC,     KC_A,   KC_R,    KC_S,    KC_T,    KC_D,                          KC_H,    KC_N,    KC_E,    KC_I,    KC_O,     KC_QUOT,
+  SC_LSPO,    KC_Z,   KC_X,    KC_C,    KC_V,    KC_B, DF(_COLEMAK),  KC_BSLS, KC_K,    KC_M,    KC_COMM, KC_DOT,   KC_MINS,  SC_RSPC,
+  LT(_ADJUST, KC_F11), OSL(_RAISE), CTL_T(KC_BSPC), LALT_T(KC_DEL),   LGUI_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_F12)
+ ),
 
 /* COLEMAK
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -171,21 +173,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                   | F11  |      |BackSP|/ DEL  /         \      \ | Lower|      | F12  |
  *                   `-------------------''-------'           '------''--------------------'
  */
- [_MAC] = LAYOUT( \
-  CAPS_EMU,  WK1,    WK2,     WK3,     WK4,      WK5,                                     WK6,      WK7,      WK8,      WK9,      WK0,       KC_MUTE, \
-  KC_TAB,    LCM_Q,  LCM_W,   LCM_F,   LCM_P,    LCM_G,                                   LCM_J,    LCM_L,    LCM_U,    LCM_Y,    LCM_NTIL,  KC_LBRC, \
-  KC_ESC,    LCM_A,  LCM_R,   LCM_S,   LCM_T,    LCM_D,                                   LCM_H,    LCM_N,    LCM_E,    LCM_I,    LCM_O,     LCM_QUOT, \
-  SC_LSPO,   LCM_Z,  LCM_X,   LCM_C,   LCM_V,    LCM_B, DF(_COLEMAK_EMU),  DF(_COLEMAK),  LCM_K,    LCM_M,    LCM_COMM, LCM_DOT,  LCM_MINS,  SC_RSPC,\
-          LT(_ADJUST, KC_F11), OSL(_RAISE), LGUI_T(KC_BSPC), LALT_T(KC_DEL),   LCTL_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_F12) \
-),
-
-
+ [_MAC] = LAYOUT(
+  CAPS_EMU,  WK1,    WK2,     WK3,     WK4,      WK5,                                     WK6,      WK7,      WK8,      WK9,      WK0,       KC_MUTE,
+  KC_TAB,    LCM_Q,  LCM_W,   LCM_F,   LCM_P,    LCM_G,                                   LCM_J,    LCM_L,    LCM_U,    LCM_Y,    LCM_NTIL,  KC_LBRC, 
+  KC_ESC,    LCM_A,  LCM_R,   LCM_S,   LCM_T,    LCM_D,                                   LCM_H,    LCM_N,    LCM_E,    LCM_I,    LCM_O,     LCM_QUOT,
+  SC_LSPO,   LCM_Z,  LCM_X,   LCM_C,   LCM_V,    LCM_B, DF(_COLEMAK_EMU),  DF(_COLEMAK),  LCM_K,    LCM_M,    LCM_COMM, LCM_DOT,  LCM_MINS,  SC_RSPC,
+          LT(_ADJUST, KC_F11), OSL(_RAISE), LGUI_T(KC_BSPC), LALT_T(KC_DEL),   LCTL_T(KC_ENT), LT(_LOWER,KC_SPC), ROPT_T(KC_F5), LT(_ADJUST, KC_F12)
+ )
 };
 
-
-layer_state_t layer_state_set_user(layer_state_t state) {
-  return update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
-}
 
 //SSD1306 OLED update loop, make sure to enable OLED_ENABLE=yes in rules.mk
 #ifdef OLED_ENABLE
@@ -248,13 +244,13 @@ bool oled_task_user(void) {
 
 
 // Setting ADJUST layer RGB back to default
-void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) {
-  if (IS_LAYER_ON(layer1) && IS_LAYER_ON(layer2)) {
-    layer_on(layer3);
-  } else {
-    layer_off(layer3);
-  }
-}
+/* void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) { */
+/*   if (IS_LAYER_ON(layer1) && IS_LAYER_ON(layer2)) { */
+/*     layer_on(layer3); */
+/*   } else { */
+/*     layer_off(layer3); */
+/*   } */
+/* } */
 
 bool is_caps_emu_active = false;
 uint16_t key_timer;
@@ -266,10 +262,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // set_timelog();
 
     switch (keycode) {
+    /*
     case CTL_C:
       SEND_STRING(SS_LCTL("c"));
     case CTL_V:
       SEND_STRING(SS_LCTL("v"));
+      */
     case WK1:
       SEND_STRING(SS_LGUI("1"));
       return false; // Skip all further processing of this key

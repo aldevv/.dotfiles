@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define QUICK_TAP_TERM 0
 #define TAPPING_TERM 90
-#define TAPPING_TERM_PER_KEY //for get_tapping_term
+// #define TAPPING_TERM_PER_KEY //for get_tapping_term
 //default
 // #define TAPPING_TERM 100 
 
