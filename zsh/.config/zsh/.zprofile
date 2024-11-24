@@ -56,9 +56,11 @@ export AUTOMATION="$SCRIPTS/automation"
 export APPS="$SCRIPTS/apps"
 export FILES="$SCRIPTS/files"
 
-#[[ -f $UTILITIES/linux/get_package_manager ]] \
-#    && export PKG=$($UTILITIES/linux/get_package_manager) \
-#    && export PKG_INSTALL=$($UTILITIES/linux/get_package_manager "install")
+if [[ $OSTYPE !=  "darwin"* ]]; then
+[[ -f $UTILITIES/linux/get_package_manager ]] \
+    && export PKG=$($UTILITIES/linux/get_package_manager) \
+    && export PKG_INSTALL=$($UTILITIES/linux/get_package_manager "install")
+fi
 
 export PYENV_ROOT="$HOME/.local/share/.pyenv"
 export WINEPREFIX="$HOME/.local/share/wine"
