@@ -24,7 +24,6 @@ export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/rg/.ripgreprc"
 export BROWSER=chromium
 export WALL="$HOME/Pictures/Wallpapers/all_time"
 export EXP="/opt/exploitdb/exploits"
-export WORD="/opt/wordlists"
 export PROJECTS="$HOME/projects"
 export WORK="$HOME/work"
 export NOTES="$HOME/notes"
@@ -57,15 +56,14 @@ export AUTOMATION="$SCRIPTS/automation"
 export APPS="$SCRIPTS/apps"
 export FILES="$SCRIPTS/files"
 
-[[ -f $UTILITIES/linux/get_package_manager ]] \
-    && export PKG=$($UTILITIES/linux/get_package_manager) \
-    && export PKG_INSTALL=$($UTILITIES/linux/get_package_manager "install")
+#[[ -f $UTILITIES/linux/get_package_manager ]] \
+#    && export PKG=$($UTILITIES/linux/get_package_manager) \
+#    && export PKG_INSTALL=$($UTILITIES/linux/get_package_manager "install")
 
 export PYENV_ROOT="$HOME/.local/share/.pyenv"
 export WINEPREFIX="$HOME/.local/share/wine"
 export SXHKD_SHELL="/bin/bash"
 export PMY_RULE_PATH="$XDG_CONFIG_HOME/pmy/"
-export PROXYCHAINS_CONF_FILE="$XDG_CONFIG_HOME/proxychains/proxychains.conf"
 export UNCRUSTIFY_CONFIG="$XDG_CONFIG_HOME/uncristify/config.cfg"
 
 #qt5ct colorscheme

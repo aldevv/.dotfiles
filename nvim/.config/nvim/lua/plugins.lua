@@ -51,6 +51,7 @@ return {
   },
   {
     "github/copilot.vim",
+    enabled = true,
     init = function()
       vim.cmd([[
         let g:copilot_no_tab_map = v:true
@@ -79,10 +80,11 @@ return {
   },
   {
     "CopilotC-Nvim/CopilotChat.nvim",
+    enabled = false,
     branch = "canary",
     dependencies = {
       { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
-      { "nvim-lua/plenary.nvim" }, -- for curl, log wrapper
+      { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
     },
     opts = {
       debug = false, -- Enable debugging

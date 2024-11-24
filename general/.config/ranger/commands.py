@@ -85,7 +85,7 @@ class fzf_select(Command):
     def execute(self):
         if self.quantifier:
             # match only directories
-            command = "find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o \
+            command = "gfind -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o \
                 -type d -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
         else:
             # match files and directories
@@ -116,7 +116,7 @@ class fzf_select_file(Command):
     def execute(self):
         if self.quantifier:
             # match only directories
-            command = "find -L . -mindepth 1 -o -type f > /dev/null | sed 1d | fzf +m"
+            command = "gfind -L . -mindepth 1 -o -type f > /dev/null | sed 1d | fzf +m"
         else:
             # match files and directories
             # command = "find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
