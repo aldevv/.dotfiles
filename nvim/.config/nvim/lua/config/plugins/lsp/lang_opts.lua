@@ -76,6 +76,8 @@ local enhance_server_opts = {
     -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
     opts.settings = {
       gopls = {
+        --https://staticcheck.dev/docs/checks/
+        staticcheck = true,
         codelenses = {
           generate = true,
           gc_details = false,
@@ -87,6 +89,10 @@ local enhance_server_opts = {
         completeUnimported = true,
         buildFlags = { "-tags=linux,windows,darwin" },
       },
+      -- NOTE: enable golanci
+      -- go = {
+      --   lintTool = "golangci-lint",
+      -- },
     }
     --     gopls = {
     --       -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md#code-lenses

@@ -1,3 +1,6 @@
+if [[ $OSTYPE == 'darwin'* ]]; then
+  export PATH="/opt/homebrew/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:$PATH"
+fi
 if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
 # path
@@ -7,8 +10,6 @@ export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 # if command -v pmy &>/dev/null; then
 #     eval "$(pmy init)"
 # fi
-
-
 
 
 if [[ -n $CARGO_HOME ]] && [[ -f  "$CARGO_HOME/env" ]]; then 
@@ -40,7 +41,7 @@ load_fly() {
 
 load_fnm() { 
     export PATH=$HOME/.local/share/fnm:$PATH
-    eval "$(fnm env --use-on-cd)" 2>/dev/null
+    eval "$(fnm env --use-on-cd --shell zsh)" 2>/dev/null
 }
 
 load_ng() { 
@@ -66,7 +67,6 @@ load_brew() {
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-
 # bob nvim
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 
@@ -78,4 +78,5 @@ export PATH="/usr/local/go/bin:$PATH"
 [[ -d "$HOME/.pulumi/bin" ]] && export PATH="$HOME/.pulumi/bin:$PATH"
 
 [[ -d "$HOME/.tfenv/bin" ]] && export PATH="$HOME/.tfenv/bin:$PATH"
+
 

@@ -141,3 +141,4 @@ map Di % /bin/sh -c "rm -rfi "$fx""
 # map go $ $EDITOR "$HOME/cortex"
 # map go $ $EDITOR "$HOME/cortex"
 source /home/kanon/.dotfiles/general/.config/lf/shortcuts
+source /Users/jbernal1/.dotfiles/general/.config/lf/shortcuts

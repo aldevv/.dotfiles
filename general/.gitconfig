@@ -21,5 +21,5 @@
 	appraise = !~/.local/share/go/bin/git-appraise
 [rerere]
 	enabled = true
-[includeIf "gitdir:~/work/"]
-    path = ~/work/.gitconfig
+[includeIf "gitdir:/Users/jbernal1/work/"]
+    path = /Users/jbernal1/work/.gitconfig

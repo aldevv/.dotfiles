@@ -47,6 +47,7 @@ noremap <c-w>i <c-w>l
 noremap <c-w>k <c-w>n
 
 nnoremap º <c-^>
+nnoremap ° <c-^>
 " vertical version of <c-w>^
 noremap <silent><c-w>º :vsp #<cr>
 noremap <silent><c-w>V :vsp #<cr>

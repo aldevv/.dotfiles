@@ -1,5 +1,4 @@
 # Per-command profiling:
-
 # zmodload zsh/datetime
 # setopt promptsubst
 # PS4='+$EPOCHREALTIME %N:%i> '
@@ -94,20 +93,21 @@ preexec() { echo -ne '\e[5 q'; } # Use beam shape cursor for each new prompt.
 # docker adds completion for docker commands, same docker compose
 ##set history size
 [ ! -d "$HOME/.cache/zsh" ] &&\
-    mkdir "$HOME/.cache/zsh"
+    mkdir -p "$HOME/.cache/zsh"
 # plugins=(copybuffer dirhistory jsontools)
 plugins=(
 	git
-	docker
-	docker-compose
   zsh-autosuggestions
   zsh-syntax-highlighting
   fzf-zsh-plugin # to update version, delete the ~/.fzf folder
 )
-if [[ "$(hostname)" != "titan" ]]; then
-    plugins+=('kube-ps1')
-fi
 
+# if [[ "$(hostname)" != "hagane" ]]; then
+#     plugins+=('kube-ps1')
+# fi
+# if [[ "$(hostname)" != "hagane" ]]; then
+#     plugins+=('kube-ps1')
+# fi
 . "$ZSH/oh-my-zsh.sh"
 
 
@@ -277,13 +277,13 @@ bindkey "^ " autosuggest-execute
 export LESSKEYIN="$HOME/.config/colemak-less"
 
 # Only run lesskey if less version is older than v582
-less_ver=$(less --version | awk '{print $2;exit}')
-autoload -Uz is-at-least
-if ! is-at-least 582 $less_ver; then
-  # Old less versions will read this transformed file
-  lesskey $LESSKEYIN
-fi
-unset less_ver
+#less_ver=$(less --version | awk '{print $2;exit}')
+#autoload -Uz is-at-least
+#if ! is-at-least 582 $less_ver; then
+#  # Old less versions will read this transformed file
+#  lesskey $LESSKEYIN
+#fi
+#unset less_ver
 
 
 # install https://github.com/relastle/pmy
@@ -301,6 +301,7 @@ unset less_ver
 
 
 # put settings here, since oh-my-zsh sets it's own settings
+
 setopt EXTENDED_HISTORY
 setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
 setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.

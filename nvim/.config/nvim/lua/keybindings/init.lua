@@ -30,7 +30,11 @@ end
 -- ¿
 -- <leader>N
 -- essential
+
 -- colemak
+map("n", "n", "j", nor)
+map("n", "e", "k", nor)
+map({ "n", "o" }, "j", "e", nor)
 
 if not os.getenv("USE_QWERTY") then
   map("n", "n", "j", nor)
@@ -39,6 +43,7 @@ if not os.getenv("USE_QWERTY") then
 
   map("n", "gk", "gn", nor)
   map("n", "cj", "ce", nor)
+
 
   map("n", "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
   map({ "n", "x" }, "i", "lzv", nor)

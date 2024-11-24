@@ -4,6 +4,12 @@ selected="${1:-}"
 depth="${2:-1}"
 manual=0
 
+find_command="find"
+
+if [[ $OSTYPE == 'darwin'* ]]; then
+  find_command="gfind" # brew install findutils
+fi
+
 fzf_with_nth() {
 	[[ -z $depth ]] && echo "-2,-1" && return
 
@@ -42,7 +48,7 @@ if [[ -z "$selected" ]]; then
     # %C@ change time in seconds
 		# find_args=(-L "$f" -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d -printf "%A@ %Ac %p\n")
 		find_args=(-L "$f" -mindepth 1 -maxdepth 1 -not -path '*/\.*' -type d -printf "%C@ %Cc %p\n")
-		next_folder="$(find "${find_args[@]}" | sort -nr | awk '{print $NF}')"
+		next_folder="$($find_command "${find_args[@]}" | sort -nr | awk '{print $NF}')"
 
     if [[ -z $next_folder ]]; then
       continue
@@ -59,7 +65,7 @@ else
 	manual=1
 	with_nth=$(fzf_with_nth)
 	find_args=(-L "$selected" -mindepth "$depth" -maxdepth "$depth" -not -path '*/\.*' -type d -printf "%T@ %Tc %p\n")
-	folders_result="$(find "${find_args[@]}" | sort -nr | awk '{print $NF}')"
+	folders_result="$($find_command "${find_args[@]}" | sort -nr | awk '{print $NF}')"
 	selected=$(echo -e "$folders_result" | fzf --preview="ls {} --color=always" --delimiter / --with-nth "$with_nth" --preview-window=60%:wrap | awk '{print $NF}')
 fi
 
