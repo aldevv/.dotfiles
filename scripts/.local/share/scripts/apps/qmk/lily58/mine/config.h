@@ -20,9 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#define QUICK_TAP_TERM 0
-#define TAPPING_TERM 90
-// #define TAPPING_TERM_PER_KEY //for get_tapping_term
+// https://docs.qmk.fm/tap_hold#dynamic-tapping-term
+#define TAPPING_TERM_PER_KEY //for get_tapping_term
+#define TAPPING_TERM 165
+
+// NOTE: good for fast typists
+// #define PERMISSIVE_HOLD
+
+#define LSPO_KEYS KC_LSFT, KC_TRNS, KC_QUOT
+#define RSPC_KEYS KC_RSFT, KC_TRNS, KC_BSLS
+
+// NOTE: good for repeated keypresses
+// #define QUICK_TAP_TERM 120 // default 200
 //default
 // #define TAPPING_TERM 100 
 
@@ -43,8 +52,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGBLIGHT_SAT_STEP 17
 #define RGBLIGHT_VAL_STEP 17
 
-#define LSPO_KEYS KC_LSFT, KC_TRNS, KC_QUOT
-#define RSPC_KEYS KC_RSFT, KC_TRNS, KC_BSLS
 
 // Underglow
 /*

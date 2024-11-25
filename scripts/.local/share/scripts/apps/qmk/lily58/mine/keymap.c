@@ -330,23 +330,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
+    switch (keycode) {
+        case LGUI_T(KC_ENT):
+            return TAPPING_TERM - 10;
+        case SC_LSPO:
+            return TAPPING_TERM - 20;
+        case SC_RSPC:
+            return TAPPING_TERM - 50;
 
-  case SC_LSPO:
-    return TAPPING_TERM + 30;
-  case SC_RSPC:
-    return TAPPING_TERM + 30;
+        case LT(_LOWER,KC_SPC):
+            return TAPPING_TERM - 10;
 
-  case LT(_LOWER, KC_SPC):
-    return TAPPING_TERM + 50;  
-  case CTL_T(KC_BSPC) + 15:
-    return TAPPING_TERM;
-  case LGUI_T(KC_ENT):
-    return TAPPING_TERM + 30;
-  case LALT_T(KC_DEL):
-    return TAPPING_TERM ;
-  default:
-    return TAPPING_TERM;
-  }
+        case CTL_T(KC_BSPC):
+            return TAPPING_TERM - 60;
+        default:
+            return TAPPING_TERM;
+    }
 }
-
