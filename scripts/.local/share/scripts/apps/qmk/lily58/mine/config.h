@@ -24,16 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TAPPING_TERM_PER_KEY //for get_tapping_term
 #define TAPPING_TERM 165
 
-// NOTE: good for fast typists
-// #define PERMISSIVE_HOLD
-
 #define LSPO_KEYS KC_LSFT, KC_TRNS, KC_QUOT
 #define RSPC_KEYS KC_RSFT, KC_TRNS, KC_BSLS
-
-// NOTE: good for repeated keypresses
-// #define QUICK_TAP_TERM 120 // default 200
-//default
-// #define TAPPING_TERM 100 
 
 #undef RGBLIGHT_LED_COUNT
 #define RGBLIGHT_EFFECT_BREATHING
