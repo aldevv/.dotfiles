@@ -5,10 +5,10 @@
 #include <dt-bindings/zmk/backlight.h>
 
 #define default 0
-#define lower 1
-#define raise 2
-#define adjust 3
-#define mac 4
+#define mac 1
+#define lower 2
+#define raise 3
+#define adjust 4
 
 // &mt {
 //     tapping-term-ms = <200>;
@@ -60,11 +60,20 @@
         &mo 2     &kp GRAVE &kp CAPS &kp LEFT &kp RIGHT                       &mt LCTRL BSPC &mt LALT DEL   &kp END  &kp PG_DN &mt LGUI ENTER &lt lower SPACE              &kp UP &kp DOWN  &kp LBKT &kp RBKT &mo 2
       >;
     };
+    mac {
+      bindings = <
+        &trans &trans &trans &trans &trans &trans &trans                                                      &trans &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans &trans &trans                                                      &trans &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans &trans &trans                &trans &trans &trans &trans           &trans &trans &trans &trans &trans &trans &trans 
+        &trans &trans &trans &trans &trans &trans                            &trans &trans                           &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans                 &mt LGUI BSPC &trans &trans &trans &trans &trans           &trans &trans &trans &trans &trans
+      >;
+    };
     lower {
       bindings = <
         &trans &trans     &trans     &trans     &trans     &trans     &trans                                                                         &trans &trans     &trans     &trans     &trans     &trans     &trans
         &trans &kp LS(N1) &kp LS(N2) &kp LS(N3) &kp LS(N4) &kp LS(N5) &none                                                                          &none  &kp LS(N6) &kp LS(N7) &kp LS(N8) &kp LS(N9) &kp LS(N0) &trans
-        &trans &kp N1     &kp N2     &kp N3     &kp N4     &kp N5     &none               &kp LCTRL &kp LALT &kp LGUI  &kp RCTRL                     &none  &kp N6     &kp N7     &kp N8     &kp N9     &kp N0     &trans
+        &trans &kp N1     &kp N2     &kp N3     &kp N4     &kp N5     &none               &trans &trans &trans &trans                                            &none  &kp N6     &kp N7     &kp N8     &kp N9     &kp N0     &trans
         &trans &trans     &trans     &trans     &trans     &trans                               &kp HOME &kp PG_UP                                         &trans     &trans      &trans     &trans     &trans     &trans
         &trans &trans     &trans     &trans     &trans                        &mt LCTRL BSPC &mt LALT DEL   &kp END  &kp PG_DN &kp ENTER &kp SPACE            &trans &trans &trans &trans &trans
       >;
@@ -85,15 +94,6 @@
         &none &none        &none        &none        &none        &none        &none                &none &none &bt BT_CLR &none                   &rgb_ug RGB_MEFS_CMD 5 &none        &none        &none        &none &none &none
         &none &none        &none        &none        &macro_ver   &none                                     &none &none                                                   &none        &none        &none        &none &none &none
         &none &none        &none        &none        &none                                   &none &none &none &none  &bl BL_TOG &rgb_ug RGB_TOG           &bl BL_INC   &bl BL_DEC   &none &none &none
-      >;
-    };
-    mac {
-      bindings = <
-        &kp EQUAL &kp N1    &kp N2   &kp N3   &kp N4     &kp N5 &tog default                                                                                   &mo 3 &kp N6 &kp N7 &kp N8    &kp N9   &kp N0   &kp MINUS
-        &kp TAB   &kp Q     &kp W    &kp E    &kp R      &kp T  &bootloader                                                                                    &none &kp Y  &kp U  &kp I     &kp O    &kp P    &kp BSLH
-        &kp ESC   &kp A     &kp S    &kp D    &kp F      &kp G  &none                       &lt raise F11 &mo adjust &kp RALT  &kp RCTRL                       &none &kp H  &kp J  &kp K     &kp L    &kp SEMI &kp SQT
-        &kp LSHFT &kp Z     &kp X    &kp C    &kp V      &kp B                                             &kp HOME &kp PG_UP                                        &kp N  &kp M  &kp COMMA &kp DOT  &kp FSLH &kp RSHFT
-        &mo 2     &kp GRAVE &kp CAPS &kp LEFT &kp RIGHT                       &mt LGUI BSPC &mt LALT DEL   &kp END  &kp PG_DN &mt LGUI ENTER &lt lower SPACE              &kp UP &kp DOWN  &kp LBKT &kp RBKT &mo 2
       >;
     };
     // default_layer {

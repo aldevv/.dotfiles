@@ -106,8 +106,19 @@ vim.api.nvim_create_autocmd({ "BufRead" }, {
 
 vim.api.nvim_create_autocmd({ "BufRead" }, {
   pattern = "*.keymap",
-  command = "set syntax=dts",
+  callback = function()
+    vim.bo.syntax = "dts"
+    vim.opt.formatoptions:remove({ "r", "o", "t" })
+  end,
 })
+
+vim.api.nvim_create_autocmd({ "BufEnter" }, {
+  pattern = "*",
+  callback = function()
+    vim.opt.formatoptions:remove({ "r", "o", "t" })
+  end,
+})
+
 
 -- slows down saving
 local patterns = "*.{js,jsx,mjs,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua,tf,tfvars}"
