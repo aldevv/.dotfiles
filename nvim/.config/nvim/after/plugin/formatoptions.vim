@@ -1,2 +1,1 @@
-autocmd FileType * set formatoptions-=ro
-
+autocmd FileType * set formatoptions-=rot
