@@ -339,7 +339,7 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
             return TAPPING_TERM - 40;
 
         case LT(_LOWER,KC_SPC):
-            return TAPPING_TERM - 5;
+            return TAPPING_TERM - 10;
 
         case CTL_T(KC_BSPC):
             return TAPPING_TERM - 50;
