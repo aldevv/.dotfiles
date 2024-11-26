@@ -354,6 +354,7 @@ vim.keymap.set("n", "<backspace>.snl", "<cmd>e ~/.config/nvim/my_snippets/snipma
 vim.keymap.set("n", "<backspace>.snp", "<cmd>e ~/.config/nvim/my_snippets/snipmate/python.snippets <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.ao", "<cmd>e ~/.config/zsh/.aliases <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.k", "<cmd>e $HOME/qmk_firmware/keyboards/lily58/keymaps/mine/keymap.c <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<backspace>.K", "<cmd>e $HOME/.local/share/scripts/apps/zmk/mine/adv360.keymap <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.Z", "<cmd>e /root/.config/zsh/.zshrc <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.pr", "<cmd>e $FILES/projections/global/.projections.json <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.s", "<cmd>e $HOME/.ssh/config <cr>", {silent=true, noremap=true})

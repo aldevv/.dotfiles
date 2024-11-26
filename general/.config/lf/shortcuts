@@ -277,6 +277,7 @@ map <backspace2>.snl $ $EDITOR ~/.config/nvim/my_snippets/snipmate/lua.snippets
 map <backspace2>.snp $ $EDITOR ~/.config/nvim/my_snippets/snipmate/python.snippets
 map <backspace2>.ao $ $EDITOR ~/.config/zsh/.aliases
 map <backspace2>.k $ $EDITOR /Users/jbernal1/qmk_firmware/keyboards/lily58/keymaps/mine/keymap.c
+map <backspace2>.K $ $EDITOR /Users/jbernal1/.local/share/scripts/apps/zmk/mine/adv360.keymap
 map <backspace2>.Z $ $EDITOR /root/.config/zsh/.zshrc
 map <backspace2>.pr $ $EDITOR /Users/jbernal1/.local/share/scripts/files/projections/global/.projections.json
 map <backspace2>.s $ $EDITOR /Users/jbernal1/.ssh/config
