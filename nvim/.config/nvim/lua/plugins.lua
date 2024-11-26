@@ -55,7 +55,7 @@ return {
     init = function()
       vim.cmd([[
         let g:copilot_no_tab_map = v:true
-        imap <silent><script><expr> <a-y> copilot#Accept("\<a-y>")
+        imap <silent><script><expr> <c-j> copilot#Accept("\<c-j>")
       ]])
       vim.g.copilot_filetypes = {
         ["*"] = true,

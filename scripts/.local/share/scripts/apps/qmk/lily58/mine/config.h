@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // https://docs.qmk.fm/tap_hold#dynamic-tapping-term
 #define TAPPING_TERM_PER_KEY //for get_tapping_term
-#define TAPPING_TERM 165
+#define TAPPING_TERM 155
 
 #define LSPO_KEYS KC_LSFT, KC_TRNS, KC_QUOT
 #define RSPC_KEYS KC_RSFT, KC_TRNS, KC_BSLS
