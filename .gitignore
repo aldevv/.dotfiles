@@ -7,3 +7,4 @@ __pycache__
 general/.config/copyq/*
 nvim/.config/nvim/lua/work.lua
 !general/.config/copyq/copyq.conf
+.DS_Store

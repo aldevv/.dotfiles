@@ -104,6 +104,11 @@ vim.api.nvim_create_autocmd({ "BufRead" }, {
   command = "set ft=bash",
 })
 
+vim.api.nvim_create_autocmd({ "BufRead" }, {
+  pattern = "*.keymap",
+  command = "set syntax=dts",
+})
+
 -- slows down saving
 local patterns = "*.{js,jsx,mjs,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua,tf,tfvars}"
 vim.api.nvim_create_autocmd("BufWritePre", {

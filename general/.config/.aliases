@@ -42,6 +42,7 @@ alias G="lazygit"
 
 alias getgi="git forgit ignore" # create git ignore 
 alias qmkr="cd $HOME/qmk_firmware && make lily58:mine && make lily58:mine:flash; cd -"
+alias zmkr="cd /Users/jbernal1/code/Adv360-Pro-ZMK/ && make clean_firmware && make; printf 'enter bootloader mode...' ;read ans; cp firmware/*left* /Volumes/ADV360PRO/; cd - "
 
 
 alias fa="git forgit add"
