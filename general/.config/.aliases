@@ -45,6 +45,7 @@ alias qmkr="cd $HOME/qmk_firmware && make lily58:mine && make lily58:mine:flash;
 alias zmkr="cd $HOME/adv360/ && make; printf 'enter bootloader mode...' ;read ans; cp firmware/*left* /Volumes/ADV360PRO/; cd - "
 alias zmkcp="cd $HOME/adv360/ && cp firmware/*left* /Volumes/ADV360PRO/; cd -"
 alias zmkR="cd $HOME/adv360/ && make; printf 'enter bootloader mode...' ;sleep 5 ; sudo mount /dev/sda /mnt; sudo cp firmware/*left* /mnt; cd -; sudo umount /mnt"
+alias zmkcP="cd $HOME/adv360/ && cp firmware/*left* /mnt; cd -"
 
 
 alias fa="git forgit add"
