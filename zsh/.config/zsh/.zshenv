@@ -1,82 +1,106 @@
 if [[ $OSTYPE == 'darwin'* ]]; then
   export PATH="/opt/homebrew/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:$PATH"
 fi
-if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
-# path
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-#
-# what was this for again?
-# if command -v pmy &>/dev/null; then
-#     eval "$(pmy init)"
-# fi
+load_nix() {
+  if [[ ! -e $HOME/.nix-profile/etc/profile.d/nix.sh ]]; then 
+    return
+  fi
+  . $HOME/.nix-profile/etc/profile.d/nix.sh
+}
+load_nix
 
+load_cargo() { 
+  if [[ ! -n $CARGO_HOME ]] || [[ ! -f  "$CARGO_HOME/env" ]]; then 
+    return
+  fi
 
-if [[ -n $CARGO_HOME ]] && [[ -f  "$CARGO_HOME/env" ]]; then 
-    CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
-    . "$CARGO_HOME/env"
-fi
+  CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
+  . "$CARGO_HOME/env"
+}
+load_cargo
 
-[[ -f "$HOME/.ghcup/env" ]] && source "$HOME/.ghcup/env" # ghcup-env
+load_ghcup() { 
+  if [[ ! -f "$HOME/.ghcup/env" ]]; then 
+    return
+  fi
+  . "$HOME/.ghcup/env" # ghcup-env
+}
+load_ghcup
+
 
 load_direnv() {
-    eval "$(direnv hook zsh)"
+  if ! command -v direnv &>/dev/null; then
+    return
+  fi 
+  eval "$(direnv hook zsh)"
 }
-[[ -n "$(command -v direnv)" ]] &&  load_direnv
+load_direnv
 
-
-# NOTE: leave this last
 load_pyenv() {
-    eval "$(pyenv init -)"
-    eval "$(pyenv init --path)"
-    eval "$(pyenv virtualenv-init -)"
+  if [[ ! -f .python-version ]] || ! command -v pyenv &>/dev/null; then
+    return
+  fi
+  eval "$(pyenv init -)"
+  eval "$(pyenv init --path)"
+  eval "$(pyenv virtualenv-init -)"
 }
-# NOTE: this might slow down tmux when opening a folder with .python-version file
-[[ -f .python-version && -n "$(command -v pyenv)" ]] && load_pyenv
-
-load_fly() { 
-    export FLYCTL_INSTALL="/home/kanon/.fly"
-    export PATH="$FLYCTL_INSTALL/bin:$PATH"
-}
-
-load_fnm() { 
-    export PATH=$HOME/.local/share/fnm:$PATH
-    eval "$(fnm env --use-on-cd --shell zsh)" 2>/dev/null
-}
-
-load_ng() { 
-  source <(ng completion script)
-}
-
+load_pyenv
 
 load_brew() {
- eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  if [[ ! -d "/home/linuxbrew/.linuxbrew/bin" ]]; then
+    return
+  fi
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 }
+load_brew
 
-[[ -d "/home/linuxbrew/.linuxbrew/bin" ]] && load_brew
+load_fly() { 
+  if [[ ! -d $HOME/.fly  ]] || ! command -v fly &>/dev/null; then
+    return
+  fi
+  export FLYCTL_INSTALL="/home/kanon/.fly"
+  export PATH="$FLYCTL_INSTALL/bin:$PATH"
+}
+load_fly 
 
-[[ -d $HOME/.local/share/fnm ]] && load_fnm
+load_fnm() { 
+  if [[ ! -d $HOME/.local/share/fnm ]]; then
+    return
+  fi
+  export PATH=$HOME/.local/share/fnm:$PATH
+  eval "$(fnm env --use-on-cd --shell zsh)" 2>/dev/null
+}
+load_fnm
 
-[[ -d $HOME/.fly  ]] && [[ -n "$(command -v fly)" ]] && load_fly 
+load_ng() { 
+  if ! command -v ng &>/dev/null; then
+    return
+  fi
+  source <(ng completion script)
+}
+load_ng
+
+load_bun() {
+  if [[ ! -d "$HOME/.bun" ]]; then
+    return
+  fi
+  source "$HOME/.bun/_bun"
+  export BUN_INSTALL="$HOME/.bun"
+  export PATH="$BUN_INSTALL/bin:$PATH"
+}
+load_bun
 
 
-# bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+misc() { 
+  [[ -f "$HOME/.turso/turso" ]] && export PATH="$HOME/.turso:$PATH"
 
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+  [[ -d "$HOME/.pulumi/bin" ]] && export PATH="$HOME/.pulumi/bin:$PATH"
 
-# bob nvim
+  [[ -d "$HOME/.tfenv/bin" ]] && export PATH="$HOME/.tfenv/bin:$PATH"
+}
+misc
+
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
-
-# golang
 export PATH="/usr/local/go/bin:$PATH"
-
-[[ -f "$HOME/.turso/turso" ]] && export PATH="$HOME/.turso:$PATH"
-
-[[ -d "$HOME/.pulumi/bin" ]] && export PATH="$HOME/.pulumi/bin:$PATH"
-
-[[ -d "$HOME/.tfenv/bin" ]] && export PATH="$HOME/.tfenv/bin:$PATH"
-
-
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"

@@ -1,121 +1,140 @@
 #!/bin/bash
 
-
-[[ -f "$HOME/.config/zsh/.zprofile" ]] && \
+if [[ -f "$HOME/.config/zsh/.zprofile" ]]; then
   . "$HOME/.config/zsh/.zprofile"
+fi
+
 
 startup() {
   if [[ -z "$DISPLAY" ]]; then
   	return
   fi
+
   setxkbmap -layout latam -variant colemak &
   xset r rate 600 20 
   remove_dead_keys 
   sleep 0.1
-  xmodmap ~/.Xmodmap 
+  xmodmap ~/.Xmodmap
+
+  if [[ -f ~/.Xresources ]]; then
+    xrdb -merge ~/.Xresources &
+  fi
+
+  if command -v copyq &>/dev/null; then
+    copyq &
+  fi
+
+  if command -v flameshot &>/dev/null; then
+    flameshot 2>/dev/null &
+  fi
+
+  if command -v sxhkd &>/dev/null; then
+    sxhkd &
+  fi
+
+  if command -v udiskie &>/dev/null; then
+    udiskie --tray &
+  fi
+
+  # for my 4k cam
+  if command -v v4l2-ctl &>/dev/null; then
+    v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
+  fi
 }
 startup
 
-[[ -f "$HOME/.config/.startup_work" ]] && \
-	setsid "$HOME/.config/.startup_work" &
+
+work() {
+  if [[ -f "$HOME/.config/.startup_work" ]]; then
+    "$HOME/.config/.startup_work" &
+  fi
+}
+work &
 
 if [[ $DESKTOP_SESSION = "ubuntu-xorg" ]]; then
-  [[ -n $(command -v sxhkd) ]] && setsid sxhkd &
-  [[ -n $(command -v flameshot) ]] && setsid flameshot &>/dev/null &
   return
 fi
 
-if command -v picom &>/dev/null; then  
-  setsid picom &>/dev/null &
-fi
+other_wm() {
+  if command -v picom &>/dev/null; then  
+    picom &>/dev/null &
+  fi
 
-if [[ -n $(command -v feh) ]]; then
-  case "$(hostname)" in
-    hagane)
-      setsid set_wall 2 ;;
-    *)
-      setsid set_wall ;;
-  esac
-fi
+  if command -v feh &>/dev/null; then
+    case "$(hostname)" in
+      hagane)
+        set_wall 2 ;;
+      *)
+        set_wall ;;
+    esac
+  fi
 
-##to import env variables to dbus
-# dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
+  if command -v wal &>/dev/null; then
+    wal -R &
+  fi
 
-## dunst is started by dbus-daemon now
-## the display manager is also taken care of by dbus, in case you want to change to startx, havent tested
-[[ -n $(command -v dunst) ]] &&
-	setsid dunst &
+  ##to import env variables to dbus
+  # dbus-update-activation-environment --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY
 
+  ## dunst is started by dbus-daemon now
+  ## the display manager is also taken care of by dbus, in case you want to change to startx, havent tested
 
-if [[ -n $(command -v fcitx) ]]; then
-	export GTK_IM_MODULE=fcitx
-	export QT_IM_MODULE=fcitx
-	export SDL_IM_MODULE=fcitx
-	export XMODIFIERS=@im=fcitx
-	export XIM_PROGRAM=fcitx
-	setsid fcitx --replace -d &>/dev/null &
-fi
-
-# check if docker still works with xserver 19/04/24
-# # so the user can make connections to the xserver (docker)
-# xhost local:root &
+  [[ -n $(command -v dunst) ]] &&
+    dunst &
 
 
-[[ $DESKTOP_SESSION = "dwm" ]] && [[ -n $(command -v pacman) ]] && \
-	setsid dwmstatus-pacman &
+  if [[ -n $(command -v fcitx) ]]; then
+    export GTK_IM_MODULE=fcitx
+    export QT_IM_MODULE=fcitx
+    export SDL_IM_MODULE=fcitx
+    export XMODIFIERS=@im=fcitx
+    export XIM_PROGRAM=fcitx
+    fcitx --replace -d &>/dev/null &
+  fi
 
-[[ $DESKTOP_SESSION = "dwm" ]] && [[ -n $(command -v apt) ]] && \
-	setsid dwmstatus-apt &
+  if command -v xscreensaver &>/dev/null; then
+    xscreensaver --no-splash &>/dev/null &
+  fi
+}
+other_wm &
 
-[[ -f ~/.Xresources ]] &&
-	setsid xrdb -merge ~/.Xresources &
-[[ -n $(command -v copyq) ]] &&
-	setsid copyq &
-[[ -n $(command -v clipcatd) ]] &&
-	setsid clipcatd &
-[[ -n $(command -v wal) ]] &&
-	wal -R &
-[[ -n $(command -v sxhkd) ]] &&
-	setsid sxhkd &
-[[ -n $(command -v flameshot) ]] &&
-	setsid flameshot 2>/dev/null &
+rclone_mounts() {
+  if command -v rclone &>/dev/null || [[ ! -f "$HOME/.config/remotes" ]]; then
+    return
+  fi
+  . "$HOME/.config/remotes"
+}
+rclone_mounts &
+
+status_bar() {
+  if [[ $DESKTOP_SESSION != "dwm" ]]; then
+    return
+  fi
+
+  if command -v pacman &>/dev/null; then
+    dwmstatus-pacman &
+  fi
+
+  if command -v apt &>/dev/null; then
+    dwmstatus-apt &
+  fi
+}
+status_bar &
+
+
+
 
 # NOTE: the systemd should do this
 # [[ -n $(command -v autorandr) ]] &&
-# 	setsid autorandr --change &>/dev/null &
+# 	autorandr --change &>/dev/null &
 
+hacks() {
+  if [[ -f /usr/lib/polkit-kde-authentication-agent-1 ]]; then
+    /usr/lib/polkit-kde-authentication-agent-1 &
+  fi
 
-rclone_mounts() {
-	[ -f "$HOME/.config/remotes" ] && 
-    . "$HOME/.config/remotes"
+  if [[ -f /usr/lib/polkit-gnome-authentication-agent-1 ]]; then
+    /usr/lib/polkit-gnome-authentication-agent-1 &
+  fi
 }
 
-[[ -n $(command -v rclone) ]] &&
-	rclone_mounts &
-
-[[ -f "$HOME/.config/zsh/.zshenv" ]] && \
-  . "$HOME/.config/zsh/.zshenv"
-
-[[ -n $(command -v xscreensaver) ]] && [[ $DESKTOP_SESSION = "xmonad" ]] &&
-  setsid xscreensaver --no-splash &>/dev/null &
-
-# 30 minutes, you can do dim or dimblur
-# this
-# xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'betterlockscreen -l blur -t "i feel forgotten"' --timer 20000 'betterlockscreen -s blur -t "i was just taking a nap"' - &
-[[ -n $(command -v xidlehook) ]] &&
-	xidlehook --detect-sleep --not-when-fullscreen --timer 4800 'i3lock -F -i $WALL/1559506908863.png' --timer 20000 'systemctl suspend' '' &
-# the last empty string is the canceller, is any command you define that runs after you come back
-
-
-if [[ -f /usr/lib/polkit-kde-authentication-agent-1 ]]; then
-	/usr/lib/polkit-kde-authentication-agent-1 &
-else
-	if [[ -f /usr/lib/polkit-gnome-authentication-agent-1 ]]; then
-		/usr/lib/polkit-gnome-authentication-agent-1 &
-	fi
-fi
-
-# disable autofocus on w4sd camera
-if command -v v4l2-ctl &>/dev/null && [[ "$(ls -l /dev/video4 2>/dev/null)" != "" ]]; then
-  v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
-fi
