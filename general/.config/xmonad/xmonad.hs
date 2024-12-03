@@ -280,8 +280,8 @@ myRandrChangeHook = do
 
 myRescreenCfg =
   def
-    { afterRescreenHook = myAfterRescreenHook,
-      randrChangeHook = myRandrChangeHook
+    { afterRescreenHook = myAfterRescreenHook
+      -- randrChangeHook = myRandrChangeHook
     }
 
 handleSwallowHook =
