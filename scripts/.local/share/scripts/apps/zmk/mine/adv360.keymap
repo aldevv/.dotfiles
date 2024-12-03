@@ -83,11 +83,11 @@
     };
     lower {
       bindings = <
-        &trans &trans     &trans     &trans       &trans          &trans     &trans                                                                         &trans &trans        &trans     &trans     &trans     &trans     &trans
-        &trans &kp LS(N1) &kp LS(N2) &kp LS(N3)   &kp LS(N4)      &kp LS(N5) &none                                                                          &none  &kp LS(N6)    &kp LS(N7) &kp LS(N8) &kp LS(N9) &kp LS(N0) &trans
-        &trans &kp N1     &kp N2     &kp N3       &kp N4          &kp N5     &none               &trans &trans &trans &trans                                &none  &kp N6        &kp N7     &kp N8     &kp N9     &kp N0     &kp EQUAL
-        &trans &kp NUBS   &kp RA(N2) &kp LS(NUBS) &kp RA(LC_LBRC) &trans                                &trans &trans                                              &kp RA(MINUS) &kp GRAVE  &trans     &trans     &kp RBKT   &trans
-        &trans &trans     &trans     &trans       &trans                                  &trans &trans &trans &trans &trans &trans                                              &trans     &trans     &trans     &trans     &trans
+        &trans &trans     &trans     &trans       &trans          &trans     &trans                                                              &trans &trans        &trans     &trans     &trans     &trans     &trans
+        &trans &kp LS(N1) &kp LS(N2) &kp LS(N3)   &kp LS(N4)      &kp LS(N5) &none                                                               &none  &kp LS(N6)    &kp LS(N7) &kp LS(N8) &kp LS(N9) &kp LS(N0) &trans
+        &trans &kp N1     &kp N2     &kp N3       &kp N4          &kp N5     &none               &trans &trans &trans &trans                     &none  &kp N6        &kp N7     &kp N8     &kp N9     &kp N0     &kp EQUAL
+        &trans &kp NUBS   &kp RA(N2) &kp LS(NUBS) &kp RA(LC_LBRC) &trans                                &trans &trans                                   &kp RA(MINUS) &kp GRAVE  &trans     &trans     &kp RBKT   &trans
+        &trans &trans     &trans     &trans       &trans                              &kp LC(BSPC) &kp LC(DEL) &trans &trans &trans &trans                            &trans     &trans     &trans     &trans     &trans
       >;
     };
     raise {

@@ -47,26 +47,26 @@ local config = function()
       end,
       ["<Tab>"] = actions.toggle_selection + actions.move_selection_worse, --select
       ["<S-Tab>"] = actions.toggle_selection + actions.move_selection_better,
-      ["<a-p>"] = actions_layout.toggle_preview,
+      ["<a-Tab>"] = actions_layout.toggle_preview,
       ["<c-s>"] = actions.select_horizontal,
       ["<c-v>"] = actions.select_vertical,
       ["?"] = actions.which_key,
 
-      ["<a-n>"] = actions.move_selection_next,
-      ["<a-e>"] = actions.move_selection_previous,
+      ["<c-n>"] = actions.move_selection_next,
+      ["<c-p>"] = actions.move_selection_previous,
 
       ["<a-s-u>"] = actions.cycle_history_next,
       ["<a-s-d>"] = actions.cycle_history_prev,
 
-      ["<c-e>"] = actions.preview_scrolling_up,
-      ["<c-n>"] = actions.preview_scrolling_down,
+      ["<a-p>"] = actions.preview_scrolling_up,
+      ["<a-n>"] = actions.preview_scrolling_down,
 
-      ["<a-d>"] = function(prompt_bufnr)
+      ["<c-d>"] = function(prompt_bufnr)
         for _ = 1, 2, 1 do
           actions.move_selection_next(prompt_bufnr)
         end
       end,
-      ["<a-u>"] = function(prompt_bufnr)
+      ["<c-u>"] = function(prompt_bufnr)
         for _ = 1, 2, 1 do
           actions.move_selection_previous(prompt_bufnr)
         end
@@ -79,7 +79,7 @@ local config = function()
     },
     n = {
       ["<esc>"] = actions.close,
-      ["<a-p>"] = actions_layout.toggle_preview,
+      ["<a-Tab>"] = actions_layout.toggle_preview,
 
       ["n"] = actions.move_selection_next,
       ["e"] = actions.move_selection_previous,
