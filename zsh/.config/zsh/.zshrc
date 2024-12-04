@@ -226,8 +226,9 @@ bindkey -s 'q' '$UTILITIES/tmux/ant^M' # notes
 bindkey -s 'T' '$UTILITIES/tmux/ant todo^M' # notes
 bindkey -s 'I' '$UTILITIES/tmux/ant ideas^M' # notes
 bindkey -s 'g' '$UTILITIES/tmux/nf ~/repos 3^M' # projects and work
-bindkey -s 'p' 'vf ^M'
-bindkey -s 'P' 'vfg ^M'
+# bindkey -s 'p' 'vf ^M'
+bindkey -s '^p' 'vf ^M'
+bindkey -s 'p' 'vfg ^M'
 bindkey -s 'D' 'vf $HOME/.config ^M'
 # bindkey -s 'z' 'vf  "$LEARN"^M'
 # bindkey -s 'z' '. cf  "$LEARN"^M'

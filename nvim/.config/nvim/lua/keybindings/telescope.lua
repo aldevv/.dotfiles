@@ -7,33 +7,34 @@ local map = vim.keymap.set
 local desc = function(desc)
   return vim.tbl_extend("keep", nor_s, { desc = desc })
 end
-
-M.load_mappings = function()
-  map("n", "<a-p>", function()
-    -- doing this because of bug where if you open a monorepo and then go a folder up, use
-    -- telescope and then go back to prev folder and do telescope, it will show contents of pwd
-    -- and not current dir
-    if vim.bo.filetype == "netrw" then
-      require("telescope.builtin").find_files({
-        cwd = vim.b.netrw_curdir,
-        follow = true,
-        hidden = true,
-        no_ignore = false, -- ignore .gitignore
-        sort_last_used = true,
-      })
-      return
-    end
-
+function custom_find_files()
+  -- doing this because of bug where if you open a monorepo and then go a folder up, use
+  -- telescope and then go back to prev folder and do telescope, it will show contents of pwd
+  -- and not current dir
+  if vim.bo.filetype == "netrw" then
     require("telescope.builtin").find_files({
-      cwd = vim.fn.expand("%:p:h"),
+      cwd = vim.b.netrw_curdir,
       follow = true,
       hidden = true,
       no_ignore = false, -- ignore .gitignore
       sort_last_used = true,
     })
-  end, nor_s)
+    return
+  end
 
-  map("n", "<a-s-p>", function()
+  require("telescope.builtin").find_files({
+    cwd = vim.fn.expand("%:p:h"),
+    follow = true,
+    hidden = true,
+    no_ignore = false, -- ignore .gitignore
+    sort_last_used = true,
+  })
+end
+
+M.load_mappings = function()
+  map("n", "<c-p>", custom_find_files, nor_s)
+
+  map("n", "<c-g>", function()
     require("utils.lua.telescope").git_files_or_curdir_parent({
       hidden = true,
       no_ignore = true,
@@ -196,8 +197,8 @@ M.load_mappings = function()
   map("n", "<leader>gts", ':lua require("telescope.builtin").git_status()<cr>', nor_s)
   map("n", "<leader>gtS", ':lua require("telescope.builtin").git_stash()<cr>', nor_s)
 
-  map("n", "<leader>tp", ":Telescope projects<cr>", nor)                                       -- recently opened projects!!
-  map("n", "<c-s-s>", ":TodoTelescope<cr>", nor)                                               -- recently opened projects!!
+  map("n", "<leader>tp", ":Telescope projects<cr>", nor)                                        -- recently opened projects!!
+  map("n", "<c-s-s>", ":TodoTelescope<cr>", nor)                                                -- recently opened projects!!
 
   map("n", "<leader>tC", "<cmd>lua require('utils.lua.color_picker').choose_colors()<cr>", nor) -- recently opened porjects!!
 end
