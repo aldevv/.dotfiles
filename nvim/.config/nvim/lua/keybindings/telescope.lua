@@ -87,8 +87,6 @@ M.load_mappings = function()
   map("n", "sz", ':lua require("utils.lua.telescope").zenmode()<cr>', nor_s)
 
   -- t misc
-  map("n", "<a-g>", ':lua require("telescope.builtin").oldfiles()<cr>', desc("builtin.oldfiles"))
-  map("n", "<leader>to", ':lua require("telescope.builtin").oldfiles()<cr>', desc("builtin.oldfiles"))
   map("n", "<leader>tj", ':lua require("telescope.builtin").jumplist()<cr>', desc("builtin.jumplist"))
   map("n", "<leader>tL", ':lua require("telescope.builtin").loclist()<cr>', desc("builtin.loclist"))
   map("n", "<leader>tq", ':lua require("telescope.builtin").quickfix()<cr>', desc("builtin.quickfix"))
@@ -198,7 +196,7 @@ M.load_mappings = function()
   map("n", "<leader>gtS", ':lua require("telescope.builtin").git_stash()<cr>', nor_s)
 
   map("n", "<leader>tp", ":Telescope projects<cr>", nor)                                        -- recently opened projects!!
-  map("n", "<c-s-s>", ":TodoTelescope<cr>", nor)                                                -- recently opened projects!!
+  map("n", "<leader>to", ":TodoTelescope<cr>", nor)                                             -- recently opened projects!!
 
   map("n", "<leader>tC", "<cmd>lua require('utils.lua.color_picker').choose_colors()<cr>", nor) -- recently opened porjects!!
 end
