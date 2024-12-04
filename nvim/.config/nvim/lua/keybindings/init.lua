@@ -25,10 +25,7 @@ end
 
 -- backlog
 -- <a-?>
--- <a-t>
 -- <a-h>
--- ¿
--- <leader>N
 -- essential
 
 -- colemak
