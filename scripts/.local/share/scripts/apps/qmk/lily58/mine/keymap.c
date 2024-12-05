@@ -136,6 +136,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______,           XXXXXXX,          XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,   XXXXXXX,  XXXXXXX,   XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  _______,\
                                                 _______, _______, _______, _______,           _______,  _______, _______, _______ \
   ),
+ [_ADJUST] = LAYOUT(
+  XXXXXXX,           XXXXXXX,          XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,                       XXXXXXX,   XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,
+  KC_SYSTEM_POWER,   KC_SYSTEM_SLEEP,  XXXXXXX,  KC_BRID,  KC_BRIU,  XXXXXXX,                       XXXXXXX,   XXXXXXX,  KC_INS,   XXXXXXX,  XXXXXXX,  XXXXXXX,
+  KC_CAPS,           XXXXXXX,          KC_MUTE,  KC_VOLD,  KC_VOLU,  KC_CLEAR,                      KC_HOME,   KC_PGDN,  KC_PGUP,  KC_END,   XXXXXXX,  KC_LSFT,
+  _______,           XXXXXXX,          XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,   XXXXXXX,  XXXXXXX,   XXXXXXX,  XXXXXXX,  XXXXXXX,  XXXXXXX,  _______,
+                                               _______, _______, _______, _______,           _______,  _______, _______, _______
+ ),
 /* QWERTY
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | ESC  |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  |  `   |
