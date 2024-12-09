@@ -1,26 +1,18 @@
-import Control.Monad (liftM2)
-import Data.Char (isSpace)
-import Data.List (find)
-import Data.Maybe (fromJust, isNothing)
-import System.Exit
 import XMonad
 import XMonad.Actions.CopyWindow
 import XMonad.Actions.CycleWS
 import XMonad.Actions.SpawnOn
-import qualified XMonad.Hooks.DynamicLog as HDL
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeInactive
 import XMonad.Hooks.InsertPosition (Focus (Newer), Position (Master), insertPosition)
 import XMonad.Hooks.ManageDocks
-import XMonad.Hooks.ManageHelpers (doCenterFloat, isDialog)
+import XMonad.Hooks.ManageHelpers (isDialog)
 import XMonad.Hooks.OnPropertyChange
 import XMonad.Hooks.Rescreen
 import XMonad.Hooks.StatusBar
 import XMonad.Hooks.StatusBar.PP
 import XMonad.Hooks.UrgencyHook (NoUrgencyHook (NoUrgencyHook), clearUrgents, focusUrgent, withUrgencyHook)
 import XMonad.Hooks.WindowSwallowing (swallowEventHook)
-import XMonad.Layout.Gaps
-import XMonad.Layout.IndependentScreens (marshallPP, withScreens)
 import XMonad.Layout.Magnifier (magnifiercz)
 import XMonad.Layout.NoBorders (Ambiguity (OnlyScreenFloat, Screen), lessBorders, noBorders, smartBorders)
 import XMonad.Layout.Renamed
@@ -28,13 +20,11 @@ import XMonad.Layout.Simplest
 import XMonad.Layout.Spacing
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.ToggleLayouts (ToggleLayout (..), toggleLayouts)
-import qualified XMonad.StackSet as S
 import qualified XMonad.StackSet as W
 import XMonad.Util.EZConfig
 import qualified XMonad.Util.Hacks as Hacks
 import XMonad.Util.Loggers
 import XMonad.Util.NamedScratchpad
-import XMonad.Util.Run (hPutStrLn, spawnPipe)
 
 -- check for ideas (good config)
 -- https://github.com/alternateved/nixos-config/blob/c480271a7c84f5ef6a7c91f7f88142540552cd9d/config/xmonad/xmonad.hs#L191
@@ -44,8 +34,10 @@ import XMonad.Util.Run (hPutStrLn, spawnPipe)
 
 -- myWorkspaces = ["一", "ニ", "三", "四", "五", "六", "七", "八", "九"]
 
+myWS :: [String]
 myWS = ["一", "ニ", "三", "四", "五", "六", "七", "八", "九"]
 
+xmobarEscape :: [Char] -> [Char]
 xmobarEscape = concatMap doubleLts
   where
     doubleLts '<' = "<<"
@@ -281,7 +273,7 @@ myRandrChangeHook = do
 myRescreenCfg =
   def
     { afterRescreenHook = myAfterRescreenHook
-      -- randrChangeHook = myRandrChangeHook
+    -- randrChangeHook = myRandrChangeHook
     }
 
 handleSwallowHook =

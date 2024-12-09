@@ -11,7 +11,7 @@ super + BackSpace
 super + p
     dmenu_run
 
-mod5 + shift + 0
+mod5 + shift + o
     sh -c 'sleep 0.5; xdotool type "$(xclip -o -selection primary)"'
 
 super + alt + 1

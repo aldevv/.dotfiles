@@ -18,6 +18,7 @@ vim.opt.rtp:prepend(lazypath)
 
 require("utils.lua.globals")
 if os.getenv("USER") == "root" then
+  vim.g.mapleader = require("utils.lua.misc").replace_termcodes("<Space>")
 	require("ui")
 	require("config.automation")
 	require("keybindings")
@@ -31,11 +32,9 @@ end
 
 require("config")
 
--- require("lazy").setup("plugins", {
--- 	dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
--- })
-
-require("lazy").setup("plugins")
+require("lazy").setup("plugins", {
+	dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
+})
 
 require("keybindings")
 require("ui")
