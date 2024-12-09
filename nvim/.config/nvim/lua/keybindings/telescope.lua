@@ -196,7 +196,7 @@ M.load_mappings = function()
   map("n", "<leader>gtS", ':lua require("telescope.builtin").git_stash()<cr>', nor_s)
 
   map("n", "<leader>tp", ":Telescope projects<cr>", nor)                                        -- recently opened projects!!
-  map("n", "<leader>to", ":TodoTelescope<cr>", nor)                                             -- recently opened projects!!
+  map("n", "<c-s-s>", ":TodoTelescope<cr>", nor)                                                -- recently opened projects!!
 
   map("n", "<leader>tC", "<cmd>lua require('utils.lua.color_picker').choose_colors()<cr>", nor) -- recently opened porjects!!
 end

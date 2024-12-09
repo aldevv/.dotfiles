@@ -1,5 +1,6 @@
 local M = {}
 
+
 M.load_mappings = function()
   local s = {
     silent = true,
@@ -12,7 +13,6 @@ M.load_mappings = function()
 
   local harpoon = require("harpoon")
 
-  -- NOTE: not working in tmux
   map("n", "ñc", function()
     harpoon.ui:toggle_quick_menu(harpoon:list("command"), { title = "Commands" })
   end, { desc = "harpoon commands" })
@@ -26,12 +26,12 @@ M.load_mappings = function()
     harpoon.ui:toggle_quick_menu(harpoon:list("test"), { title = "Tmux Tests" })
   end)
 
-  map("n", "<C-l>h", function()
-    harpoon.ui:toggle_quick_menu(harpoon:list("Vim Commands"))
+  map("n", "<C-s-v>", function()
+    harpoon.ui:toggle_quick_menu(harpoon:list("Vim Commands"), { title = "Vim Commands" })
   end)
 
   map("n", "<c-c>", function()
-    harpoon.ui:toggle_quick_menu(harpoon:list())
+    harpoon.ui:toggle_quick_menu(harpoon:list(), { title = "Harpoon" })
   end)
   map("n", "<c-x>", function()
     harpoon:list():append()
@@ -49,10 +49,10 @@ M.load_mappings = function()
     harpoon:list():select(4)
   end)
 
-  map("n", "<a-h>", function()
-    harpoon.ui:toggle_quick_menu(harpoon:list("second"))
+  map("n", "<c-s-c>", function()
+    harpoon.ui:toggle_quick_menu(harpoon:list("second"), { title = "Second" })
   end)
-  map("n", "<a-x>", function()
+  map("n", "<c-s-x>", function()
     harpoon:list():append("second")
   end)
   map("n", "<a-s-s>", function()
