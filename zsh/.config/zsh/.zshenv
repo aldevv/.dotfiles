@@ -79,7 +79,8 @@ load_ng() {
   fi
   source <(ng completion script)
 }
-load_ng
+# has bug with compdef
+#load_ng
 
 load_bun() {
   if [[ ! -d "$HOME/.bun" ]]; then
