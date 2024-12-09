@@ -102,6 +102,7 @@ misc() {
 }
 misc
 
-export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
+export PATH="/usr/local/bin:$PATH"
 export PATH="/usr/local/go/bin:$PATH"
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
