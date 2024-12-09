@@ -37,9 +37,9 @@ startup() {
   fi
 
   # for my 4k cam
-  if command -v v4l2-ctl &>/dev/null; then
-    v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
-  fi
+  # if command -v v4l2-ctl &>/dev/null; then
+  #   v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
+  # fi
 }
 startup
 
