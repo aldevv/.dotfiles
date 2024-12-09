@@ -75,11 +75,11 @@
     };
     mac {
       bindings = <
-        &trans &trans &trans &trans &trans &trans &trans                                                      &trans &trans &trans &trans &trans &trans &trans
-        &trans &trans &trans &trans &trans &trans &trans                                                      &trans &trans &trans &trans &trans &trans &trans
-        &trans &trans &trans &trans &trans &trans &trans                &trans &trans &trans &trans           &trans &trans &trans &trans &trans &trans &trans 
-        &trans &trans &trans &trans &trans &trans                            &trans &trans                           &trans &trans &trans &trans &trans &trans
-        &trans &trans &trans &trans &trans                 &mt LGUI BSPC &trans &trans &trans &trans &trans                 &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans &trans &trans                                                              &trans &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans &trans &trans                                                              &trans &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans &trans &trans                &trans &trans &trans &trans                   &trans &trans &trans &trans &trans &trans &trans 
+        &trans &trans &trans &trans &trans &trans                            &trans &trans                                   &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans                 &mt LGUI BSPC &trans &trans &mt RCTRL ENTER &trans &trans                &trans &trans &trans &trans &trans
       >;
     };
     colemak_emu {
