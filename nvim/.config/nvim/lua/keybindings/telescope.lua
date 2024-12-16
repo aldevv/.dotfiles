@@ -87,26 +87,26 @@ M.load_mappings = function()
   map("n", "sz", ':lua require("utils.lua.telescope").zenmode()<cr>', nor_s)
 
   -- t misc
-  map("n", "<leader>tj", ':lua require("telescope.builtin").jumplist()<cr>', desc("builtin.jumplist"))
-  map("n", "<leader>tL", ':lua require("telescope.builtin").loclist()<cr>', desc("builtin.loclist"))
-  map("n", "<leader>tq", ':lua require("telescope.builtin").quickfix()<cr>', desc("builtin.quickfix"))
-  map("n", "<leader>tr", ':lua require("telescope.builtin").registers()<cr>', desc("builtin.registers"))
-  map("n", "<leader>ta", ':lua require("telescope.builtin").autocommands()<cr>', desc("builtin.autocommands"))
-  map("n", "<leader>tk", ':lua require("telescope.builtin").keymaps()<cr>', desc("builtin.keymaps"))
-  map("n", "<leader>tM", ':lua require("telescope.builtin").marks()<cr>', desc("builtin.marks"))
-  map("n", "<leader>tm", ':lua require("telescope.builtin").man_pages()<cr>', desc("builtin.man_pages"))
-  map("n", "<leader>th", ':lua require("telescope.builtin").help_tags()<cr>', desc("builtin.help_tags"))
-  map("n", "<leader>tH", ':lua require("telescope.builtin").highlights()<cr>', desc("builtin.highlights"))
-  map("n", "<leader>tvo", ':lua require("telescope.builtin").vim_options()<cr>', desc("builtin.vim_options"))
-  map("n", "<leader>tvc", ':lua require("telescope.builtin").commands()<cr>', desc("builtin.commands"))
-  map("n", "<leader>tvC", ':lua require("telescope.builtin").colorscheme()<cr>', desc("builtin.colorscheme"))
-  map("n", "<leader>tc", ':lua require("telescope.builtin").command_history()<cr>', desc("builtin.command_history"))
-  map("n", "<leader>ts", ':lua require("telescope.builtin").search_history()<cr>', desc("builtin.search_history"))
+  map("n", "<leader>Tj", ':lua require("telescope.builtin").jumplist()<cr>', desc("builtin.jumplist"))
+  map("n", "<leader>TL", ':lua require("telescope.builtin").loclist()<cr>', desc("builtin.loclist"))
+  map("n", "<leader>Tq", ':lua require("telescope.builtin").quickfix()<cr>', desc("builtin.quickfix"))
+  map("n", "<leader>Tr", ':lua require("telescope.builtin").registers()<cr>', desc("builtin.registers"))
+  map("n", "<leader>Ta", ':lua require("telescope.builtin").autocommands()<cr>', desc("builtin.autocommands"))
+  map("n", "<leader>Tk", ':lua require("telescope.builtin").keymaps()<cr>', desc("builtin.keymaps"))
+  map("n", "<leader>TM", ':lua require("telescope.builtin").marks()<cr>', desc("builtin.marks"))
+  map("n", "<leader>Tm", ':lua require("telescope.builtin").man_pages()<cr>', desc("builtin.man_pages"))
+  map("n", "<leader>Th", ':lua require("telescope.builtin").help_tags()<cr>', desc("builtin.help_tags"))
+  map("n", "<leader>TH", ':lua require("telescope.builtin").highlights()<cr>', desc("builtin.highlights"))
+  map("n", "<leader>Tvo", ':lua require("telescope.builtin").vim_options()<cr>', desc("builtin.vim_options"))
+  map("n", "<leader>Tvc", ':lua require("telescope.builtin").commands()<cr>', desc("builtin.commands"))
+  map("n", "<leader>TvC", ':lua require("telescope.builtin").colorscheme()<cr>', desc("builtin.colorscheme"))
+  map("n", "<leader>Tc", ':lua require("telescope.builtin").command_history()<cr>', desc("builtin.command_history"))
+  map("n", "<leader>Ts", ':lua require("telescope.builtin").search_history()<cr>', desc("builtin.search_history"))
   -- custom
 
   -- folders
   map("n", "<leader>tb", ':lua require("utils.lua.telescope").select_bg()<cr>', nor_s)
-  map("n", "<leader>tN", ':lua require("utils.lua.telescope").sort_notes()<cr>', nor_s)
+  map("n", "<leader>tn", ':lua require("utils.lua.telescope").sort_notes()<cr>', nor_s)
   map(
     "n",
     "<leader>tn",
@@ -150,11 +150,11 @@ M.load_mappings = function()
 
   map("n", "<leader>t,r", ":Telescope refactoring<cr>", nor_s)
 
-  map("n", "<leader>t,dc", ":Telescope dap configurations", nor_s)
-  map("n", "<leader>t,dC", ":Telescope dap commands", nor_s)
-  map("n", "<leader>t,dl", ":Telescope dap list_breakpoints", nor_s)
-  map("n", "<leader>t,dv", ":Telescope dap variables", nor_s)
-  map("n", "<leader>t,df", ":Telescope dap frames", nor_s)
+  map("n", "<leader>tdc", ":Telescope dap configurations", nor_s)
+  map("n", "<leader>tdC", ":Telescope dap commands", nor_s)
+  map("n", "<leader>tdl", ":Telescope dap list_breakpoints", nor_s)
+  map("n", "<leader>tdv", ":Telescope dap variables", nor_s)
+  map("n", "<leader>tdf", ":Telescope dap frames", nor_s)
 
   -- use <c-d> while in this to delete it!
   map("n", "gwc", ":Telescope git_worktree create_git_worktree<cr>", nor)
@@ -175,19 +175,11 @@ M.load_mappings = function()
   map("v", "<leader>tla", ':lua require("telescope.builtin").lsp_range_code_actions()<cr>', nor_s)
   map("n", "<leader>tlt", ':lua require("telescope.builtin").lsp_type_definitions()<cr>', nor_s)
   map("n", "<leader>tli", ':lua require("telescope.builtin").lsp_implementations()<cr>', nor_s)
-  map("n", "<leader>tld", ':lua require("telescope.builtin").lsp_definitions()<cr>', nor_s)
-  map("n", "<leader>tlD", ':lua require("telescope.builtin").diagnostics()<cr>', nor_s)
+  map("n", "<leader>tlD", ':lua require("telescope.builtin").lsp_definitions()<cr>', nor_s)
+  map("n", "<leader>tld", ':lua require("telescope.builtin").diagnostics()<cr>', nor_s)
   map("n", "<leader>tlws", ':lua require("telescope.builtin").lsp_workspace_symbols()<cr>', nor_s)
 
-  -- telescope git
-  map("n", "<leader>tgc", ':lua require("telescope.builtin").git_commits()<cr>', nor_s)
-  -- 	Lists git commits with diff preview, checkout action <cr>, reset mixed <C-r>m, reset soft <C-r>s and reset hard <C-r>h
-  map("n", "<leader>tgC", ':lua require("telescope.builtin").git_bcommits()<cr>', nor_s)
-  -- 	Lists buffer's git commits with diff preview and checks them out on <cr>
 
-  map("n", "<leader>tgb", ':lua require("telescope.builtin").git_branches()<cr>', nor_s)
-  map("n", "<leader>tgs", ':lua require("telescope.builtin").git_status()<cr>', nor_s)
-  map("n", "<leader>tgS", ':lua require("telescope.builtin").git_stash()<cr>', nor_s)
   -- git namespace
   map("n", "<leader>gtc", ':lua require("telescope.builtin").git_commits()<cr>', nor_s)
   map("n", "<leader>gtC", ':lua require("telescope.builtin").git_bcommits()<cr>', nor_s)

@@ -7,6 +7,7 @@ return {
   "ThePrimeagen/git-worktree.nvim",
   {
     "tpope/vim-fugitive",
+    dependencies = { "tpope/vim-rhubarb" },
     config = function()
       vim.opt.diffopt = "internal,vertical,closeoff,filler"
     end,

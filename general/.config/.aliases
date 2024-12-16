@@ -14,7 +14,7 @@ alias srca=". ~/.config/.aliases"
 
 alias .s="nvim ~/.dotfiles/scripts/.local/share/scripts/"
 alias xin='xinput map-to-output $(xinput | grep -i "pen pen"| cut -d = -f 2 | cut -d [ -f 1) DP-1'
-alias r='ranger .'
+alias r='ranger . 2>/dev/null; clear'
 alias xmr="xmonad --recompile; xmonad --restart"
 alias .dxm="cp ~/.config/xmonad/xmonad.hs ~/.dotfiles/xmonad/.config/xmonad/xmonad.hs; cp ~/.config/xmobar/xmobarrc1 ~/.dotfiles/xmonad/.config/xmobar/xmobarrc1; cp ~/.config/xmobar/xmobarrc2 ~/.dotfiles/xmonad/.config/xmobar/xmobarrc2"
 alias rex="xrandr --output DP-1 --primary --right-of eDP-1 --auto"
@@ -172,6 +172,8 @@ alias Q="quick"
 alias proto="protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative"
 alias .env="sed 's/^export //g' .envrc > .env"
 alias .secrets="sed 's/^export //g' .envrc > .secrets"
+
+alias mkr="make run"
 
 # run ubuntu and let it run in the background
 ubuntu() {
