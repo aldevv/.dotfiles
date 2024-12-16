@@ -28,7 +28,7 @@ super + alt + 0
 
 # bug with npm
 super + r
-    st -e bash -c "ranger 2>/dev/null; $SHELL"
+    st -e bash -c "ranger 2>/dev/null; clear; $SHELL"
 
 super + alt + n
     nt dmenu
