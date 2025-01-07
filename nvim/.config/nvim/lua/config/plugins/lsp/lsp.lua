@@ -10,7 +10,6 @@ local servers = {
   "clangd",
   "html",
   "cssls",
-  -- "ts_ls",
   "tsserver",
   "svelte",
   "lua_ls",
