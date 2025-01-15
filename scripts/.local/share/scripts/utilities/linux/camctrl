@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+case $1 in
+    default)
+        v4l2-ctl --set-ctrl=brightness=0
+        v4l2-ctl --set-ctrl=zoom_absolute=100
+        v4l2-ctl --set-ctrl=contrast=32
+        v4l2-ctl --set-ctrl=saturation=64
+        ;;
+    *)
+        v4l2-ctl --set-ctrl=brightness=35
+        v4l2-ctl --set-ctrl=zoom_absolute=120
+        v4l2-ctl --set-ctrl=contrast=45
+        v4l2-ctl --set-ctrl=saturation=75
+        ;;
+esac
+  
+
+# defaults
+# v4l2-ctl --set-ctrl=brightness=0
+# v4l2-ctl --set-ctrl=zoom_absolute=100
+# v4l2-ctl --set-ctrl=contrast=32
+# v4l2-ctl --set-ctrl=saturation=64
+
+# v4l2-ctl --set-ctrl=brightness=35
+# v4l2-ctl --set-ctrl=zoom_absolute=120
+# v4l2-ctl --set-ctrl=contrast=45
+# v4l2-ctl --set-ctrl=saturation=75
