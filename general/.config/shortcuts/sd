@@ -34,8 +34,8 @@ u.      $UTILITIES
 a.      $AUTOMATION
 A.     $APPS
 ml.     $MLIBS
-O       ~/Downloads
-o       ~/Documents
+o       ~/Downloads
+O       ~/Documents
 vv      ~/Videos
 wa      $WALL
 wi      $WIKI

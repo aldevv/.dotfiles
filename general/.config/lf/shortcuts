@@ -4,78 +4,78 @@ map YH $ cp -rv $f ~
 map <backspace2>d. cd ~/.dotfiles
 map md. $ mv -v $f ~/.dotfiles
 map Yd. $ cp -rv $f ~/.dotfiles
-map <backspace2>uu cd /Users/jbernal1/remotes
-map muu $ mv -v $f /Users/jbernal1/remotes
-map Yuu $ cp -rv $f /Users/jbernal1/remotes
+map <backspace2>uu cd /home/kanon/remotes
+map muu $ mv -v $f /home/kanon/remotes
+map Yuu $ cp -rv $f /home/kanon/remotes
 map <backspace2>rr cd ~/repos
 map mrr $ mv -v $f ~/repos
 map Yrr $ cp -rv $f ~/repos
-map <backspace2>n. cd /Users/jbernal1/notes
-map mn. $ mv -v $f /Users/jbernal1/notes
-map Yn. $ cp -rv $f /Users/jbernal1/notes
-map <backspace2>N. cd /Users/jbernal1/notes/atomic
-map mN. $ mv -v $f /Users/jbernal1/notes/atomic
-map YN. $ cp -rv $f /Users/jbernal1/notes/atomic
-map <backspace2>wo cd /Users/jbernal1/work
-map mwo $ mv -v $f /Users/jbernal1/work
-map Ywo $ cp -rv $f /Users/jbernal1/work
-map <backspace2>bk cd /Users/jbernal1/books
-map mbk $ mv -v $f /Users/jbernal1/books
-map Ybk $ cp -rv $f /Users/jbernal1/books
-map <backspace2>bK cd /Users/jbernal1/books/ln
-map mbK $ mv -v $f /Users/jbernal1/books/ln
-map YbK $ cp -rv $f /Users/jbernal1/books/ln
-map <backspace2>ba cd /Users/jbernal1/.local/share/.backups
-map mba $ mv -v $f /Users/jbernal1/.local/share/.backups
-map Yba $ cp -rv $f /Users/jbernal1/.local/share/.backups
-map <backspace2>ll cd /Users/jbernal1/learn
-map mll $ mv -v $f /Users/jbernal1/learn
-map Yll $ cp -rv $f /Users/jbernal1/learn
-map <backspace2>l. cd /Users/jbernal1/learn
-map ml. $ mv -v $f /Users/jbernal1/learn
-map Yl. $ cp -rv $f /Users/jbernal1/learn
-map <backspace2>b. cd /Users/jbernal1/.local/builds
-map mb. $ mv -v $f /Users/jbernal1/.local/builds
-map Yb. $ cp -rv $f /Users/jbernal1/.local/builds
-map <backspace2>T. cd /Users/jbernal1/.local/share/Trash/files
-map mT. $ mv -v $f /Users/jbernal1/.local/share/Trash/files
-map YT. $ cp -rv $f /Users/jbernal1/.local/share/Trash/files
-map <backspace2>Tt cd /Users/jbernal1/.local/share/Trash/files
-map mTt $ mv -v $f /Users/jbernal1/.local/share/Trash/files
-map YTt $ cp -rv $f /Users/jbernal1/.local/share/Trash/files
-map <backspace2>Tr cd /Users/jbernal1/Downloads/torrents
-map mTr $ mv -v $f /Users/jbernal1/Downloads/torrents
-map YTr $ cp -rv $f /Users/jbernal1/Downloads/torrents
-map <backspace2>sk cd /Users/jbernal1/programs/suckless
-map msk $ mv -v $f /Users/jbernal1/programs/suckless
-map Ysk $ cp -rv $f /Users/jbernal1/programs/suckless
-map <backspace2>f. cd /Users/jbernal1/.config
-map mf. $ mv -v $f /Users/jbernal1/.config
-map Yf. $ cp -rv $f /Users/jbernal1/.config
-map <backspace2>v. cd /Users/jbernal1/.config/nvim
-map mv. $ mv -v $f /Users/jbernal1/.config/nvim
-map Yv. $ cp -rv $f /Users/jbernal1/.config/nvim
-map <backspace2>vl cd /Users/jbernal1/.config/nvim/lua/config/plugins/lsp
-map mvl $ mv -v $f /Users/jbernal1/.config/nvim/lua/config/plugins/lsp
-map Yvl $ cp -rv $f /Users/jbernal1/.config/nvim/lua/config/plugins/lsp
-map <backspace2>va cd /Users/jbernal1/.config/nvim/lua/config/automation
-map mva $ mv -v $f /Users/jbernal1/.config/nvim/lua/config/automation
-map Yva $ cp -rv $f /Users/jbernal1/.config/nvim/lua/config/automation
-map <backspace2>vt cd /Users/jbernal1/.config/nvim/lua/ui/themes
-map mvt $ mv -v $f /Users/jbernal1/.config/nvim/lua/ui/themes
-map Yvt $ cp -rv $f /Users/jbernal1/.config/nvim/lua/ui/themes
-map <backspace2>vc cd /Users/jbernal1/.config/nvim/lua/config/plugins
-map mvc $ mv -v $f /Users/jbernal1/.config/nvim/lua/config/plugins
-map Yvc $ cp -rv $f /Users/jbernal1/.config/nvim/lua/config/plugins
-map <backspace2>vC cd /Users/jbernal1/.config/nvim/lua/config
-map mvC $ mv -v $f /Users/jbernal1/.config/nvim/lua/config
-map YvC $ cp -rv $f /Users/jbernal1/.config/nvim/lua/config
-map <backspace2>vu cd /Users/jbernal1/.config/nvim/lua/utils
-map mvu $ mv -v $f /Users/jbernal1/.config/nvim/lua/utils
-map Yvu $ cp -rv $f /Users/jbernal1/.config/nvim/lua/utils
-map <backspace2>vk cd /Users/jbernal1/.config/nvim/lua/keybindings
-map mvk $ mv -v $f /Users/jbernal1/.config/nvim/lua/keybindings
-map Yvk $ cp -rv $f /Users/jbernal1/.config/nvim/lua/keybindings
+map <backspace2>n. cd /home/kanon/notes
+map mn. $ mv -v $f /home/kanon/notes
+map Yn. $ cp -rv $f /home/kanon/notes
+map <backspace2>N. cd /home/kanon/notes/atomic
+map mN. $ mv -v $f /home/kanon/notes/atomic
+map YN. $ cp -rv $f /home/kanon/notes/atomic
+map <backspace2>wo cd /home/kanon/work
+map mwo $ mv -v $f /home/kanon/work
+map Ywo $ cp -rv $f /home/kanon/work
+map <backspace2>bk cd /home/kanon/books
+map mbk $ mv -v $f /home/kanon/books
+map Ybk $ cp -rv $f /home/kanon/books
+map <backspace2>bK cd /home/kanon/books/ln
+map mbK $ mv -v $f /home/kanon/books/ln
+map YbK $ cp -rv $f /home/kanon/books/ln
+map <backspace2>ba cd /home/kanon/.local/share/.backups
+map mba $ mv -v $f /home/kanon/.local/share/.backups
+map Yba $ cp -rv $f /home/kanon/.local/share/.backups
+map <backspace2>ll cd /home/kanon/learn
+map mll $ mv -v $f /home/kanon/learn
+map Yll $ cp -rv $f /home/kanon/learn
+map <backspace2>l. cd /home/kanon/learn
+map ml. $ mv -v $f /home/kanon/learn
+map Yl. $ cp -rv $f /home/kanon/learn
+map <backspace2>b. cd /home/kanon/.local/builds
+map mb. $ mv -v $f /home/kanon/.local/builds
+map Yb. $ cp -rv $f /home/kanon/.local/builds
+map <backspace2>T. cd /home/kanon/.local/share/Trash/files
+map mT. $ mv -v $f /home/kanon/.local/share/Trash/files
+map YT. $ cp -rv $f /home/kanon/.local/share/Trash/files
+map <backspace2>Tt cd /home/kanon/.local/share/Trash/files
+map mTt $ mv -v $f /home/kanon/.local/share/Trash/files
+map YTt $ cp -rv $f /home/kanon/.local/share/Trash/files
+map <backspace2>Tr cd /home/kanon/Downloads/torrents
+map mTr $ mv -v $f /home/kanon/Downloads/torrents
+map YTr $ cp -rv $f /home/kanon/Downloads/torrents
+map <backspace2>sk cd /home/kanon/programs/suckless
+map msk $ mv -v $f /home/kanon/programs/suckless
+map Ysk $ cp -rv $f /home/kanon/programs/suckless
+map <backspace2>f. cd /home/kanon/.config
+map mf. $ mv -v $f /home/kanon/.config
+map Yf. $ cp -rv $f /home/kanon/.config
+map <backspace2>v. cd /home/kanon/.config/nvim
+map mv. $ mv -v $f /home/kanon/.config/nvim
+map Yv. $ cp -rv $f /home/kanon/.config/nvim
+map <backspace2>vl cd /home/kanon/.config/nvim/lua/config/plugins/lsp
+map mvl $ mv -v $f /home/kanon/.config/nvim/lua/config/plugins/lsp
+map Yvl $ cp -rv $f /home/kanon/.config/nvim/lua/config/plugins/lsp
+map <backspace2>va cd /home/kanon/.config/nvim/lua/config/automation
+map mva $ mv -v $f /home/kanon/.config/nvim/lua/config/automation
+map Yva $ cp -rv $f /home/kanon/.config/nvim/lua/config/automation
+map <backspace2>vt cd /home/kanon/.config/nvim/lua/ui/themes
+map mvt $ mv -v $f /home/kanon/.config/nvim/lua/ui/themes
+map Yvt $ cp -rv $f /home/kanon/.config/nvim/lua/ui/themes
+map <backspace2>vc cd /home/kanon/.config/nvim/lua/config/plugins
+map mvc $ mv -v $f /home/kanon/.config/nvim/lua/config/plugins
+map Yvc $ cp -rv $f /home/kanon/.config/nvim/lua/config/plugins
+map <backspace2>vC cd /home/kanon/.config/nvim/lua/config
+map mvC $ mv -v $f /home/kanon/.config/nvim/lua/config
+map YvC $ cp -rv $f /home/kanon/.config/nvim/lua/config
+map <backspace2>vu cd /home/kanon/.config/nvim/lua/utils
+map mvu $ mv -v $f /home/kanon/.config/nvim/lua/utils
+map Yvu $ cp -rv $f /home/kanon/.config/nvim/lua/utils
+map <backspace2>vk cd /home/kanon/.config/nvim/lua/keybindings
+map mvk $ mv -v $f /home/kanon/.config/nvim/lua/keybindings
+map Yvk $ cp -rv $f /home/kanon/.config/nvim/lua/keybindings
 map <backspace2>sn cd ~/.config/nvim/my_snippets/
 map msn $ mv -v $f ~/.config/nvim/my_snippets/
 map Ysn $ cp -rv $f ~/.config/nvim/my_snippets/
@@ -85,45 +85,45 @@ map YsN $ cp -rv $f ~/.config/nvim/my_snippets/luasnips
 map <backspace2>vL cd ~/.config/nvim/lua/config/plugins/lsp/snippets
 map mvL $ mv -v $f ~/.config/nvim/lua/config/plugins/lsp/snippets
 map YvL $ cp -rv $f ~/.config/nvim/lua/config/plugins/lsp/snippets
-map <backspace2>m. cd /Users/jbernal1/.local/share/scripts
-map mm. $ mv -v $f /Users/jbernal1/.local/share/scripts
-map Ym. $ cp -rv $f /Users/jbernal1/.local/share/scripts
-map <backspace2>ff cd /Users/jbernal1/.local/share/scripts/files
-map mff $ mv -v $f /Users/jbernal1/.local/share/scripts/files
-map Yff $ cp -rv $f /Users/jbernal1/.local/share/scripts/files
-map <backspace2>u. cd /Users/jbernal1/.local/share/scripts/utilities
-map mu. $ mv -v $f /Users/jbernal1/.local/share/scripts/utilities
-map Yu. $ cp -rv $f /Users/jbernal1/.local/share/scripts/utilities
-map <backspace2>a. cd /Users/jbernal1/.local/share/scripts/automation
-map ma. $ mv -v $f /Users/jbernal1/.local/share/scripts/automation
-map Ya. $ cp -rv $f /Users/jbernal1/.local/share/scripts/automation
-map <backspace2>A. cd /Users/jbernal1/.local/share/scripts/apps
-map mA. $ mv -v $f /Users/jbernal1/.local/share/scripts/apps
-map YA. $ cp -rv $f /Users/jbernal1/.local/share/scripts/apps
+map <backspace2>m. cd /home/kanon/.local/share/scripts
+map mm. $ mv -v $f /home/kanon/.local/share/scripts
+map Ym. $ cp -rv $f /home/kanon/.local/share/scripts
+map <backspace2>ff cd /home/kanon/.local/share/scripts/files
+map mff $ mv -v $f /home/kanon/.local/share/scripts/files
+map Yff $ cp -rv $f /home/kanon/.local/share/scripts/files
+map <backspace2>u. cd /home/kanon/.local/share/scripts/utilities
+map mu. $ mv -v $f /home/kanon/.local/share/scripts/utilities
+map Yu. $ cp -rv $f /home/kanon/.local/share/scripts/utilities
+map <backspace2>a. cd /home/kanon/.local/share/scripts/automation
+map ma. $ mv -v $f /home/kanon/.local/share/scripts/automation
+map Ya. $ cp -rv $f /home/kanon/.local/share/scripts/automation
+map <backspace2>A. cd /home/kanon/.local/share/scripts/apps
+map mA. $ mv -v $f /home/kanon/.local/share/scripts/apps
+map YA. $ cp -rv $f /home/kanon/.local/share/scripts/apps
 map <backspace2>ml. cd 
 map mml. $ mv -v $f 
 map Yml. $ cp -rv $f 
-map <backspace2>O cd ~/Downloads
-map mO $ mv -v $f ~/Downloads
-map YO $ cp -rv $f ~/Downloads
-map <backspace2>o cd ~/Documents
-map mo $ mv -v $f ~/Documents
-map Yo $ cp -rv $f ~/Documents
+map <backspace2>o cd ~/Downloads
+map mo $ mv -v $f ~/Downloads
+map Yo $ cp -rv $f ~/Downloads
+map <backspace2>O cd ~/Documents
+map mO $ mv -v $f ~/Documents
+map YO $ cp -rv $f ~/Documents
 map <backspace2>vv cd ~/Videos
 map mvv $ mv -v $f ~/Videos
 map Yvv $ cp -rv $f ~/Videos
-map <backspace2>wa cd /Users/jbernal1/Pictures/Wallpapers/all_time
-map mwa $ mv -v $f /Users/jbernal1/Pictures/Wallpapers/all_time
-map Ywa $ cp -rv $f /Users/jbernal1/Pictures/Wallpapers/all_time
-map <backspace2>wi cd /Users/jbernal1/.local/share/wiki
-map mwi $ mv -v $f /Users/jbernal1/.local/share/wiki
-map Ywi $ cp -rv $f /Users/jbernal1/.local/share/wiki
-map <backspace2>wp cd /Users/jbernal1/.local/share/wiki/personal
-map mwp $ mv -v $f /Users/jbernal1/.local/share/wiki/personal
-map Ywp $ cp -rv $f /Users/jbernal1/.local/share/wiki/personal
-map <backspace2>wS cd /Users/jbernal1/.local/share/wiki/cheatsheets
-map mwS $ mv -v $f /Users/jbernal1/.local/share/wiki/cheatsheets
-map YwS $ cp -rv $f /Users/jbernal1/.local/share/wiki/cheatsheets
+map <backspace2>wa cd /home/kanon/Pictures/Wallpapers/all_time
+map mwa $ mv -v $f /home/kanon/Pictures/Wallpapers/all_time
+map Ywa $ cp -rv $f /home/kanon/Pictures/Wallpapers/all_time
+map <backspace2>wi cd /home/kanon/.local/share/wiki
+map mwi $ mv -v $f /home/kanon/.local/share/wiki
+map Ywi $ cp -rv $f /home/kanon/.local/share/wiki
+map <backspace2>wp cd /home/kanon/.local/share/wiki/personal
+map mwp $ mv -v $f /home/kanon/.local/share/wiki/personal
+map Ywp $ cp -rv $f /home/kanon/.local/share/wiki/personal
+map <backspace2>wS cd /home/kanon/.local/share/wiki/cheatsheets
+map mwS $ mv -v $f /home/kanon/.local/share/wiki/cheatsheets
+map YwS $ cp -rv $f /home/kanon/.local/share/wiki/cheatsheets
 map <backspace2>mm cd ~/Music
 map mmm $ mv -v $f ~/Music
 map Ymm $ cp -rv $f ~/Music
@@ -199,36 +199,36 @@ map YRmn $ cp -rv $f /mnt
 map <backspace2>sc cd ~/Pictures/screenshots
 map msc $ mv -v $f ~/Pictures/screenshots
 map Ysc $ cp -rv $f ~/Pictures/screenshots
-map <backspace2>vo cd /Users/jbernal1/volumes
-map mvo $ mv -v $f /Users/jbernal1/volumes
-map Yvo $ cp -rv $f /Users/jbernal1/volumes
+map <backspace2>vo cd /home/kanon/volumes
+map mvo $ mv -v $f /home/kanon/volumes
+map Yvo $ cp -rv $f /home/kanon/volumes
 map <backspace2>an. cd ~/.local/share/ansible
 map man. $ mv -v $f ~/.local/share/ansible
 map Yan. $ cp -rv $f ~/.local/share/ansible
-map <backspace2>P cd /Users/jbernal1/programs/
-map mP $ mv -v $f /Users/jbernal1/programs/
-map YP $ cp -rv $f /Users/jbernal1/programs/
-map <backspace2>P. cd /Users/jbernal1/programs/
-map mP. $ mv -v $f /Users/jbernal1/programs/
-map YP. $ cp -rv $f /Users/jbernal1/programs/
-map <backspace2>p cd /Users/jbernal1/projects/
-map mp $ mv -v $f /Users/jbernal1/projects/
-map Yp $ cp -rv $f /Users/jbernal1/projects/
-map <backspace2>p. cd /Users/jbernal1/projects/
-map mp. $ mv -v $f /Users/jbernal1/projects/
-map Yp. $ cp -rv $f /Users/jbernal1/projects/
-map <backspace2>c. cd /Users/jbernal1/code
-map mc. $ mv -v $f /Users/jbernal1/code
-map Yc. $ cp -rv $f /Users/jbernal1/code
+map <backspace2>P cd /home/kanon/programs/
+map mP $ mv -v $f /home/kanon/programs/
+map YP $ cp -rv $f /home/kanon/programs/
+map <backspace2>P. cd /home/kanon/programs/
+map mP. $ mv -v $f /home/kanon/programs/
+map YP. $ cp -rv $f /home/kanon/programs/
+map <backspace2>p cd /home/kanon/projects/
+map mp $ mv -v $f /home/kanon/projects/
+map Yp $ cp -rv $f /home/kanon/projects/
+map <backspace2>p. cd /home/kanon/projects/
+map mp. $ mv -v $f /home/kanon/projects/
+map Yp. $ cp -rv $f /home/kanon/projects/
+map <backspace2>c. cd /home/kanon/code
+map mc. $ mv -v $f /home/kanon/code
+map Yc. $ cp -rv $f /home/kanon/code
 map <backspace2>pp cd ~/Pictures
 map mpp $ mv -v $f ~/Pictures
 map Ypp $ cp -rv $f ~/Pictures
 map <backspace2>xm. cd ~/.config/xmonad
 map mxm. $ mv -v $f ~/.config/xmonad
 map Yxm. $ cp -rv $f ~/.config/xmonad
-map <backspace2>k. cd /Users/jbernal1/qmk_firmware
-map mk. $ mv -v $f /Users/jbernal1/qmk_firmware
-map Yk. $ cp -rv $f /Users/jbernal1/qmk_firmware
+map <backspace2>k. cd /home/kanon/qmk_firmware
+map mk. $ mv -v $f /home/kanon/qmk_firmware
+map Yk. $ cp -rv $f /home/kanon/qmk_firmware
 map <backspace2>.sf $ $EDITOR ~/.config/shortcuts/sf
 map <backspace2>.sd $ $EDITOR ~/.config/shortcuts/sd
 map <backspace2>.z $ $EDITOR ~/.config/zsh/.zshrc
@@ -265,22 +265,22 @@ map <backspace2>.xm $ $EDITOR ~/.config/xmonad/xmonad.hs
 map <backspace2>.xmm $ $EDITOR ~/.config/xmonad/xmonad.hs
 map <backspace2>.xmb $ $EDITOR ~/.config/xmobar/xmobar0.hs
 map <backspace2>.n $ $EDITOR ~/.config/newsboat/urls
-map <backspace2>.dwm $ $EDITOR /Users/jbernal1/programs/suckless/dwm/config.h
-map <backspace2>.st $ $EDITOR /Users/jbernal1/programs/suckless/st/config.h
+map <backspace2>.dwm $ $EDITOR /home/kanon/programs/suckless/dwm/config.h
+map <backspace2>.st $ $EDITOR /home/kanon/programs/suckless/st/config.h
 map <backspace2>.a $ $EDITOR ~/.config/.aliases
 map <backspace2>.aa $ $EDITOR ~/.config/.aliases
 map <backspace2>.aw $ $EDITOR ~/.config/.aliases_work
-map <backspace2>.su $ $EDITOR /Users/jbernal1/.local/share/scripts/automation/startup/startup
+map <backspace2>.su $ $EDITOR /home/kanon/.local/share/scripts/automation/startup/startup
 map <backspace2>.sw $ $EDITOR ~/.config/.startup_work
 map <backspace2>.sng $ $EDITOR ~/.config/nvim/my_snippets/snipmate/go.snippets
 map <backspace2>.snl $ $EDITOR ~/.config/nvim/my_snippets/snipmate/lua.snippets
 map <backspace2>.snp $ $EDITOR ~/.config/nvim/my_snippets/snipmate/python.snippets
 map <backspace2>.ao $ $EDITOR ~/.config/zsh/.aliases
-map <backspace2>.k $ $EDITOR /Users/jbernal1/qmk_firmware/keyboards/lily58/keymaps/mine/keymap.c
-map <backspace2>.K $ $EDITOR /Users/jbernal1/.local/share/scripts/apps/zmk/mine/adv360.keymap
+map <backspace2>.k $ $EDITOR /home/kanon/qmk_firmware/keyboards/lily58/keymaps/mine/keymap.c
+map <backspace2>.K $ $EDITOR /home/kanon/.local/share/scripts/apps/zmk/mine/adv360.keymap
 map <backspace2>.Z $ $EDITOR /root/.config/zsh/.zshrc
-map <backspace2>.pr $ $EDITOR /Users/jbernal1/.local/share/scripts/files/projections/global/.projections.json
-map <backspace2>.s $ $EDITOR /Users/jbernal1/.ssh/config
+map <backspace2>.pr $ $EDITOR /home/kanon/.local/share/scripts/files/projections/global/.projections.json
+map <backspace2>.s $ $EDITOR /home/kanon/.ssh/config
 map <backspace2>.an $ $EDITOR ~/.local/share/ansible/local.yml
 map <backspace2>.anc $ $EDITOR ~/.local/share/ansible/roles/core/tasks
 map <backspace2>.anr $ $EDITOR ~/.local/share/ansible/README.md
