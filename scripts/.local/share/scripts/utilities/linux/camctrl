@@ -9,7 +9,7 @@ case $1 in
         ;;
     *)
         v4l2-ctl --set-ctrl=brightness=35
-        v4l2-ctl --set-ctrl=zoom_absolute=120
+        v4l2-ctl --set-ctrl=zoom_absolute=110
         v4l2-ctl --set-ctrl=contrast=45
         v4l2-ctl --set-ctrl=saturation=75
         ;;
