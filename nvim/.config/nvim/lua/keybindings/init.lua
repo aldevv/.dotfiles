@@ -518,3 +518,5 @@ map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
 
 map("n", "<Del>", "<cmd>lua vim.diagnostic.goto_next()<cr>", nor)
 map("n", "<S-Del>", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
+
+map("n", "<leader><leader>x", "<cmd>luafile %<cr>", nor)

@@ -67,12 +67,12 @@ local handlers = {
       require("lspconfig")["hls"].setup(opts)
     end
   end,
-  ["lua_ls"] = function()
-    require("neodev").setup({})
-    local opts = get_lsp_opts()
-    enhance_server("lua_ls", opts)
-    require("lspconfig")["lua_ls"].setup(opts)
-  end,
+  -- ["lua_ls"] = function()
+  --   require("neodev").setup({})
+  --   local opts = get_lsp_opts()
+  --   enhance_server("lua_ls", opts)
+  --   require("lspconfig")["lua_ls"].setup(opts)
+  -- end,
 }
 
 -- set log level for lsp operations, probably what you want

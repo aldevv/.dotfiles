@@ -114,18 +114,19 @@ local enhance_server_opts = {
     --     },
   end,
   ["lua_ls"] = function(opts)
-    opts.root_dir = function(filepath)
-      util.root_pattern(
-        ".luarc.json",
-        ".luarc.jsonc",
-        ".luacheckrc",
-        ".stylua.toml",
-        "stylua.toml",
-        "selene.toml",
-        "selene.yml",
-        ".git"
-      )(filepath)
-    end
+    -- opts.root_dir = function(filepath)
+    --   util.root_pattern(
+    --     ".luarc.json",
+    --     ".luarc.jsonc",
+    --     ".luacheckrc",
+    --     ".stylua.toml",
+    --     "stylua.toml",
+    --     "selene.toml",
+    --     "selene.yml",
+    --     ".git"
+    --   )(filepath)
+    -- end
+
     -- opts.root_dir = function()
     --   local def_env = function()
     --     return "/home/kanon/.dotfiles/nvim/.config/nvim/lua"
@@ -135,6 +136,7 @@ local enhance_server_opts = {
 
     opts.settings = {
       Lua = {
+        version = "LuaJIT",
         diagnostics = {
           globals = { "vim" },
         },
@@ -143,21 +145,12 @@ local enhance_server_opts = {
         --   enable = true
         -- },
 
-        runtime = {
-          --   --   path = os.getenv("HOME") .. "/.dotfiles/nvim/.config/nvim/lua"
-          --   -- path = runtime_path,
-          version = "LuaJIT",
-          --   path = nvim_paths,
-          -- },
-          -- diagnostics = {
-          --   globals = { "vim" },
-        },
-        workspace = {
-          checkThirdParty = false,
-          -- library = vim.api.nvim_get_runtime_file("", true),
-          -- library = nvim_paths,
-          --   checkThirdParty = false,
-        },
+        -- workspace = {
+        --   checkThirdParty = false,
+        --   -- library = vim.api.nvim_get_runtime_file("", true),
+        --   -- library = nvim_paths,
+        --   --   checkThirdParty = false,
+        -- },
       },
     }
   end,
