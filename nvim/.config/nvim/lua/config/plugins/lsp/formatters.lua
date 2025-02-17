@@ -22,13 +22,12 @@ local opts = {
 local ensure_format_servers = {
   "prettier",
   "shfmt",
-  "black",
   "clang_format",
   -- "stylua", -- uncommenting is enough to enable
 }
 local ensure_diagnostic_servers = {
   -- "shellcheck",
-  "flake8",
+  -- "flake8",
   "vint", -- for vim
   "luacheck",
 }
@@ -37,6 +36,8 @@ local ensure_code_actions = {
   "gitsigns",
   "refactoring",
 }
+
+
 
 if os.getenv("NVIM_MINIMAL") ~= nil then
   ensure_format_servers = {}
@@ -48,7 +49,7 @@ local ensure_installed = vim.tbl_extend("keep", ensure_format_servers, ensure_di
 
 local conf = {
   -- shellcheck = { diagnostics.shellcheck.with({ extra_filetypes = { "zsh", "bash" } }) },
-  black = { formatting.black.with({ extra_args = { "--fast" } }) },
+  -- black = { formatting.black.with({ extra_args = { "--fast" } }) },
   shfmt = { formatting.shfmt.with({
     extra_filetypes = { "zsh", "bash" },
   }) },
