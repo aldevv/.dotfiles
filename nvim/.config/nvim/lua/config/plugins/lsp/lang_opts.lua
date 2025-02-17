@@ -22,7 +22,7 @@ local enhance_server_opts = {
       vim.keymap.set("n", "<cr>", "<cmd>SqlsExecuteQuery<cr>", { buffer = 0 })
     end
   end,
-  ["tsserver"] = function(opts)
+  ["ts_ls"] = function(opts)
     opts.root_dir = function(fname)
       return util.root_pattern("tsconfig.json")(fname)
           or util.root_pattern("package.json", "jsconfig.json", ".git", ".projections.json")(fname)
@@ -168,6 +168,48 @@ local enhance_server_opts = {
         or util.root_pattern("*.cabal", "package.yaml")(filepath)
       )
     end
+  end,
+  ["basedpyright"] = function(opts)
+    opts.settings = {
+      basedpyright = {
+        -- Using Ruff's import organizer
+        -- disableOrganizeImports = true,
+        analysis = {
+          autoImportCompletions = true,
+          autoSearchPaths = true,
+          -- diagnosticMode = "workspace",
+          typeCheckingMode = "basic", -- standard, strict, all, off, basic
+        },
+      },
+      python = {
+        analysis = {
+          -- Ignore all files for analysis to exclusively use Ruff for linting
+          ignore = { '*' },
+        },
+      },
+    }
+  end,
+  ["ruff"] = function(opts)
+    vim.api.nvim_create_autocmd("LspAttach", {
+      group = vim.api.nvim_create_augroup('lsp_attach_disable_ruff_hover', { clear = true }),
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client == nil then
+          return
+        end
+        if client.name == 'ruff' then
+          -- Disable hover in favor of basedpyright
+          client.server_capabilities.hoverProvider = false
+        end
+      end,
+      desc = 'LSP: Disable hover capability from Ruff',
+    })
+    opts.init_options = {
+      settings = {
+        logLevel = "info",
+        -- logFile = "/tmp/ruff.log"
+      }
+    }
   end,
 }
 function M.enhanceable(name)

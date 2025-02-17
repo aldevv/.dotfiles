@@ -28,7 +28,6 @@ load_ghcup() {
 }
 load_ghcup
 
-
 load_direnv() {
   if ! command -v direnv &>/dev/null; then
     return
