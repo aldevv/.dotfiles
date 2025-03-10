@@ -21,6 +21,15 @@ return {
           },
         },
       },
+      -- {
+      --   'saghen/blink.cmp',
+      --   dependencies = { 'rafamadriz/friendly-snippets',
+      --     "saadparwaiz1/cmp_luasnip",
+      --     "onsails/lspkind-nvim",
+      --   },
+      --   version = '*',
+      --   config = req("config.plugins.lsp.blink"),
+      -- },
 
       {
         "hrsh7th/nvim-cmp",

@@ -128,3 +128,13 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     vim.lsp.buf.format()
   end,
 })
+
+
+vim.api.nvim_create_autocmd({ "BufEnter" }, {
+  pattern = "*.py",
+  callback = function()
+    -- to show self in a different color than white
+    -- you can check it with :Inspect
+    vim.api.nvim_set_hl(0, '@lsp.type.parameter.python', {})
+  end,
+})

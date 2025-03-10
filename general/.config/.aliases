@@ -148,7 +148,7 @@ alias gwta/=". _worktree_create_branch 'second'"
 alias A=". _worktree_create_branch 'first'"
 alias gwtA/=". _worktree_create_branch 'first'"
 
-alias tobare=". _tobare"
+alias toworktree=". _toworktree"
 alias gg='cd $(gitRoot)'
 
 # dotfiles

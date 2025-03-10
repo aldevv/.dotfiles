@@ -78,7 +78,7 @@ local handlers = {
 -- set log level for lsp operations, probably what you want
 -- vim.lsp.set_log_level("info")
 -- TODO; change this
-vim.lsp.set_log_level("trace")
+-- vim.lsp.set_log_level("trace")
 
 require("mason").setup({
   -- by default the path is extended to here

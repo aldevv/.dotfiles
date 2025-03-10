@@ -167,7 +167,7 @@ cmp.setup({
       --  check for examples https://github.com/hrsh7th/nvim-cmp/wiki/Example-mappings
       -- select = true, -- auto select on enter (even if not selected with <a-n>)
       select = true, -- auto select on enter (even if not selected with <a-n>)
-    }),           -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+    }),              -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
     -- same as <cr> but it auto selects first option
     -- ["<a-y>"] = cmp.mapping.confirm({
     --   behavior = cmp.ConfirmBehavior.Insert,
@@ -180,41 +180,41 @@ cmp.setup({
   -- end,
   sorting = {
     -- TODO: Would be cool to add stuff like "See variable names before method names" in rust, or something like that.
-    comparators = {
-      cmp.config.compare.score,
-      cmp.config.compare.sort_text,
-      lspkind_comparator({
-        kind_priority = {
-          Parameter = 14,
-          Variable = 12,
-          Field = 11,
-          Property = 11,
-          Constant = 10,
-          Enum = 10,
-          EnumMember = 10,
-          Event = 10,
-          Function = 10,
-          Method = 10,
-          Operator = 10,
-          Reference = 10,
-          Struct = 10,
-          File = 8,
-          Folder = 8,
-          Class = 5,
-          Color = 5,
-          Module = 5,
-          Keyword = 2,
-          Constructor = 1,
-          Interface = 1,
-          Snippet = 0,
-          Text = 1,
-          TypeParameter = 1,
-          Unit = 1,
-          Value = 1,
-        },
-      }),
-      label_comparator,
-    },
+    -- comparators = {
+    --   cmp.config.compare.score,
+    --   cmp.config.compare.sort_text,
+    --   lspkind_comparator({
+    --     kind_priority = {
+    --       Parameter = 14,
+    --       Variable = 12,
+    --       Field = 11,
+    --       Property = 11,
+    --       Constant = 10,
+    --       Enum = 10,
+    --       EnumMember = 10,
+    --       Event = 10,
+    --       Function = 10,
+    --       Method = 10,
+    --       Operator = 10,
+    --       Reference = 10,
+    --       Struct = 10,
+    --       File = 8,
+    --       Folder = 8,
+    --       Class = 5,
+    --       Color = 5,
+    --       Module = 5,
+    --       Keyword = 2,
+    --       Constructor = 1,
+    --       Interface = 1,
+    --       Snippet = 0,
+    --       Text = 1,
+    --       TypeParameter = 1,
+    --       Unit = 1,
+    --       Value = 1,
+    --     },
+    --   }),
+    --   label_comparator,
+    -- },
   },
   sources = {
     { name = "luasnip",              priority = 1 },

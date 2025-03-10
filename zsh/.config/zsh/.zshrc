@@ -328,3 +328,14 @@ if command -v aws_completer &>/dev/null; then
 fi
 #
 # source $HOME/programs/forgit/forgit.plugin.zsh
+
+if [[ -f $PWD/.venv/bin/activate ]]; then
+    source .venv/bin/activate
+fi
+
+# function cd {
+#    builtin cd "$@"
+#    if [[ -f .venv/bin/activate ]]; then
+#        source .venv/bin/activate
+#    fi
+# }
