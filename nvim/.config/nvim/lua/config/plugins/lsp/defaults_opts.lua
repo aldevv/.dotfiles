@@ -17,7 +17,10 @@ for k, v in pairs(lsp_handlers) do
   handlers[k] = v
 end
 
+  -- TODO: delete in nvim version 0.11
+-- local capabilities = require("blink.cmp").get_lsp_capabilities()
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 -- NOTE: this is for ufo when using the lsp provider
 -- capabilities.textDocument.foldingRange = {

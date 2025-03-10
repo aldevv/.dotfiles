@@ -106,17 +106,25 @@ vim.opt.spell = true
 
 -- general diagnostics
 vim.diagnostic.config({
-	virtual_text = {
-		spacing = 2,
-		severity_limit = "Warning",
-	},
-	-- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
-	-- update_in_insert = true,
-	update_in_insert = false,
-	float = {
-		-- source = "if_many",
-		source = true,
-	},
+  virtual_text = {
+    spacing = 2,
+    severity_limit = "Warning",
+  },
+  -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
+  -- update_in_insert = true,
+  update_in_insert = false,
+  float = {
+    -- source = "if_many",
+    source = true,
+  },
 })
 
 vim.opt.jumpoptions = "stack"
+
+vim.g.python_host_prog = "/usr/bin/python"
+vim.g.python3_host_prog = "/usr/bin/python3"
+
+if vim.fn.has("macunix") == 1 then
+  vim.g.python_host_prog = "/opt/homebrew/bin/python"
+  vim.g.python3_host_prog = "/opt/homebrew/bin/python3"
+end
