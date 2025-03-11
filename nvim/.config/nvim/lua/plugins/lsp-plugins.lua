@@ -21,28 +21,28 @@ return {
         config = req("config.plugins.lsp.blink"),
       },
 
-      -- {
-      --   "hrsh7th/nvim-cmp",
-      --   config = req("config.plugins.lsp.cmp"),
-      --   dependencies = {
-      --     "saadparwaiz1/cmp_luasnip",
-      --     "nvim-lua/plenary.nvim",
-      --     "onsails/lspkind-nvim",
-      --     "hrsh7th/cmp-nvim-lsp",
-      --     -- { "hrsh7th/cmp-nvim-lua",   ft = "lua" },
-      --     "hrsh7th/cmp-path",
-      --     "hrsh7th/cmp-buffer",
-      --     "hrsh7th/cmp-cmdline",
-      --     "petertriho/cmp-git",
-      --     {
-      --       "tzachar/cmp-fuzzy-path",
-      --       dependencies = "tzachar/fuzzy.nvim",
-      --       enabled = function()
-      --         return vim.loop.os_uname().sysname == "Linux"
-      --       end,
-      --     },
-      --   },
-      -- },
+      {
+        "hrsh7th/nvim-cmp",
+        config = req("config.plugins.lsp.cmp"),
+        dependencies = {
+          "saadparwaiz1/cmp_luasnip",
+          "nvim-lua/plenary.nvim",
+          "onsails/lspkind-nvim",
+          "hrsh7th/cmp-nvim-lsp",
+          -- { "hrsh7th/cmp-nvim-lua",   ft = "lua" },
+          "hrsh7th/cmp-path",
+          "hrsh7th/cmp-buffer",
+          "hrsh7th/cmp-cmdline",
+          "petertriho/cmp-git",
+          {
+            "tzachar/cmp-fuzzy-path",
+            dependencies = "tzachar/fuzzy.nvim",
+            enabled = function()
+              return vim.loop.os_uname().sysname == "Linux"
+            end,
+          },
+        },
+      },
     },
   },
   {
