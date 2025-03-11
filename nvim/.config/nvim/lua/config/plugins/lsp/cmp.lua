@@ -229,7 +229,7 @@ cmp.setup({
     { name = "orgmode" },
     { name = "vim-dadbod-completion" },
     { name = "git" },
-    { name = "lazydev" },
+    { name = "lazydev",              group_index = 0 },
     -- { name = 'snippy' }, -- For snippy users.
     -- { name = 'treesitter' },
   },

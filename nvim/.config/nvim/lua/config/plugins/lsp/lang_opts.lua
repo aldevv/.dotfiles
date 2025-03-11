@@ -114,45 +114,14 @@ local enhance_server_opts = {
     --     },
   end,
   ["lua_ls"] = function(opts)
-    -- opts.root_dir = function(filepath)
-    --   util.root_pattern(
-    --     ".luarc.json",
-    --     ".luarc.jsonc",
-    --     ".luacheckrc",
-    --     ".stylua.toml",
-    --     "stylua.toml",
-    --     "selene.toml",
-    --     "selene.yml",
-    --     ".git"
-    --   )(filepath)
-    -- end
-
-    -- opts.root_dir = function()
-    --   local def_env = function()
-    --     return "/home/kanon/.dotfiles/nvim/.config/nvim/lua"
-    --   end
-    --   return util.root_pattern("apm.csv")() or def_env()
-    -- end
-
-    opts.settings = {
-      Lua = {
-        version = "LuaJIT",
-        diagnostics = {
-          globals = { "vim" },
-        },
-        -- annoying lenses
-        -- hint = {
-        --   enable = true
-        -- },
-
-        -- workspace = {
-        --   checkThirdParty = false,
-        --   -- library = vim.api.nvim_get_runtime_file("", true),
-        --   -- library = nvim_paths,
-        --   --   checkThirdParty = false,
-        -- },
-      },
-    }
+    -- opts.settings = {
+    --   Lua = {
+    --     version = "LuaJIT",
+    --     diagnostics = {
+    --       globals = { "vim" },
+    --     },
+    --   },
+    -- }
   end,
   ["eslintls"] = function(opts)
     opts.settings = {
