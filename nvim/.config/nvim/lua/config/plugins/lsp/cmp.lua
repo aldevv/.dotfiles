@@ -77,6 +77,165 @@ local luasnip = require("luasnip")
 
 vim.api.nvim_set_option_value("completeopt", "menu,menuone,noselect", {})
 
+-- NOTE: uncomment this to start using cmp for completion of code
+-- cmp.setup({
+--   preselect = cmp.PreselectMode.None, -- so it doesn't select lsp automatically, and lets me choose manually
+--   snippet = {
+--     expand = function(args)
+--       luasnip.lsp_expand(args.body)
+--     end,
+--   },
+--   window = {
+--     completion = cmp.config.window.bordered(),
+--     documentation = cmp.config.window.bordered(),
+--   },
+--   formatting = {
+--
+--     format = function(entry, vim_item)
+--       vim_item.kind = string.format("%s %s", lspkind.presets.default[vim_item.kind], vim_item.kind)
+--       vim_item.menu = ({
+--         -- nvim_lsp = "ﲳ",
+--         -- nvim_lsp = "📚",
+--         luasnip = "🔥",
+--         -- nvim_lua = "[nvim]",
+--         nvim_lsp = "[LS]",
+--         -- nvim_lua = "[API]",
+--         -- treesitter = "",
+--         treesitter = "🌲",
+--         -- path = "ﱮ",
+--         path = "📁",
+--         -- buffer = "﬘",
+--         buffer = "[BUF]",
+--         zsh = "[SH]",
+--         -- vsnip = "",
+--         -- ultisnips = "🔥",
+--         -- spell = "暈",
+--         spell = "暈",
+--         cmdline = "[CMD]",
+--         cody = "[CODY]",
+--         ["vim-dadbod-completion"] = "[DB]",
+--       })[entry.source.name]
+--
+--       return vim_item
+--     end,
+--   },
+--   experimental = {
+--     ghost_text = true,
+--     -- native_menu = true
+--   },
+--   mapping = {
+--     -- Manually trigger cody completions
+--     ["<c-a>"] = cmp.mapping.complete({
+--       config = {
+--         sources = {
+--           { name = "cody" },
+--         },
+--       },
+--     }),
+--     ["<c-p>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
+--     ["<c-n>"] = cmp.mapping(cmp.mapping.select_next_item(), { "i", "c" }),
+--     ["<c-u>"] = function(fallback)
+--       if cmp.visible() then
+--         for _ = 1, 2 do
+--           cmp.select_prev_item()
+--         end
+--       else
+--         fallback()
+--       end
+--     end,
+--     ["<c-d>"] = function(fallback)
+--       if cmp.visible() then
+--         for _ = 1, 2 do
+--           cmp.select_next_item()
+--         end
+--       else
+--         fallback()
+--       end
+--     end,
+--     ["<c-S-p>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
+--     ["<c-S-n>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
+--     ["<C-Space>"] = cmp.mapping(function()
+--       if cmp.visible() then
+--         cmp.close()
+--       else
+--         cmp.complete()
+--       end
+--     end, { "i", "c" }),
+--     ["<CR>"] = cmp.mapping.confirm({
+--       behavior = cmp.ConfirmBehavior.Replace, -->https://github.com/hrsh7th/nvim-cmp/issues/664
+--       -- behavior = cmp.ConfirmBehavior.Insert, -->https://github.com/hrsh7th/nvim-cmp/issues/664
+--       -- behavior = cmp.ConfirmBehavior.Replace, -->https://github.com/hrsh7th/nvim-cmp/issues/664
+--       --  check for examples https://github.com/hrsh7th/nvim-cmp/wiki/Example-mappings
+--       -- select = true, -- auto select on enter (even if not selected with <a-n>)
+--       select = true, -- auto select on enter (even if not selected with <a-n>)
+--     }),              -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+--     -- same as <cr> but it auto selects first option
+--     -- ["<a-y>"] = cmp.mapping.confirm({
+--     --   behavior = cmp.ConfirmBehavior.Insert,
+--     --   select = true, -- auto select on enter (even if not selected with <a-n>)
+--     -- }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+--   },
+--   -- nvim-cmp by defaults disables autocomplete for prompt buffers
+--   -- enabled = function()
+--   --   return vim.api.nvim_get_option_value("buftype", { buf = 0 }) ~= "prompt" or require("cmp_dap").is_dap_buffer()
+--   -- end,
+--   sorting = {
+--     -- TODO: Would be cool to add stuff like "See variable names before method names" in rust, or something like that.
+--     -- comparators = {
+--     --   cmp.config.compare.score,
+--     --   cmp.config.compare.sort_text,
+--     --   lspkind_comparator({
+--     --     kind_priority = {
+--     --       Parameter = 14,
+--     --       Variable = 12,
+--     --       Field = 11,
+--     --       Property = 11,
+--     --       Constant = 10,
+--     --       Enum = 10,
+--     --       EnumMember = 10,
+--     --       Event = 10,
+--     --       Function = 10,
+--     --       Method = 10,
+--     --       Operator = 10,
+--     --       Reference = 10,
+--     --       Struct = 10,
+--     --       File = 8,
+--     --       Folder = 8,
+--     --       Class = 5,
+--     --       Color = 5,
+--     --       Module = 5,
+--     --       Keyword = 2,
+--     --       Constructor = 1,
+--     --       Interface = 1,
+--     --       Snippet = 0,
+--     --       Text = 1,
+--     --       TypeParameter = 1,
+--     --       Unit = 1,
+--     --       Value = 1,
+--     --     },
+--     --   }),
+--     --   label_comparator,
+--     -- },
+--   },
+--   sources = {
+--     { name = "luasnip",              priority = 1 },
+--     -- { name = "nvim_lua" },
+--     { name = "nvim_lsp",             priority = 2 },
+--     -- { name = "ultisnips" }, -- For ultisnips users.
+--     -- these below also need a plugin like cmp-nvim-ultisnips
+--     { name = "path",                 max_item_count = 10 },
+--     -- { name = 'luasnip' }, TODO change to this!
+--     { name = "buffer",               keyword_length = 5 },
+--     { name = "dap" },
+--     { name = "orgmode" },
+--     { name = "vim-dadbod-completion" },
+--     { name = "git" },
+--     { name = "lazydev",              group_index = 0 },
+--     -- { name = 'snippy' }, -- For snippy users.
+--     -- { name = 'treesitter' },
+--   },
+-- })
+
 cmp.setup({
   preselect = cmp.PreselectMode.None, -- so it doesn't select lsp automatically, and lets me choose manually
   snippet = {
@@ -89,7 +248,6 @@ cmp.setup({
     documentation = cmp.config.window.bordered(),
   },
   formatting = {
-
     format = function(entry, vim_item)
       vim_item.kind = string.format("%s %s", lspkind.presets.default[vim_item.kind], vim_item.kind)
       vim_item.menu = ({
@@ -168,71 +326,8 @@ cmp.setup({
       -- select = true, -- auto select on enter (even if not selected with <a-n>)
       select = true, -- auto select on enter (even if not selected with <a-n>)
     }),              -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
-    -- same as <cr> but it auto selects first option
-    -- ["<a-y>"] = cmp.mapping.confirm({
-    --   behavior = cmp.ConfirmBehavior.Insert,
-    --   select = true, -- auto select on enter (even if not selected with <a-n>)
-    -- }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
   },
-  -- nvim-cmp by defaults disables autocomplete for prompt buffers
-  -- enabled = function()
-  --   return vim.api.nvim_get_option_value("buftype", { buf = 0 }) ~= "prompt" or require("cmp_dap").is_dap_buffer()
-  -- end,
-  sorting = {
-    -- TODO: Would be cool to add stuff like "See variable names before method names" in rust, or something like that.
-    -- comparators = {
-    --   cmp.config.compare.score,
-    --   cmp.config.compare.sort_text,
-    --   lspkind_comparator({
-    --     kind_priority = {
-    --       Parameter = 14,
-    --       Variable = 12,
-    --       Field = 11,
-    --       Property = 11,
-    --       Constant = 10,
-    --       Enum = 10,
-    --       EnumMember = 10,
-    --       Event = 10,
-    --       Function = 10,
-    --       Method = 10,
-    --       Operator = 10,
-    --       Reference = 10,
-    --       Struct = 10,
-    --       File = 8,
-    --       Folder = 8,
-    --       Class = 5,
-    --       Color = 5,
-    --       Module = 5,
-    --       Keyword = 2,
-    --       Constructor = 1,
-    --       Interface = 1,
-    --       Snippet = 0,
-    --       Text = 1,
-    --       TypeParameter = 1,
-    --       Unit = 1,
-    --       Value = 1,
-    --     },
-    --   }),
-    --   label_comparator,
-    -- },
-  },
-  sources = {
-    { name = "luasnip",              priority = 1 },
-    -- { name = "nvim_lua" },
-    { name = "nvim_lsp",             priority = 2 },
-    -- { name = "ultisnips" }, -- For ultisnips users.
-    -- these below also need a plugin like cmp-nvim-ultisnips
-    { name = "path",                 max_item_count = 10 },
-    -- { name = 'luasnip' }, TODO change to this!
-    { name = "buffer",               keyword_length = 5 },
-    { name = "dap" },
-    { name = "orgmode" },
-    { name = "vim-dadbod-completion" },
-    { name = "git" },
-    { name = "lazydev",              group_index = 0 },
-    -- { name = 'snippy' }, -- For snippy users.
-    -- { name = 'treesitter' },
-  },
+  sources = {},
 })
 
 -- command line

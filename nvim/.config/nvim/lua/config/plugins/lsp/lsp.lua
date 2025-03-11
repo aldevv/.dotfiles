@@ -28,6 +28,7 @@ local servers = {
   "terraformls",
 }
 
+
 if os.getenv("NVIM_MINIMAL") ~= nil then
   servers = {}
 end
