@@ -90,9 +90,9 @@ local enhance_server_opts = {
         buildFlags = { "-tags=linux,windows,darwin" },
       },
       -- NOTE: enable golanci
-      -- go = {
-      --   lintTool = "golangci-lint",
-      -- },
+      go = {
+        lintTool = "golangci-lint",
+      },
     }
     --     gopls = {
     --       -- https://github.com/golang/tools/blob/master/gopls/doc/settings.md#code-lenses
