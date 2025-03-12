@@ -1,3 +1,7 @@
+-- if you want to disable the plugin for a project
+-- add this .nvim.lua --> require("project_nvim").setup({manual_mode=true})
+
+
 require("project_nvim").setup({
   -- Manual mode doesn't automatically change your root directory, so you have
   -- the option to manually do so using `:ProjectRoot` command.

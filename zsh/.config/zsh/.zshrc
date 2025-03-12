@@ -326,8 +326,6 @@ if command -v aws_completer &>/dev/null; then
     autoload bashcompinit && bashcompinit
     complete -C '/usr/local/bin/aws_completer' aws
 fi
-#
-# source $HOME/programs/forgit/forgit.plugin.zsh
 
 if [[ -f $PWD/.venv/bin/activate ]]; then
     source .venv/bin/activate
