@@ -146,8 +146,9 @@ local enhance_server_opts = {
         analysis = {
           autoImportCompletions = true,
           autoSearchPaths = true,
-          diagnosticMode = "workspace", -- slower but analyzes and auto completes for whole workspace
-          typeCheckingMode = "basic",   -- standard, strict, all, off, basic
+          useLibraryCodeForTypes = true,
+          -- diagnosticMode = "workspace", -- slower but analyzes and auto completes for whole workspace
+          typeCheckingMode = "basic", -- standard, strict, all, off, basic
         },
       },
       python = {

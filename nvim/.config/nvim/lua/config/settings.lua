@@ -125,6 +125,6 @@ vim.g.python_host_prog = "/usr/bin/python"
 vim.g.python3_host_prog = "/usr/bin/python3"
 
 if vim.fn.has("macunix") == 1 then
-  vim.g.python_host_prog = "/opt/homebrew/bin/python"
-  vim.g.python3_host_prog = "/opt/homebrew/bin/python3"
+  vim.g.python_host_prog = "/usr/local/bin/python"
+  vim.g.python3_host_prog = "/usr/local/bin/python3"
 end
