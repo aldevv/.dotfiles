@@ -143,7 +143,12 @@ bindkey -s "^[h" "^[OD"
 # Yank to the system clipboard
 function vi-yank-xclip {
     zle vi-yank
-   echo "$CUTBUFFER" | xclip -sel clipboard
+    # if macos use pbcopy
+    if [[ "$(uname)" == "Darwin" ]]; then
+      echo "$CUTBUFFER" | pbcopy
+      return
+    fi
+    echo "$CUTBUFFER" | xclip -sel clipboard
 }
 
 zle -N vi-yank-xclip
