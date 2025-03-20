@@ -1,10 +1,16 @@
 local cmp = require('blink.cmp')
 
 
+-- https://cmp.saghen.dev/configuration/sources.html
 cmp.setup({
   sources = {
+    -- default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer' },
     default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer' },
     providers = {
+      buffer = {
+
+        min_keyword_length = 5,
+      },
       lazydev = {
         name = "LazyDev",
         module = "lazydev.integrations.blink",
@@ -13,10 +19,12 @@ cmp.setup({
       },
     },
   },
+  -- https://cmp.saghen.dev/configuration/keymap.html#commands
   keymap = {
     ["<D-c>"] = { "show" },
     ["<S-CR>"] = { "hide" },
-    ["<CR>"] = { "select_and_accept", "fallback" },
+    -- ["<CR>"] = { "select_and_accept", "fallback" },
+    ["<CR>"] = { "accept", "fallback" },
     -- ["<Tab>"] = { "select_next", "fallback" },
     -- ["<S-Tab>"] = { "select_prev", "fallback" },
     ["<Down>"] = { "select_next", "fallback" },
@@ -52,6 +60,12 @@ cmp.setup({
   },
   fuzzy = { implementation = "prefer_rust_with_warning" },
   completion = {
+    -- https://cmp.saghen.dev/configuration/reference#completion-list
+    list = {
+      selection = {
+        preselect = false
+      }
+    },
     documentation = {
       auto_show = true,
       auto_show_delay_ms = 200,
