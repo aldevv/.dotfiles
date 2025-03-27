@@ -235,8 +235,8 @@ bindkey -s 'I' '$UTILITIES/tmux/ant ideas^M' # notes
 bindkey -s 'g' '$UTILITIES/tmux/nf ~/repos 3^M' # projects and work
 # bindkey -s 'p' 'vf ^M'
 bindkey -s '^p' 'vf ^M'
-bindkey -s '^a' 'vF ^M' # for folders
-bindkey -s 'a' 'vFa ^M' # for folders
+bindkey -s '^z' 'vF ^M' # for folders
+bindkey -s 'z' 'vFa ^M' # for folders
 bindkey -s '^g' 'vfg ^M'
 bindkey -s 'D' 'vf $HOME/.config ^M'
 # bindkey -s 'z' 'vf  "$LEARN"^M'
