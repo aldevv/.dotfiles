@@ -3,6 +3,8 @@
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
 alias vf="source _vf"
+alias vF="source _vF"
+alias vFa="source _vFa"
 alias wezterm='flatpak run org.wezfurlong.wezterm'
 
 alias irssi="irssi --home=~/.config/irssi --config=~/.config/irssi/config"
