@@ -228,7 +228,6 @@ alias \
 	yz="mpv 'https://www.youtube.com/watch?v=mRwcGr8yTws'" \
 	cu="curl" \
 	wg="wget" \
-	rick="curl -s -L http://bit.ly/10hA8iC | bash" \
 	conv="$UTILITIES/video/MkvToMp4.sh" \
 	par="curl parrot.live" \
 	ssr="simplescreenrecorder" \
@@ -1060,6 +1059,9 @@ alias rcrm='rclone delete'
 alias rcrmd='rclone purge'
 alias rcmu='rclone mount --daemon'
 alias rcmg='rclone mount --daemon gd: $REMOTES/gd'
+
+
+alias rick="curl -s -L http://bit.ly/10hA8iC | bash" # killall aplay
 
 #============
 # DUPLICITY

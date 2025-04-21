@@ -1,3 +1,16 @@
+local function get_venv(variable)
+  local venv = os.getenv(variable)
+  if venv ~= nil and string.find(venv, "/") then
+    local orig_venv = venv
+    for w in orig_venv:gmatch("([^/]+)") do
+      venv = w
+    end
+    venv = string.format("%s", venv)
+  end
+  return venv
+end
+
+
 local filename_widget = {
   "filename",
   file_status = true,
@@ -77,7 +90,13 @@ require("lualine").setup({
     -- absolute path
     -- lualine_c = { { "filename", path = 3 } },
     lualine_x = { "filetype" },
-    lualine_y = { "progress" },
+    lualine_y = {
+      {
+        function() return get_venv("VIRTUAL_ENV") end,
+        cond = function() return vim.bo.filetype == "python" end,
+      },
+      "progress",
+    },
     lualine_z = { "location" },
   },
   inactive_sections = {

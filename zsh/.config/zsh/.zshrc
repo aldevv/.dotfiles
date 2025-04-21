@@ -143,7 +143,12 @@ bindkey -s "^[h" "^[OD"
 # Yank to the system clipboard
 function vi-yank-xclip {
     zle vi-yank
-   echo "$CUTBUFFER" | xclip -sel clipboard
+    # if macos use pbcopy
+    if [[ "$(uname)" == "Darwin" ]]; then
+      echo "$CUTBUFFER" | pbcopy
+      return
+    fi
+    echo "$CUTBUFFER" | xclip -sel clipboard
 }
 
 zle -N vi-yank-xclip
@@ -326,5 +331,14 @@ if command -v aws_completer &>/dev/null; then
     autoload bashcompinit && bashcompinit
     complete -C '/usr/local/bin/aws_completer' aws
 fi
-#
-# source $HOME/programs/forgit/forgit.plugin.zsh
+
+if [[ -f $PWD/.venv/bin/activate ]]; then
+    source .venv/bin/activate
+fi
+
+# function cd {
+#    builtin cd "$@"
+#    if [[ -f .venv/bin/activate ]]; then
+#        source .venv/bin/activate
+#    fi
+# }
