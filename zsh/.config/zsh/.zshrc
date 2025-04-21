@@ -220,6 +220,8 @@ doge() {
 
 # control
 bindkey -s "^n" "stn^M"
+
+bindkey -s '^j' 'gwts^M' # projects and work
 # alt
 bindkey -s 'w' 'nw^M' # wiki
 bindkey -s 'N' '$UTILITIES/grep/lgnotes^M' # projects and work
@@ -241,7 +243,6 @@ bindkey -s 'm' 'scripts^M'
 bindkey -s 'M' 'runscript^M'
 # bindkey -s 'M' '. cf  "$SCRIPTS"^M'
 bindkey -s 'o' '**	'
-bindkey -s 'j' 'gwts^M' # projects and work
 # tested, this shows stderr correctly on new terminal window
 
 # this is used for previous command

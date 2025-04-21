@@ -8,3 +8,4 @@ general/.config/copyq/*
 nvim/.config/nvim/lua/work.lua
 !general/.config/copyq/copyq.conf
 .DS_Store
+zsh/.config/zsh/.zsh_sessions/*
