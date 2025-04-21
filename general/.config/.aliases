@@ -12,6 +12,8 @@ alias srcz=". ~/.config/zsh/.zshrc"
 alias srcao=". ~/.config/zsh/.aliases"
 alias srca=". ~/.config/.aliases"
 
+alias da="deactivate"
+
 alias .s="nvim ~/.dotfiles/scripts/.local/share/scripts/"
 alias xin='xinput map-to-output $(xinput | grep -i "pen pen"| cut -d = -f 2 | cut -d [ -f 1) DP-1'
 alias r='ranger . 2>/dev/null; clear'

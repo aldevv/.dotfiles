@@ -14,7 +14,7 @@ local config = function()
       args = { "--mime-type", "-b", filepath },
       on_exit = function(j)
         local mime_type = vim.split(j:result()[1], "/")[1]
-        if mime_type == "text" then
+        if mime_type == "text" or mime_type == "application" then
           previewers.buffer_previewer_maker(filepath, bufnr, opts)
         else
           -- maybe we want to write something to the buffer here
