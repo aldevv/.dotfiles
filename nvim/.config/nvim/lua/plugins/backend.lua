@@ -64,4 +64,8 @@ return {
     branch = "2.x.x", -- recommended
     lazy = true,
   },
+  {
+    "hexdigest/go-enhanced-treesitter.nvim",
+    ft = "go",
+  },
 }
