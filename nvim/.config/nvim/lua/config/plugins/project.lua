@@ -1,3 +1,7 @@
+-- if you want to disable the plugin for a project
+-- add this .nvim.lua --> require("project_nvim").setup({manual_mode=true})
+
+
 require("project_nvim").setup({
   -- Manual mode doesn't automatically change your root directory, so you have
   -- the option to manually do so using `:ProjectRoot` command.
@@ -10,7 +14,7 @@ require("project_nvim").setup({
   detection_methods = { "lsp", "pattern" },
   -- All the patterns used to detect root dir, when **"pattern"** is in
   -- detection_methods
-  patterns = { ".projections.json", "go.mod", "Makefile", "package.json", "stack.yaml", ".git" },
+  patterns = { ".projections.json", "go.mod", "Makefile", "package.json", "stack.yaml", ".git", "pyproject.toml" },
   -- Table of lsp clients to ignore by name
   -- eg: { "efm", ... }
   ignore_lsp = { "null-ls", "terraformls", "tflint" },

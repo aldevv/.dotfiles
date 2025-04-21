@@ -102,8 +102,14 @@ map("n", "si", "<cmd>IndentBlanklineToggle<cr>", desc("Toggle indentlines"))
 map("n", "som", "set modifiable!", nor)
 map("n", "sow", "set wrap!", nor)
 map("n", "sos", "set wrapscan!", nor)
-map("n", "syf", ":let @+=expand('%:p')<cr>", descv("yank relative filepath"))
-map("n", "syF", ":let @+=expand('%:p')<cr>", descv("yank filepath"))
+
+map("n", "syf", function()
+  local path = vim.fn.expand("%:p")
+  local relative_path = vim.fn.fnamemodify(path, ":~:.")
+  vim.fn.setreg("+", relative_path)
+end, descv("yank relative filepath"))
+
+map("n", "syF", ":let @+=expand('%:p:')<cr>", descv("yank filepath"))
 map("n", "syp", ":let @+=execute('pwd')->split('\\n')[0]<cr>", descv("yank pwd")) -- doing the split because it removes the newline prefix
 
 -- 'cd' towards the directory in which the current file is edited
@@ -518,3 +524,5 @@ map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
 
 map("n", "<Del>", "<cmd>lua vim.diagnostic.goto_next()<cr>", nor)
 map("n", "<S-Del>", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
+
+map("n", "<leader><leader>x", "<cmd>luafile %<cr>", nor)

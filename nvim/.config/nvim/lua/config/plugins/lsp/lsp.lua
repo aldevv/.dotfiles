@@ -6,11 +6,11 @@ local servers = {
   "bashls",
   -- "pylyzer",
   -- "pylsp",
-  "pyright",
+  "ruff",
+  "basedpyright",
   "clangd",
   "html",
   "cssls",
-  -- "tsserver",
   "ts_ls",
   "svelte",
   "lua_ls",
@@ -27,6 +27,7 @@ local servers = {
   "emmet_ls",
   "terraformls",
 }
+
 
 if os.getenv("NVIM_MINIMAL") ~= nil then
   servers = {}
@@ -67,12 +68,12 @@ local handlers = {
       require("lspconfig")["hls"].setup(opts)
     end
   end,
-  ["lua_ls"] = function()
-    require("neodev").setup({})
-    local opts = get_lsp_opts()
-    enhance_server("lua_ls", opts)
-    require("lspconfig")["lua_ls"].setup(opts)
-  end,
+  -- ["lua_ls"] = function()
+  --   require("neodev").setup({})
+  --   local opts = get_lsp_opts()
+  --   enhance_server("lua_ls", opts)
+  --   require("lspconfig")["lua_ls"].setup(opts)
+  -- end,
 }
 
 -- set log level for lsp operations, probably what you want
