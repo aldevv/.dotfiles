@@ -173,11 +173,11 @@ nnoremap gñ :SyntaxQuery<CR>
 
 nnoremap <leader>.vS :%s/<c-r>=expand("<cword>")<cr>//gI<Left><Left><Left>
 " nnoremap <leader>.vs :%s///gI<Left><Left><Left><Left>
-nnoremap <leader>.vs :%s/
-vnoremap <leader>.vs :s///gI<Left><Left><Left><Left>
-nnoremap <leader>.vg :%g//norm!<Left><Left><Left><Left><Left><Left>
+nnoremap <leader>.vs :%s/\v
+vnoremap <leader>.vs :s/\v//gI<Left><Left><Left><Left>
+nnoremap <leader>.vg :%g/\v/norm!<Left><Left><Left><Left><Left><Left>
 nnoremap <leader>.vn :%norm!<space>
-vnoremap <leader>.vg :g//norm!<Left><Left><Left><Left><Left><Left>
+vnoremap <leader>.vg :g/\v/norm!<Left><Left><Left><Left><Left><Left>
 "-----------------------
 " save with no permission using w!!, could be cnoremap
 nnoremap <silent><leader>.ch  :w !sudo chmod +x %<cr>

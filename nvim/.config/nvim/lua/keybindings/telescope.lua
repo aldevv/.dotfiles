@@ -50,9 +50,9 @@ M.load_mappings = function()
 
   map("n", "<a-r>", function()
     if vim.bo.filetype ~= "netrw" then
-      require("telescope.builtin").live_grep({ cwd = vim.fn.expand("%:p:h"), hidden = true })
+      require("telescope.builtin").live_grep({ cwd = vim.fn.expand("%:p:h"), hidden = true, additional_args = { '--multiline' } })
     else
-      require("telescope.builtin").live_grep({ cwd = vim.b.netrw_curdir, hidden = true })
+      require("telescope.builtin").live_grep({ cwd = vim.b.netrw_curdir, hidden = true, additional_args = { '--multiline' } })
     end
   end, nor_s)
 

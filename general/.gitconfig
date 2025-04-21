@@ -1,6 +1,7 @@
 [user]
 	email = jbernalxyz@gmail.com
 	name = Alejandro Bernal
+	signingkey = D2EC9DB2C637B0432D756E59A73168DC8AB40D23
 [init]
 	defaultBranch = main
 [push]
