@@ -28,8 +28,8 @@ cmp.setup({
   },
   -- https://cmp.saghen.dev/configuration/keymap.html#commands
   keymap = {
-    ["<D-c>"] = { "show" },
-    ["<S-CR>"] = { "hide" },
+    ["<C-CR>"] = { "show" },
+    ["<C-S-CR>"] = { "hide" },
     -- ["<CR>"] = { "select_and_accept", "fallback" },
     ["<CR>"] = { "accept", "fallback" },
     -- ["<Tab>"] = { "select_next", "fallback" },
@@ -38,6 +38,16 @@ cmp.setup({
     ["<Up>"] = { "select_prev", "fallback" },
     ["<C-n>"] = { "select_next", "fallback" },
     ["<C-p>"] = { "select_prev", "fallback" },
+    -- ["<C-Space>"] = {
+    --   function()
+    --     -- if not cmp.is_menu_visible() then
+    --     --   return false
+    --     -- end
+    --     vim.schedule(function(opts)
+    --       require('blink.cmp.completion.list').show(opts)
+    --     end)
+    --     return true
+    --   end, "fallback" },
 
     ["<C-d>"] = { function()
       if not cmp.is_menu_visible() then return end

@@ -1,10 +1,17 @@
 #!/bin/bash
+
+print_exec() {
+  { printf ' %q' "$@"; echo; } >&2
+  "$@"
+}
 # programs
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
 alias vf="source _vf"
 alias vF="source _vF"
 alias vFa="source _vFa"
+alias grun="print_exec go run ./cmd/..."
+alias gup="print_exec go get -u ./..."
 alias wezterm='flatpak run org.wezfurlong.wezterm'
 
 alias irssi="irssi --home=~/.config/irssi --config=~/.config/irssi/config"
@@ -103,9 +110,6 @@ alias extract_install='. _extract_install'
 alias getlatest=". _getlatest"
 alias clone=". _clone"
 alias clone1=". _clone 1"
-
-# builtin
-alias c="cat"
 
 # git
 alias gt="git tag"

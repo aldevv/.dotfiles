@@ -295,7 +295,6 @@ alias \
 	lofiplay="mpv --no-video --shuffle 'https://www.youtube.com/watch?v=0te6noMKffA'" \
 	aniplayv='mpv --shuffle https://www.youtube.com/playlist\?list\=PLjNlQ2vXx1xbt30X8TcUfNzw_akVISXEu' \
 	apropos='apropos -e' \
-	bat='bat' \
 	b='bat' \
 	bb='bat --paging=always' \
 	bp='batpipe' \
