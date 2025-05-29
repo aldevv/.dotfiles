@@ -56,7 +56,8 @@ M.load_mappings = function() -- use these on_attach
   -- map("n", "+", "<cmd>Lspsaga hover_doc<cr>", nor)
 
   -- map("i", "<a-->", "<C-\\><C-O>:lua vim.lsp.buf.signature_help()<cr>", nor)
-  map("n", "<c-space>", ":lua vim.lsp.buf.completion()<cr>", nor)
+
+  map("n", "<C-Space>", ":lua vim.lsp.buf.completion()<cr>", nor)
   map("n", "<leader>ls", ":Telescope lsp_document_symbols<cr>", nor)
   map("n", "<leader>lS", ":Telescope lsp_workspace_symbols<cr>", nor)
 

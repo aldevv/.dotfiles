@@ -6,7 +6,7 @@
 # for a list of all available themes
 # bat --list-themes
 # --theme="OneHalfDark"
---theme="gruvbox-dark"
+# --theme="gruvbox-dark"
 
 
 # Show line numbers, Git modifications and file header (but no grid)
@@ -27,7 +27,7 @@
 # Uncomment the following line to disable automatic paging:
 # --paging=always
 # --paging=auto
---paging "never"
+--paging "auto"
 --color=auto
 
 # Uncomment the following line if you are using less version >= 551 and want to

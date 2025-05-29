@@ -187,13 +187,24 @@ bindkey -M menuselect 'n' vi-down-line-or-history
 bindkey -v '^?' backward-delete-char
 bindkey '^[.' insert-last-word
 
-bindkey -r  'lw' 
-bindkey -r  'lW' 
-bindkey -r  'la' 
+# cl", cl', cl`, dl", etc
+autoload -U select-quoted
+zle -N select-quoted
+for m in visual viopp; do
+        for c in {a,l}{\',\",\`}; do
+                bindkey -M $m $c select-quoted
+        done
+done
 
-bindkey -M viopp 'lw' select-in-word
-bindkey -M viopp 'lW' select-in-blank-word
-bindkey -M viopp 'la' select-in-shell-word
+# cl{, cl(, cl<, dl{, etc
+autoload -U select-bracketed
+zle -N select-bracketed
+for m in visual viopp; do
+        for c in {a,l}${(s..)^:-'()[]{}<>bB'}; do
+                bindkey -M "$m" "$c" select-bracketed
+        done
+done
+
 
 bindkey -M vicmd "v" visual-mode
 bindkey -M vicmd "" edit-command-line
@@ -203,7 +214,11 @@ bindkey '^H' backward-kill-word
 
 # in visual mode move right with i
 bindkey -M visual "i" vi-forward-char
-bindkey -M visual "l" vi-insert
+bindkey -M visual "lw" select-in-word
+bindkey -M visual "lW" select-in-blank-word
+bindkey -M visual "lj" select-in-shell-word
+bindkey -M visual "lJ" select-in-blank-shell-word
+bindkey -M visual "j" vi-forward-word-end
 
 
 # Compilation flags
