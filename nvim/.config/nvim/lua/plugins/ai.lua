@@ -68,4 +68,16 @@ return {
       },
     },
   },
+  -- {
+  --   "CopilotC-Nvim/CopilotChat.nvim",
+  --   version = "3.12.0",
+  --   -- enabled = false,
+  --   dependencies = {
+  --     { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
+  --     { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
+  --   },
+  --   build = "make tiktoken",        -- Only on MacOS or Linux
+  --   -- See Commands section for default commands if you want to lazy load on them
+  --   opts = {}
+  -- },
 }

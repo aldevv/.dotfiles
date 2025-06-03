@@ -8,8 +8,8 @@ return {
     "neovim/nvim-lspconfig",
     config = req("config.plugins.lsp.lsp"),
     dependencies = {
-      { "williamboman/mason.nvim", build = ":MasonUpdate" },
-      {"williamboman/mason-lspconfig.nvim", version="1.*"},
+      { "williamboman/mason.nvim",           version = "1.11.0" },
+      { "williamboman/mason-lspconfig.nvim", version = "1.*" },
       {
         'saghen/blink.cmp',
         dependencies = { 'rafamadriz/friendly-snippets',

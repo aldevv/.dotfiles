@@ -58,6 +58,8 @@ M.load_mappings = function()
 
   map("n", "<a-s-r>", function()
     local cwd = require("utils.lua.telescope").git_root_or_curdir_parent()
+    -- __AUTO_GENERATED_PRINT_VAR_START__
+    print([==[M.load_mappings#(anon) cwd:]==], vim.inspect(cwd)) -- __AUTO_GENERATED_PRINT_VAR_END__
     require("telescope.builtin").live_grep({ cwd = cwd, hidden = true, no_ignore = true, no_ignore_parent = true })
   end, nor_s)
 
