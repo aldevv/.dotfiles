@@ -157,7 +157,7 @@ alias toworktree=". _toworktree"
 alias gg='cd $(gitRoot)'
 
 # dotfiles
-alias dgp=". _dgp"
+alias dgp=". _dgp $DOTFILES"
 alias dgpa=". _dgpa"
 alias dgpd='. _dgp $DOTFILES'
 alias dgpw='. _dgp $WIKI'

@@ -50,51 +50,6 @@ return {
     end,
   },
   {
-    "github/copilot.vim",
-    enabled = true,
-    init = function()
-      vim.cmd([[
-        let g:copilot_no_tab_map = v:true
-        imap <silent><script><expr> <c-j> copilot#Accept("\<c-j>")
-      ]])
-      vim.g.copilot_filetypes = {
-        ["*"] = true,
-        ["txt"] = false,
-        ["md"] = false,
-        [""] = false,
-        -- ["docker-compose"] = true,
-        -- dockerfile = true,
-        -- json = true,
-        -- yaml = true,
-        -- sh = true,
-        -- lua = true,
-        -- go = true,
-        -- rust = true,
-        -- js = true,
-        -- ts = true,
-        -- jsx = true,
-        -- tsx = true,
-        -- python = true,
-      }
-    end,
-  },
-  {
-    "CopilotC-Nvim/CopilotChat.nvim",
-    -- enabled = false,
-    enabled = true,
-    branch = "canary",
-    dependencies = {
-      { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
-      { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
-    },
-    opts = {
-      debug = false, -- Enable debugging
-      -- See Configuration section for rest
-    },
-    cmd = { "CopilotChat", "CopilotChatExplain", "CopilotChatTests", "CopilotChatDocs" },
-    -- See Commands section for default commands if you want to lazy load on them
-  },
-  {
     "armyers/Vim-Jinja2-Syntax",
     ft = { "jinja.html", "jinja" },
   },
