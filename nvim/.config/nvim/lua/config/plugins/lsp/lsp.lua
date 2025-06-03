@@ -33,6 +33,7 @@ if os.getenv("NVIM_MINIMAL") ~= nil then
   servers = {}
 end
 
+vim.lsp.inlay_hint.enable = false
 local default_opts = require("config.plugins.lsp.defaults_opts")
 local get_lsp_opts = function()
   local opts = vim.deepcopy(default_opts)
@@ -40,7 +41,7 @@ local get_lsp_opts = function()
     capabilities = opts.capabilities,
     handlers = opts.handlers,
     on_attach = opts.on_attach,
-    inlay_hints = { enabled = false },
+    -- inlay_hints = { enabled = false },
   }
 end
 local lang_opts = require("config.plugins.lsp.lang_opts")

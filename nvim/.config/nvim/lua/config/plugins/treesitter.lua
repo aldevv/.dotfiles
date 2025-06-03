@@ -38,10 +38,10 @@ local ensure_installed = {
   "svelte",
   "requirements",
   "prisma",
-  "php",
-  "phpdoc",
-  "ocaml",
-  "ocaml_interface",
+  -- "php",
+  -- "phpdoc",
+  -- "ocaml",
+  -- "ocaml_interface",
   "ini",
   "http",
   "html",
@@ -51,7 +51,7 @@ local ensure_installed = {
   "git_rebase",
   "git_config",
   "csv",
-  "c_sharp",
+  -- "c_sharp",
   "angular",
 }
 if os.getenv("NVIM_MINIMAL") ~= nil then
