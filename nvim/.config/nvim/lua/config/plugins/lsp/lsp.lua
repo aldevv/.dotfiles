@@ -16,7 +16,6 @@ local servers = {
   "lua_ls",
   "vimls",
   "gopls",
-  "golangci-lint",
   "dockerls",
   "jsonls",
   "rust_analyzer",
