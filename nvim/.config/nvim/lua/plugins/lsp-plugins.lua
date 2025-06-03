@@ -9,7 +9,7 @@ return {
     config = req("config.plugins.lsp.lsp"),
     dependencies = {
       { "williamboman/mason.nvim", build = ":MasonUpdate" },
-      "williamboman/mason-lspconfig.nvim",
+      {"williamboman/mason-lspconfig.nvim", version="1.*"},
       {
         'saghen/blink.cmp',
         dependencies = { 'rafamadriz/friendly-snippets',

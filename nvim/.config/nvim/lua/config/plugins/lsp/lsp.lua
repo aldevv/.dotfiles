@@ -16,10 +16,11 @@ local servers = {
   "lua_ls",
   "vimls",
   "gopls",
+  "golangci-lint",
   "dockerls",
   "jsonls",
   "rust_analyzer",
-  "volar",
+  -- "volar",
   -- "eslint-lsp"
   -- "sqls",
   -- "hls@2.0.0.0", -- mason is not installing it correctly as of 10/06/23
@@ -97,6 +98,6 @@ require("mason-lspconfig").setup({
   ensure_installed = servers,
   --   - false: Servers are not automatically installed.
   --   - true: All servers set up via lspconfig are automatically installed.
-  automatic_installation = false,
+  automatic_enable = true,
   handlers = handlers,
 })
