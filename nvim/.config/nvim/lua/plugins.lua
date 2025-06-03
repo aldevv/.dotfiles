@@ -80,7 +80,8 @@ return {
   },
   {
     "CopilotC-Nvim/CopilotChat.nvim",
-    enabled = false,
+    -- enabled = false,
+    enabled = true,
     branch = "canary",
     dependencies = {
       { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
@@ -92,6 +93,10 @@ return {
     },
     cmd = { "CopilotChat", "CopilotChatExplain", "CopilotChatTests", "CopilotChatDocs" },
     -- See Commands section for default commands if you want to lazy load on them
+  },
+  {
+    "armyers/Vim-Jinja2-Syntax",
+    ft = { "jinja.html", "jinja" },
   },
 
   -- sets comments according to filetype, not treesitter, helps for custom buffers with a set

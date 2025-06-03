@@ -37,7 +37,7 @@ load_direnv() {
 load_direnv
 
 load_pyenv() {
-  if [[ ! -f .python-version ]] || ! command -v pyenv &>/dev/null; then
+  if [[ ! -f .python-version ]] || ! command -v pyenv &>/dev/null || ! command -v virtualenv-init &>/dev/null; then
     return
   fi
   eval "$(pyenv init -)"

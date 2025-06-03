@@ -36,6 +36,9 @@ alias pom3="pomo start 3h"
 alias dkrit="docker run -it"
 alias dkritr="docker run -it --rm"
 
+alias mkc="make -C"
+alias mkcd="make -C docker"
+
 # programs
 alias srcdirenv='eval "$(direnv hook zsh)"'
 alias srcenv='. _srcenv'

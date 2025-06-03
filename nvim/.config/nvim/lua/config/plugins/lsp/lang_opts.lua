@@ -148,7 +148,9 @@ local enhance_server_opts = {
           autoSearchPaths = true,
           useLibraryCodeForTypes = true,
           -- diagnosticMode = "workspace", -- slower but analyzes and auto completes for whole workspace
-          typeCheckingMode = "basic", -- standard, strict, all, off, basic
+          diagnosticMode = "openFilesOnly", -- faster
+          -- typeCheckingMode = "basic",       -- standard, strict, all, off, basic
+          typeCheckingMode = "standard",    -- standard, strict, all, off, basic
         },
       },
       python = {

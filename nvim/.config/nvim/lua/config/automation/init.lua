@@ -138,3 +138,8 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
     vim.api.nvim_set_hl(0, '@lsp.type.parameter.python', {})
   end,
 })
+
+vim.api.nvim_create_autocmd({ "BufEnter" }, {
+  pattern = "*.ddl",
+  command = "setlocal filetype=sql",
+})
