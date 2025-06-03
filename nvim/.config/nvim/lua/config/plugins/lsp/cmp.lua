@@ -367,12 +367,12 @@ cmp.setup.cmdline(":", {
 -- })
 
 -- / search
-cmp.setup.cmdline("/", {
-  mapping = cmp.mapping.preset.cmdline(),
-  sources = {
-    { name = "buffer" },
-  },
-})
+-- cmp.setup.cmdline("/", {
+--   mapping = cmp.mapping.preset.cmdline(),
+--   sources = {
+--     { name = "buffer" },
+--   },
+-- })
 
 require("cmp_git").setup({
   filetypes = { "gitcommit", "octo" },

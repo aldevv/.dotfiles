@@ -1,14 +1,21 @@
 local cmp = require('blink.cmp')
 
 
--- https://cmp.saghen.dev/configuration/sources.html
+-- https://cmp.saghen.dev/configuration/general.html
 cmp.setup({
+  fuzzy = { implementation = "prefer_rust_with_warning" },
+  cmdline = {
+    completion = {
+      menu = {
+        auto_show = true
+      }
+    }
+  },
   sources = {
     -- default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer' },
-    default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer' },
+    default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer', "codecompanion" },
     providers = {
       buffer = {
-
         min_keyword_length = 5,
       },
       lazydev = {
@@ -58,7 +65,6 @@ cmp.setup({
     use_nvim_cmp_as_default = true,
     nerd_font_variant = 'mono'
   },
-  fuzzy = { implementation = "prefer_rust_with_warning" },
   completion = {
     -- https://cmp.saghen.dev/configuration/reference#completion-list
     list = {
