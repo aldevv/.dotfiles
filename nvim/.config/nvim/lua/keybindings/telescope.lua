@@ -58,7 +58,7 @@ M.load_mappings = function()
 
   map("n", "<a-s-r>", function()
     local cwd = require("utils.lua.telescope").git_root_or_curdir_parent()
-    require("telescope.builtin").live_grep({ cwd = cwd, hidden = true })
+    require("telescope.builtin").live_grep({ cwd = cwd, hidden = true, no_ignore = true, no_ignore_parent = true })
   end, nor_s)
 
   map(

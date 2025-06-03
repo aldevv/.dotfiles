@@ -35,6 +35,21 @@ return {
       { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
       { "nvim-lua/plenary.nvim" },
       { "saghen/blink.cmp" },
+      -- optional
+      -- https://codecompanion.olimorris.dev/installation.html#img-clip-nvim
+      -- use :PasteImage
+      {
+        "HakonHarnes/img-clip.nvim",
+        opts = {
+          filetypes = {
+            codecompanion = {
+              prompt_for_file_name = false,
+              template = "[Image]($FILE_PATH)",
+              use_absolute_path = true,
+            },
+          },
+        },
+      },
     },
     opts = {
       strategies = {

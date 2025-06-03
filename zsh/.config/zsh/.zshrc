@@ -236,7 +236,7 @@ doge() {
 # control
 bindkey -s "^n" "stn^M"
 
-bindkey -s '^j' 'gwts^M' # projects and work
+bindkey -s 'j' 'gwts^M' # projects and work
 # alt
 bindkey -s 'w' 'nw^M' # wiki
 bindkey -s 'N' '$UTILITIES/grep/lgnotes^M' # projects and work
