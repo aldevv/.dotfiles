@@ -311,9 +311,7 @@ alias \
 	fla='qmk flash' \
 	stn='setsid st >/dev/null 2>&1 & disown' \
 	mk='make' \
-	mkc='make clean' \
 	mk='make' \
-	mkc='make clean' \
 	mki='make install' \
 	mka='make && sudo make install' \
 	smk='sudo make' \

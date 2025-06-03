@@ -17,6 +17,14 @@ local opts = {
     use_console = "async",
   },
   on_attach = function(nlient, bufnr) end,
+  should_attach = function(bufnr)
+    local filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
+    -- use the ruff lsp server for python
+    if filetype == "python" then
+      return false
+    end
+    return true
+  end,
 }
 
 local ensure_format_servers = {
