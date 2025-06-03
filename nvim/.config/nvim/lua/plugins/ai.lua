@@ -38,11 +38,18 @@ return {
     },
     opts = {
       strategies = {
-        chat = { adapter = "copilot" },
+        -- https://codecompanion.olimorris.dev/configuration/adapters.html
+        -- https://docs.github.com/en/copilot/using-github-copilot/ai-models/changing-the-ai-model-for-copilot-chat
+        -- choose: https://docs.github.com/en/copilot/using-github-copilot/ai-models/choosing-the-right-ai-model-for-your-task
+
+        -- cost: https://docs.github.com/en/copilot/managing-copilot/monitoring-usage-and-entitlements/about-premium-requests
+        -- you can set the model with model = "claude-sonnet-4-20250514" or similar
+        chat = { adapter = "copilot", },
+
         inline = { adapter = "copilot" },
       },
       opts = {
-        log_level = "DEBUG",
+        log_level = "INFO",
       },
     },
   },
