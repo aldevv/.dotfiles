@@ -236,7 +236,7 @@ doge() {
 # control
 bindkey -s "^n" "stn^M"
 
-bindkey -s 'j' 'gwts^M' # projects and work
+bindkey -s "^z" "gwts^M"
 # alt
 bindkey -s 'w' 'nw^M' # wiki
 bindkey -s 'N' '$UTILITIES/grep/lgnotes^M' # projects and work
@@ -251,7 +251,6 @@ bindkey -s 'g' '$UTILITIES/tmux/nf ~/repos 3^M' # projects and work
 # bindkey -s 'p' 'vf ^M'
 bindkey -s '^p' 'vf ^M'
 bindkey -s '^z' 'vF ^M' # for folders
-bindkey -s 'z' 'vFa ^M' # for folders
 bindkey -s '^g' 'vfg ^M'
 bindkey -s 'D' 'vf $HOME/.config ^M'
 # bindkey -s 'z' 'vf  "$LEARN"^M'
