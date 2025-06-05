@@ -13,7 +13,6 @@ return {
       {
         'saghen/blink.cmp',
         dependencies = { 'rafamadriz/friendly-snippets',
-          "saadparwaiz1/cmp_luasnip",
           "onsails/lspkind-nvim",
           "folke/lazydev.nvim",
         },
@@ -68,7 +67,6 @@ return {
     config = req("config.plugins.lsp.lsp-signature"),
     dependencies = {
       "neovim/nvim-lspconfig",
-      "hrsh7th/nvim-cmp",
     },
   },
 }
