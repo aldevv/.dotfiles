@@ -87,10 +87,10 @@ vim.keymap.set(
   { desc = "Sourcegraph search" }
 )
 
-vim.keymap.set("i", "<m-\\>", "<Plug>(copilot-suggest)", nor) -- no need to enable copilot with this
-vim.keymap.set("i", "<a-}>", "<Plug>(copilot-next)", nor)
-vim.keymap.set("i", "<a-{>", "<Plug>(copilot-previous)", nor)
-vim.keymap.set("i", "<c-}>", "<Plug>(copilot-dismiss)", nor)
+-- vim.keymap.set("i", "<m-\\>", "<Plug>(copilot-suggest)", nor) -- no need to enable copilot with this
+-- vim.keymap.set("i", "<a-}>", "<Plug>(copilot-next)", nor)
+-- vim.keymap.set("i", "<a-{>", "<Plug>(copilot-previous)", nor)
+-- vim.keymap.set("i", "<c-}>", "<Plug>(copilot-dismiss)", nor)
 
 vim.keymap.set("v", "Scc", ":CopilotChat<cr>", nor)
 vim.keymap.set("v", "Sc<space>", ":CopilotChat", nor)
