@@ -5,10 +5,13 @@ local cmp = require('blink.cmp')
 cmp.setup({
   fuzzy = { implementation = "prefer_rust_with_warning" },
   cmdline = {
+    keymap = {
+      ['<CR>'] = { 'accept_and_enter', 'fallback' },
+    },
     completion = {
       menu = {
-        auto_show = true
-      }
+        auto_show = true,
+      },
     }
   },
   sources = {
