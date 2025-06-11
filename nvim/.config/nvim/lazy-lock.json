@@ -5,6 +5,7 @@
   "LuaSnip": { "branch": "master", "commit": "118263867197a111717b5f13d954cd1ab8124387" },
   "Vim-Jinja2-Syntax": { "branch": "master", "commit": "10120ee298fbbd13ec59e682a15d5caf7bfd8308" },
   "blink.cmp": { "branch": "main", "commit": "022521a8910a5543b0251b21c9e1a1e989745796" },
+  "codecompanion-history.nvim": { "branch": "main", "commit": "ceb02d2edb93264d1b4ce3e711707600d96b7d84" },
   "codecompanion.nvim": { "branch": "main", "commit": "9e4d4edd892a0e2ba0a2d874d5dfcfdc6575d08b" },
   "color-picker.nvim": { "branch": "master", "commit": "06cb5f853535dea529a523e9a0e8884cdf9eba4d" },
   "copilot.lua": { "branch": "master", "commit": "c1bb86abbed1a52a11ab3944ef00c8410520543d" },

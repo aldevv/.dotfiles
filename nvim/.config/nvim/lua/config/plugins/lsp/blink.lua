@@ -6,7 +6,7 @@ cmp.setup({
   fuzzy = { implementation = "prefer_rust_with_warning" },
   cmdline = {
     keymap = {
-      ['<CR>'] = { 'accept_and_enter', 'fallback' },
+      -- ['<CR>'] = { 'accept_and_enter', 'fallback' },
     },
     completion = {
       menu = {
