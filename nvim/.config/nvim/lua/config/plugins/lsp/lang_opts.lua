@@ -150,7 +150,8 @@ local enhance_server_opts = {
           -- diagnosticMode = "workspace", -- slower but analyzes and auto completes for whole workspace
           diagnosticMode = "openFilesOnly", -- faster
           -- typeCheckingMode = "basic",       -- standard, strict, all, off, basic
-          typeCheckingMode = "standard",    -- standard, strict, all, off, basic
+          -- typeCheckingMode = "standard",       -- standard, strict, all, off, basic
+          typeCheckingMode = "recommended", -- standard, strict, all, off, basic, recommended
         },
       },
       python = {
