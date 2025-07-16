@@ -131,16 +131,16 @@ return {
             -- Number of days after which chats are automatically deleted (0 to disable)
             expiration_days = 0,
             -- Picker interface (auto resolved to a valid picker)
-            picker = "telescope",     --- ("telescope", "snacks", "fzf-lua", or "default")
+            picker = "telescope", --- ("telescope", "snacks", "fzf-lua", or "default")
             ---Automatically generate titles for new chats
             auto_generate_title = true,
             title_generation_opts = {
               ---Adapter for generating titles (defaults to current chat adapter)
-              adapter = nil,                     -- "copilot"
+              adapter = nil,               -- "copilot"
               ---Model for generating titles (defaults to current chat model)
-              model = nil,                       -- "gpt-4o"
+              model = nil,                 -- "gpt-4o"
               ---Number of user prompts after which to refresh the title (0 to disable)
-              refresh_every_n_prompts = 0,       -- e.g., 3 to refresh after every 3rd user prompt
+              refresh_every_n_prompts = 0, -- e.g., 3 to refresh after every 3rd user prompt
               ---Maximum number of times to refresh the title (default: 3)
               max_refreshes = 3,
             },
@@ -162,7 +162,7 @@ return {
     dependencies = {
       "nvim-lua/plenary.nvim",
     },
-    build = "npm install -g mcp-hub@latest", -- Installs `mcp-hub` node binary globally
+    build = "npm install -g mcp-hub@4.1.0", -- Installs `mcp-hub` node binary globally
     config = function()
       require("mcphub").setup()
     end
