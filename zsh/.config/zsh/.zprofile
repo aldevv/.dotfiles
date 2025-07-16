@@ -44,7 +44,6 @@ export TRASH="$HOME/.local/share/Trash/files"
 export PASSWORD_STORE_DIR="$HOME/.local/share/.pass"
 export SECRETS_EXTENSION=".scr"
 export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
-export NVIM_LISTEN_ADDRESS=/tmp/nvimsocket
 export NIXPKGS_ALLOW_UNFREE=1
 
 export CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com/:$PROJECTS"
