@@ -1,18 +1,51 @@
 local cmp = require('blink.cmp')
 
+pcall(vim.keymap.del, { 'c', 'i', 's' }, '<Tab>', { buffer = 0 })
+pcall(vim.keymap.del, { 'c', 'i', 's' }, '<S-Tab>', { buffer = 0 })
 
 -- https://cmp.saghen.dev/configuration/general.html
 cmp.setup({
   fuzzy = { implementation = "prefer_rust_with_warning" },
   cmdline = {
+    sources = { 'buffer', 'cmdline', },
     keymap = {
-      -- ['<CR>'] = { 'accept_and_enter', 'fallback' },
+      -- preset = "none",
+      ['<CR>'] = { 'accept_and_enter', 'fallback' },
+      ['<C-n>'] = { 'show_and_insert', 'select_next', 'fallback' },
+      ['<C-p>'] = { 'show_and_insert', 'select_prev', 'fallback' },
+
+      -- ['<Tab>'] = { 'show_and_insert', 'select_next', 'fallback' },
+      -- ['<S-Tab>'] = { 'show_and_insert', 'select_prev', 'fallback' },
+
+      ['<C-Space>'] = { 'show', 'fallback' },
+      ['<C-S-CR>'] = { 'hide', 'fallback' },
     },
+
     completion = {
-      menu = {
-        auto_show = true,
+      trigger = {
+        show_on_blocked_trigger_characters = {},
+        show_on_x_blocked_trigger_characters = {},
       },
+      list = {
+        selection = {
+          -- When `true`, will automatically select the first item in the completion list
+          preselect = true,
+          -- When `true`, inserts the completion item automatically when selecting it
+          auto_insert = true,
+        },
+      },
+      -- Whether to automatically show the window when new completion items are available
+      -- Default is false for cmdline, true for cmdwin (command-line window)
+      menu = { auto_show = function(ctx, _) return ctx.mode == 'cmdwin' end },
+      -- Displays a preview of the selected item on the current line
+      ghost_text = { enabled = true },
     }
+    -- completion = {
+    --   ghost_text = { enabled = true },
+    --   menu = {
+    --     auto_show = true,
+    --   },
+    -- }
   },
   sources = {
     -- default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer' },
@@ -197,3 +230,5 @@ cmp.setup({
   }
 
 })
+-- __AUTO_GENERATED_PRINT_VAR_START__
+print([==[ show_and_insert:]==], vim.inspect(show_and_insert)) -- __AUTO_GENERATED_PRINT_VAR_END__
