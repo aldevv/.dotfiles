@@ -18,7 +18,7 @@ end
 
 local map = vim.keymap.set
 
-map({ "n", "v" }, "<C-a>", "<cmd>CodeCompanionActions<cr>", nor_s)
+map({ "n", "v" }, "gA", "<cmd>CodeCompanionActions<cr>", nor_s)
 map({ "n", "v" }, "Sa", "<cmd>CodeCompanionChat Toggle<cr>", nor_s)
 map("v", "ga", "<cmd>CodeCompanionChat Add<cr>", nor_s)
 
