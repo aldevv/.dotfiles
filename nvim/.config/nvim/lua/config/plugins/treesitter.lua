@@ -6,9 +6,9 @@ local ensure_installed = {
   "vimdoc",
   "bash",
   "python",
-  "c",
+  -- "c",
   "css",
-  "cpp",
+  -- "cpp",
   "rust",
   "javascript",
   "typescript",
@@ -26,7 +26,7 @@ local ensure_installed = {
   "markdown_inline",
   "yaml",
   "http",
-  "nix",
+  -- "nix",
   "zig",
   "jsdoc",
   "lua",
@@ -37,7 +37,7 @@ local ensure_installed = {
   "sxhkdrc",
   "svelte",
   "requirements",
-  "prisma",
+  -- "prisma",
   -- "php",
   -- "phpdoc",
   -- "ocaml",
@@ -52,7 +52,7 @@ local ensure_installed = {
   "git_config",
   "csv",
   -- "c_sharp",
-  "angular",
+  -- "angular",
 }
 if os.getenv("NVIM_MINIMAL") ~= nil then
   ensure_installed = {}

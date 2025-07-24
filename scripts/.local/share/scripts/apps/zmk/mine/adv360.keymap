@@ -67,7 +67,7 @@
     default {
       bindings = <
         &none             &kp LG(N1)     &kp LG(N2) &kp LG(N3) &kp LG(N4) &kp LG(N5) &tog colemak_emu                                                                                  &tog mac &kp LG(N6) &kp LG(N7) &kp LG(N8) &kp LG(N9) &kp LG(N0)   &kp C_MUTE
-        &kp TAB           &kp LC_Q       &kp LC_W   &kp LC_F   &kp LC_P   &kp LC_G   &bootloader                                                                                       &none    &kp LC_J   &kp LC_L   &kp LC_U   &kp LC_Y   &kp LC_NTIL  &kp LC_ACU 
+        &kp TAB           &kp LC_Q       &kp LC_W   &kp LC_F   &kp LC_P   &kp LC_G   &none                                                                                             &none    &kp LC_J   &kp LC_L   &kp LC_U   &kp LC_Y   &kp LC_NTIL  &kp LC_ACU 
         &kp ESC           &kp LC_A       &kp LC_R   &kp LC_S   &kp LC_T   &kp LC_D   &none                        &lt raise F5 &kp LS(LALT) &mt RALT F11  &mt RCTRL F12                &none    &kp LC_H   &kp LC_N   &kp LC_E   &kp LC_I   &kp LC_O     &kp LC_SQT
         &mt LSHFT LC_LBRC &kp LC_Z       &kp LC_X   &kp LC_C   &kp LC_V   &kp LC_B                                             &kp HOME     &kp PG_UP                                           &kp LC_K   &kp LC_M   &kp COMMA  &kp DOT    &kp LC_MINUS &mt RSHFT LC_RBRC
         &mo adjust        &kp LC_PIPE    &kp CAPS   &kp LEFT   &kp RIGHT                          &mt LCTRL BSPC &mt LALT DEL  &kp END      &kp PG_DN &mt LGUI ENTER &lt lower SPACE                       &kp UP     &kp DOWN   &none      &kp LC_PLUS  &mo adjust
@@ -85,7 +85,7 @@
     colemak_emu {
       bindings = <
         &none          &trans   &trans &trans &trans &trans &trans                                                         &trans   &trans &trans &trans    &trans  &trans     &trans
-        &trans         &kp Q    &kp W  &kp F  &kp P  &kp G  &bootloader                                                    &none    &kp J  &kp L  &kp U     &kp Y   &kp COLON  &kp LBRC
+        &trans         &kp Q    &kp W  &kp F  &kp P  &kp G  &none                                                          &none    &kp J  &kp L  &kp U     &kp Y   &kp COLON  &kp LBRC
         &trans         &kp A    &kp R  &kp S  &kp T  &kp D  &none                        &trans &trans &trans  &trans      &none    &kp H  &kp N  &kp E     &kp I   &kp O      &kp QUOT
         &mt LSHFT LBRC &kp Z    &kp X  &kp C  &kp V  &kp B                                      &trans &trans                       &kp K  &kp M  &kp COMMA &kp DOT &kp MINUS  &mt RSHFT RBRC
         &trans         &kp PIPE &trans &trans &trans                          &trans &trans &trans  &trans &trans &trans                   &trans &trans    &trans  &kp PLUS   &trans
@@ -94,7 +94,7 @@
     lower {
       bindings = <
         &trans &trans     &trans     &trans     &trans       &trans     &trans                                                              &trans &trans      &trans      &trans     &trans     &trans      &trans
-        &trans &kp LS(N1) &kp LS(N2) &kp LS(N3) &kp LS(N4)   &kp LS(N5) &none                                                               &none  &kp LS(N6)  &kp LS(N7)  &kp LS(N8) &kp LS(N9) &kp LS(N0)  &kp LC_GRAVE
+        &trans &kp LS(N1) &kp LS(N2) &kp LS(N3) &kp LS(N4)   &kp LS(N5) &bootloader                                                         &none  &kp LS(N6)  &kp LS(N7)  &kp LS(N8) &kp LS(N9) &kp LS(N0)  &kp LC_GRAVE
         &trans &kp N1     &kp N2     &kp N3     &kp N4       &kp N5     &none               &trans &trans &trans &trans                     &none  &kp N6      &kp N7      &kp N8     &kp N9     &kp N0      &kp LC_IQUE
         &trans &kp LC_LT  &kp LC_AT  &kp LC_GT  &kp LC_CARET &trans                                &trans &trans                                   &kp LC_BSLH &kp LC_PIPE &trans     &trans     &kp LC_PLUS &trans
         &trans &trans     &trans     &trans     &trans                           &kp LC(BSPC) &kp LC(DEL) &trans &trans &trans &trans                          &trans      &trans     &trans     &trans      &trans

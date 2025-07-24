@@ -53,12 +53,15 @@ alias srcdirenv='eval "$(direnv hook zsh)"'
 alias srcenv='. _srcenv'
 alias addpath='. _addpath'
 alias G="lazygit"
+alias claudeui="nix run github:k3d3/claude-desktop-linux-flake --impure "
 
 alias getgi="git forgit ignore" # create git ignore 
 alias qmkr="cd $HOME/qmk_firmware && make lily58:mine && make lily58:mine:flash; cd -"
-alias zmkr="cd $HOME/adv360/ && make; printf 'enter bootloader mode...' ;read ans; cp firmware/*left* /Volumes/ADV360PRO/; cd - "
+
+alias zmkr=" cd $HOME/adv360/ && make; printf 'enter bootloader mode...' ;read ans; cp firmware/*left* /Volumes/ADV360PRO/; cd - "
+alias zmkR=" cp $SCRIPTS/apps/zmk/mine/adv360.keymap $HOME/adv360/config; cd $HOME/adv360/ && make; printf 'enter bootloader mode...' ;sleep 5 ; sudo mount /dev/sda /mnt; sudo cp firmware/*left* /mnt; cd -; sudo umount /mnt"
+
 alias zmkcp="cd $HOME/adv360/ && cp firmware/*left* /Volumes/ADV360PRO/; cd -"
-alias zmkR="cd $HOME/adv360/ && make; printf 'enter bootloader mode...' ;sleep 5 ; sudo mount /dev/sda /mnt; sudo cp firmware/*left* /mnt; cd -; sudo umount /mnt"
 alias zmkcP="cd $HOME/adv360/ && cp firmware/*left* /media/kanon/ADV360PRO ; cd -"
 
 

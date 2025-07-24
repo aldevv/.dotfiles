@@ -2,7 +2,7 @@ return {
 
   {
     "ray-x/go.nvim",
-    -- commit = "a8095eb334495caec3099b717cc7f5b1fbc3e628",
+    commit = "a3455f48cff718a86275115523dcc735535a13aa",
     dependencies = { -- optional packages
       "ray-x/guihua.lua",
       "neovim/nvim-lspconfig",
