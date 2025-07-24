@@ -250,7 +250,6 @@ bindkey -s 'I' '$UTILITIES/tmux/ant ideas^M' # notes
 bindkey -s 'g' '$UTILITIES/tmux/nf ~/repos 3^M' # projects and work
 # bindkey -s 'p' 'vf ^M'
 bindkey -s '^p' 'vf ^M'
-bindkey -s '^z' 'vF ^M' # for folders
 bindkey -s '^g' 'vfg ^M'
 bindkey -s 'D' 'vf $HOME/.config ^M'
 # bindkey -s 'z' 'vf  "$LEARN"^M'
@@ -329,7 +328,7 @@ setopt EXTENDED_HISTORY
 setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
 setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
 export HISTFILE="$HOME/.cache/zsh/.zsh_history"
-export HISTSIZE=500000
+export HISTSIZE=50000
 export SAVEHIST=$HISTSIZE
 setopt appendhistory
 setopt INC_APPEND_HISTORY  

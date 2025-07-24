@@ -49,6 +49,7 @@ return {
       filetypes = {
         [""] = false,
         text = false,
+        markdown = true,
       },
     },
   },
