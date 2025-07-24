@@ -230,5 +230,3 @@ cmp.setup({
   }
 
 })
--- __AUTO_GENERATED_PRINT_VAR_START__
-print([==[ show_and_insert:]==], vim.inspect(show_and_insert)) -- __AUTO_GENERATED_PRINT_VAR_END__
