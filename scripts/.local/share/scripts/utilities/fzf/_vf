@@ -2,7 +2,7 @@
 
 # show only text files
 
-FZF_DEFAULT_COMMAND="fd --follow  --hidden"
+FZF_DEFAULT_COMMAND="fd --follow  --hidden -t f"
 cmd="fzf --bind 'tab:reload(fd -uuu --follow --hidden)' --preview 'if file {} | grep -i -q 'directory'; then ls --color {}; else if file {} | grep -i -q 'text'; then bat --color always {}; else echo \"{} is a binary file\"; fi; fi'"
 name="$(eval $cmd)"
 if [[ -z $name ]]; then 
