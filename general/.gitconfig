@@ -24,3 +24,5 @@
 	enabled = true
 [includeIf "gitdir:~/work/"]
     path = ~/work/.gitconfig
+[url "git@github.com:"]
+	insteadOf = https://github.com/
