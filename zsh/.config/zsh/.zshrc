@@ -326,7 +326,7 @@ export LESSKEYIN="$HOME/.config/colemak-less"
 
 export HISTSIZE=50000
 export SAVEHIST=50000
-export HISTFILE="$HOME/.cache/zsh/.zsh_history"
+export HISTFILE="$HOME/.config/zsh/.zsh_history"
 setopt EXTENDED_HISTORY # add timestamp to history file entries
 setopt SHARE_HISTORY # Share history between multiple interactive shells
 setopt HIST_IGNORE_ALL_DUPS # Delete old recorded entry if new entry is a duplicate.
