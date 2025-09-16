@@ -16,6 +16,7 @@ keybinding:
     nextMatch: k
     prevMatch: K
     ignoreFile: l
+    new: "k"
     edit: j
     refresh: R
   branches:
