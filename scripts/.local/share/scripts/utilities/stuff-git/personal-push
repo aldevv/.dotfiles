@@ -4,19 +4,18 @@
 dgp_func() {
     local path="$1"
 
+    clear
     pushd "$path" &>/dev/null || return 1
-
-    # Pull latest changes first
-    git pull origin HEAD &>/dev/null
+    echo -e "\e[35mIN $(basename "$path" | tr a-z A-Z)"
 
     changes=$(git status -s)
     if [ -z "$(tr -d '\n' <<< "$changes")" ]; then
+        clear
         printf "\e[31mno changes for $(basename "$path")\n"
         popd &>/dev/null || return 1
         return 1
     fi
 
-    printf "\e[35mIN $(basename "$path" | tr a-z A-Z)\n"
     git status -s
 
     printf "\nmessage: \n"

@@ -7,8 +7,6 @@ dgp_func() {
 
     pushd "$path" &>/dev/null || return 1
 
-    # Pull latest changes first
-    git pull origin HEAD &>/dev/null
 
     changes=$(git status -s)
     if [ -z "$(tr -d '\n' <<< "$changes")" ]; then
@@ -31,6 +29,9 @@ dgp_func() {
     git push origin HEAD
     popd &>/dev/null || return
 }
+
+# Pull latest changes first
+git pull origin HEAD &>/dev/null
 
 sleep 0.001
 
