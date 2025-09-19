@@ -31,6 +31,7 @@
 - **Auto-suspend**: Managed via systemd service `xautolock@kanon.service`
 - **Stow**: Use `cd ~/.dotfiles && stow <folder>` to manage symlinks
 - **Shortcuts**: File shortcuts in `~/.config/shortcuts/sf`, dir shortcuts in `sd`
+- **Personal Push**: `personal-push-all` or `dgpA` - pushes changes from main folders (notes|wiki|dotfiles|ansible)
 
 ## Work Environment
 - **Work Directory**: `$WORK` - Work-related projects
@@ -43,3 +44,4 @@
 - Prefers systemd services over autostart desktop files
 - System uses `xautolock` (not systemd-logind) for user-input-only idle detection
 - **IMPORTANT**: Do not touch work-related files/directories unless explicitly requested
+- **Auto-push**: Run `personal-push-all` after updating personal files (no secrets/sensitive data)
