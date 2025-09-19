@@ -38,6 +38,9 @@ dgp_func() {
     popd &>/dev/null || return
 }
 
+# Pull latest changes first
+git pull origin HEAD &>/dev/null
+
 sleep 0.001
 
 # Run for each directory
