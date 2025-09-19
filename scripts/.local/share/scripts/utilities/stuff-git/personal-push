@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Function to handle git operations for a directory
+# Function to handle git operations for a directory with prompts
 dgp_func() {
     local path="$1"
-    local message="$2"
 
     pushd "$path" &>/dev/null || return 1
 
@@ -20,11 +19,19 @@ dgp_func() {
     printf "\e[35mIN $(basename "$path" | tr a-z A-Z)\n"
     git status -s
 
+    printf "\nmessage: \n"
+    read -r message
+
     git add -u
 
-    # Add untracked files automatically
+    # If there are untracked files, ask to add them
     if [[ -n "$(git ls-files --other --directory --exclude-standard | head -n 1)" ]]; then
-        git add -A
+        echo -e "\nadd untracked files? [y/N]"
+        read -r untracked
+
+        if [[ "$untracked" == "y" || "$untracked" == "Y" ]]; then
+            git add -A
+        fi
     fi
 
     git commit -m "$message"
@@ -35,10 +42,10 @@ dgp_func() {
 sleep 0.001
 
 # Run for each directory
-dgp_func "$NOTES" "auto update" || f_notes=1
-dgp_func "$WIKI" "auto update" || f_wiki=1
-dgp_func "$DOTFILES" "auto update" || f_dotfiles=1
-dgp_func ~/.local/share/ansible "auto update" || f_ansible=1
+dgp_func "$NOTES" || f_notes=1
+dgp_func "$WIKI" || f_wiki=1
+dgp_func "$DOTFILES" || f_dotfiles=1
+dgp_func ~/.local/share/ansible || f_ansible=1
 
 clear
 echo -e -n "\e[0m"
