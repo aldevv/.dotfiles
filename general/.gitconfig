@@ -26,3 +26,5 @@
     path = ~/work/.gitconfig
 [url "git@github.com:"]
 	insteadOf = https://github.com/
+[coderabbit]
+	machineId = cli/22da2d084a274380aed86ac0b070356c
