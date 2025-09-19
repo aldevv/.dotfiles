@@ -324,24 +324,14 @@ export LESSKEYIN="$HOME/.config/colemak-less"
 
 # put settings here, since oh-my-zsh sets it's own settings
 
-setopt EXTENDED_HISTORY
-setopt INC_APPEND_HISTORY_TIME  # Write to the history file immediately, not when the shell exits.
-setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
-export HISTFILE="$HOME/.cache/zsh/.zsh_history"
 export HISTSIZE=50000
-export SAVEHIST=$HISTSIZE
-setopt appendhistory
-setopt INC_APPEND_HISTORY  
-setopt SHARE_HISTORY
+export SAVEHIST=50000
+export HISTFILE="$HOME/.config/.zsh_history"
+setopt EXTENDED_HISTORY # add timestamp to history file entries
+setopt SHARE_HISTORY # Share history between multiple interactive shells
+setopt HIST_IGNORE_ALL_DUPS # Delete old recorded entry if new entry is a duplicate.
+setopt HIST_FCNTL_LOCK # Helps prevent corruption when multiple shells write to history
 
-#
-# End profiling (uncomment when necessary)
-#
-
-# Per-command profiling:
-
-# unsetopt xtrace
-# exec 2>&3 3>&-
 
 if command -v aws_completer &>/dev/null; then
     autoload bashcompinit && bashcompinit

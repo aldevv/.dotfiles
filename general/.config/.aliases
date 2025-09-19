@@ -167,10 +167,12 @@ alias gg='cd $(gitRoot)'
 
 # dotfiles
 alias dgp=". _dgp $DOTFILES"
-alias dgpa=". _dgpa"
+alias dgpa="personal-push"
 alias dgpd='. _dgp $DOTFILES'
 alias dgpw='. _dgp $WIKI'
 alias dgpn='. _dgp $NOTES'
+alias personal-push-all-old=". _personal-push-all-old"
+alias dgpA="personal-push-all"
 
 # development
 alias sv='. _sv' # previously sa

@@ -1,26 +1,36 @@
+# https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md
 keybinding:
-    universal:
-        prevItem: e
-        nextItem: n
-        prevItem-alt: e
-        nextItem-alt: n
-        prevBlock: h
-        nextBlock: i
-        prevBlock-alt: h
-        nextBlock-alt: i
-        scrollUpMain-alt1: E
-        scrollDownMain-alt1: N
-        nextTab: ']'
-        prevTab: '['
-        nextMatch: k
-        prevMatch: K
-    files:
-        ignoreFile: l
-    branches:
-        viewGitFlowOptions: l
-    commits:
-        moveDownCommit: <c-n>
-        moveUpCommit: <c-e>
-        startInteractiveRebase: l
-    submodules:
-        init: l
+  universal:
+    prevItem: e
+    nextItem: n
+    prevItem-alt: e
+    nextItem-alt: n
+    prevBlock: h
+    nextBlock: i
+    prevBlock-alt: h
+    nextBlock-alt: i
+    scrollUpMain-alt1: E
+    scrollDownMain-alt1: N
+    nextTab: ']'
+    prevTab: '['
+    nextMatch: k
+    prevMatch: K
+    ignoreFile: l
+    new: "k"
+    edit: j
+    refresh: R
+  branches:
+    viewGitFlowOptions: l
+  commits:
+    moveDownCommit: <c-n>
+    moveUpCommit: <c-e>
+    startInteractiveRebase: l
+  submodules:
+    init: l
+
+os:
+  editPreset: nvim
+
+git:
+ overrideGpg: true
+promptToReturnFromSubprocess: false
