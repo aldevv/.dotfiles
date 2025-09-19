@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Function to handle git operations for a directory
+dgp_func() {
+    local path="$1"
+    local message="$2"
+
+    pushd "$path" &>/dev/null || return 1
+
+    changes=$(git status -s)
+    if [ -z "$(tr -d '\n' <<< "$changes")" ]; then
+        printf "\e[31mno changes for $(basename "$path")\n"
+        popd &>/dev/null || return 1
+        return 1
+    fi
+
+    printf "\e[35mIN $(basename "$path" | tr a-z A-Z)\n"
+    git status -s
+
+    git add -u
+
+    # Add untracked files automatically
+    if [[ -n "$(git ls-files --other --directory --exclude-standard | head -n 1)" ]]; then
+        git add -A
+    fi
+
+    git commit -m "$message"
+    git push origin HEAD
+    popd &>/dev/null || return
+}
+
+sleep 0.001
+
+# Run for each directory
+dgp_func "$NOTES" "auto update" || f_notes=1
+dgp_func "$WIKI" "auto update" || f_wiki=1
+dgp_func "$DOTFILES" "auto update" || f_dotfiles=1
+dgp_func ~/.local/share/ansible "auto update" || f_ansible=1
+
+clear
+echo -e -n "\e[0m"
+[[ -z $f_notes ]] && echo -e "\e[35mupdated notes" || echo -e "\e[31mno changes for notes"
+[[ -z $f_wiki ]] && echo -e "\e[35mupdated wiki" || echo -e "\e[31mno changes for wiki"
+[[ -z $f_dotfiles ]] && echo -e "\e[35mupdated dotfiles" || echo -e "\e[31mno changes for dotfiles"
+[[ -z $f_ansible ]] && echo -e "\e[35mupdated ansible" || echo -e "\e[31mno changes for ansible"
