@@ -55,7 +55,7 @@ local handlers = {
   function(server_name)
     local opts = get_lsp_opts()
     enhance_server(server_name, opts)
-    require("lspconfig")[server_name].setup(opts)
+    vim.lsp.config(server_name, opts)
   end,
   ["rust_analyzer"] = function() end,
   ["hls"] = function()
@@ -66,14 +66,14 @@ local handlers = {
     if require("utils.lua.lazy").is_plugin_enabled("haskell-tools") then
       require("haskell-tools").setup({ hls = opts })
     else
-      require("lspconfig")["hls"].setup(opts)
+      vim.lsp.config("hls", opts)
     end
   end,
   -- ["lua_ls"] = function()
   --   require("neodev").setup({})
   --   local opts = get_lsp_opts()
   --   enhance_server("lua_ls", opts)
-  --   require("lspconfig")["lua_ls"].setup(opts)
+  --   vim.lsp.config("lua_ls", opts)
   -- end,
 }
 

@@ -14,7 +14,7 @@ M.file_exists = function(opts)
 end
 
 M.is_repo_lsp = function()
-    return require("lspconfig.util").find_git_ancestor(vim.fn.getcwd()) ~= nil
+    return vim.fs.find(".git", { upward = true, path = vim.fn.getcwd() })[1] ~= nil
 end
 
 M.is_repo = function()

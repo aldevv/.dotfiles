@@ -56,9 +56,10 @@ return {
   {
     -- https://codecompanion.olimorris.dev/getting-started.html
     "olimorris/codecompanion.nvim",
+    enabled = false,
     dependencies = {
       "ravitemer/codecompanion-history.nvim",
-      "ravitemer/mcphub.nvim",
+      -- "ravitemer/mcphub.nvim",
       { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
       { "nvim-lua/plenary.nvim" },
       { "saghen/blink.cmp" },
@@ -112,14 +113,14 @@ return {
         inline = { adapter = "copilot" },
       },
       extensions = {
-        mcphub = {
-          callback = "mcphub.extensions.codecompanion",
-          opts = {
-            make_vars = true,
-            make_slash_commands = true,
-            show_result_in_chat = true
-          }
-        },
+        -- mcphub = {
+        --   callback = "mcphub.extensions.codecompanion",
+        --   opts = {
+        --     make_vars = true,
+        --     make_slash_commands = true,
+        --     show_result_in_chat = true
+        --   }
+        -- },
         history = {
           enabled = true,
           opts = {
@@ -160,10 +161,11 @@ return {
   },
   {
     "ravitemer/mcphub.nvim",
+    enabled = false,
     dependencies = {
       "nvim-lua/plenary.nvim",
     },
-    build = "npm install -g mcp-hub@4.1.0", -- Installs `mcp-hub` node binary globally
+    build = "npm install -g mcp-hub@4.2.1", -- Installs `mcp-hub` node binary globally
     config = function()
       require("mcphub").setup()
     end

@@ -39,8 +39,13 @@ return {
     config = req("config.plugins.overseer"),
   },
   {
-    "ahmedkhalf/project.nvim",
+    "coffebar/neovim-project",
     config = req("config.plugins.project"),
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim",
+      "Shatur/neovim-session-manager",
+    },
   },
   {
     "szw/vim-maximizer",

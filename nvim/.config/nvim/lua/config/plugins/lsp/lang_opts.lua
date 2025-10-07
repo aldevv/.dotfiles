@@ -1,7 +1,7 @@
 local M = {}
 -- :h lspconfig-root-advanced
 -- :h lspconfig-root-composition
-local util = require("lspconfig.util")
+local util = vim.lsp
 local function copy(opts)
   local tmp = {}
   for k, v in pairs(opts) do
@@ -23,10 +23,7 @@ local enhance_server_opts = {
     end
   end,
   ["ts_ls"] = function(opts)
-    opts.root_dir = function(fname)
-      return util.root_pattern("tsconfig.json")(fname)
-          or util.root_pattern("package.json", "jsconfig.json", ".git", ".projections.json")(fname)
-    end
+    opts.root_markers = { "tsconfig.json", "package.json", "jsconfig.json", ".git", ".projections.json" }
   end,
   ["pylsp"] = function(opts)
     opts.settings = {
@@ -131,12 +128,7 @@ local enhance_server_opts = {
     }
   end,
   ["hls"] = function(opts)
-    opts.root_dir = function(filepath)
-      return (
-        util.root_pattern("hie.yaml", "stack.yaml", "cabal.project")(filepath)
-        or util.root_pattern("*.cabal", "package.yaml")(filepath)
-      )
-    end
+    opts.root_markers = { "hie.yaml", "stack.yaml", "cabal.project", "*.cabal", "package.yaml" }
   end,
   ["basedpyright"] = function(opts)
     opts.settings = {

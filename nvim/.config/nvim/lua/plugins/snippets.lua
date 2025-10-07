@@ -8,7 +8,7 @@ return {
 
 	{
 		"L3MON4D3/LuaSnip",
-		tag = "v2.1.1",
+		tag = "v2.3.0",
 		config = req("config.plugins.luasnip"),
 	},
 	{

@@ -15,7 +15,7 @@ return {
         ft = { "html", "js", "javascriptreact", "typescriptreact", "ts", "css", "vue", "svelte", "jsx", "tsx" },
     },
     {
-        "norcalli/nvim-colorizer.lua",
+        "NvChad/nvim-colorizer.lua",
         config = function()
             require("colorizer").setup()
         end,
