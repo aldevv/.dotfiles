@@ -19,7 +19,6 @@ local servers = {
   "dockerls",
   "jsonls",
   "rust_analyzer",
-  -- "vue_ls",
   -- "eslint-lsp"
   -- "sqls",
   -- "hls@2.0.0.0", -- mason is not installing it correctly as of 10/06/23

@@ -44,7 +44,8 @@
 - Prefers systemd services over autostart desktop files
 - System uses `xautolock` (not systemd-logind) for user-input-only idle detection
 - **IMPORTANT**: Do not touch work-related files/directories unless explicitly requested
-- **CRITICAL**: whe
+- **CRITICAL**: when I tell you to save the changes in my dotfiles, I mean these folders, and
+    to use the personal-push-all command
   - `~/.dotfiles/` (dotfiles)
   - `~/notes/` (personal notes)
   - `~/wiki/` (personal wiki)
