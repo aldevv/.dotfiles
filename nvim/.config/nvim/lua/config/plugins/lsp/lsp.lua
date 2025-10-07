@@ -19,7 +19,7 @@ local servers = {
   "dockerls",
   "jsonls",
   "rust_analyzer",
-  -- "volar",
+  -- "vue_ls",
   -- "eslint-lsp"
   -- "sqls",
   -- "hls@2.0.0.0", -- mason is not installing it correctly as of 10/06/23
@@ -55,7 +55,9 @@ local handlers = {
   function(server_name)
     local opts = get_lsp_opts()
     enhance_server(server_name, opts)
-    vim.lsp.config(server_name, opts)
+    -- Native Neovim 0.11+ LSP configuration
+    vim.lsp.config[server_name] = opts
+    vim.lsp.enable(server_name)
   end,
   ["rust_analyzer"] = function() end,
   ["hls"] = function()
@@ -66,14 +68,16 @@ local handlers = {
     if require("utils.lua.lazy").is_plugin_enabled("haskell-tools") then
       require("haskell-tools").setup({ hls = opts })
     else
-      vim.lsp.config("hls", opts)
+      vim.lsp.config["hls"] = opts
+      vim.lsp.enable("hls")
     end
   end,
   -- ["lua_ls"] = function()
   --   require("neodev").setup({})
   --   local opts = get_lsp_opts()
   --   enhance_server("lua_ls", opts)
-  --   vim.lsp.config("lua_ls", opts)
+  --   vim.lsp.config["lua_ls"] = opts
+  --   vim.lsp.enable("lua_ls")
   -- end,
 }
 
