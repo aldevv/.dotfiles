@@ -48,8 +48,8 @@ cmp.setup({
     -- }
   },
   sources = {
-    -- default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer' },
-    default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer', "codecompanion" },
+    default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer' },
+    -- default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer', "codecompanion" },
     providers = {
       buffer = {
         min_keyword_length = 5,

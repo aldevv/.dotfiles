@@ -44,4 +44,9 @@
 - Prefers systemd services over autostart desktop files
 - System uses `xautolock` (not systemd-logind) for user-input-only idle detection
 - **IMPORTANT**: Do not touch work-related files/directories unless explicitly requested
-- **Auto-push**: Run `personal-push-all` after updating personal files (no secrets/sensitive data)
+- **CRITICAL**: whe
+  - `~/.dotfiles/` (dotfiles)
+  - `~/notes/` (personal notes)
+  - `~/wiki/` (personal wiki)
+  - `~/.local/share/ansible/` (ansible configs)
+  - This command commits AND pushes changes from all personal folders
