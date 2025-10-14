@@ -45,15 +45,11 @@ dgp_func "$DOTFILES/wiki/.local/share/wiki" "auto update" || f_subwiki=1
 # After pushing submodules, update parent dotfiles if submodules changed
 if [[ -z $f_personal ]] || [[ -z $f_subwiki ]]; then
     pushd "$DOTFILES" &>/dev/null
-    if git diff --quiet HEAD; then
-        # No changes in dotfiles itself, but submodules changed
-        # Update submodule references
-        git add personal wiki/.local/share/wiki 2>/dev/null
-        if ! git diff --staged --quiet; then
-            git commit -m "update submodules"
-            git push origin HEAD
-            f_dotfiles_sub=1
-        fi
+    # Update submodule references
+    git add personal wiki/.local/share/wiki 2>/dev/null
+    if ! git diff --staged --quiet; then
+        git commit -m "update submodules"
+        git push origin HEAD
     fi
     popd &>/dev/null
 fi
