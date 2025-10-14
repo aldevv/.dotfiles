@@ -46,6 +46,10 @@ sleep 0.001
 # Run for each directory
 dgp_func "$NOTES" || f_notes=1
 
+# Pull submodules first to avoid merge commits
+pushd "$DOTFILES/personal" &>/dev/null && git pull origin HEAD &>/dev/null; popd &>/dev/null
+pushd "$DOTFILES/wiki/.local/share/wiki" &>/dev/null && git pull origin HEAD &>/dev/null; popd &>/dev/null
+
 # Handle dotfiles submodules
 dgp_func "$DOTFILES/personal" || f_personal=1
 dgp_func "$DOTFILES/wiki/.local/share/wiki" || f_subwiki=1
