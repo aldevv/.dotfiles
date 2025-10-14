@@ -4,6 +4,7 @@
 dgp_func() {
     local path="$1"
     local message="$2"
+    local branch="${3:-HEAD}"
 
     pushd "$path" &>/dev/null || return 1
 
@@ -26,7 +27,7 @@ dgp_func() {
     fi
 
     git commit -m "$message"
-    git push origin HEAD
+    git push origin "$branch"
     popd &>/dev/null || return
 }
 
@@ -38,13 +39,13 @@ sleep 0.001
 # Run for each directory
 dgp_func "$NOTES" "auto update" || f_notes=1
 
-# Pull submodules first to avoid merge commits
-pushd "$DOTFILES/personal" &>/dev/null && git pull origin HEAD &>/dev/null; popd &>/dev/null
-pushd "$DOTFILES/wiki/.local/share/wiki" &>/dev/null && git pull origin HEAD &>/dev/null; popd &>/dev/null
+# Pull submodules first to avoid merge commits and ensure on correct branch
+pushd "$DOTFILES/personal" &>/dev/null && git checkout main &>/dev/null && git pull origin main &>/dev/null; popd &>/dev/null
+pushd "$DOTFILES/wiki/.local/share/wiki" &>/dev/null && git checkout master &>/dev/null && git pull origin master &>/dev/null; popd &>/dev/null
 
 # Handle dotfiles submodules
-dgp_func "$DOTFILES/personal" "auto update" || f_personal=1
-dgp_func "$DOTFILES/wiki/.local/share/wiki" "auto update" || f_subwiki=1
+dgp_func "$DOTFILES/personal" "auto update" "main" || f_personal=1
+dgp_func "$DOTFILES/wiki/.local/share/wiki" "auto update" "master" || f_subwiki=1
 
 # After pushing submodules, update parent dotfiles if submodules changed
 if [[ -z $f_personal ]] || [[ -z $f_subwiki ]]; then
