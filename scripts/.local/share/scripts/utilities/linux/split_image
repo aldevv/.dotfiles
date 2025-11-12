@@ -1,0 +1,244 @@
+#!/bin/bash
+
+# Usage: split_image <image|folder> [num_parts] [resize_percent]
+# Defaults: auto-calculated parts based on height, 150% resize
+
+# Help function
+show_help() {
+    cat << EOF
+split_image - Split an image or images in a folder into multiple parts vertically
+
+USAGE:
+    split_image <image|folder> [num_parts] [resize_percent]
+    split_image --help
+
+ARGUMENTS:
+    image|folder    Path to the input image or folder (required)
+                   Use . or ./ for current directory
+    num_parts       Number of parts to split into (default: auto-calculated)
+                   Auto-calc: splits tall images (height/width > 3) into ~4000px parts
+    resize_percent  Resize percentage for output images (default: 150)
+
+OPTIONS:
+    --help, -h      Show this help message
+
+EXAMPLES:
+    # Split single image with auto-calculated parts and 150% resize
+    split_image image.png
+
+    # Split all images in current directory with auto-calculated parts
+    split_image .
+    split_image ./
+
+    # Split into specific number of parts
+    split_image image.png 4
+
+    # Split folder with specific parts and resize
+    split_image ./screenshots 8 200
+
+OUTPUT:
+    Creates a directory named '{image-name}_split_{num_parts}' containing
+    the split image parts as '{image-name}-part1.png', 'part2.png', etc.
+
+REQUIREMENTS:
+    - ImageMagick (convert and identify commands)
+
+EOF
+    exit 0
+}
+
+# Check for help flag
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    show_help
+fi
+
+# Check if input argument is provided
+if [ -z "$1" ]; then
+    echo "Error: Missing required argument <image|folder>"
+    echo ""
+    echo "Usage: split_image <image|folder> [num_parts] [resize_percent]"
+    echo "Try 'split_image --help' for more information"
+    exit 1
+fi
+
+# Function to calculate optimal number of parts for tall images
+calculate_parts() {
+    local width=$1
+    local height=$2
+
+    # Calculate aspect ratio (height/width)
+    # Use bc for floating point if available, otherwise integer math
+    if command -v bc &> /dev/null; then
+        local aspect_ratio=$(echo "scale=2; $height / $width" | bc)
+        local is_tall=$(echo "$aspect_ratio > 1.5" | bc)
+    else
+        # Fallback to integer math: height > width * 1.5
+        local threshold=$((width * 3 / 2))
+        local is_tall=$( [ $height -gt $threshold ] && echo 1 || echo 0 )
+    fi
+
+    # If height/width ratio > 1.5, it's a tall image
+    if [ "$is_tall" = "1" ]; then
+        # Split into ~4000px parts, rounding up to ensure smaller parts
+        local parts=$(( (height + 3999) / 4000 ))
+        [ $parts -lt 2 ] && parts=2
+        echo $parts
+    else
+        # Not a tall image, don't split
+        echo 0
+    fi
+}
+
+# Function to check if image has readable text using Claude
+check_readable_text() {
+    local image_path="$1"
+
+    # Check if claude command exists
+    if ! command -v claude &> /dev/null; then
+        return 1  # Claude not found, skip check
+    fi
+
+    echo "Checking if image has readable text using Claude..."
+
+    # Use Claude to analyze the image
+    local response=$(claude -e "Does this image contain very readable text (clear, legible, easy to read)? Answer with ONLY 'YES' or 'NO', nothing else." -f "$image_path" 2>/dev/null)
+
+    if [ $? -ne 0 ]; then
+        echo "Warning: Claude check failed, proceeding with split"
+        return 1
+    fi
+
+    # Check if response contains YES
+    if echo "$response" | grep -qi "YES"; then
+        echo "Claude detected readable text - skipping split to preserve readability"
+        return 0  # Has readable text
+    else
+        echo "Claude did not detect very readable text - proceeding with split"
+        return 1  # No readable text
+    fi
+}
+
+# Function to split a single image
+split_single_image() {
+    local input_image="$1"
+    local num_parts="$2"
+    local resize="$3"
+
+    # Check if input image exists
+    if [ ! -f "$input_image" ]; then
+        echo "Warning: Image '$input_image' not found, skipping"
+        return 1
+    fi
+
+    # Get image dimensions
+    IMAGE_INFO=$(identify -format "%w %h" "$input_image" 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        echo "Warning: Could not read image '$input_image', skipping"
+        return 1
+    fi
+
+    WIDTH=$(echo $IMAGE_INFO | cut -d' ' -f1)
+    HEIGHT=$(echo $IMAGE_INFO | cut -d' ' -f2)
+
+    # Auto-calculate parts if not specified or set to "auto"
+    if [ "$num_parts" = "auto" ]; then
+        num_parts=$(calculate_parts $WIDTH $HEIGHT)
+        if [ $num_parts -eq 0 ]; then
+            echo "Skipping '$input_image' (${WIDTH}x${HEIGHT}) - not tall enough to split"
+            return 0
+        fi
+    fi
+
+    # Check for readable text using Claude (if available)
+    if check_readable_text "$input_image"; then
+        echo "Skipping '$input_image' - contains readable text that should not be split"
+        echo ""
+        return 0
+    fi
+
+    # Extract filename without extension
+    BASENAME=$(basename "$input_image" | sed 's/\.[^.]*$//')
+
+    # Create output directory
+    OUTPUT_DIR="${BASENAME}_split_${num_parts}"
+
+    # Check if output directory already exists
+    if [ -d "$OUTPUT_DIR" ]; then
+        echo "Error: Output directory '$OUTPUT_DIR' already exists. Skipping '$input_image'"
+        echo "Remove the directory first if you want to re-process this image."
+        echo ""
+        return 1
+    fi
+
+    mkdir -p "$OUTPUT_DIR"
+
+    # Calculate crop height for each part
+    CROP_HEIGHT=$((HEIGHT / num_parts))
+
+    echo "Splitting '$input_image' into $num_parts parts with $resize resize"
+    echo "Image dimensions: ${WIDTH}x${HEIGHT}"
+    echo "Crop height per part: ${CROP_HEIGHT}"
+    echo "Output directory: $OUTPUT_DIR"
+    echo ""
+
+    # Generate and execute convert commands
+    for ((i=1; i<=num_parts; i++)); do
+        OFFSET=$(( (i-1) * CROP_HEIGHT ))
+        OUTPUT_FILE="${OUTPUT_DIR}/${BASENAME}-part${i}.png"
+
+        echo "Creating part $i/$num_parts..."
+        convert "$input_image" -crop ${WIDTH}x${CROP_HEIGHT}+0+${OFFSET} -resize "$resize" "$OUTPUT_FILE"
+
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to create part $i"
+            return 1
+        fi
+    done
+
+    echo ""
+    echo "✓ Successfully split '$input_image' into $num_parts parts"
+    echo "✓ Output directory: $OUTPUT_DIR"
+    echo ""
+}
+
+# Main script
+INPUT="$1"
+NUM_PARTS="${2:-auto}"
+RESIZE="${3:-150}%"
+
+# Check if input is a directory
+if [ -d "$INPUT" ]; then
+    # Process all images in directory
+    echo "Processing all images in directory: $INPUT"
+    echo "=========================================="
+    echo ""
+
+    PROCESSED=0
+    SKIPPED=0
+    FAILED=0
+
+    # Find all common image formats
+    shopt -s nullglob
+    for img in "$INPUT"/*.{png,PNG,jpg,JPG,jpeg,JPEG,gif,GIF,bmp,BMP,tiff,TIFF,webp,WEBP}; do
+        [ -f "$img" ] || continue
+
+        split_single_image "$img" "$NUM_PARTS" "$RESIZE"
+        case $? in
+            0) ((PROCESSED++)) ;;
+            1) ((FAILED++)) ;;
+        esac
+    done
+
+    echo ""
+    echo "=========================================="
+    echo "Summary:"
+    echo "  Processed: $PROCESSED"
+    echo "  Failed: $FAILED"
+
+elif [ -f "$INPUT" ]; then
+    # Process single image
+    split_single_image "$INPUT" "$NUM_PARTS" "$RESIZE"
+else
+    echo "Error: '$INPUT' is not a valid file or directory"
+    exit 1
+fi
