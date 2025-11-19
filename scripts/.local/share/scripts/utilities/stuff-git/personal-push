@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Disable pager for all git commands in this script
+unset PAGER
+
 # Function to handle git operations for a directory with prompts
 dgp_func() {
     local path="$1"
