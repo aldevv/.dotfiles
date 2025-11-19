@@ -108,7 +108,7 @@ exp_if_cmd "fd" FZF_DEFAULT_COMMAND=$FD_DEFAULT_FOR_FZF
 [ "$?" = 1 ] && exp_if_cmd "rg" FZF_DEFAULT_COMMAND=$RG_DEFAULT_FOR_FZF
 
 # export FZF_DEFAULT_OPTS='--bind=ctrl-e:up,ctrl-n:down'
-FZF_BINDS="alt-g:first,alt-G:last,alt-E:preview-up,alt-N:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept"
+FZF_BINDS="alt-g:first,alt-G:last,alt-E:preview-up,alt-N:preview-down,alt-e:up,alt-n:down,+:toggle-preview,ctrl-a:select-all+accept,ctrl-d:half-page-down,ctrl-u:half-page-up"
 FZF_PREV="'[[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file || (bat --style=numbers --color=always {} || cat {}) > /dev/null | head -199'"
 export FZF_DEFAULT_OPTS="
 --ansi --height=75% --layout=reverse --multi 

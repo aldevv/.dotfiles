@@ -10,7 +10,15 @@ alias v="nvim"
 alias vf="source _vf"
 alias vF="source _vF"
 alias vFa="source _vFa"
-alias grun="print_exec go run ./cmd/..."
+
+grun() {
+  if [ ! -d "./cmd" ]; then
+    print_exec go run .
+    return
+  fi
+  print_exec go run ./cmd/...
+}
+
 alias gup="print_exec go get -u ./..."
 alias wezterm='flatpak run org.wezfurlong.wezterm'
 

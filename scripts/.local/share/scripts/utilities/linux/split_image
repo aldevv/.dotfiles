@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage: split_image <image|folder> [num_parts] [resize_percent]
-# Defaults: auto-calculated parts based on height, 150% resize
+# Defaults: auto-calculated parts based on height,300% resize
 
 # Help function
 show_help() {
@@ -16,14 +16,14 @@ ARGUMENTS:
     image|folder    Path to the input image or folder (required)
                    Use . or ./ for current directory
     num_parts       Number of parts to split into (default: auto-calculated)
-                   Auto-calc: splits tall images (height/width > 3) into ~4000px parts
-    resize_percent  Resize percentage for output images (default: 150)
+                   Auto-calc: splits tall images (ratio > 1.2 OR height > 5000px) into ~4000px parts
+    resize_percent  Resize percentage for output images (default: 300)
 
 OPTIONS:
     --help, -h      Show this help message
 
 EXAMPLES:
-    # Split single image with auto-calculated parts and 150% resize
+    # Split single image with auto-calculated parts and 300% resize
     split_image image.png
 
     # Split all images in current directory with auto-calculated parts
@@ -66,19 +66,22 @@ calculate_parts() {
     local width=$1
     local height=$2
 
-    # Calculate aspect ratio (height/width)
+    # Calculate aspect ratio (height/width) and check absolute height
     # Use bc for floating point if available, otherwise integer math
     if command -v bc &> /dev/null; then
         local aspect_ratio=$(echo "scale=2; $height / $width" | bc)
-        local is_tall=$(echo "$aspect_ratio > 1.5" | bc)
+        local is_tall_ratio=$(echo "$aspect_ratio > 1.2" | bc)
     else
-        # Fallback to integer math: height > width * 1.5
-        local threshold=$((width * 3 / 2))
-        local is_tall=$( [ $height -gt $threshold ] && echo 1 || echo 0 )
+        # Fallback to integer math: height > width * 1.2
+        local threshold=$((width * 6 / 5))
+        local is_tall_ratio=$( [ $height -gt $threshold ] && echo 1 || echo 0 )
     fi
 
-    # If height/width ratio > 1.5, it's a tall image
-    if [ "$is_tall" = "1" ]; then
+    # Check if image is tall enough: either ratio > 1.2 OR absolute height > 5000px
+    local is_tall_absolute=$( [ $height -gt 5000 ] && echo 1 || echo 0 )
+
+    # If height/width ratio > 1.2 OR height > 5000px, it's a tall image
+    if [ "$is_tall_ratio" = "1" ] || [ "$is_tall_absolute" = "1" ]; then
         # Split into ~4000px parts, rounding up to ensure smaller parts
         local parts=$(( (height + 3999) / 4000 ))
         [ $parts -lt 2 ] && parts=2
@@ -204,7 +207,7 @@ split_single_image() {
 # Main script
 INPUT="$1"
 NUM_PARTS="${2:-auto}"
-RESIZE="${3:-150}%"
+RESIZE="${3:-300}%"
 
 # Check if input is a directory
 if [ -d "$INPUT" ]; then
