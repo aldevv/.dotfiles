@@ -59,6 +59,9 @@ local handlers = {
     vim.lsp.enable(server_name)
   end,
   ["rust_analyzer"] = function() end,
+  ["pyright"] = function()
+    print("[LSP] Mason tried to enable pyright but it's disabled - use basedpyright instead")
+  end,
   ["hls"] = function()
     -- local opts = get_opts()
     local opts = get_lsp_opts()
@@ -103,4 +106,5 @@ require("mason-lspconfig").setup({
   --   - true: All servers set up via lspconfig are automatically installed.
   automatic_enable = true,
   handlers = handlers,
+  automatic_installation = true,
 })

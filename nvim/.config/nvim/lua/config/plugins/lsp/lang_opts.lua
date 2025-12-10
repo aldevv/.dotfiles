@@ -138,13 +138,13 @@ local enhance_server_opts = {
         analysis = {
           autoImportCompletions = true,
           autoSearchPaths = true,
-          useLibraryCodeForTypes = true,
+          useLibraryCodeForTypes = false,
           -- diagnosticMode = "workspace", -- slower but analyzes and auto completes for whole workspace
 
           -- TODO: check if this is required
           -- diagnosticMode = "openFilesOnly", -- faster
 
-          typeCheckingMode = "basic", -- standard, strict, all, off, basic
+          typeCheckingMode = "recommended", -- standard, strict, all, off, basic
           -- typeCheckingMode = "standard",       -- standard, strict, all, off, basic
           -- typeCheckingMode = "recommended", -- standard, strict, all, off, basic, recommended
         },

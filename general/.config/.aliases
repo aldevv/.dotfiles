@@ -12,11 +12,27 @@ alias vF="source _vF"
 alias vFa="source _vFa"
 
 grun() {
+  local cmd_args=()
+
   if [ ! -d "./cmd" ]; then
-    print_exec go run .
+    cmd_args=(go run .)
+  else
+    cmd_args=(go run ./cmd/...)
+  fi
+
+  if [ "$#" -gt 0 ]; then
+    cmd_args+=("$@")
+  fi
+
+  print_exec "${cmd_args[@]}"
+}
+
+ur() {
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "uv command not found"
     return
   fi
-  print_exec go run ./cmd/...
+  print_exec uv run python "$@"
 }
 
 alias gup="print_exec go get -u ./..."
@@ -135,8 +151,25 @@ alias grso="git remote set-url origin"
 alias grao="git remote add origin"
 alias grg="git remote get-url origin"
 alias gcsr="git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'"
-alias cop="gh copilot suggest -t shell"
-alias coP="gh copilot explain"
+
+# function cop() {
+#   if [ "$#" -eq  "0" ]; then
+#     echo "Usage: cop <your prompt here>"
+#     return 1
+#   fi
+#   if ! command -v copilot >/dev/null 2>&1; then
+#     npm install -g @github/copilot
+#   fi
+#   echo "suggest me the command to: $*. in one line, command only" | copilot
+# }
+
+function cop() {
+  if [ "$#" -eq  "0" ]; then
+    echo "Usage: cop <your prompt here>"
+    return 1
+  fi
+  echo "in one line, give me  the command, nothing else: $*" | claude
+}
 alias yt="cd ~/.local/bin/ && yt"
 
 alias gwts=". _gwts"

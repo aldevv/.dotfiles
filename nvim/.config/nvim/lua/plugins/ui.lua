@@ -43,6 +43,7 @@ return {
         },
         TODO = { icon = "", color = "info" },
         HACK = { icon = "", color = "error", alt = { "ERROR", "REMOVE", "DELETE" } },
+        IMPORTANT = { icon = "", color = "error" },
         WARNING = { icon = "", color = "warning", alt = { "WARNING", "XXX" } },
         DEPRECATED = { icon = "", color = "warning", alt = { "DEPRECATED", "XXX" } },
         PERFORMANCE = { icon = "", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },

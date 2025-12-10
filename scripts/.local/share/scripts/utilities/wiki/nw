@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 WIKI=${WIKI:-"$HOME/.local/share/wiki/"}
 is_dmenu=0
 [[ "$1" == "dmenu" ]] && is_dmenu=1 && shift
@@ -37,5 +38,5 @@ if [[  -n $chosen_filepath ]]; then
     else
         setsid st -e nvim $chosen_filepath 2>/dev/null
     fi
-    
+
 fi
