@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Check if bruno CLI is installed, install if not
+if ! command -v bru &> /dev/null; then
+    echo "Bruno CLI not found. Installing @usebruno/cli..."
+    npm install -g @usebruno/cli
+fi
+
+# Find bruno collection root by locating bruno.json
+search_root=$(pwd)
+git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+
+# Prefer git root if available, otherwise use current directory
+if [ -n "$git_root" ]; then
+    search_root="$git_root"
+fi
+
+# Use find to locate bruno.json
+bruno_json=$(find "$search_root" -name "bruno.json" -type f | head -1)
+
+if [ -z "$bruno_json" ]; then
+    echo "Error: bruno.json not found in $search_root"
+    exit 1
+fi
+
+bruno_root=$(dirname "$bruno_json")
+
+history_file="$HOME/.cache/bruf-history"
+mkdir -p "$HOME/.cache"
+
+# Get all .bru files
+all_files=$(find "$bruno_root" -name "*.bru" -type f -printf '%P\n')
+
+# Sort files by recency (most recently used first)
+if [ -f "$history_file" ]; then
+    # Get used files in reverse order (most recent first)
+    used_files=$(tac "$history_file" | awk '!seen[$0]++')
+    # Get unused files
+    unused_files=$(while IFS= read -r file; do
+        grep -q "^$file$" "$history_file" 2>/dev/null || echo "$file"
+    done <<< "$all_files")
+    # Combine: used first, then unused
+    sorted_files=$(printf "%s\n%s" "$used_files" "$unused_files" | grep -v '^$')
+else
+    sorted_files="$all_files"
+fi
+
+# Use fzf to select
+selected=$(echo "$sorted_files" | \
+    fzf --preview "cat '$bruno_root/{}'")
+
+if [ -z "$selected" ]; then
+    exit 1
+fi
+
+# Log the selection to history
+echo "$selected" >> "$history_file"
+
+# Run the command from bruno collection root
+(cd "$bruno_root" && bru run --env local "$selected" --reporter-json /dev/stdout 2>&1 | tail -n +17 | sed 's/Wrote json results to \/dev\/stdout$//' | jq)
+
