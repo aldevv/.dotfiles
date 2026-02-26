@@ -40,6 +40,11 @@ startup() {
     blueman-applet &
   fi
 
+# for audio in tray
+  if command -v pasystray &>/dev/null; then
+    pasystray &
+  fi
+
   # for my 4k cam
   # if command -v v4l2-ctl &>/dev/null; then
   #   v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
