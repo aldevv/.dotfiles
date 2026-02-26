@@ -6,6 +6,7 @@ local finders = require("telescope.finders")
 local pickers = require("telescope.pickers")
 local themes = require("telescope.themes")
 local conf = require("telescope.config").values
+local previewers = require("telescope.previewers")
 -- pickers creation guide
 -- https://github.com/nvim-telescope/telescope.nvim/blob/master/developers.md#guide-to-your-first-picker
 
@@ -298,6 +299,123 @@ M.sort_notes = function()
     previewer = conf.file_previewer({}),
   })
   picker:find()
+end
+
+local function get_default_branch()
+  local ref = vim.fn.system("git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null"):gsub("\n", "")
+  if vim.v.shell_error == 0 and ref ~= "" then
+    local branch = ref:match("refs/remotes/origin/(.+)")
+    if branch then return branch end
+  end
+  for _, name in ipairs({ "trunk", "main", "master" }) do
+    vim.fn.system("git rev-parse --verify " .. name .. " 2>/dev/null")
+    if vim.v.shell_error == 0 then
+      return name
+    end
+  end
+  return "main"
+end
+
+local function git_diff_files(diff_args, title)
+  local git_root = vim.fn.system("git rev-parse --show-toplevel"):gsub("\n", "")
+  local lines = vim.fn.systemlist("git -C " .. vim.fn.shellescape(git_root) .. " diff " .. diff_args)
+  local entries = {}
+  local current_file, current_lnum = nil, 0
+
+  for _, line in ipairs(lines) do
+    local file = line:match("^diff %-%-git a/.+ b/(.+)$")
+    if file then
+      current_file = file
+    end
+    if current_file then
+      local hunk_start = line:match("^@@ %-%d+[,%d]* %+(%d+)")
+      if hunk_start then
+        current_lnum = tonumber(hunk_start)
+      elseif line:sub(1, 1) == "+" and line:sub(1, 3) ~= "+++" then
+        table.insert(entries, {
+          filename = git_root .. "/" .. current_file,
+          lnum = current_lnum,
+          text = line:sub(2),
+        })
+        current_lnum = current_lnum + 1
+      elseif line:sub(1, 1) == " " then
+        current_lnum = current_lnum + 1
+      end
+    end
+  end
+
+  if #entries == 0 then
+    vim.notify("No diff changes found", vim.log.levels.INFO)
+    return
+  end
+
+  pickers
+    .new({}, {
+      prompt_title = title or "<Git Diff>",
+      finder = finders.new_table({
+        results = entries,
+        entry_maker = function(entry)
+          local display = vim.fn.fnamemodify(entry.filename, ":~:.") .. ":" .. entry.lnum .. ": " .. entry.text
+          return {
+            value = entry,
+            display = display,
+            ordinal = display,
+            filename = entry.filename,
+            lnum = entry.lnum,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      previewer = conf.grep_previewer({}),
+      attach_mappings = function(prompt_bufnr)
+        a.select_default:replace(function()
+          a.close(prompt_bufnr)
+          local entry = s.get_selected_entry()
+          vim.cmd("edit " .. vim.fn.fnameescape(entry.filename))
+          vim.api.nvim_win_set_cursor(0, { entry.lnum, 0 })
+        end)
+        return true
+      end,
+    })
+    :find()
+end
+
+M.git_difftool_branch = function()
+  require("telescope.builtin").git_branches({
+    prompt_title = "<Git Diff Branch>",
+    attach_mappings = function(branch_bufnr, map)
+      local function pick()
+        local branch = s.get_selected_entry().value
+        a.close(branch_bufnr)
+        local default_branch = get_default_branch()
+        local base = vim.fn.system("git merge-base " .. default_branch .. " " .. branch):gsub("\n", "")
+        if vim.v.shell_error ~= 0 or base == "" then
+          vim.notify("Could not find merge-base for " .. branch, vim.log.levels.WARN)
+          return
+        end
+        git_diff_files(base .. ".." .. branch, "<Diff " .. branch .. ">")
+      end
+      map("i", "<CR>", pick)
+      map("n", "<CR>", pick)
+      return true
+    end,
+  })
+end
+
+M.git_difftool_commit = function()
+  require("telescope.builtin").git_commits({
+    prompt_title = "<Git Diff Commit>",
+    attach_mappings = function(commit_bufnr, map)
+      local function pick()
+        local hash = s.get_selected_entry().value
+        a.close(commit_bufnr)
+        git_diff_files(hash .. "~1 " .. hash, "<Diff " .. hash:sub(1, 8) .. ">")
+      end
+      map("i", "<CR>", pick)
+      map("n", "<CR>", pick)
+      return true
+    end,
+  })
 end
 
 return M

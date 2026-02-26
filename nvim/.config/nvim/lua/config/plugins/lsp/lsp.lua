@@ -9,7 +9,7 @@ local servers = {
   "ruff",
   "basedpyright",
   "clangd",
-  "html",
+  -- "html",
   "cssls",
   "ts_ls",
   "svelte",

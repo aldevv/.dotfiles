@@ -136,3 +136,12 @@ map("v", "<leader>gVv", ":GV<CR>", nor) -- other plugin to visualize repo, you c
 map("v", "<leader>gV0", ":GV!<CR>", nor) -- only list commits current file
 
 map("n", "<leader>gv", ":Gvsplit @~", nor)
+
+-- Git difftool pickers → Telescope quickfix
+map("n", "<leader>gsh", function()
+  require("utils.lua.telescope").git_difftool_branch()
+end, desc("git difftool → branch → Telescope qf"))
+
+map("n", "<leader>gsH", function()
+  require("utils.lua.telescope").git_difftool_commit()
+end, desc("git difftool → commit → Telescope qf"))
