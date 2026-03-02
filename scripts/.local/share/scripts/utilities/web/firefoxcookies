@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if test -z "${1:-}"; then
+    echo "Usage: firefoxcookies <url>"
+    echo "Extracts Firefox cookies for a URL's hostname into a Netscape cookie file"
+    exit 1
+fi
+
+if ! command -v sqlite3 &>/dev/null; then
+    echo "Error: sqlite3 is required (apt install sqlite3)"
+    exit 1
+fi
+
+url="$1"
+hostname=$(echo "$url" | sed -E 's|^https?://||; s|/.*||; s|:.*||')
+
+cookie_db=$(find ~/snap/firefox/ ~/.mozilla/firefox/ ~/.var/app/org.mozilla.firefox/ \
+    -name "cookies.sqlite" 2>/dev/null | head -1 || true)
+
+if test -z "$cookie_db"; then
+    echo "Error: Firefox cookies.sqlite not found"
+    exit 1
+fi
+
+tmp=$(mktemp)
+cp "$cookie_db" "$tmp"
+
+outfile="${hostname}-cookies"
+
+echo "# Netscape HTTP Cookie File" > "$outfile"
+
+# build domain match list: www.epicgames.com -> also match .epicgames.com, .com
+domains="host LIKE '%${hostname}' OR host LIKE '%.${hostname}'"
+strip="$hostname"
+while [[ "$strip" == *.* ]]; do
+    strip="${strip#*.}"
+    domains="$domains OR host = '.$strip'"
+done
+
+sqlite3 "$tmp" <<SQL >> "$outfile"
+.mode tabs
+SELECT
+    CASE WHEN host LIKE '.%' THEN host ELSE '.' || host END,
+    CASE WHEN host LIKE '.%' THEN 'TRUE' ELSE 'FALSE' END,
+    path,
+    CASE WHEN isSecure THEN 'TRUE' ELSE 'FALSE' END,
+    expiry,
+    name,
+    value
+FROM moz_cookies
+WHERE $domains
+ORDER BY host, path, name;
+SQL
+
+rm "$tmp"
+
+count=$(grep -cv '^#' "$outfile" 2>/dev/null || echo 0)
+
+if test "$count" -eq 0; then
+    echo "No cookies found for $hostname"
+    rm "$outfile"
+    exit 1
+fi
+
+echo "Saved $count cookies to $outfile"
+echo ""
+echo "curl -b $outfile '$url'"

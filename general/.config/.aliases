@@ -266,3 +266,4 @@ nixi() {
 # v4l2-ctl --device=<chosen> -c=<what you want>
 # v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
 alias bruf="$HOME/.dotfiles/scripts/.local/share/scripts/utilities/linux/bruf"
+alias v.e="nvim .envrc"
