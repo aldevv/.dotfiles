@@ -136,3 +136,84 @@ map("v", "<leader>gVv", ":GV<CR>", nor) -- other plugin to visualize repo, you c
 map("v", "<leader>gV0", ":GV!<CR>", nor) -- only list commits current file
 
 map("n", "<leader>gv", ":Gvsplit @~", nor)
+
+local function git_show_qf(ref)
+	local cmd = "git show --name-only --format=" .. (ref ~= "" and (" " .. ref) or "")
+	local files = vim.fn.systemlist(cmd)
+	local items = {}
+	for _, f in ipairs(files) do
+		if f ~= "" then
+			table.insert(items, { filename = f, lnum = 1 })
+		end
+	end
+	vim.fn.setqflist({}, "r", { title = "git show " .. ref, items = items })
+	vim.cmd("copen")
+end
+
+map("n", "<leader>gshh", function()
+	local prev = vim.api.nvim_get_current_buf()
+	vim.cmd("G show")
+	vim.api.nvim_buf_delete(prev, { force = true })
+end, desc("G show (replace buf)"))
+map("n", "<leader>gsh<space>", function()
+	local ref = vim.fn.input("git show ref: ")
+	if ref ~= "" then
+		local prev = vim.api.nvim_get_current_buf()
+		vim.cmd("G show " .. ref)
+		vim.api.nvim_buf_delete(prev, { force = true })
+	end
+end, descv("G show <ref> (replace buf)"))
+
+map("n", "<leader>gsH", function()
+	local prev = vim.api.nvim_get_current_buf()
+	vim.cmd("G show")
+	vim.api.nvim_buf_delete(prev, { force = true })
+end, desc("G show (replace buf)"))
+
+map("n", "<leader>gshq", function()
+	git_show_qf("")
+end, vim.tbl_extend("keep", desc("git show → qf"), { nowait = true }))
+
+map("n", "<leader>gshq<space>", function()
+	local ref = vim.fn.input("git show ref: ")
+	if ref ~= "" then
+		git_show_qf(ref)
+	end
+end, descv("git show <ref> → qf"))
+
+local function git_show_telescope(ref)
+	local cmd = "git show --name-only --format=" .. (ref ~= "" and (" " .. ref) or "")
+	local files = vim.fn.systemlist(cmd)
+	local items = {}
+	for _, f in ipairs(files) do
+		if f ~= "" then
+			table.insert(items, f)
+		end
+	end
+	local pickers = require("telescope.pickers")
+	local finders = require("telescope.finders")
+	local previewers = require("telescope.previewers")
+	local conf = require("telescope.config").values
+	local show_ref = ref ~= "" and ref or "HEAD"
+	pickers.new({}, {
+		prompt_title = "git show " .. show_ref,
+		finder = finders.new_table({ results = items }),
+		sorter = conf.generic_sorter({}),
+		previewer = previewers.new_termopen_previewer({
+			get_command = function(entry)
+				return { "git", "show", show_ref, "--", entry.value }
+			end,
+		}),
+	}):find()
+end
+
+map("n", "<leader>gsht", function()
+	git_show_telescope("")
+end, vim.tbl_extend("keep", desc("git show → telescope"), { nowait = true }))
+
+map("n", "<leader>gsht<space>", function()
+	local ref = vim.fn.input("git show ref: ")
+	if ref ~= "" then
+		git_show_telescope(ref)
+	end
+end, descv("git show <ref> → telescope"))

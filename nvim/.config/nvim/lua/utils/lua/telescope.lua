@@ -6,6 +6,7 @@ local finders = require("telescope.finders")
 local pickers = require("telescope.pickers")
 local themes = require("telescope.themes")
 local conf = require("telescope.config").values
+local previewers = require("telescope.previewers")
 -- pickers creation guide
 -- https://github.com/nvim-telescope/telescope.nvim/blob/master/developers.md#guide-to-your-first-picker
 

@@ -61,6 +61,9 @@ local conf = {
   shfmt = { formatting.shfmt.with({
     extra_filetypes = { "zsh", "bash" },
   }) },
+  sql_formatter = { formatting.sql_formatter.with({
+    extra_args = { "-l", "snowflake" },
+  }) },
 }
 
 local handlers = {

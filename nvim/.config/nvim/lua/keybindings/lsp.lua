@@ -43,13 +43,18 @@ M.load_mappings = function() -- use these on_attach
   --       <leader>e can be remmaped
 
   map("n", "gd", ":Telescope lsp_definitions<cr>", nor_s)
+  -- IMPORTANT: remember to user lsp_type_definitions for stubs!!
+  map("n", "gy", ":Telescope lsp_type_definitions<cr>", nor_s)
   map("n", "gz", ":Telescope lsp_document_symbols<cr>", nor)
+  -- all workspaces
+  map("n", "gZ", ":Telescope lsp_dynamic_workspace_symbols<cr>", nor)
+  -- current workspace (not working ???)
+  -- map("n", "gZ", ":Telescope lsp_workspace_symbols<cr>", nor)
 
   map("n", "gD", ":vsplit | lua vim.lsp.buf.definition()<cr>")
   map("n", "gS", ":split | lua vim.lsp.buf.definition()<cr>")
   map("n", "gr", ":Telescope lsp_references<cr>", nor)
   map("n", "gR", ":lua vim.lsp.buf.references()<cr>", nor)
-  map("n", "gy", ":lua vim.lsp.buf.type_definition()<cr>", nor)
   map("n", "gY", ":lua vim.lsp.buf.declaration()<cr>", nor)
   map("n", "<M-->", vim.lsp.buf.signature_help, nor)
   map("i", "<a-->", "<C-\\><C-O>:lua require('lsp_signature').signature()<cr>", nor)
@@ -71,7 +76,6 @@ M.load_mappings = function() -- use these on_attach
   map("n", "<F2>", ":lua vim.lsp.buf.rename()<cr>", nor)
 
   map("n", "gi", ":Telescope lsp_implementations<cr>", nor)
-  -- map("n", "<leader>li", ":lua vim.lsp.buf.implementation()<cr>", nor)
 
   map("n", "<leader>lci", ":lua vim.lsp.buf.incoming_calls()<cr>", nor)
   map("n", "<leader>lco", ":lua vim.lsp.buf.outgoing_calls()<cr>", nor)
@@ -106,6 +110,12 @@ M.load_mappings = function() -- use these on_attach
   map("n", "<leader>on", ":lua vim.diagnostic.get_namespace()<cr>", nor)
   map("n", "<leader>ol", ":lua vim.diagnostic.setloclist{ title = 'Buffer diagnostics' }<cr>", nor)
   map("n", "<leader>oq", ":lua vim.diagnostic.setqflist{ title = 'Workspace diagnostics' }<cr>", nor)
+
+  -- Disable default LSP mappings and remap for Colemak
+  pcall(vim.keymap.del, 'x', 'in')
+  map('x', 'ln', function()
+    vim.lsp.buf.selection_range(-vim.v.count1)
+  end, desc('LSP selection range'))
 end
 
 return M

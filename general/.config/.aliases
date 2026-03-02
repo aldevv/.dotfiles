@@ -10,7 +10,31 @@ alias v="nvim"
 alias vf="source _vf"
 alias vF="source _vF"
 alias vFa="source _vFa"
-alias grun="print_exec go run ./cmd/..."
+
+grun() {
+  local cmd_args=()
+
+  if [ ! -d "./cmd" ]; then
+    cmd_args=(go run .)
+  else
+    cmd_args=(go run ./cmd/...)
+  fi
+
+  if [ "$#" -gt 0 ]; then
+    cmd_args+=("$@")
+  fi
+
+  print_exec "${cmd_args[@]}"
+}
+
+ur() {
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "uv command not found"
+    return
+  fi
+  print_exec uv run python "$@"
+}
+
 alias gup="print_exec go get -u ./..."
 alias wezterm='flatpak run org.wezfurlong.wezterm'
 
@@ -129,6 +153,7 @@ alias grg="git remote get-url origin"
 alias gcsr="git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'"
 alias cop="copilot -i "
 alias copilot="copilot --allow-tool 'write' --allow-all-paths --allow-all-tools"
+
 
 alias yt="cd ~/.local/bin/ && yt"
 
