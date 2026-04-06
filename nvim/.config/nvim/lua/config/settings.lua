@@ -3,6 +3,12 @@ filetype plugin on
 set number nu
 ]])
 
+vim.filetype.add({
+	extension = {
+		mdx = "markdown",
+	},
+})
+
 -- split window will put the new window right of the current one
 vim.opt.splitright = true
 -- split window will put the new window below the current one

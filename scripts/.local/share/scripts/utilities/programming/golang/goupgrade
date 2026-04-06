@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+CURRENT=$(go version | awk '{print $3}')
+VERSIONS=$(curl -sL https://go.dev/dl/ | grep -oP 'go[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^go//' | sort -t. -k1,1n -k2,2n -k3,3n | uniq)
+
+if [[ -n "$1" ]]; then
+  VERSIONS=$(echo "$VERSIONS" | grep "^${1}")
+  if [[ -z "$VERSIONS" ]]; then
+    echo "No versions match '$1'"
+    exit 1
+  fi
+fi
+
+SELECTED=$(echo "$VERSIONS" | fzf --tac --no-preview --header="current: ${CURRENT#go}")
+[[ -z "$SELECTED" ]] && exit 0
+LATEST="go${SELECTED}"
+
+if [[ "$CURRENT" == "$LATEST" ]]; then
+  echo "Already on $LATEST"
+  exit 0
+fi
+
+echo "$CURRENT -> $LATEST"
+read -p "Upgrade? [y/N] " -n 1 -r reply
+echo
+[[ $reply =~ ^[Yy]$ ]] || exit 0
+
+curl -sL "https://go.dev/dl/${LATEST}.linux-amd64.tar.gz" | sudo tar -C /usr/local -xz
+echo "Done: $(go version)"

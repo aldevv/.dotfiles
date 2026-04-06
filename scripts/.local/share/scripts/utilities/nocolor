@@ -1,0 +1,10 @@
+#!/bin/bash
+# Strip ANSI color codes from input
+
+if [ $# -eq 0 ]; then
+    # No arguments - read from stdin
+    sed 's/\x1b\[[0-9;]*m//g'
+else
+    # Arguments provided - execute in interactive zsh to expand aliases
+    zsh -i -c "$*" 2>&1 | sed 's/\x1b\[[0-9;]*m//g'
+fi
