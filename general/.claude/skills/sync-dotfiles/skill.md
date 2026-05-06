@@ -1,9 +1,9 @@
 ---
 name: sync-dotfiles
-description: "Pull dotfiles, resolve any merge conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), restow any packages that gained new files, then push with a commit message that includes the OS name and machine identifier. Metadata (id and os) is stored in ~/.machine_metadata — if missing, prompt the user to create it."
+description: "Pull dotfiles, resolve any merge conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), sync submodules, restow any packages that gained new files, then push with a commit message that includes the OS name and machine identifier. Metadata (id and os) is stored in ~/.machine_metadata — if missing, prompt the user to create it."
 ---
 
-Sync the dotfiles repo at `~/.dotfiles`: pull remote changes, resolve conflicts, restow packages with new files, and push with a machine-tagged commit.
+Sync the dotfiles repo at `~/.dotfiles` and all its submodules: pull remote changes, resolve conflicts, restow packages with new files, and push with a machine-tagged commit.
 
 ## Step 1 — Load machine metadata
 
@@ -21,15 +21,111 @@ printf "id=<number>\nos=<OS>\n" > ~/.machine_metadata
 
 Do not proceed until both values are confirmed.
 
-## Step 2 — Stage any uncommitted local changes
+## Step 2 — Sync submodules
 
-Before pulling, check for modified tracked files:
+For each submodule defined in `~/.dotfiles/.gitmodules`, sync it independently before touching the parent repo. Run:
+
+```bash
+cd ~/.dotfiles && git submodule status
+```
+
+For each submodule path listed:
+
+### 2a — Resolve SSH alias
+
+The submodule URLs use a `personal` SSH alias (e.g. `git@personal:aldevv/wiki.git`). Check if it resolves:
+
+```bash
+ssh -T git@personal -o ConnectTimeout=3 2>&1 | grep -q "successfully authenticated"
+```
+
+If it fails, derive the fallback GitHub URL by replacing `git@personal:` with `git@github.com:`. Use this fallback URL for all git operations on that submodule for the rest of this session.
+
+### 2b — Initialize if needed
+
+If the submodule shows a leading `-` (not yet cloned), initialize it:
+
+```bash
+# If 'personal' alias works:
+git -C ~/.dotfiles submodule update --init <path>
+
+# If 'personal' alias doesn't work, use insteadOf override:
+git -c "url.git@github.com:aldevv/<repo>.git.insteadOf=git@personal:aldevv/<repo>.git" \
+    -C ~/.dotfiles submodule update --init <path>
+```
+
+### 2c — Ensure on a branch (not detached HEAD)
+
+```bash
+cd ~/.dotfiles/<submodule-path>
+git rev-parse --abbrev-ref HEAD   # returns "HEAD" if detached
+```
+
+If detached, check out the default branch:
+
+```bash
+# Try main first, then master
+git checkout main 2>/dev/null || git checkout master
+```
+
+### 2d — Stage and commit any local changes
+
+```bash
+cd ~/.dotfiles/<submodule-path>
+git status --short
+```
+
+If there are modified tracked files, commit them:
+
+```bash
+git add -u
+git commit -m "wip: local changes before sync [machine-${id}]"
+```
+
+### 2e — Pull remote changes
+
+```bash
+git pull --no-rebase origin <branch>
+```
+
+If the pull fails due to the `personal` SSH alias, use the fallback URL:
+
+```bash
+git pull --no-rebase git@github.com:aldevv/<repo>.git <branch>
+```
+
+Resolve any conflicts using the same rules as Step 3 below.
+
+### 2f — Push submodule changes
+
+```bash
+git push origin <branch>
+```
+
+If push fails due to SSH alias, push to the fallback URL:
+
+```bash
+git push git@github.com:aldevv/<repo>.git <branch>
+```
+
+### 2g — Update the submodule pointer in the parent repo
+
+After syncing each submodule, stage the updated pointer:
+
+```bash
+cd ~/.dotfiles
+git add <submodule-path>
+```
+
+## Step 3 — Stage any uncommitted local changes in parent repo
+
+After submodule syncs, check for modified tracked files in the parent:
 
 ```bash
 cd ~/.dotfiles && git status --short
 ```
 
-If there are **unstaged modifications** (lines starting with ` M`, `M `, etc.), stage and commit only the tracked modified files so the pull can merge cleanly:
+If there are **unstaged modifications** (lines starting with ` M`, `M `, etc.), stage and commit:
 
 ```bash
 cd ~/.dotfiles
@@ -39,7 +135,7 @@ git commit -m "wip: local changes before sync [machine-${id}]"
 
 Skip this commit step if the working tree is already clean.
 
-## Step 3 — Pull with merge strategy
+## Step 4 — Pull with merge strategy
 
 Fetch and merge remote changes, preferring to keep both sides:
 
@@ -74,28 +170,24 @@ After resolving all conflicts, stage them:
 git add -A
 ```
 
-## Step 3.5 — Restow packages that gained new files
+## Step 5 — Restow packages that gained new files
 
-The dotfiles repo is managed with GNU Stow. Files added under a top-level package directory (e.g. `general/`, `nvim/`, `scripts/`) are not active until that package is stowed — pulling alone does not create the symlinks.
-
-After the pull, identify which top-level packages had files **added** (not just modified):
+After pulling, check which dotfiles packages received new files and restow them so the new symlinks appear in `$HOME`:
 
 ```bash
 cd ~/.dotfiles
-git diff --name-only --diff-filter=A HEAD@{1} HEAD | awk -F/ '{print $1}' | sort -u
+git diff HEAD~1 --name-only | sed 's|/.*||' | sort -u
 ```
 
-For each package returned, restow it so new files get linked into `$HOME`:
+For each package directory returned that exists in `~/.dotfiles`, restow it:
 
 ```bash
 cd ~/.dotfiles && stow -R <package>
 ```
 
-If stow reports a conflict because an existing target is a real file (not a symlink), **stop and ask the user** how to resolve — do not auto-adopt or overwrite. As a workaround to keep the rest of the package stowing, you can pass `--ignore='<basename>$'` for the specific conflicting file and surface it in the final report.
+Skip any package that produced no new files or where stow reports conflicts (report conflicts but do not abort).
 
-If no packages had files added, skip this step.
-
-## Step 4 — Commit the merge (if a merge commit is needed)
+## Step 7 — Commit the merge (if a merge commit is needed)
 
 If git left a pending merge commit, finalize it:
 
@@ -103,7 +195,7 @@ If git left a pending merge commit, finalize it:
 git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"
 ```
 
-## Step 5 — Push with a tagged commit message
+## Step 8 — Push with a tagged commit message
 
 The commit message format must be:
 ```
@@ -124,10 +216,10 @@ Then push:
 cd ~/.dotfiles && git push origin main
 ```
 
-## Step 6 — Report
+## Step 9 — Report
 
 Print a summary of what was done:
 - Machine ID and OS used
-- Whether any conflicts were resolved (and how many)
-- Which packages were restowed (and any stow conflicts surfaced)
+- Which submodules were synced (and whether any needed initialization or fallback URLs)
+- Whether any conflicts were resolved in parent or submodules (and how many)
 - Final git log of the last commit pushed
