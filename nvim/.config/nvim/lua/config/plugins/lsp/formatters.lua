@@ -11,6 +11,7 @@ local code_actions = null_ls.builtins.code_actions
 
 local opts = {
   debug = false,
+  temp_dir = vim.fn.stdpath("cache"),
   log = {
     enable = false,
     level = "warn",
