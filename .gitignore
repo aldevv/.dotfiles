@@ -11,3 +11,4 @@ nvim/.config/nvim/lua/work.lua
 zsh/.config/zsh/.zsh_sessions/*
 scripts/.local/share/
 scripts/.local/state/
+scripts/.local/bin/
