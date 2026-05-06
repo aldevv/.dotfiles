@@ -1,6 +1,6 @@
 ---
 name: sync-dotfiles
-description: "Pull dotfiles, resolve any merge conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), sync submodules, restow any packages that gained new files, then push with a commit message that includes the OS name and machine identifier. Metadata (id and os) is stored in ~/.machine_metadata — if missing, prompt the user to create it."
+description: "Pull dotfiles, resolve any merge conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), sync submodules, restow any packages that gained new files, then push with a commit message that includes the OS name and machine identifier. Metadata (id and os) is stored in ~/.machine_metadata — auto-created from hostname + /etc/os-release if missing."
 ---
 
 Sync the dotfiles repo at `~/.dotfiles` and all its submodules: pull remote changes, resolve conflicts, restow packages with new files, and push with a machine-tagged commit.
@@ -13,14 +13,17 @@ Sync the dotfiles repo at `~/.dotfiles` and all its submodules: pull remote chan
 
 Run both of these simultaneously:
 
-**1a — Load machine metadata:**
+**1a — Load machine metadata (auto-create if missing):**
 ```bash
+if [ ! -f ~/.machine_metadata ] || ! grep -q '^id=' ~/.machine_metadata || ! grep -q '^os=' ~/.machine_metadata; then
+  auto_id=$(hostname -s 2>/dev/null || hostname)
+  auto_os=$( ( . /etc/os-release 2>/dev/null && echo "${ID:-$(uname -s)}" ) | tr '[:upper:]' '[:lower:]')
+  printf "id=%s\nos=%s\n" "$auto_id" "$auto_os" > ~/.machine_metadata
+  echo "created ~/.machine_metadata: id=$auto_id os=$auto_os"
+fi
 export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null && echo "id=$id os=$os"
 ```
-If `$id` or `$os` is empty, stop and ask the user to create `~/.machine_metadata`:
-```bash
-printf "id=<number>\nos=<OS>\n" > ~/.machine_metadata
-```
+If `$id` or `$os` is still empty after this (e.g. unwritable HOME), stop and report the failure.
 
 **1b — Check SSH alias and submodule status:**
 ```bash
