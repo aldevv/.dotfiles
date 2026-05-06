@@ -68,11 +68,20 @@ git rev-parse --abbrev-ref HEAD
 git checkout main 2>/dev/null || git checkout master
 ```
 
-**3b — Commit any local changes:**
+**3b — Scan for secrets before staging:**
+```bash
+cd ~/.dotfiles/<path>
+# Get list of modified/added tracked files
+git diff --name-only HEAD
+```
+For each file in that list, run the secret scan (see Secret Scan Rules below).
+If any file fails the scan, **stop and alert the user** — do not stage or commit that repo.
+
+**3c — Commit any local changes:**
 ```bash
 cd ~/.dotfiles/<path>
 git status --short
-# If modified tracked files exist:
+# If modified tracked files exist (and passed secret scan):
 git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
 ```
 
@@ -103,12 +112,18 @@ cd ~/.dotfiles && git add <path1> <path2> <path3>
 
 ## Step 4 — Pull parent repo
 
-Check for local changes, then pull:
+Check for local changes, scan for secrets, then pull:
 
 ```bash
 cd ~/.dotfiles && git status --short
-# If modified tracked files:
-git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+```
+
+If there are modified tracked files, scan them for secrets first (see Secret Scan Rules below).
+If any file fails the scan, **stop and alert the user** — do not stage or commit.
+
+```bash
+# Only if all files passed the scan:
+cd ~/.dotfiles && git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
 
 git pull --no-rebase origin main
 ```
@@ -162,6 +177,26 @@ git push origin main
 ```
 
 ---
+
+## Secret Scan Rules
+
+Before staging any file, check it with:
+
+```bash
+# 1. Suspicious filename
+echo "<filename>" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519'
+
+# 2. Suspicious content — run against the file in the working tree
+grep -qiE \
+  'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' \
+  "<filepath>"
+```
+
+**If either check matches:**
+- Do **not** stage or commit the file
+- Print a clear warning: `BLOCKED: possible secret in <filepath>`
+- Continue syncing other files/repos, but skip this one
+- Include blocked files in the final report
 
 ## Step 7 — Report
 
