@@ -120,11 +120,37 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 })
 
 
+-- large file handling (>100KB): disable LSP, folding, swap
+-- treesitter is disabled separately via the disable function in treesitter.lua
+local bigfile_threshold = 100 * 1024
+vim.api.nvim_create_autocmd("BufReadPre", {
+  callback = function(args)
+    local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(args.buf))
+    if ok and stats and stats.size > bigfile_threshold then
+      vim.b[args.buf].bigfile = true
+      vim.bo[args.buf].swapfile = false
+    end
+  end,
+})
+vim.api.nvim_create_autocmd("BufReadPost", {
+  callback = function(args)
+    if not vim.b[args.buf].bigfile then return end
+    vim.wo[0].foldmethod = "manual"
+    vim.wo[0].foldenable = false
+    vim.schedule(function()
+      for _, client in ipairs(vim.lsp.get_clients({ bufnr = args.buf })) do
+        vim.lsp.buf_detach_client(args.buf, client.id)
+      end
+    end)
+  end,
+})
+
 -- slows down saving
 local patterns = "*.{js,jsx,mjs,java,c,cpp,hs,json,ts,tsx,rs,go,html,svelte,vue,py,hs,sh,lua,tf,tfvars}"
 vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = patterns,
-  callback = function()
+  callback = function(args)
+    if vim.b[args.buf].bigfile then return end
     vim.lsp.buf.format()
   end,
 })

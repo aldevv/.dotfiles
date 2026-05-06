@@ -51,6 +51,7 @@ local ensure_installed = {
   "git_rebase",
   "git_config",
   "csv",
+  "terraform",
   -- "c_sharp",
   -- "angular",
 }
@@ -97,14 +98,17 @@ vim.defer_fn(function()
         ["foo.bar"] = "Identifier",
       },
 
-      -- list of language that will be disabled
-      disable = {},
+      disable = function(_, buf)
+        local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
+        return ok and stats and stats.size > 100 * 1024
+      end,
     },
     indent = {
       enable = true,
-      -- disable = { "go" },
-      -- disable = { "nix" },
-      -- disable = { "yaml", "python" }, -- not working in python as of 23/01/2021
+      disable = function(_, buf)
+        local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
+        return ok and stats and stats.size > 100 * 1024
+      end,
     },
     incremental_selection = {
       enable = true,
