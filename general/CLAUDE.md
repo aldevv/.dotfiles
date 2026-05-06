@@ -38,6 +38,9 @@
 - **Work Aliases**: `~/.config/.aliases_work` (`.aw`)
 - **Work Startup**: `~/.config/.startup_work` (`.sw`)
 
+## Commits & PRs
+- **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
+
 ## Notes
 - Uses environment variables for key paths (check shortcuts in `~/.config/shortcuts/`)
 - Dotfiles are symlinked from `~/.dotfiles/` using GNU Stow

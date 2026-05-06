@@ -151,25 +151,10 @@ alias grso="git remote set-url origin"
 alias grao="git remote add origin"
 alias grg="git remote get-url origin"
 alias gcsr="git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'"
+alias cop="copilot -i "
+alias copilot="copilot --allow-tool 'write' --allow-all-paths --allow-all-tools"
 
-# function cop() {
-#   if [ "$#" -eq  "0" ]; then
-#     echo "Usage: cop <your prompt here>"
-#     return 1
-#   fi
-#   if ! command -v copilot >/dev/null 2>&1; then
-#     npm install -g @github/copilot
-#   fi
-#   echo "suggest me the command to: $*. in one line, command only" | copilot
-# }
 
-function cop() {
-  if [ "$#" -eq  "0" ]; then
-    echo "Usage: cop <your prompt here>"
-    return 1
-  fi
-  echo "in one line, give me  the command, nothing else: $*" | claude
-}
 alias yt="cd ~/.local/bin/ && yt"
 
 alias gwts=". _gwts"
@@ -305,3 +290,5 @@ nixi() {
 # check the one you want, then do
 # v4l2-ctl --device=<chosen> -c=<what you want>
 # v4l2-ctl -d /dev/video4 -c focus_automatic_continuous=0
+alias bruf="$HOME/.dotfiles/scripts/.local/share/scripts/utilities/linux/bruf"
+alias v.e="nvim .envrc"
