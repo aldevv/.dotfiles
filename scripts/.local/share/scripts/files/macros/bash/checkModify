@@ -1,1 +1,0 @@
-inotifywait -e close "$walFolder"

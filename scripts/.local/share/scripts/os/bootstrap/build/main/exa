@@ -1,6 +1,0 @@
-#!/bin/sh
-
-if [ ! -e "$CARGO_HOME" ]; then
-    $OS/build/main/rust
-fi
-sudo -u $SUDO_USER -E PATH="$PATH" "$CARGO_HOME/bin/cargo" install exa

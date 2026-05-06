@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# bwu - Unlock Bitwarden and update BW_SESSION in $HOME/work/.envrc
+# Requires: gpg, bw
+# Password stored encrypted at: ~/.bw_password.gpg
+# Create it with: echo -n 'your_password' | gpg --encrypt --recipient your@email.com -o ~/.bw_password.gpg
+
+set -euo pipefail
+
+ENCRYPTED_PASS="$HOME/.bw_password.gpg"
+ENVRC="$HOME/work/.envrc"
+
+if [[ ! -f "$ENCRYPTED_PASS" ]]; then
+    echo "Error: encrypted password not found at $ENCRYPTED_PASS"
+    echo "Create it with: echo -n 'your_password' | gpg --encrypt --recipient your@email.com -o $ENCRYPTED_PASS"
+    exit 1
+fi
+
+# Decrypt password (GPG will prompt for passphrase if needed)
+PASSWORD=$(gpg --quiet --decrypt "$ENCRYPTED_PASS")
+
+# Unlock Bitwarden using the decrypted password via env var
+BW_SESSION=$(BW_PASSWORD="$PASSWORD" bw unlock --passwordenv BW_PASSWORD --raw)
+unset PASSWORD
+
+if [[ -z "$BW_SESSION" ]]; then
+    echo "Error: failed to unlock Bitwarden"
+    exit 1
+fi
+
+# Update BW_SESSION in .envrc (replace existing line or append)
+if grep -q "^export BW_SESSION=" "$ENVRC"; then
+    sed -i '' "s|^export BW_SESSION=.*|export BW_SESSION=\"$BW_SESSION\"|" "$ENVRC"
+else
+    echo "export BW_SESSION=\"$BW_SESSION\"" >> "$ENVRC"
+fi
+
+echo "BW_SESSION updated in $ENVRC"
+echo "Run: source $ENVRC"

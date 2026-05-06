@@ -1,5 +1,0 @@
-#!/bin/sh
-folder=$(rclone lsd gdrive: | awk '{print $5}')
-remote=$(echo "$folder" | dmenu -i -p "choose folder")
-[ -z "$remote" ] && exit
-rclone -v copy "$1" gdrive:"$remote"

@@ -1,6 +1,0 @@
-#!/bin/sh
-cd "$PROGRAMS"
-mkdir gef;
-cd gef
-wget -O ./.gdbinit-gef.py -q http://gef.blah.cat/py
-echo "source $PROGRAMS/gef/.gdbinit-gef.py" >> "$HOME/.gdbinit"

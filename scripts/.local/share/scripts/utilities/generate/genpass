@@ -1,6 +1,0 @@
-#!/bin/sh
-
-
-pass=$(bw generate -lusn --length 20)
-echo "$pass" | xsel -b
-notify-send "generated password! ㊙️"

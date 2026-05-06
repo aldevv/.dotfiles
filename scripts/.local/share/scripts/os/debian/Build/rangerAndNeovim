@@ -1,6 +1,0 @@
-#!/bin/sh
-
-# for vim and ranger
-mkdir -p "$HOME/nvim/backups"
-sudo pip3 install neovim-remote ranger-fm ueberzug pynvim 
-npm install -g neovim

@@ -1,8 +1,0 @@
-#!/bin/sh
-
-echo \
-'[D-BUS Service]
-Name=org.freedesktop.Notifications
-Exec=/usr/bin/dunst' > /usr/share/dbus-1/services/org.freedesktop.Notifications.service
-
-mv /usr/share/dbus-1/services/org.freedesktop.mate.Notifications.service $HOME/.config/dunst/

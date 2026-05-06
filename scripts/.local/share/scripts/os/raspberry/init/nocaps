@@ -1,9 +1,0 @@
-#!/bin/sh
-echo \
-"XKBMODEL="pc104"
-XKBLAYOUT="latam"
-XKBVARIANT="colemak"
-BACKSPACE="guess"
-XKBOPTIONS="caps:escape"" > /etc/default/keyboard/
-dpkg-reconfigure keyboard-configuration
-#enter and enter

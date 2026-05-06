@@ -1,2 +1,0 @@
-#!/bin/sh
-catdoc "$2" | rg "$1"

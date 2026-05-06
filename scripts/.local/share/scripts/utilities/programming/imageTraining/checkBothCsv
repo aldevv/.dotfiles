@@ -1,6 +1,0 @@
-#!/bin/bash
-# $1 and $2 must be csv files
-# $1 and $2 can be in any order
-common_names=$(comm <(awk -F, '{print $1}' "$1" | sort) <(awk -F, '{print $1}' "$2" | sort) | awk -F'\t' '{print $3}' | grep '\S' | wc -l)
-
-[ "$common_names" == "1" ] && echo "OK" || echo "FAILED with $(( $common_names - 1 )) common files"

@@ -1,5 +1,0 @@
-#!/bin/bash
-# w3m "www.google.com/search?q=$*"
-url="https://lite.duckduckgo.com/lite?kd=-1&kp=-1&q=$(urlencode "$*")" # 🦆
-# exec w3m "$url" +15
-exec lynx -cfg=~/.config/lynx/lynx.cfg -lss=~/.config/lynx/lynx.lss "$url" 

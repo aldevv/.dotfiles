@@ -1,5 +1,0 @@
-#!/bin/bash
-
-book=$(du -a $BOOKS | awk '/pdf/{for(i=2;i<=NF;i++){printf "%s ", $i}; printf "\n"}' | cut -d'/' -f7- | dmenu -l 15 )
-[[ ! -z $book ]] && $AUTOMATION/open_with "${BOOKS}/${book}" || echo failed
-

@@ -1,4 +1,0 @@
-# first option, cant use the print $1
-#man -k "$prog" | awk -v var="$prog" "/^$prog/{print}"
-# in this option var is a regex
-##man -k "$prog" | awk -v var="^$prog" ' $0 ~ var {printf "%-8s ",$1; printf "%-4s", $2; printf "%s ","-"; for(i=4;i<=NF;i++){printf "%s ", $i}; printf "\n"}'

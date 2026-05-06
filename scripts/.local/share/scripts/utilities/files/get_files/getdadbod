@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# file_name="psql"
-file_name="*"
-folder=$FILES/db/dadbod
-destination=$HOME/.local/bin
-
-# getfile "$file_name" "$folder" "$destination"
-getfileu "$folder" "$destination"

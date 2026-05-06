@@ -1,3 +1,0 @@
-#!/bin/bash
-
-mkfile $UTILITIES "Choose a name for your evil util"

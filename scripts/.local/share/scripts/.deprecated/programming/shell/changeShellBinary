@@ -1,9 +1,0 @@
-#!/bin/bash
-
-
-# find ./* -type f ! -wholename "./apps" ! -wholename "./shared" -exec sed '1 s/^#!.*/#!\/bin\/bash/g' {} \;
-find ./* -type f ! -wholename "./apps/*" ! -wholename "./shared/*" -exec sed -i 's/^#!\/bin\/sh/#!\/bin\/bash/g' {} \;
-# find ./* -type f ! -wholename "./apps/*" ! -wholename "./shared/*" 
-
-
-

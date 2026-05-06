@@ -1,6 +1,0 @@
-#!/bin/bash
-
-file="$1"
-
-while read l; do unset "${l%%=*}"; done < "${file:-.env}"
-

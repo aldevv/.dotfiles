@@ -1,7 +1,0 @@
-#!/bin/sh
-
-network=$(dmenu -p "enter ip" < /dev/null)
-if [ ! -z "$network" ]; then
-    name="$network"
-    sed -i "1s/.*/$name/g" "$UTILITIES/classes/network/data"
-fi

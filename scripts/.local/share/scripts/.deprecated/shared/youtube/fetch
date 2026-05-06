@@ -1,15 +1,0 @@
-#!/bin/sh
-font=$(echo "Monospace-10:normal")
-if [ $# -eq 1 ]; # if 1 argument, then ask for vid, if 2 show options and return the id
-then
-    echo "Youtube Search" | dmenu -l 20 -fn $font
-else
-    no_color=$(echo "$1" | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g") 
-    res=$(echo "${no_color}" | sed 's///; /^$/d; /=>/d; s/\([0-9]\)\./\1/;' \
-        | awk '{for(i=1; i<NF-3; i++) printf $i" "} {print "\t\t"$(NF-3)"\t"$(NF-2)"\t" $(NF-1)"\t"$(NF);}'\
-        | column -s$'\t' -t \
-        | dmenu -l 20 -fn $font -p "Results")
-    #need to format the columns so is always aligned
-    choice=$(echo $res | awk '{print $1}')
-    echo $choice
-fi

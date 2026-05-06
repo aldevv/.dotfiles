@@ -1,6 +1,0 @@
-#!/bin/sh
-cd "$SUCKLESS/dmenu"
-apt-get -y install libxinerama-dev libxft-dev libx11-xcb-dev libxcb-res0 libxcb-res0-dev
-make clean
-make 
-make install

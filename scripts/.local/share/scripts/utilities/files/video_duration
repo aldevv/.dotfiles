@@ -1,7 +1,0 @@
-#!/bin/bash
-files="mp4"
-sec=$(for i in *.$files; do LC_ALL=C ffmpeg -i "$i" 2>&1 | awk -F: '/Duration:/{print $2*3600+$3*60+$4}'; done | paste -sd+ | bc)
-echo "scale=2; $sec/60/60" | bc | tr -d '\n'
-printf " hours | "
-echo "scale=2; $sec/60" | bc | tr -d '\n'
-echo " minutes of video"

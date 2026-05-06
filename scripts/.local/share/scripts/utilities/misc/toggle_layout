@@ -1,8 +1,0 @@
-#!/bin/bash
-
-layout="$(setxkbmap -query | grep "variant" | awk '{print $2}')"
-if [[ "$layout" == "colemak" ]]; then
-	setxkbmap -layout latam
-else
-	setxkbmap -layout latam -variant colemak
-fi

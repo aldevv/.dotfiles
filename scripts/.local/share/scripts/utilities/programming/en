@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# when any file changes do the command
-entr -c $* < <(find . -type f)

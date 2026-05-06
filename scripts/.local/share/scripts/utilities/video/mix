@@ -1,9 +1,0 @@
-#!/bin/bash
-
-fname=$(basename -- "$1")
-extension="${fname##*.}"
-filename_no_ext=${fname%.*}
-
-ffmpeg -i "$1" -i "$2" -c copy "${filename_no_ext}v2.${extension}"
-
-

@@ -1,3 +1,0 @@
-#!/bin/bash
-
-nvim "$HOME/todo/todo$(date -u +"%d%m%y")"

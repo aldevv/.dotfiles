@@ -1,6 +1,0 @@
-#!/bin/sh
-name=$(sed -n '1p' "$UTILITIES/classes/network/data")
-
-
-sleep 0.5 && xdotool type "$name"
-# sleep 0.5 && xdotool type '172.16.'

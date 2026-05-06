@@ -1,3 +1,0 @@
-#!/bin/sh
-sudo -u "$SUDO_USER" pip3 install black
-sudo -u "$SUDO_USER" npm install -g prettier

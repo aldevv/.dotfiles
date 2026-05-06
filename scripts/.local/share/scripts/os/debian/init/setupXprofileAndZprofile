@@ -1,7 +1,0 @@
-#!/bin/sh
-
-echo "
-[ -f /etc/profile ] && . /etc/profile
-[ -f "$HOME/.zprofile" ] && . "$HOME/.zprofile" 
-[ -f "$HOME/.xprofile" ] && . "$HOME/.xprofile" 
-" > /etc/X11/Xsession.d/

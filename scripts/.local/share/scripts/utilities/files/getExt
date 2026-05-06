@@ -1,2 +1,0 @@
-#!/bin/sh
-fd '.*' . | rg  -o '\.[a-zA-Z]+$' | sort | uniq

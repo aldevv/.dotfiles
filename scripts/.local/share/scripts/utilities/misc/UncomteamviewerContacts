@@ -1,6 +1,0 @@
-#!/bin/bash
-
-declare -A contacts
-names=("jacobo" "diego")
-contacts[jacobo]=
-contacts[diego]="279628801"

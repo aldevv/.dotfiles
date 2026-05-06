@@ -1,3 +1,0 @@
-#!/bin/sh
-
-sudo -u "$SUDO_USER" npm install -g yarn

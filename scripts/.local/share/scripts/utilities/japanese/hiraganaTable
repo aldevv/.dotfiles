@@ -1,3 +1,0 @@
-#!/bin/bash
-
-zathura "$HOME/Documents/Learn/Books/japanese/tables/hiragana_table.pdf"

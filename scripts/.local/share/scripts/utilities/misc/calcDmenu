@@ -1,4 +1,0 @@
-#!/bin/bash
-calculation=$(xsel -b | dmenu -p Calculate: | bc 2>&1)
-dunstify $calculation
-echo $calculation | xsel -b

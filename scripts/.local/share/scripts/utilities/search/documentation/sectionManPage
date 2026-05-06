@@ -1,7 +1,0 @@
-#!/bin/bash
-program=$(dmenu -p "Program:" </dev/null)
-option=$(dmenu -p "Option" </dev/null)
-# program="curl"
-# option="-s"
-man -P cat $program 2>/dev/null | grep -E -A4 -- "\s${option}" 2>/dev/null
-

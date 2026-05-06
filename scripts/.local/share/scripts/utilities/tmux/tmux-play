@@ -1,5 +1,0 @@
-#!/bin/bash
-
-read -p "Enter extension [go]: " -r lang 
-play "$lang"
-

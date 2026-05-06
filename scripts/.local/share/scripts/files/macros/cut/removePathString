@@ -1,2 +1,0 @@
-# change the -f7 to the number you need
-cut -d'/' -f7-
