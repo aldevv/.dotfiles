@@ -1,55 +1,45 @@
 ---
 name: sync-dotfiles
-description: "Pull dotfiles, resolve any merge conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), then push with a commit message that includes the OS name and machine identifier. The machine ID is stored in ~/.machine_id — if missing, prompt the user to create it."
+description: "Pull dotfiles, resolve any merge conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), then push with a commit message that includes the OS name and machine identifier. Metadata (id and os) is stored in ~/.machine_metadata — if missing, prompt the user to create it."
 ---
 
 Sync the dotfiles repo at `~/.dotfiles`: pull remote changes, resolve conflicts, and push with a machine-tagged commit.
 
-## Step 1 — Check for machine ID
+## Step 1 — Load machine metadata
 
-Check whether `~/.machine_id` exists and contains a valid number:
-
-```bash
-cat ~/.machine_id 2>/dev/null
-```
-
-If the file is missing or empty, **stop and ask the user** to provide their machine identifier number, then write it:
+Read `~/.machine_metadata`:
 
 ```bash
-echo "<number>" > ~/.machine_id
+source ~/.machine_metadata 2>/dev/null
 ```
 
-Do not proceed until the ID is confirmed.
-
-## Step 2 — Detect OS
+This sets `$id` and `$os`. If the file is missing or either value is empty, **stop and ask the user** to provide them, then write the file:
 
 ```bash
-uname -s   # Darwin → macOS, Linux → Linux
+printf "id=<number>\nos=<OS>\n" > ~/.machine_metadata
 ```
 
-Map the result to a friendly name:
-- `Darwin` → `macOS`
-- `Linux` → `Linux`
+Do not proceed until both values are confirmed.
 
-## Step 3 — Stage any uncommitted local changes
+## Step 2 — Stage any uncommitted local changes
 
-Before pulling, make sure there are no untracked or modified files left unstaged that could cause issues. Check with:
+Before pulling, check for modified tracked files:
 
 ```bash
 cd ~/.dotfiles && git status --short
 ```
 
-If there are **unstaged modifications**, stage and commit them first so the pull can merge cleanly:
+If there are **unstaged modifications** (lines starting with ` M`, `M `, etc.), stage and commit only the tracked modified files so the pull can merge cleanly:
 
 ```bash
 cd ~/.dotfiles
-git add -A
-git commit -m "wip: local changes before sync [machine-<ID>]"
+git add -u
+git commit -m "wip: local changes before sync [machine-${id}]"
 ```
 
 Skip this commit step if the working tree is already clean.
 
-## Step 4 — Pull with merge strategy
+## Step 3 — Pull with merge strategy
 
 Fetch and merge remote changes, preferring to keep both sides:
 
@@ -84,37 +74,36 @@ After resolving all conflicts, stage them:
 git add -A
 ```
 
-## Step 5 — Commit the merge (if a merge commit is needed)
+## Step 4 — Commit the merge (if a merge commit is needed)
 
 If git left a pending merge commit, finalize it:
 
 ```bash
-git diff --cached --quiet || git commit -m "merge: sync from remote [machine-<ID>, <OS>]"
+git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"
 ```
 
-## Step 6 — Push with a tagged commit message
-
-Push the result. The final push should include (or be preceded by) a descriptive commit if there were local changes beyond the merge:
-
-```bash
-cd ~/.dotfiles
-git push origin main
-```
+## Step 5 — Push with a tagged commit message
 
 The commit message format must be:
 ```
-sync: dotfiles update [<OS>, machine-<ID>]
+sync: dotfiles update [<os>, machine-<id>]
 ```
 
 Example: `sync: dotfiles update [macOS, machine-3]`
 
-If no new commit is needed (the only new commit is the merge itself), amend its message to follow this format:
+If the only new commit is the wip or merge commit, amend it:
 
 ```bash
-git commit --amend -m "sync: dotfiles update [<OS>, machine-<ID>]"
+git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]"
 ```
 
-## Step 7 — Report
+Then push:
+
+```bash
+cd ~/.dotfiles && git push origin main
+```
+
+## Step 6 — Report
 
 Print a summary of what was done:
 - Machine ID and OS used
