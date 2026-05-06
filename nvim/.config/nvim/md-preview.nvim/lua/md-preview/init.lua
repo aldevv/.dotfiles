@@ -1,5 +1,5 @@
 -- md-preview/init.lua — Neovim scroll-synced markdown preview
--- Single-instance: open → server + Chrome + tmux pane
+-- Single-instance: open → server + Chrome window
 --                  re-open → replace content, no new server/window
 
 -- Resolve plugin root: lua/md-preview/init.lua → ../../ → plugin root
@@ -9,17 +9,32 @@ local _plugin_dir = vim.fn.fnamemodify(
 
 local M = {}
 
+M.opts = {
+  auto_position = true,   -- resize/reposition terminal + browser side-by-side
+}
+
 M.state = {
   job_id         = nil,   -- jobstart() channel ID
   port           = 9753,
   file           = nil,   -- absolute path currently previewed
-  tmux_pane_id   = nil,   -- "%12" style tmux pane ID (Linux/tmux)
   debounce_timer = nil,   -- vim.loop timer for cursor debounce
   platform       = nil,   -- "linux" or "macos"
+  wm             = nil,   -- detected WM name on Linux ("xmonad", "dwm", ...)
   augroup        = nil,   -- autocmd group ID
 }
 
+-- WMs that tile automatically — launching the browser is enough, the WM
+-- handles placement.
+local AUTO_TILING_WMS = {
+  xmonad = true, dwm = true, i3 = true, sway = true, bspwm = true,
+  awesome = true, hyprland = true, river = true, qtile = true,
+}
+
 local function log(msg)
+  vim.notify("[md-preview] " .. msg, vim.log.levels.DEBUG)
+end
+
+local function info(msg)
   vim.notify("[md-preview] " .. msg, vim.log.levels.INFO)
 end
 
@@ -32,12 +47,33 @@ local uv = vim.uv or vim.loop
 
 -- ── Platform detection ────────────────────────────────────────────────────
 
-function M.setup()
+local function detect_wm()
+  -- Try env first (cheap, set by most session managers).
+  local env = os.getenv("XDG_CURRENT_DESKTOP")
+      or os.getenv("DESKTOP_SESSION")
+      or os.getenv("XDG_SESSION_DESKTOP")
+  if env and env ~= "" then
+    local first = env:lower():match("[%w_-]+")
+    if first then return first end
+  end
+  -- Fallback: query root window via xprop.
+  if vim.fn.executable("xprop") == 1 then
+    local out = vim.fn.system("xprop -root _NET_WM_NAME 2>/dev/null")
+    local name = out:match('"(.-)"')
+    if name then return name:lower():match("[%w_-]+") end
+  end
+  return nil
+end
+
+function M.setup(opts)
+  M.opts = vim.tbl_extend("force", M.opts, opts or {})
+
   local uname = uv.os_uname()
   if uname.sysname == "Darwin" then
     M.state.platform = "macos"
   else
     M.state.platform = "linux"
+    M.state.wm = detect_wm()
   end
 end
 
@@ -117,30 +153,54 @@ local function register_autocmds()
   })
 end
 
--- ── tmux pane management ──────────────────────────────────────────────────
+-- ── Port conflict recovery ───────────────────────────────────────────────
 
-local function in_tmux()
-  return os.getenv("TMUX") ~= nil
-end
-
-local function tmux_open_pane(cmd)
-  -- Split right 45%, run cmd, capture pane ID
-  local pane_id = vim.fn.system("tmux split-window -h -l 45% -P -F '#{pane_id}' " .. vim.fn.shellescape(cmd))
-  pane_id = pane_id:gsub("%s+", "")
-  return pane_id ~= "" and pane_id or nil
-end
-
-local function tmux_kill_pane(pane_id)
-  if pane_id then
-    vim.fn.system("tmux kill-pane -t " .. vim.fn.shellescape(pane_id))
+-- Finds PIDs of md-preview-server.py processes bound to `port` and kills them.
+-- Scoped to our own server's command line so we never kill an unrelated
+-- process that happens to share the port.
+local function clear_stale_server(port)
+  if vim.fn.executable("lsof") ~= 1 then return false end
+  local pids_str = vim.fn.system("lsof -ti :" .. port .. " 2>/dev/null")
+  local killed = {}
+  for pid in pids_str:gmatch("%d+") do
+    local cmdline = vim.fn.system("ps -o cmd= -p " .. pid .. " 2>/dev/null")
+    if cmdline:match("md%-preview%-server%.py") then
+      vim.fn.system("kill " .. pid)
+      table.insert(killed, pid)
+    end
   end
+  if #killed > 0 then
+    -- Wait briefly for the socket to be released.
+    vim.wait(500, function()
+      local remaining = vim.fn.system("lsof -ti :" .. port .. " 2>/dev/null")
+      return not remaining:match("%S")
+    end)
+    log("Cleared orphan md-preview server (pid " .. table.concat(killed, ",") .. ")")
+    return true
+  end
+  return false
 end
 
 -- ── Open browser ─────────────────────────────────────────────────────────
 
+local function find_chrome()
+  local candidates = { "google-chrome", "chromium", "chromium-browser" }
+  for _, c in ipairs(candidates) do
+    if vim.fn.executable(c) == 1 then return c end
+  end
+  return nil
+end
+
 local function open_browser()
   local url = "http://localhost:" .. M.state.port .. "/"
   if M.state.platform == "macos" then
+    if not M.opts.auto_position then
+      vim.fn.jobstart(
+        { "open", "-na", "Google Chrome", "--args", "--app=" .. url },
+        { detach = true }
+      )
+      return
+    end
     -- Open Chrome app window, then tile it to the right of kitty
     local script = string.format([[
 -- Get screen bounds
@@ -185,21 +245,19 @@ end tell
 ]], url)
     vim.fn.jobstart({ "osascript", "-e", script }, { detach = true })
   else
-    -- Linux
-    if in_tmux() then
-      local cmd = vim.fn.executable("devour") == 1
-          and ("devour chromium --app=" .. url)
-          or ("chromium --app=" .. url)
-      M.state.tmux_pane_id = tmux_open_pane(cmd)
-    else
-      local chrome = vim.fn.executable("google-chrome") == 1 and "google-chrome"
-          or vim.fn.executable("chromium") == 1 and "chromium"
-          or vim.fn.executable("chromium-browser") == 1 and "chromium-browser"
-          or nil
-      if chrome then
-        vim.fn.jobstart({ chrome, "--app=" .. url }, { detach = true })
+    -- Linux: always launch detached. Known auto-tiling WMs handle placement;
+    -- on unknown WMs we explicitly skip positioning per design.
+    local chrome = find_chrome()
+    if not chrome then
+      err("No Chrome/Chromium found")
+      return
+    end
+    vim.fn.jobstart({ chrome, "--app=" .. url }, { detach = true })
+    if M.opts.auto_position then
+      if M.state.wm and AUTO_TILING_WMS[M.state.wm] then
+        log("WM " .. M.state.wm .. " will tile chromium")
       else
-        err("No Chrome/Chromium found")
+        log("WM " .. (M.state.wm or "unknown") .. " — launched without positioning")
       end
     end
   end
@@ -226,6 +284,10 @@ function M.open(theme)
 
   M.state.file = file
 
+  -- If a previous nvim session left a server bound to our port (e.g. plugin
+  -- was reloaded without close()), kill it before binding.
+  clear_stale_server(M.state.port)
+
   local server_script = _plugin_dir .. "/scripts/md-preview-server.py"
   local venv_python = vim.fn.expand("~/.local/share/nvim/md-preview-venv/bin/python3")
   local python = vim.fn.filereadable(venv_python) == 1 and venv_python or "python3"
@@ -251,7 +313,6 @@ function M.open(theme)
           err("Server exited with code " .. code)
         end
         M.state.job_id = nil
-        M.state.tmux_pane_id = nil
       end,
     }
   )
@@ -262,7 +323,7 @@ function M.open(theme)
     return
   end
 
-  log("Starting server for " .. vim.fn.fnamemodify(file, ":t") .. "…")
+  info("Starting server for " .. vim.fn.fnamemodify(file, ":t") .. "…")
 
   poll_ready(M.state.port, function()
     log("Server ready — opening browser")
@@ -321,10 +382,6 @@ function M.close()
     vim.fn.jobstop(M.state.job_id)
   end
 
-  if M.state.tmux_pane_id then
-    tmux_kill_pane(M.state.tmux_pane_id)
-  end
-
   -- Close the Chrome --app window that's serving our port
   if M.state.platform == "macos" then
     local port = M.state.port
@@ -344,16 +401,27 @@ tell application "System Events"
 end tell
 ]], port),
     }, { detach = true })
+  elseif M.state.platform == "linux" then
+    -- Chromium with --app= shares the existing chromium master process via
+    -- IPC, so jobstop on our launcher does nothing visible. Match the
+    -- window by title (--app= URL appears in the title) and ask the WM to
+    -- close it gently.
+    local title = "localhost:" .. M.state.port
+    if vim.fn.executable("xdotool") == 1 then
+      vim.fn.system("xdotool search --name " .. vim.fn.shellescape(title)
+        .. " windowclose 2>/dev/null")
+    elseif vim.fn.executable("wmctrl") == 1 then
+      vim.fn.system("wmctrl -c " .. vim.fn.shellescape(title) .. " 2>/dev/null")
+    end
   end
 
   if M.state.augroup then
     pcall(vim.api.nvim_del_augroup_by_id, M.state.augroup)
   end
 
-  M.state.job_id       = nil
-  M.state.file         = nil
-  M.state.tmux_pane_id = nil
-  M.state.augroup      = nil
+  M.state.job_id  = nil
+  M.state.file    = nil
+  M.state.augroup = nil
 
   log("Preview closed")
 end

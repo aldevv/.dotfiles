@@ -10,10 +10,7 @@ return {
   },
   {
     "rcarriga/nvim-notify",
-    config = function()
-      require("config.plugins.notify")
-      vim.notify = require("notify")
-    end,
+    config = req("config.plugins.notify"),
   },
   {
     "stevearc/dressing.nvim",
