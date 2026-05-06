@@ -1,7 +1,0 @@
-#!/bin/sh
-# dependencies sxiv
-apt-get -y install libimlib2-dev libexif-dev libgif-dev
-
-cd "$SUCKLESS/sxiv"
-make 
-make install

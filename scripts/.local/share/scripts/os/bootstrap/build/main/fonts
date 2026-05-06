@@ -1,3 +1,0 @@
-#!/bin/sh
-[ ! -e "$PROGRAMS/pass" ] && ./pass
-sudo -u "$SUDO_USER" git clone --depth=1 "https://aldevv:$(pass github)@github.com/aldevv/fonts" "$HOME/.local/share/fonts"

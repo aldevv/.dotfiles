@@ -1,8 +1,0 @@
-#!/bin/zsh
-
-source "$XDG_CONFIG_HOME/nvm/nvm.sh" > /dev/null 2>&1
-source "$HOME/.zshrc" > /dev/null 2>&1
-source "$HOME/.zprofile" > /dev/null 2>&1
-
-node_path="$(nvm which default)"
-echo "${node_path%/*}/"

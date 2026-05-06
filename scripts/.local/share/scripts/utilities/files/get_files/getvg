@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# simply add filename and add the folder with the hierarchy
-
-file_name="Vagrantfile"
-folder=$FILES/virtual/vagrant
-
-getfile "$file_name" "$folder"

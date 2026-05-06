@@ -1,2 +1,0 @@
-#!/bin/sh
-tail -n +2 "$1"| cut -d "," -f 6 | cut -d '"' -f "2" | sort | uniq

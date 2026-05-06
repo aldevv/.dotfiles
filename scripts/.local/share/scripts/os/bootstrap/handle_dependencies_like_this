@@ -1,5 +1,0 @@
-declare -A req=( \
-    ["eopkg"]="intel-compute-runtime"\
-)
-
-install_ ${req[$PKG]}

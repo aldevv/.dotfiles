@@ -1,6 +1,0 @@
-#!/bin/bash
-
-file_name=".projections.json"
-folder=$FILES/projections
-
-getfile "$file_name" "$folder"

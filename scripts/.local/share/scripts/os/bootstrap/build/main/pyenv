@@ -1,4 +1,0 @@
-#!/bin/zsh
-
-sudo -u $SUDO_USER curl https://pyenv.run | zsh
-mv $HOME/.pyenv $HOME/.local/share

@@ -1,4 +1,0 @@
-useradd -m -g wheel arch
-pacman -S --noconfirm base base-devel networkmanager python3 emacs xorg-server xorg-xinit xorg-setxkbmap webkit2gtk gcr xorg-xprop compton transmission-cli zathura youtube-dl powerline powerline-fonts ttf-fira-code xclip alsa-utils pulseaudio pulseaudio-alsa pulseaudio-bluetooth pulsemixer python-pip python-wheel npm sxhkd openssh ranger
-python3 -m pip install --user --upgrade pynvim
-setxkbmap -layout latam -variant colemak -model pc104 -option caps:escape

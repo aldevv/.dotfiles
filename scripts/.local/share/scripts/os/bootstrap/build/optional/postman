@@ -1,7 +1,0 @@
-#!/bin/sh
-
-cd "$PROGRAMS"
-sudo -u "$SUDO_USER" wget https://dl.pstmn.io/download/latest/linux64
-sudo -u "$SUDO_USER" tar -xzf linux64
-rm -r linux64
-sudo -u "$SUDO_USER" ln -s "$PROGRAMS/Postman/Postman" "$HOME/.local/bin/postman"

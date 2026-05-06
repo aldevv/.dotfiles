@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CURRENT=$(go version | awk '{print $3}')
+VERSIONS=$(curl -sL https://go.dev/dl/ | grep -oP 'go[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^go//' | sort -t. -k1,1n -k2,2n -k3,3n | uniq)
+
+if [[ -n "${1:-}" ]]; then
+  VERSIONS=$(echo "$VERSIONS" | grep "^${1}")
+  if [[ -z "$VERSIONS" ]]; then
+    echo "No versions match '$1'"
+    exit 1
+  fi
+fi
+
+SELECTED=$(echo "$VERSIONS" | fzf --tac --no-preview --header="current: ${CURRENT#go}")
+[[ -z "$SELECTED" ]] && exit 0
+LATEST="go${SELECTED}"
+
+if [[ "$CURRENT" == "$LATEST" ]]; then
+  echo "Already on $LATEST"
+  exit 0
+fi
+
+echo "$CURRENT -> $LATEST"
+read -p "Upgrade? [y/N] " -n 1 -r reply
+echo
+[[ $reply =~ ^[Yy]$ ]] || exit 0
+
+TARBALL=$(mktemp --suffix=.tar.gz)
+trap 'rm -f "$TARBALL"' EXIT
+
+echo "Downloading ${LATEST}..."
+curl -fSL "https://go.dev/dl/${LATEST}.linux-amd64.tar.gz" -o "$TARBALL"
+
+# Remove the old install before extracting — tar -xz does not clean up files
+# that existed in the old version but not the new one, which leaves stale
+# stdlib files behind and breaks the toolchain (duplicate declarations, etc).
+echo "Replacing /usr/local/go..."
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf "$TARBALL"
+
+hash -r 2>/dev/null || true
+echo "Done: $(go version)"

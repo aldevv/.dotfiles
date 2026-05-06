@@ -1,7 +1,0 @@
-#!/bin/sh
-#requires xdotool
-
-isItRunning="$(pgrep 'Station')"
-# returns true if is an empty variable
-[ -z "$isItRunning" ] && "$HOME/.local/bin/Station-1.65.0-x86_64.AppImage" && dunstify "worked" || dunstify "didn't work"
-

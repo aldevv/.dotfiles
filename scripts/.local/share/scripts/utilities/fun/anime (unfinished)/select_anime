@@ -1,3 +1,0 @@
-#!/bin/sh
-ls -t $HOME/Downloads/*mkv  | sed 's/^.*\///g' | dmenu -i -l 30
-

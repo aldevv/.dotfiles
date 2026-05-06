@@ -1,4 +1,0 @@
-#!/bin/sh
-
-
-sudo -u "$SUDO_USER" python3 -m pip install --upgrade autorandr

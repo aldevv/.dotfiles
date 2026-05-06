@@ -50,6 +50,10 @@
 - **Default location**: `$HOME/.claude-epic/skills/<skill-name>/SKILL.md` — use this for all skills unless the skill is tightly coupled to a specific project
 - **Project-specific** (rare): `.claude/skills/<skill-name>/SKILL.md` inside the repo — only when the skill depends on files, tooling, or context that only makes sense within that one project
 
+## Commits & PRs
+- **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
+
+
 ## Notes
 - Uses environment variables for key paths (check shortcuts in `~/.config/shortcuts/`)
 - Dotfiles are symlinked from `~/.dotfiles/` using GNU Stow

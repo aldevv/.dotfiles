@@ -1,4 +1,0 @@
-#!/bin/sh
-
-wget -q -O - https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-2.3-medium.txt
-

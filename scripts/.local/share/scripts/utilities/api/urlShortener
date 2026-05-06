@@ -1,9 +1,0 @@
-#!/bin/bash
-
-#sh doesn't have process substitution!
-
-url=$(dmenu -p "shorten:")
-# curl -s -o >(tee >(read variable) >(xclip -sel c) >/dev/null) "http://tinyurl.com/api-create.php?url=${url}" | read variable && dunstify "$variable"
-
-curl -s -o >(tee >(cat) >(xsel -b) >/dev/null) "http://tinyurl.com/api-create.php?url=${url}"
-

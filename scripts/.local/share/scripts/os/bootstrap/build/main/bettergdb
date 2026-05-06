@@ -1,4 +1,0 @@
-#!/bin/sh
-
-# sudo -u "$SUDO_USER" wget -P ~ https://git.io/.gdbinit
-sudo -u "$SUDO_USER" pip install pygments

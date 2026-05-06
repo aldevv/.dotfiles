@@ -1,9 +1,0 @@
-#!/bin/sh
-
-cd "$PROGRAMS"
-
-sudo -u "$SUDO_USER" wget https://zoom.us/client/latest/zoom_x86_64.tar.xz
-tar kvvxf "zoom_x86_64.tar.xz"
-rm "zoom_x86_64.tar.xz"
-cd zoom
-ln -s "$PROGRAMS/zoom/ZoomLauncher" "$HOME/.local/bin/zoom"

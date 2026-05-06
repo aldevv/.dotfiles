@@ -1,7 +1,0 @@
-#!/bin/bash
-
-file_name="launch.json"
-sources="$FILES/debug/launch $WORK/.debug/launch"
-destination=".vscode/"
-
-getfile "$file_name" "$sources" "$destination"

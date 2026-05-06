@@ -1,3 +1,0 @@
-#!/bin/sh
-
-wget -q -O - https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt

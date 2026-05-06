@@ -1,4 +1,0 @@
-#!/bin/sh
-
-go install github.com/OJ/gobuster/v3@latest
-ln -sf $GOPATH/bin/gobuster /usr/local/bin

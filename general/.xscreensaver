@@ -1,11 +1,11 @@
 # XScreenSaver Preferences File
-# Written by xscreensaver-settings 6.08 for kanon on Wed Dec 18 11:05:18 2024.
+# Written by xscreensaver-settings 6.08 for kanon on Wed Jan 21 13:51:04 2026.
 # https://www.jwz.org/xscreensaver/
 
-timeout:	0:10:00
+timeout:	1:20:00
 cycle:		0:10:00
 lock:		True
-lockTimeout:	0:15:00
+lockTimeout:	2:00:00
 passwdTimeout:	0:00:30
 visualID:	default
 installColormap:    True
@@ -20,7 +20,7 @@ fadeSeconds:	0:00:03
 ignoreUninstalledPrograms:False
 dpmsEnabled:	True
 dpmsQuickOff:	False
-dpmsStandby:	1:00:00
+dpmsStandby:	1:20:00
 dpmsSuspend:	2:00:00
 dpmsOff:	4:00:00
 grabDesktopImages:  False
@@ -37,7 +37,7 @@ textFile:
 textProgram:	fortune
 textURL:	https://feeds.feedburner.com/ubuntu-news
 dialogTheme:	default
-settingsGeom:	0,17 1382,482
+settingsGeom:	20,37 1382,482
 
 programs:								      \
 				maze --root				    \n\

@@ -1,4 +1,0 @@
-#!/bin/sh
-
-sudo -u $SUDO_USER https://github.com/arielf/cuts "$PROGRAMS/cuts"
-ln -sf $PROGRAMS/cuts/cuts /usr/local/bin/cut

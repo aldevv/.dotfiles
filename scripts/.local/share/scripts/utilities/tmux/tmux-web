@@ -1,5 +1,0 @@
-#!/bin/bash
-
-read -r -p "Enter Query: " query
-
-$UTILITIES/search/? "$query"
