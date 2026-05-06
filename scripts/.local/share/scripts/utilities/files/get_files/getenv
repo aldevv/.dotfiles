@@ -1,0 +1,14 @@
+#!/bin/bash
+
+folder="${1:-$FILES/env}"
+destination="${2:-.}"
+chosen=$(find "$folder" -mindepth 1 -type f | fzf -m -d / --with-nth -2)
+
+[[ -z "$chosen" ]] && exit
+
+new_file=""
+for c in $chosen; do
+    new_file+="$(cat $c)\n"
+done
+echo -e "$new_file" > "$destination/.envrc"
+

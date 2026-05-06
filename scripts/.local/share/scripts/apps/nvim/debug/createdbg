@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# $1 is the extension
+# $2 is the filename
+# sed -i "s|myapp1|$2.$1|g" "$(pwd)/.vimspector.json"
+folder="$1"
+if [ "$1" = 'rs' ];then
+    workspace=${PWD%*/src}
+    app_name=$(basename "$workspace")
+else
+
+    if [ "$1" = 'c' ] || [ "$1" = 'cpp' ];then
+        workspace=${PWD}
+        app_name="a.out"
+    fi
+
+fi
+if [ ! -e "$APPS/vim/debug/$1" ]; then
+    folder="default"
+fi
+cp "$APPS/vim/debug/$folder/.vimspector.json" "$workspace/.vimspector.json"
+sed -i "s|myapp1|$app_name|g" "$workspace/.vimspector.json"

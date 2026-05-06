@@ -1,0 +1,7 @@
+#!/bin/sh
+# task spooler
+sudo -u "$SUDO_USER" wget http://vicerveza.homeunix.net/~viric/soft/ts/ts-1.0.1.tar.gz
+sudo -u "$SUDO_USER" tar kvvxf ts-1.0.1.tar.gz
+cd ts-1.0.1
+make
+make install

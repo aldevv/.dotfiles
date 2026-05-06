@@ -1,0 +1,21 @@
+#!/bin/bash
+
+git clone --depth=1 https://github.com/openwall/john /opt/john
+cd /opt/john/src || exit
+./configure
+make -s clean && make -sj4
+
+for executable in /opt/john/run/*; do
+    if [ -x "$executable" ] && [ -f "$executable" ]; then
+        base=$(basename $executable)
+        if [ "$base" == "john" ]; then
+            continue
+        fi
+        ln -sf "$executable" /usr/local/bin/${base%%.*}
+    fi
+done
+
+[[ -n "$PROGRAMS" ]] \
+    && ln -sf /opt/john "$PROGRAMS/john"
+
+

@@ -1,0 +1,1 @@
+psql -U postgres -d database_name -c "copy (select * from cc where dd >= 28) to STDOUT;"

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+sudo -u "$SUDO_USER" pip install pylovepdf

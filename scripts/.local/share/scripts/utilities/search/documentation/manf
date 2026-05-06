@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# puts a fullscreen man page of the command given
+if [ -z "$1" ]; then
+    exit
+fi
+dwmc togglefullscr
+man "$1"
+dwmc togglefullscr

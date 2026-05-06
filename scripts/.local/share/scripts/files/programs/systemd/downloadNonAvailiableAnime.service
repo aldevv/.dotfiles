@@ -1,0 +1,11 @@
+[Unit]
+Description=Get anime not availiable elsewhere
+
+[Service]
+Type=simple
+ExecStart=$SCRIPTS/utilities/anime/downloadAnime
+User=$USER
+
+[Install]
+WantedBy=graphical.target
+

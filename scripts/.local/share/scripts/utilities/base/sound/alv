@@ -1,0 +1,4 @@
+#!/bin/sh
+
+
+pactl list sink-inputs | awk  '/(Sink Input|%|application\.name)/{if ($3 ~ /#[0-9]+/) printf "%s ",$3; else if($5 ~ /%/) printf "%s ", $5; else printf "%s\n",$3;}' | tr -d '"'

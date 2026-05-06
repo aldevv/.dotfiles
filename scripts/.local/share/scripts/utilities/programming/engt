@@ -1,0 +1,3 @@
+#!/bin/bash
+
+entr -c go test < <(find .)

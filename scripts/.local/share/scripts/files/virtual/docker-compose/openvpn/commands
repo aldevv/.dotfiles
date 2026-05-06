@@ -1,0 +1,26 @@
+#!/bin/sh
+# clientname $1
+# ip $2
+
+# try it while already on a vpn
+
+CLIENTNAME=$1
+if [ -n "$2" ]; then
+    docker-compose run --rm openvpn ovpn_genconfig -u udp://"$2"
+else
+    pi="curl -s ifconfig.me | cut -d'%' -f 1"
+    docker-compose run --rm openvpn ovpn_genconfig -u udp://"$pi"
+fi
+docker-compose run --rm openvpn ovpn_initpki
+
+#docker-compose run --rm openvpn easyrsa build-client-full $CLIENTNAME nopass
+if [ -n "$1" ]; then
+    docker-compose run --rm openvpn easyrsa build-client-full $CLIENTNAME
+    docker-compose run --rm openvpn ovpn_getclient $CLIENTNAME > $CLIENTNAME.ovpn nopass
+else
+    docker-compose run --rm openvpn easyrsa build-client-full "example" nopass
+    docker-compose run --rm openvpn ovpn_getclient "example" > example.ovpn
+fi
+# for no pass
+
+

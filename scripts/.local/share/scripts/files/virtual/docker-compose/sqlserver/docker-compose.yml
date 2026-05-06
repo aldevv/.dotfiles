@@ -1,0 +1,23 @@
+version: '3.5'
+x-vars:
+  &db-variables
+  CLIENT: '/opt/mssql-tools/bin/sqlcmd'
+  MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+  SA_PASSWORD: 'Mypassword.'
+  ACCEPT_EULA: 'Y'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2017-CU8-ubuntu
+    environment: *db-variables
+    ports:
+      - "1433:1433"
+    volumes:
+      - $CLASS/DBII/taller_ssis/migra/taller_multimedia_parte2/db:/src:rw
+      - ${MYVOLUMEDATA}:/var/opt/mssql/data:rw
+      - ${MYVOLUMELOG}:/var/opt/mssql/log:rw
+      - ${MYVOLUMESECRETS}:/var/opt/mssql/secrets:rw
+    networks:
+      - lamp
+networks:
+  lamp:

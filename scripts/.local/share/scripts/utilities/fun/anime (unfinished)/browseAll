@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# browse anime names
+anime=$(curl -s https://subsplease.org/shows/ | pup 'div.all-shows-link text{}' | dmenu -i -l 15)
+
+echo $anime
+
+# browse urls
+curl -s https://subsplease.org/shows/ | pup 'div.all-shows-link a attr{href}'

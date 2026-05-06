@@ -1,0 +1,22 @@
+version: "2"
+
+services:
+  openvpn:
+    image: 'kylemanna/openvpn'
+    cap_add:
+      - NET_ADMIN
+    ports:
+    - '1194:1194/udp'
+    volumes:
+        - ${VOLUMES}/VPN:/etc/openvpn
+    environment:
+        - CLIENTNAME=example
+
+
+# this is while on another vpn
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.37.1.0/24

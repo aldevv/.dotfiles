@@ -1,0 +1,10 @@
+#!/bin/sh
+# use autoexpect ./yourprogram
+# it records what you do once, and creates a program for automation
+sudo -u "$SUDO_USER" mkdir "$PROGRAMS/rust"
+if [ ! -e "$PROGRAMS/rust/cargo" ]; then
+# dont use the package manager, it has problems when installing packages
+sudo -u "$SUDO_USER" curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sudo -u "$SUDO_USER" CARGO_HOME=$CARGO_HOME RUSTUP_HOME=$RUSTUP_HOME zsh
+sudo -u "$SUDO_USER" rustup component add rls rust-analysis rust-src
+fi
+

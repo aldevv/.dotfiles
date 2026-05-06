@@ -1,0 +1,44 @@
+- hosts: localhost
+  become: true
+  pre_tasks:
+    - name: Update cache
+      apt:
+        update_cache: true
+      tags:
+        - zsh
+        - node
+  tasks:
+    - name: Install zsh
+      apt: name=zsh
+      tags:
+        - zsh
+    - name: Change shell
+      shell: chsh -s `which zsh`
+      tags:
+        - zsh
+    - name: Install .oh-my-zsh
+      shell: curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sh
+      tags:
+        - zsh
+    - name: Install autosuggestions
+      ansible.builtin.git:
+        repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
+        dest: '~/.oh-my-zsh/plugins/zsh-autosuggestions'
+      tags:
+        - zsh
+    - name: Install node
+      apt:
+        name: ['nodejs', 'npm']
+      tags:
+        - zsh
+    - name: Install n
+      npm:
+        name: n
+        global: true
+      tags:
+        - node
+    - name: n 14
+      shell: n 14
+      tags:
+        - node
+

@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Golang launch.json file",
+            "type": "go",
+            "cwd": "${workspaceFolder}",
+            "request": "launch",
+            "program": "./cmd/photos_api/main.go",
+            "args": [
+                "--storage",
+                "google"
+            ]
+        }
+    ]
+}

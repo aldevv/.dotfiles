@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+while true; do
+  read -p "Ask: " -r query
+  tgpt "$query"
+done
+tmux swap-window -t -1

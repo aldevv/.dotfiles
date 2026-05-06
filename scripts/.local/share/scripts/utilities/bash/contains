@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# run like this
+# $ array=("something to search for" "a string" "test2000")
+# $ containsElement "a string" "${array[@]}"
+# $ echo $?
+# 0
+
+e="$1"
+shift
+match="$1"
+for e; do [[ "$e" == "$match" ]] && exit 0; done
+exit 1
+

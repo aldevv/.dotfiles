@@ -1,0 +1,5 @@
+go get -u github.com/relastle/pmy
+sudo -u $SUDO_USER git clone https://github.com/relastle/pmy-config $HOME/.pmy
+sudo -u $SUDO_USER git clone https://github.com/Valodim/zsh-capture-completion $HOME/.local/bin/zsh-capture
+mv $HOME/.local/bin/zsh-capture/capture.zsh $HOME/.local/bin/
+rm -r $HOME/.local/bin/zsh-capture

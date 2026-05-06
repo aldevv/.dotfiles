@@ -1,0 +1,6 @@
+#!/bin/bash
+
+file_name="docker-compose.yml"
+folder=$FILES/virtual/docker-compose
+
+getfile "$file_name" "$folder"

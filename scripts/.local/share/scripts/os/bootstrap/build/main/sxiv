@@ -1,0 +1,10 @@
+#!/bin/bash
+# dependencies sxiv
+declare -A req=(\
+['eopkg']="imlib2-devel libexif-devel giflib-devel"\
+['zypper']="imlib2-devel libexif-devel giflib-devel"\
+)
+
+cd "$SUCKLESS/sxiv"
+make
+make install

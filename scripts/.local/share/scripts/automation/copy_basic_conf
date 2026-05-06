@@ -1,0 +1,65 @@
+#!/bin/zsh
+#
+#run with sudo -E
+
+
+
+
+cd "$HOME" || exit
+path_dot="$(find "$HOME" -name 'dotfiles')"
+
+#==============
+# VIM CONFIG
+#==============
+vim_folder="/etc/vim"
+cp "$path_dot/.config/nvim/modules/keybindings.vim" "$HOME/.config/nvim/init.vim"
+cp "$path_dot/.config/nvim/modules/keybindings.vim" "$vim_folder/vimrc.local"
+sourced=$(grep 'source .*vimrc\.local' "$vim_folder/vimrc")
+[[ -d "$vim_folder" && -z "$sourced" ]] \
+    && echo "source $vim_folder/vimrc.local" >> "$vim_folder/vimrc" \
+    || echo "/etc/vim/vimrc doesn't exist or vimrc.local is not sourced"
+
+#==============
+# ZSH CONFIG
+#==============
+cp "$path_dot/.config/zsh/.auto_aliases" "$HOME/.config"
+cp "$path_dot/.config/zsh/.aliases" "$HOME/.config"
+auto_aliases='source $HOME/.config/.auto_aliases'
+aliases='source $HOME/.config/.aliases'
+lesskey='lesskey $HOME/.config/colemak-less'
+echo \
+"$auto_aliases
+$aliases
+$lesskey" >> "$HOME/.zshrc"
+
+cp "$path_dot/.config/colemak-less" "$HOME/.config/colemak-less"
+
+# ================
+# INSTALL PROGRAMS
+# ================
+
+[[ -z "$PKG" ]] \
+    && export PKG="$(../../utilities/linux/get_package_manager)"\
+    ;  export PKG_COMMAND="$(../../utilities/linux/get_package_manager 'command')"
+
+declare -A programs=(\
+["eopkg"]="
+tmux"\
+["apt"]="
+tmux"\
+["pacman"]="
+tmux"\
+)
+
+echo "Install programs?"
+echo "${programs[$PKG]}"
+
+select opt in "si" "no"; do
+    case opt in
+        'no') exit ;;
+        'n') exit ;;
+    esac
+done
+
+
+../../utilities/linux/install_dependencies ${programs[$PKG]}

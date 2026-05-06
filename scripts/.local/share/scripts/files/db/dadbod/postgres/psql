@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ ! "$(docker ps -q -f name=$NAME)" ]; then
+    if [ "$(docker ps -aq -f status=exited -f name=$NAME)" ]; then
+        docker rm $NAME
+    fi
+fi
+
+echo "$@" >> /tmp/test.psql
+
+docker-compose exec -T $SERVICE_NAME psql "$@"
+

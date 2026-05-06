@@ -1,0 +1,11 @@
+#!/bin/sh
+
+cd /opt
+wget -O "crunch.tgz" https://sourceforge.net/projects/crunch-wordlist/files/latest/download
+tar kvvxf crunch.tgz
+rm "crunch.tgz"
+name="$(ls | grep 'crunch')"
+cd "$name"
+sudo make
+sudo make install
+

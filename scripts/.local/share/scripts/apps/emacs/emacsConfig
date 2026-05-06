@@ -1,0 +1,3 @@
+#!/bin/sh
+cd ~/.emacs.d
+awk '{if ($1 !~ /^#/ ) print $2 }' "$APPS/emacs/emacsDependencies" | xargs -n 1 git clone

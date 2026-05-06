@@ -1,0 +1,13 @@
+#!/bin/sh
+# clip_command=$(xclip -out -sel clip)
+clip_command=$(xsel -o -b)
+clear
+echo "Enter Filename: "
+read -r name
+if [ -z "$name" ]; then
+    # curl -O "$(xclip -out -sel clip)"
+    curl -O "$clip_command"
+else
+    curl -o "$name" "$clip_command"
+fi
+

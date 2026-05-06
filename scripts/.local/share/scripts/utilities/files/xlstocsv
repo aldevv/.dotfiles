@@ -1,0 +1,5 @@
+#!/bin/sh
+filename="$1"
+outdir="$2"
+ [ -z "$2" ] && outdir="."
+libreoffice --headless --convert-to csv $filename --outdir $outdir

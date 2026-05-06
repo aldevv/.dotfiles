@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flask App",
+            "type": "python",
+            "module": "flask",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "FLASK_APP": "core.app.py",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "1"
+            },
+            "python": "${env:VIRTUAL_ENV}/bin/python",
+            "args": [
+                "run",
+                "--no-reload"
+            ],
+            "jinja": true
+        }
+    ]
+}

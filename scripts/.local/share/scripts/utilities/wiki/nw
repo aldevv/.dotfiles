@@ -1,0 +1,42 @@
+#!/bin/bash
+export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
+WIKI=${WIKI:-"$HOME/.local/share/wiki/"}
+is_dmenu=0
+[[ "$1" == "dmenu" ]] && is_dmenu=1 && shift
+
+pattern="${1:-.}"
+ext="org"
+files=$(fd "$pattern" $WIKI/notes -t f -e ${ext})
+
+if [[ "$pattern.${ext}" == "${files##*/}" ]]; then
+    nvim "$files"
+    exit 0
+fi
+
+if [[ $is_dmenu == 1 ]]; then
+    chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} ".${ext}" | dmenu -n)
+else
+    #if explicit pattern, don't add new
+    if [[ "$pattern" == "." ]]; then
+        chosen_file=$(echo -e "$files\nnew" | xargs -I {} basename {} ".${ext}" | fzf --no-preview)
+    else
+        chosen_file=$(echo -e "$files" | xargs -I {} basename {} .${ext} | fzf --no-preview)
+    fi
+fi
+
+
+if [[  $chosen_file == "new" ]]; then
+    setsid st -e nvim $WIKI/notes/ 2>/dev/null
+    exit 0
+fi
+
+chosen_filepath=$(echo "$files" | grep "/${chosen_file}.${ext}" 2>/dev/null)
+
+if [[  -n $chosen_filepath ]]; then
+    if [[ $flag == '?' ]]; then
+        nvim $chosen_filepath
+    else
+        setsid st -e nvim $chosen_filepath 2>/dev/null
+    fi
+
+fi

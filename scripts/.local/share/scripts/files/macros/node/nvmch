@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# use node as $1 for latest version
+nvm install "$1" && nvm use "$1"
+
+# to change default in all terminals
+# nvm alias default <version>
+# nvm alias default node
+# nvm alias default 10.22.1

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+
+zathura "$HOME/Documents/Learn/Books/japanese/pimsleur/pimsleur-Japones/Pimsleur-JP/Pimsleur-Japanese-Complete-Notes/Pimsleur-Japanese-Complete-Notes.pdf"

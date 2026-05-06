@@ -1,0 +1,7 @@
+#!/bin/sh
+cd "$PROGRAMS" || exit
+git clone --depth=1 https://github.com/Gnurou/tagainijisho
+cd "tagainijisho" || exit
+cmake .
+make
+make install

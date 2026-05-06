@@ -1,0 +1,15 @@
+build-essential
+ranger
+neovim
+zsh  # special, modify script
+sxhkd
+exa
+npm
+compton #change to picom
+fzf
+imagemagick
+ripgrep
+feh
+dunst
+copyq
+xmodmap

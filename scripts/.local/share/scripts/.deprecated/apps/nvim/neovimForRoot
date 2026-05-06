@@ -1,0 +1,5 @@
+#!/bin/sh
+# put usable nvim for root (working)
+# cp -r "/home/$SUDO_USER/.config/nvim" "/root/.config/nvim"
+# rm /root/.config/nvim/init.vim
+# mv /root/.config/nvim/init_root.vim /root/.config/nvim/init.vim;

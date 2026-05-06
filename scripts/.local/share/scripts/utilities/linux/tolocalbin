@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+dest="$HOME/.local/bin"
+
+for f in "$@"; do
+  tar tf "$f"
+  read -p "extract $f in $dest? [y/N] " -n 1 -r reply
+  if [[ $reply =~ ^[Yy]$ ]]; then
+    tar -C "$dest" -xzf "$f"
+  fi
+done
+

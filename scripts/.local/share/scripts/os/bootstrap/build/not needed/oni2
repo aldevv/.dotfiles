@@ -1,0 +1,14 @@
+#!/bin/sh
+
+cd "$PROGRAMS"
+https://github.com/onivim/oni2
+cd "oni2"
+npm install -g esy@latest
+eopkg it libxt-devel
+eopkg it libsm-devel
+eopkg it acl-devel
+eopkg it libxxf86vm-devel
+pkg it bzip2-devel
+esy install
+esy bootstrap
+esy build

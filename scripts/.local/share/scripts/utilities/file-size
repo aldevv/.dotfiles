@@ -1,0 +1,250 @@
+#!/bin/bash
+
+# file-size - Interactive file/folder size explorer with fzf
+# Lists top-level items by size and allows exploration
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Function to format size in human readable format
+format_size() {
+    local size=$1
+    if (( size > 1073741824 )); then
+        printf "%.1fG" "$(echo "scale=1; $size/1073741824" | bc -l)"
+    elif (( size > 1048576 )); then
+        printf "%.1fM" "$(echo "scale=1; $size/1048576" | bc -l)"
+    elif (( size > 1024 )); then
+        printf "%.1fK" "$(echo "scale=1; $size/1024" | bc -l)"
+    else
+        printf "%dB" "$size"
+    fi
+}
+
+# Function to get directory size
+get_dir_size() {
+    local dir="$1"
+    du -sb "$dir" 2>/dev/null | cut -f1
+}
+
+# Function to get file size
+get_file_size() {
+    local file="$1"
+    stat -c%s "$file" 2>/dev/null
+}
+
+# Function to explore directory contents
+explore_directory() {
+    local target_dir="$1"
+
+    echo -e "${CYAN}Exploring: $target_dir${NC}"
+    echo "=============================================="
+
+    # Get items in the directory with sizes
+    local items=()
+
+    # Process files and directories
+    while IFS= read -r -d '' item; do
+        local basename=$(basename "$item")
+        local size
+        local type_indicator
+
+        if [[ -d "$item" ]]; then
+            size=$(get_dir_size "$item")
+            type_indicator="${BLUE}[DIR]${NC}"
+        else
+            size=$(get_file_size "$item")
+            type_indicator="${GREEN}[FILE]${NC}"
+        fi
+
+        if [[ -n "$size" && "$size" -gt 0 ]]; then
+            local formatted_size=$(format_size "$size")
+            items+=("$size|$type_indicator $formatted_size $basename|$item")
+        fi
+    done < <(find "$target_dir" -maxdepth 1 -type f -print0; find "$target_dir" -maxdepth 1 -type d ! -path "$target_dir" -print0)
+
+    # Sort by size (descending) and display
+    if [[ ${#items[@]} -gt 0 ]]; then
+        printf '%s\n' "${items[@]}" | sort -t'|' -k1 -nr | while IFS='|' read -r size display_line full_path; do
+            echo -e "$display_line"
+        done | head -20
+
+        echo ""
+        echo -e "${YELLOW}Select an item to explore further (ESC to quit):${NC}"
+
+        # Create fzf-friendly list for selection
+        printf '%s\n' "${items[@]}" | sort -t'|' -k1 -nr | head -20 | \
+        while IFS='|' read -r size display_line full_path; do
+            echo "$display_line|$full_path"
+        done | sed 's/\\033\[[0-9;]*m//g' | \
+        fzf --header="Select item to explore (ENTER=open, ESC=quit)" \
+              --preview='
+                  item=$(echo {} | cut -d"|" -f3)
+                  if [[ -d "$item" ]]; then
+                      echo "Directory contents:"
+                      ls -la "$item" 2>/dev/null | head -20
+                  else
+                      echo "File info:"
+                      file "$item" 2>/dev/null
+                      echo ""
+                      if [[ -f "$item" ]]; then
+                          head -20 "$item" 2>/dev/null || echo "Binary file or permission denied"
+                      fi
+                  fi
+              ' | while IFS='|' read -r display_line full_path; do
+            if [[ -d "$full_path" ]]; then
+                echo ""
+                explore_directory "$full_path"
+            else
+                echo ""
+                echo -e "${GREEN}File: $full_path${NC}"
+                echo "Type: $(file "$full_path" 2>/dev/null)"
+                echo ""
+                read -p "Open with default editor? (y/N): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    ${EDITOR:-nano} "$full_path"
+                fi
+            fi
+        done
+    else
+        echo -e "${RED}No accessible items found in $target_dir${NC}"
+    fi
+}
+
+# Main function
+main() {
+    local start_dir="${1:-.}"
+
+    echo -e "${PURPLE}File Size Explorer${NC}"
+    echo -e "${CYAN}Analyzing top-level items in: $start_dir${NC}"
+    echo "=============================================="
+
+    # Check if we can access the directory
+    if [[ ! -r "$start_dir" ]]; then
+        echo -e "${RED}Error: Cannot read directory $start_dir${NC}"
+        exit 1
+    fi
+
+    # Get top-level items with sizes
+    local items=()
+
+    echo "Calculating sizes... (this may take a moment)"
+
+    # Process directories and files separately
+    while IFS= read -r -d '' item; do
+        local basename=$(basename "$item")
+        local size
+        local type_indicator
+
+        if [[ -d "$item" ]]; then
+            echo -n "."  # Progress indicator
+            size=$(get_dir_size "$item")
+            type_indicator="${BLUE}[DIR]${NC}"
+        else
+            size=$(get_file_size "$item")
+            type_indicator="${GREEN}[FILE]${NC}"
+        fi
+
+        if [[ -n "$size" && "$size" -gt 0 ]]; then
+            local formatted_size=$(format_size "$size")
+            items+=("$size|$type_indicator $formatted_size $basename|$item")
+        fi
+    done < <(find "$start_dir" -maxdepth 1 -type f -print0; find "$start_dir" -maxdepth 1 -type d ! -path "$start_dir" -print0)
+
+    echo ""  # New line after progress dots
+    echo ""
+
+    if [[ ${#items[@]} -eq 0 ]]; then
+        echo -e "${RED}No accessible items found in $start_dir${NC}"
+        exit 1
+    fi
+
+    # Separate files and directories for better display
+    local dirs=()
+    local files=()
+
+    for item in "${items[@]}"; do
+        IFS='|' read -r size display_line full_path <<< "$item"
+        if [[ -d "$full_path" ]]; then
+            dirs+=("$item")
+        else
+            files+=("$item")
+        fi
+    done
+
+    # Display directories (top 15)
+    if [[ ${#dirs[@]} -gt 0 ]]; then
+        echo -e "${YELLOW}Top 15 largest directories:${NC}"
+        printf '%s\n' "${dirs[@]}" | sort -t'|' -k1 -nr | head -15 | while IFS='|' read -r size display_line full_path; do
+            echo -e "$display_line"
+        done
+        echo ""
+    fi
+
+    # Display files (top 10)
+    if [[ ${#files[@]} -gt 0 ]]; then
+        echo -e "${YELLOW}Top 10 largest files:${NC}"
+        printf '%s\n' "${files[@]}" | sort -t'|' -k1 -nr | head -10 | while IFS='|' read -r size display_line full_path; do
+            echo -e "$display_line"
+        done
+    fi
+
+    echo ""
+    echo -e "${YELLOW}Select an item to explore (ESC to quit):${NC}"
+
+    # Use fzf for selection - combine dirs and files
+    all_items=()
+    if [[ ${#dirs[@]} -gt 0 ]]; then
+        while IFS= read -r item; do
+            all_items+=("$item")
+        done < <(printf '%s\n' "${dirs[@]}" | sort -t'|' -k1 -nr | head -15)
+    fi
+    if [[ ${#files[@]} -gt 0 ]]; then
+        while IFS= read -r item; do
+            all_items+=("$item")
+        done < <(printf '%s\n' "${files[@]}" | sort -t'|' -k1 -nr | head -10)
+    fi
+
+    selected=$(printf '%s\n' "${all_items[@]}" | \
+        while IFS='|' read -r size display_line full_path; do
+            echo "$display_line|$full_path"
+        done | sed 's/\\033\[[0-9;]*m//g' | \
+        fzf --header="Select item to explore (ENTER=explore, ESC=quit)" \
+            --preview='
+                item=$(echo {} | cut -d"|" -f2)
+                if [[ -d "$item" ]]; then
+                    echo "Directory preview:"
+                    ls -la "$item" 2>/dev/null | head -10
+                    echo ""
+                    echo "Total items: $(find "$item" -maxdepth 1 | wc -l)"
+                else
+                    echo "File preview:"
+                    file "$item" 2>/dev/null
+                    echo ""
+                    if [[ -f "$item" ]]; then
+                        head -10 "$item" 2>/dev/null || echo "Binary file or permission denied"
+                    fi
+                fi
+            ')
+
+    if [[ -n "$selected" ]]; then
+        local selected_path=$(echo "$selected" | cut -d'|' -f2)
+        echo ""
+        explore_directory "$(dirname "$selected_path")"
+    else
+        echo -e "${CYAN}Goodbye!${NC}"
+    fi
+}
+
+# Check dependencies
+command -v fzf >/dev/null 2>&1 || { echo -e "${RED}Error: fzf is required but not installed.${NC}" >&2; exit 1; }
+command -v bc >/dev/null 2>&1 || { echo -e "${RED}Error: bc is required but not installed.${NC}" >&2; exit 1; }
+
+# Run main function
+main "$@"

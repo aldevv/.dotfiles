@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -x
+
+#有難うございます
+isBookmark() {
+ARRAY=( "l:b-ok.cc"
+        "reg:www.debuggex.com/"
+        "aa:subsplease.org/"
+        "sia:autenticasia.unal.edu.co/oam/server/obrareq.cgi?encquery%3D5529jVTc1pcM3pQPy8nqs7bW7Dt2jAXTdCmWsP9B5%2BUB18EgjnempvDufQY8eD7r6x7XJmlQePrpJd4hN5H%2F67rG8Oi7wvnzhnvEsA6AgppaEhzN98MP72wKq9Rs9HHkS%2BAuzJr8kQa%2BHDE2Uy3F2OaGooMpfiCTtUHDLMktLvkyXxwt6EtMGEMpLl4ruqWyodA3M8vNbyxAeZalgZbgYEuxLP%2BDOI%2Bs8HxUSb%2BNao%2BMHrBswb0uYq9xI%2BrK4%2FkAtcY0dvYLTELj5eGBvVEcOYp%2F5FlVA38QovTy5JvBx%2B4%3D%20agentid%3DWT_uncuxwebX%20ver%3D1%20crmethod%3D2&ECID-Context=1.005eZ88R5Jw6MQRMyYbe6G000YjF000Rbc%3BkXjE"
+        "s:snipboard.io/"
+        "t:github.com/wellle/targets.vim/"
+        "gg:https://github.com/gaia-unal/covidalert/issues"
+        "y:https://www.youtube.com/"
+        "a:https://animeultima.to/"
+        "a2:https://animepahe.com/"
+        "c:https://www.crunchyroll.com/videos/anime/updated"
+    )
+
+    # regex in these conditions cant be in quotes
+    # if [[ $1 =~ !.+ ]]; then
+    word=$(echo $1 |tr -d "!")
+    for item in "${ARRAY[@]}" ; do
+        shortcut="${item%%:*}"
+        page="${item##*:}"
+        if [[ $word == $shortcut ]]; then
+            $BROWSER --new-tab $page
+            return 0
+        fi
+    done
+    return 1
+}
+
+words=$(dmenu -p "search" &>/dev/null)
+# words="!l"
+[[ -z $words ]] && exit
+if isBookmark $words; then
+    exit
+fi
+words=$(echo $words | tr " " "+")
+page="https://www.google.com/search?client=firefox-b-d&q=${words}"
+$BROWSER --new-tab $page
+

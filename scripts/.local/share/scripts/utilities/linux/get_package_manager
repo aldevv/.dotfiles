@@ -1,0 +1,26 @@
+#!/bin/bash
+if [[ -f "$HOME/.cache/pkg" ]] && [[ -z "$1" ]]; then
+    cat "$HOME/.cache/pkg"
+    exit
+fi
+
+if [[ -f "$HOME/.cache/pkg_command" ]]; then
+    cat "$HOME/.cache/pkg_command"
+    exit
+fi
+
+declare -A packagemanagers_commands=(\
+    ["apt"]="apt install -y" \
+    ["eopkg"]="eopkg install -y" \
+    ["pacman"]="pacman -S --noconfirm --needed" \
+    ["zypper"]="zypper install -y"\
+)
+for pkg in "${!packagemanagers_commands[@]}"; do
+    if [[ -x $(command -v "$pkg") ]]; then
+        echo "$pkg" > "$HOME/.cache/pkg"
+        echo "${packagemanagers_commands[$pkg]}" > "$HOME/.cache/pkg_command"
+        echo "$pkg"
+        exit
+    fi
+done
+

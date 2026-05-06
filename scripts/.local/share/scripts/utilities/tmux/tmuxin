@@ -1,0 +1,4 @@
+#!/bin/bash
+
+unset TMUX
+tmux -u new -A -s "$*"

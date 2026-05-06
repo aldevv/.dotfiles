@@ -1,0 +1,9 @@
+#!/bin/sh
+
+cd "$PROGRAMS" || exit
+
+soft="syncthing-linux-amd64-"
+version="v1.16.1"
+sudo -u $SUDO_USER wget https://github.com/syncthing/syncthing/releases/download/$version/${soft}${version}.tar.gz
+sudo -u $SUDO_USER tar kvvxf "${soft}${version}.tar.gz"
+rm  "${soft}${version}.tar.gz"

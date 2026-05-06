@@ -1,0 +1,81 @@
+#!/bin/bash
+
+#https://www.reddit.com/r/unixporn/comments/6p40ic/volume_notifications_with_dunst/
+#https://gist.github.com/sebastiencs/5d7227f388d93374cebdf72e783fbd6a
+
+# You can call this script like this:
+# $./volume.sh up
+# $./volume.sh down
+# $./volume.sh mute
+
+function get_volume {
+	amixer -D pulse get Master | grep '%' | head -n 1 | cut -d '[' -f 2 | cut -d '%' -f 1
+}
+
+function is_mute {
+	amixer -D pulse get Master | grep '%' | grep -oE '[^ ]+$' | grep off >/dev/null
+}
+
+function send_notification {
+	if [[ -z "$(command -v dunstify)" ]]; then
+		echo "install dunstify to get notifications"
+		return
+	fi
+	volume=$(get_volume)
+	# Make the bar with the special character ─ (it's not dash -)
+	# https://en.wikipedia.org/wiki/Box-drawing_character
+	bar=$(seq -s "─" $((volume / 5)) | sed 's/[0-9]//g')
+	# Send the notification
+	dunstify -i audio-volume-muted-blocking -t 700 -r 2593 -u normal "    $bar"
+}
+
+case $1 in
+up)
+	amixer -D pulse sset Master 5%+ &>/dev/null
+	send_notification
+	# Set the volume on (if it was muted)
+	# for i in Master Headphone PCM Front Surround Center LFE Side; do
+	# 	amixer -D pulse sset $i 5%+ &>/dev/null
+	# done
+	;;
+down)
+	amixer -D pulse sset Master 5%- &>/dev/null
+	send_notification
+	# for i in Master Headphone PCM Front Surround Center LFE Side; do
+	# 	amixer -D pulse sset $i toggle &>/dev/null
+	# done
+	;;
+toggle)
+	amixer -D pulse sset Master toggle &>/dev/null
+  if is_mute; then
+    dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "Muted"
+  else
+    dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "UnMuted"
+  fi
+	# for i in Master Headphone PCM Front Surround Center LFE Side; do
+	# 	amixer -D pulse sset $i toggle &>/dev/null
+	# done
+	;;
+
+	# muted=0
+	# for i in Master Headphone PCM Front Surround Center LFE Side; do
+	# if is_mute $i; then
+	# 	muted=1
+	# 	break
+	# fi
+	# done
+	# if [[ $muted == 1 ]]; then
+	# 	amixer -D pulse sset $i unmute &>/dev/null
+	# 	send_notification
+	# else
+	# 	amixer -D pulse sset $i mute &>/dev/null
+	# 	dunstify -i audio-volume-muted -t 700 -r 2593 -u normal "Mute"
+	# fi
+esac
+
+# OLD WAY
+# amixer -D pulse set Master on > /dev/null
+# amixer -D pulse sset Master 5%+ > /dev/null
+# amixer -D pulse set Master on > /dev/null
+# amixer -D pulse sset Master 5%- > /dev/null
+# amixer -D pulse set Master 1+ toggle > /dev/null

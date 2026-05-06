@@ -1,0 +1,4 @@
+#!/bin/sh
+name="$1"
+curl -s https://subsplease.org/rss/\?t\&r\=1080 | pup |rg -A4 -F "$name" | rg 'http' | tr -d " "
+# [SubsPlease] Mushoku Tensei - 07 (1080p) [AE7EF41E].mkv

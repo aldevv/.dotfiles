@@ -1,0 +1,9 @@
+#!/bin/sh
+
+[ -d $HOME/Downloads/torrents ] || mkdir -p $HOME/Downloads/torrents
+
+name="$1"
+[ -z  "$name" ] && name="$(./getTorrentNames)"
+
+wget -q  $(./downloadTorrentFile "$name") -O "$HOME/Downloads/torrents/$1.torrent"
+deluge "$HOME/Downloads/torrents/$1.torrent"

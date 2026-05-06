@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Get the current day of the week (1 = Monday, 7 = Sunday)
+day_of_week=$(date +%u)
+
+# Check if it's a weekday (1 to 5)
+if [ "$day_of_week" -ge 1 ] && [ "$day_of_week" -le 5 ]; then
+    exit 0
+else
+    exit 1
+fi
+

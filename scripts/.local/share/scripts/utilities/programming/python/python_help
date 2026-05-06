@@ -1,0 +1,11 @@
+#!/bin/bash
+
+declare -A libraries
+libraries["plt"]=matplotlib.pyplot
+libraries["mpl"]=matplotlib
+libraries["pd"]=pandas
+libraries["np"]=numpy
+
+commandImport="import ${libraries[$1]} as $1;"
+path=$(eval pwd)
+$path/env/bin/python3 -c "$commandImport help($1)"

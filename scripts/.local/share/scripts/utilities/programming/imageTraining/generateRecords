@@ -1,0 +1,5 @@
+#!/bin/sh
+
+python3 "$UTILITIES/programming/imageTraining/generate_pbtxt.py" csv test.csv ../annotations/label_map.pbtxt
+python3 "$UTILITIES/programming/imageTraining/generate_tfrecord.py" train.csv ../annotations/label_map.pbtxt train/ ../annotations/train.record
+python3 "$UTILITIES/programming/imageTraining/generate_tfrecord.py" test.csv ../annotations/label_map.pbtxt test/ ../annotations/test.record

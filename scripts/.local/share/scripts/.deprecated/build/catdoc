@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# for processing text in microsoft documents
+cd "$PROGRAMS"
+sudo -u "$SUDO_USER" wget http://ftp.wagner.pp.ru/pub/catdoc/catdoc-0.95.tar.gz
+tar -xvf catdoc-0.95.tar.gz
+rm "catdoc-0.95.tar.gz"
+cd "catdoc-0.95"
+./configure --prefix="$PROGRAMS/prefix-installs/catdoc"
+make
+make install

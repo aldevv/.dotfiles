@@ -1,0 +1,59 @@
+{
+  "*.js": {
+    "alternate": [
+      "{dirname}/{basename}.test.js",
+      "{dirname}/__tests__/{basename}-test.js"
+    ],
+    "type": "source",
+    "dispatch": "node {}.js",
+    "console": "node {}.js"
+  },
+
+  "*.ts": {
+    "alternate": [
+      "{dirname}/{basename}.test.js",
+      "{dirname}/__tests__/{basename}-test.js"
+    ],
+    "dispatch": "tsc % && node %:r.js"
+  },
+
+  "*.c": {
+    "dispatch": "gcc -g3 -O0 -o {basename} {file} && ./{basename}",
+    "alternate": "{}.h"
+  },
+
+  "*.cpp": {
+    "dispatch": "g++ -g -O0 -o {basename} {file} && ./{basename}",
+    "alternate": "{}.h"
+  },
+  "*.tex": {
+    "dispatch": "latexmk -pdf {file}",
+    "alternate": "mybib.bib"
+  },
+
+  "*.java": {
+    "dispatch": "javac *.java && java {basename}",
+    "skeleton": "class"
+  },
+
+  "*.py": {
+    "dispatch": "python3 %"
+  },
+
+  "*.rs": {
+    "dispatch": "cargo run"
+  },
+
+  "*.go": {
+    "dispatch": "go run {file}"
+  },
+  "*.lua": {
+    "dispatch": ""
+  },
+  "*.h": {
+    "dispatch": "sudo make && sudo make install"
+  },
+  "*": {
+    "dispatch": "chmod +x %; ./%"
+  }
+}

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+#dependencies for dwm
+declare -A req=( \
+['eopkg']="libxft-devel libxinerama-devel"\
+['zypper']="libXft-devel libXinerama-devel"\
+)
+install_ ${req[$PKG]}
+
+cd "$SUCKLESS/dwm-6.2"
+currentUser=$(grep "$USER" config.h)
+if [ -z "$currentUser" ]; then
+    sed -i "s|#include \"/home/.*|#include \"$HOME/.cache/wal/colors-wal-dwm.h\"|g" config.h
+fi
+make clean
+make
+make install

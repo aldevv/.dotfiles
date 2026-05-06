@@ -1,0 +1,5 @@
+#!/bin/sh
+
+setsid chromium &
+sleep 1
+exec sleep 0

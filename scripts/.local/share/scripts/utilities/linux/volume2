@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ $1 = "mute" ]
+then
+    amixer set Master mute
+    notify-send "Volume muted"
+elif [ $1 = "unmute" ]
+then
+    amixer set Master unmute
+    notify-send "Volume unmuted"
+elif [ $1 = "up" ]
+then
+    str=`amixer set Master 5+`
+    vol=`echo $str| awk '{print $22}'`
+    notify-send "Volume $vol"
+elif [ $1 = "down" ]
+then
+    str=`amixer set Master 5-`
+    vol=`echo $str| awk '{print $22}'`
+    notify-send "Volume $vol"
+else
+    str=`amixer set Master $1`
+    vol=`echo $str| awk '{print $22}'`
+    notify-send "Volume $vol"
+fi
+

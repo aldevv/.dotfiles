@@ -1,0 +1,2 @@
+#!bin/bin/sh
+nmcli d wifi connect Hiperion_R

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# clear stale remote branches (they no longer exist in the remote)
+git remote prune origin && echo ""
+merged_from_pr_and_deleted="$(git branch -vv | grep ': gone]')"
+
+worktree_active="$(awk '/^+/{print $2}' <<<"$merged_from_pr_and_deleted")"
+normal_branches="$(awk '/^[^+]/{print $1}' <<<"$merged_from_pr_and_deleted")"
+
+while read -r l; do
+	if [[ -z "$l" ]]; then
+		continue
+	fi
+	# if [[ -z $1 ]]; then
+	folder_prefix="${l%%/*}"
+	# else
+	folder_postfix="$(basename "$l")"
+	# fi
+
+	echo "git worktree remove -f $l"
+	echo "git branch -D $l"
+	echo -e "\ndelete worktree and branch?(y/n)"
+	read -r remove_worktree </dev/tty
+	if [[ "$remove_worktree" == "y" ]]; then
+		if ! git worktree remove -f "$folder_prefix" 2>/dev/null; then
+			git worktree remove -f "$folder_postfix"
+		fi
+		git branch -D "$l"
+	fi
+	echo "-----------------------------------"
+done <<<"$worktree_active"
+
+while read -r l; do
+	if [[ -z "$l" ]]; then
+		continue
+	fi
+
+	echo "git branch -D $l"
+	echo -e "\ndelete branch?(y/n)"
+	read -r remove_branch </dev/tty
+	if [[ "$remove_branch" == "y" ]]; then
+		git branch -D "$l"
+	fi
+	echo "-----------------------------------"
+done <<<"$normal_branches"

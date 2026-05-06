@@ -1,0 +1,11 @@
+#!/bin/sh
+[ -z "$2" ] \
+    && echo "enter output name [$1-compressed.mp4]" \
+    && read -r output
+echo "output name is: $output"
+[ -z "$output" ] \
+    && output="$1-compressed.mp4" \
+    || output="${output}.mp4"
+# old way
+# ffmpeg -i "$1" -vcodec libx264 -crf 20 "$output"
+ffmpeg -i "$1" -b 800k -crf 28 "$output"

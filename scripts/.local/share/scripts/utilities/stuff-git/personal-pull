@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+
+cd "$HOME/.dotfiles"
+
+echo "Pulling dotfiles repository..."
+git pull
+
+echo "Updating all submodules..."
+git submodule update --remote --merge
+
+echo "All repositories updated successfully!"

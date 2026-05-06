@@ -1,0 +1,16 @@
+#!/bin/bash
+# file structure of servers file:
+# name  ip pass
+
+server="$1"
+servers="$(pwd)/servers"
+[[ -n "$server" ]] \
+    && server=$(grep "$server" "$servers") \
+    || server=$(head -n 1 "$servers") && color echo "$1 SERVER NOT FOUND, selected first option" && echo ""
+
+user=$(echo "$server" | awk '{print $2}')
+ip=$(echo "$server" | awk '{print $3}')
+password=$(echo "$server" | awk '{print $4}')
+
+echo "$password" | xsel -b
+ssh $user@$ip

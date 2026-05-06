@@ -1,0 +1,6 @@
+#!/bin/sh
+video=$(select_anime)
+[ ! -z "$video" ] && mpv "$HOME/Downloads/$video" 2>/dev/null
+
+
+

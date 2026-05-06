@@ -1,0 +1,5 @@
+# no pass prompt, just write it
+ssh -t host_name "sudo docker-compose -f /var/run/deploy/app/docker-compose.yml \
+exec db pg_dump -U postgres -d database_name --column-inserts -a -t core_dd \
+-t core_aa -t core_ss \
+-t core_mm -t core_ss" > name.dump

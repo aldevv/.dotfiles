@@ -1,0 +1,4 @@
+#!/bin/bash
+# have to give it like this so it sends an argument that contains nothing, otherwise only sends
+# folder
+grepfolder "${@:-}" "$NOTES" 

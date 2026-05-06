@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+n=5
+
+while true; do
+  read -p "Quick Examples: " -r examples
+  defstr="give me $n examples of how to use $examples"
+  tgpt "$defstr"
+done

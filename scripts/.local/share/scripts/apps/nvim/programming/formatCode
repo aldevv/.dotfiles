@@ -1,0 +1,27 @@
+#!/bin/sh
+# fcc: format code configuration
+# fc is a builtin and cannot be used or changed
+
+# options:  llvm google chromium mozilla webkit
+if [ "$1" = "java" ]; then
+    style="chromium"
+    cp "$XDG_CONFIG_HOME/clang-format/java/$style/.clang-format" .
+    exit
+fi
+
+# if [ "$1" = "c" ]; then
+#     style="mozilla"
+#     cp "$XDG_CONFIG_HOME/clang-format/c/$style/.clang-format" .
+#     exit
+# fi
+
+if [ "$1" = "cpp" ] || [ "$1" = "c" ]; then
+    style="mozilla"
+    cp "$XDG_CONFIG_HOME/clang-format/c/$style/.clang-format" .
+    # create compilation database for clang
+    cp "$XDG_CONFIG_HOME/clang-format/compile_commands.json" .
+    fname=$(basename -- "$2")
+    sed -i "s|mypath|$2|g; s|myname|$fname|g" compile_commands.json
+    exit
+fi
+

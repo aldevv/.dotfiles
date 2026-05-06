@@ -1,0 +1,3 @@
+#!/bin/sh
+root=$(repoRoot)
+[ -n "$root" ] && echo true || echo false

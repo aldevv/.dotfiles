@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# download from https://busybox.net/downloads/
+
+name="busybox-1.33.1"
+cd $PROGRAMS
+sudo -u $SUDO_USER wget https://busybox.net/downloads/$name.tar.bz2
+sudo -u $SUDO_USER tar xvvf $name.tar.bz2
+rm "$name.tar.bz2"
+cd "$name"
+make defconfig # defmenu is availiable, you can select the progs you want, then just do make normally
+make
+make install
+make clean
+
+ln -sf $(pwd)/busybox /usr/local/bin/busybox

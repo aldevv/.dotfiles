@@ -1,0 +1,24 @@
+#!/bin/bash
+
+cd $PROGRAMS
+sudo -u "$SUDO_USER" git clone --depth=1 https://github.com/eth-p/bat-extras
+cd bat-extras
+sudo -u "$SUDO_USER" ./build.sh --install --prefix=$PREFIX_DIR/bat-extras
+ln -sf $PREFIX_DIR/bat-extras/bin/* /usr/local/bin/
+
+# batgrep
+# Quickly search through and highlight files using ripgrep. Requirements: ripgrep
+
+# batman
+# Read system manual pages (man) using bat as the manual page formatter.
+
+# batwatch
+# Watch for changes in one or more files, and print them with bat. Requirements: entr (optional)
+
+# batpipe
+
+# batdiff
+# Diff a file against the current git index, or display the diff between two files. Requirements: bat, delta (optional)
+
+# prettybat
+# Pretty-print source code and highlight it with bat. Requirements: (see doc/prettybat.md)

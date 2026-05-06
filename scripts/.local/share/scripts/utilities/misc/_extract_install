@@ -1,0 +1,25 @@
+#!/bin/bash
+
+[[ -z "$1" ]] && return
+
+_file="$1";
+name="${${_file%.*}##*/}";
+
+# if exists enter the folder and exit
+[[ -d "$PROGRAMS/${name%.*}" ]] && cd "$PROGRAMS/${name%.*}" && return;
+
+mv "$_file" "$PROGRAMS";
+cd "$PROGRAMS" || return
+extract "$_file"
+
+named=$(find "$PROGRAMS" -maxdepth 1 -iname "*${name%%-*}*" -type d);
+[[ -d "$named" ]] \
+    && cd "$named" \
+    && mv "../$_file" "/tmp/" \
+    && return;
+
+mv "$_file" "/tmp/"
+
+RED='\033[0;31m'
+echo "${RED}couldn't find folder extracted from file"
+

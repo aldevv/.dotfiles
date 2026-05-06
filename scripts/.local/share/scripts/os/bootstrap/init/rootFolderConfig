@@ -1,0 +1,28 @@
+#!/bin/sh
+
+
+# this is so the the env variables work
+mkdir -p "/root/.local/bin"
+mkdir -p "/root/.config/nvim"
+ln -s "$HOME/.zprofile" "/root"
+ln -s "$SCRIPTS" "/root/.local/share/myScripts"
+ln -s "$PROGRAMS" "/root/.local/programs"
+ln -s "$XDG_CONFIG_HOME" "/root/.config"
+cp "$HOME/.zshenv" "/root/.zshenv"
+# ln -s "$HOME/.zshrc" "/root/.zshrc"
+# ln -s "$HOME/.zprofile" "/root/.zprofile"
+cp -r "$HOME/.local/share/nvim/site" "/root/.local/share/nvim/site"
+sed -i 's|^Defaults secure_path.\+|Defaults secure_path=\"/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin:/usr/local/sbin\"|g' /etc/sudoers
+
+# mkdir -p "/root/.config/ranger"
+# cp "$XDG_CONFIG_HOME/ranger/rc_root.conf" "/root/.config/ranger/rc.conf"
+# cp "$XDG_CONFIG_HOME/ranger/rifle.conf" "/root/.config/ranger/rifle.conf"
+# cp "$XDG_CONFIG_HOME/ranger/scope.sh" "/root/.config/ranger/scope.sh"
+# cp "$XDG_CONFIG_HOME/nvim/init_root.vim" "/root/.config/nvim/init.lua"
+# cp "$XDG_CONFIG_HOME/colemak-less" "/root/.config/colemak-less"
+# cp -r "$XDG_CONFIG_HOME/ranger/plugins" "/root/.config/ranger/plugins"
+
+# cp "$XDG_CONFIG_HOME/completion_fzf.zsh" "/root/.config/completion_fzf.zsh"
+# cp "$XDG_CONFIG_HOME/colemak-less" "/root/.config/colemak-less"
+
+

@@ -1,0 +1,17 @@
+#!/bin/bash
+declare -A req=( \
+    ["eopkg"]="intel-compute-runtime"\
+)
+install_ ${req[$PKG]}
+
+name="hashcat"
+version="6.2.2"
+url="https://hashcat.net/files/$name-$version.7z"
+cd /opt || exit
+wget -O "$name.7z" $url
+7z x "$name.7z"
+rm "$name.7z"
+
+ln -sf "/opt/$name-$version/hashcat.bin" "/usr/local/bin/hashcat"
+[[ -n "$PROGRAMS" ]] \
+    && ln -sf "/opt/$name-$version" "$PROGRAMS/hacking/$name"

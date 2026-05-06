@@ -1,0 +1,6 @@
+#!/bin/bash
+program=$(select-manpage)
+# batman --paging=always $program 2>/dev/null;$SHELL
+# man "$program" >/dev/null 2>&1 && man "$program" | vim -R +":set ft=man" - ;
+nvim -c "Man $program" -c 'silent only'
+# man $program 2>/dev/null;$SHELL

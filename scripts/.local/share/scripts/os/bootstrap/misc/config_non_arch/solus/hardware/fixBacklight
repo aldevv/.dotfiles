@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo \
+'Section "Device"
+        Identifier "Card0"
+        Driver "intel"
+        Option "Backlight" "intel_backlight"
+EndSection' > /usr/share/X11/xorg.conf.d/20-video.conf
