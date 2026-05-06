@@ -528,3 +528,8 @@ map("n", "<S-Del>", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
 map("n", "<leader><leader>x", "<cmd>luafile %<cr>", nor)
 
 require("keybindings.ai")
+
+-- Run current line / visual selection through zsh
+map("n", "!!", ":. !zsh<space>", { noremap = true })
+map("x", "!!", ":!zsh<space>", { noremap = true })
+map("x", "!.", ":!zsh<space>", { noremap = true })
