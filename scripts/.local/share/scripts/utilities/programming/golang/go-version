@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+INSTALL_DIR="/usr/local"
+API_URL="https://go.dev/dl/?mode=json"
+
+usage() {
+    echo "Usage: go-version <upgrade|downgrade|list|VERSION>"
+    echo ""
+    echo "  upgrade       Install the latest stable Go release"
+    echo "  downgrade     Install the previous stable Go release"
+    echo "  list          Show recent stable releases"
+    echo "  VERSION       Install a specific version (e.g. 1.23.0 or go1.23.0)"
+    exit 1
+}
+
+current_version() {
+    go version 2>/dev/null | grep -oP 'go[\d.]+' | head -1
+}
+
+fetch_stable_versions() {
+    curl -fsSL "$API_URL" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+versions = []
+for r in data:
+    if r['stable']:
+        versions.append(r['version'])
+print('\n'.join(versions))
+"
+}
+
+get_file_info() {
+    local version="$1"
+    curl -fsSL "$API_URL" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for r in data:
+    if r['version'] == '$version':
+        for f in r['files']:
+            if f['os'] == 'linux' and f['arch'] == 'amd64' and f['kind'] == 'archive':
+                print(f['filename'], f['sha256'])
+                sys.exit(0)
+print('NOT_FOUND')
+sys.exit(1)
+"
+}
+
+install_version() {
+    local version="$1"
+    local current
+    current=$(current_version)
+
+    if [[ "$version" == "$current" ]]; then
+        echo "Already on $version"
+        exit 0
+    fi
+
+    echo "Fetching file info for $version..."
+    local info
+    info=$(get_file_info "$version")
+
+    if [[ "$info" == "NOT_FOUND" ]]; then
+        echo "Error: $version not found in go.dev/dl (linux/amd64)"
+        exit 1
+    fi
+
+    local filename sha256
+    filename=$(echo "$info" | awk '{print $1}')
+    sha256=$(echo "$info" | awk '{print $2}')
+    local url="https://go.dev/dl/$filename"
+    local tmpfile="/tmp/$filename"
+
+    echo "Downloading $filename..."
+    curl -L --progress-bar -o "$tmpfile" "$url"
+
+    echo "Verifying checksum..."
+    echo "$sha256  $tmpfile" | sha256sum -c
+
+    echo "Installing $version (requires sudo)..."
+    sudo rm -rf "$INSTALL_DIR/go"
+    sudo tar -C "$INSTALL_DIR" -xzf "$tmpfile"
+
+    rm -f "$tmpfile"
+
+    echo "Done: $current -> $($INSTALL_DIR/go/bin/go version | grep -oP 'go[\d.]+')"
+}
+
+[[ $# -lt 1 ]] && usage
+
+arg="$1"
+
+case "$arg" in
+    list)
+        echo "Stable releases:"
+        fetch_stable_versions | head -10
+        ;;
+    upgrade)
+        echo "Fetching latest stable version..."
+        latest=$(fetch_stable_versions | head -1)
+        echo "Latest: $latest  |  Current: $(current_version)"
+        install_version "$latest"
+        ;;
+    downgrade)
+        current=$(current_version)
+        echo "Current: $current"
+        echo "Fetching stable versions..."
+        mapfile -t versions < <(fetch_stable_versions)
+        prev=""
+        for i in "${!versions[@]}"; do
+            if [[ "${versions[$i]}" == "$current" ]]; then
+                prev="${versions[$((i+1))]:-}"
+                break
+            fi
+        done
+        if [[ -z "$prev" ]]; then
+            echo "No previous stable version found (current: $current)"
+            exit 1
+        fi
+        echo "Downgrading to $prev..."
+        install_version "$prev"
+        ;;
+    *)
+        # Normalize: strip leading 'go' if present, then re-add
+        version="${arg#go}"
+        version="go${version}"
+        echo "Installing $version..."
+        install_version "$version"
+        ;;
+esac

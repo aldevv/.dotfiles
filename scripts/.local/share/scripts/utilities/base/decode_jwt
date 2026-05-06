@@ -1,0 +1,59 @@
+#!/bin/bash
+# Decode a JWT token and pretty-print its header and payload
+
+set -euo pipefail
+
+usage() {
+    echo "Usage: decode_jwt <token>"
+    echo "       decode_jwt  (reads from stdin)"
+    exit 1
+}
+
+decode_part() {
+    local part="$1"
+    # Add padding if needed
+    local padded="$part"
+    case $(( ${#part} % 4 )) in
+        2) padded="${part}==" ;;
+        3) padded="${part}=" ;;
+    esac
+    echo "$padded" | tr '_-' '/+' | base64 -d 2>/dev/null
+}
+
+if [[ $# -eq 0 ]]; then
+    if [[ -t 0 ]]; then
+        usage
+    fi
+    token="$(cat)"
+elif [[ $# -eq 1 ]]; then
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        usage
+    fi
+    token="$1"
+else
+    usage
+fi
+
+IFS='.' read -r header payload signature <<< "$token"
+
+if [[ -z "$header" || -z "$payload" ]]; then
+    echo "Error: invalid JWT token" >&2
+    exit 1
+fi
+
+if command -v jq &>/dev/null; then
+    pretty() { jq .; }
+else
+    pretty() { python3 -m json.tool 2>/dev/null || cat; }
+fi
+
+echo "=== Header ==="
+decode_part "$header" | pretty
+
+echo ""
+echo "=== Payload ==="
+decode_part "$payload" | pretty
+
+echo ""
+echo "=== Signature ==="
+echo "$signature"

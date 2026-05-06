@@ -1,0 +1,33 @@
+#!/bin/bash
+# Extract the signature from a JWT token
+
+set -euo pipefail
+
+usage() {
+    echo "Usage: signature_jwt <token>"
+    echo "       signature_jwt  (reads from stdin)"
+    exit 1
+}
+
+if [[ $# -eq 0 ]]; then
+    if [[ -t 0 ]]; then
+        usage
+    fi
+    token="$(cat)"
+elif [[ $# -eq 1 ]]; then
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        usage
+    fi
+    token="$1"
+else
+    usage
+fi
+
+IFS='.' read -r header payload signature <<< "$token"
+
+if [[ -z "$header" || -z "$payload" || -z "$signature" ]]; then
+    echo "Error: invalid JWT token" >&2
+    exit 1
+fi
+
+echo "$signature"
