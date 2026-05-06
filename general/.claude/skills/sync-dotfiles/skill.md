@@ -5,232 +5,169 @@ description: "Pull dotfiles, resolve any merge conflicts (keep both non-conflict
 
 Sync the dotfiles repo at `~/.dotfiles` and all its submodules: pull remote changes, resolve conflicts, restow packages with new files, and push with a machine-tagged commit.
 
-## Step 1 — Load machine metadata
+**Parallelism rule**: wherever steps are marked **[PARALLEL]**, issue all their tool calls in a single message to run them concurrently.
 
-Read `~/.machine_metadata` and export the values so they persist across all subsequent commands:
+---
 
+## Step 1 — Load metadata + check SSH **[PARALLEL]**
+
+Run both of these simultaneously:
+
+**1a — Load machine metadata:**
 ```bash
-export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null
+export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null && echo "id=$id os=$os"
 ```
-
-This sets and exports `$id` and `$os`. If the file is missing or either value is empty, **stop and ask the user** to provide them, then write the file:
-
+If `$id` or `$os` is empty, stop and ask the user to create `~/.machine_metadata`:
 ```bash
 printf "id=<number>\nos=<OS>\n" > ~/.machine_metadata
 ```
 
-Do not proceed until both values are confirmed.
-
-## Step 2 — Sync submodules
-
-For each submodule defined in `~/.dotfiles/.gitmodules`, sync it independently before touching the parent repo. Run:
-
+**1b — Check SSH alias and submodule status:**
+```bash
+ssh -T git@personal -o ConnectTimeout=3 2>&1 | grep -q "successfully authenticated" && echo "ssh=ok" || echo "ssh=fallback"
+```
 ```bash
 cd ~/.dotfiles && git submodule status
 ```
 
-For each submodule path listed, note the prefix:
+If SSH check returns `fallback`, use `git@github.com:aldevv/<repo>.git` instead of `git@personal:aldevv/<repo>.git` for all submodule operations.
+
+Submodule prefix legend:
 - `-` = not yet initialized (needs cloning)
-- `+` = initialized but parent repo's recorded commit pointer is stale (needs pointer update after sync)
+- `+` = pointer stale (pointer needs updating after sync)
 - ` ` = in sync
 
-### 2a — Resolve SSH alias
+---
 
-The submodule URLs use a `personal` SSH alias (e.g. `git@personal:aldevv/wiki.git`). Check if it resolves:
+## Step 2 — Initialize any uncloned submodules **[PARALLEL if multiple]**
 
-```bash
-ssh -T git@personal -o ConnectTimeout=3 2>&1 | grep -q "successfully authenticated"
-```
-
-If it fails, derive the fallback GitHub URL by replacing `git@personal:` with `git@github.com:`. Use this fallback URL for all git operations on that submodule for the rest of this session.
-
-### 2b — Initialize if needed
-
-If the submodule shows a leading `-` (not yet cloned), initialize it:
+For each submodule with a `-` prefix, initialize it (all at once in parallel):
 
 ```bash
-# If 'personal' alias works:
+# personal alias works:
 git -C ~/.dotfiles submodule update --init <path>
 
-# If 'personal' alias doesn't work, use insteadOf override:
+# personal alias unavailable — use insteadOf override:
 git -c "url.git@github.com:aldevv/<repo>.git.insteadOf=git@personal:aldevv/<repo>.git" \
     -C ~/.dotfiles submodule update --init <path>
 ```
 
-### 2c — Ensure on a branch (not detached HEAD)
+---
 
+## Step 3 — Sync all submodules **[PARALLEL]**
+
+For every submodule (initialized or already cloned), run all of the following steps for each submodule simultaneously — issue one set of tool calls per submodule in a single message.
+
+For each submodule:
+
+**3a — Ensure on a branch:**
 ```bash
-cd ~/.dotfiles/<submodule-path>
-git rev-parse --abbrev-ref HEAD   # returns "HEAD" if detached
-```
-
-If detached, check out the default branch:
-
-```bash
-# Try main first, then master
+cd ~/.dotfiles/<path>
+git rev-parse --abbrev-ref HEAD
+# If output is "HEAD" (detached), run:
 git checkout main 2>/dev/null || git checkout master
 ```
 
-### 2d — Stage and commit any local changes
-
+**3b — Commit any local changes:**
 ```bash
-cd ~/.dotfiles/<submodule-path>
+cd ~/.dotfiles/<path>
 git status --short
+# If modified tracked files exist:
+git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
 ```
 
-If there are modified tracked files, commit them:
-
+**3c — Pull:**
 ```bash
-git add -u
-git commit -m "wip: local changes before sync [machine-${id}]"
+# personal alias works:
+git -C ~/.dotfiles/<path> pull --no-rebase origin <branch>
+# personal alias unavailable:
+git -C ~/.dotfiles/<path> pull --no-rebase git@github.com:aldevv/<repo>.git <branch>
 ```
 
-### 2e — Pull remote changes
-
+**3d — Push:**
 ```bash
-git pull --no-rebase origin <branch>
+# personal alias works:
+git -C ~/.dotfiles/<path> push origin <branch>
+# personal alias unavailable:
+git -C ~/.dotfiles/<path> push git@github.com:aldevv/<repo>.git <branch>
 ```
 
-If the pull fails due to the `personal` SSH alias, use the fallback URL:
+Resolve any pull conflicts using Rule A / Rule B from Step 4.
 
+After all submodules finish, stage their updated pointers in the parent:
 ```bash
-git pull --no-rebase git@github.com:aldevv/<repo>.git <branch>
+cd ~/.dotfiles && git add <path1> <path2> <path3>
 ```
 
-Resolve any conflicts using the same rules as Step 3 below.
+---
 
-### 2f — Push submodule changes
+## Step 4 — Pull parent repo
 
-```bash
-git push origin <branch>
-```
-
-If push fails due to SSH alias, push to the fallback URL:
-
-```bash
-git push git@github.com:aldevv/<repo>.git <branch>
-```
-
-### 2g — Update the submodule pointer in the parent repo
-
-After syncing each submodule, stage the updated pointer:
-
-```bash
-cd ~/.dotfiles
-git add <submodule-path>
-```
-
-## Step 3 — Stage any uncommitted local changes in parent repo
-
-After submodule syncs, check for modified tracked files in the parent:
+Check for local changes, then pull:
 
 ```bash
 cd ~/.dotfiles && git status --short
-```
+# If modified tracked files:
+git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
 
-If there are **unstaged modifications** (lines starting with ` M`, `M `, etc.), stage and commit:
-
-```bash
-cd ~/.dotfiles
-git add -u
-git commit -m "wip: local changes before sync [machine-${id}]"
-```
-
-Skip this commit step if the working tree is already clean.
-
-## Step 4 — Pull with merge strategy
-
-Fetch and merge remote changes, preferring to keep both sides:
-
-```bash
-cd ~/.dotfiles && git pull --no-rebase origin main
+git pull --no-rebase origin main
 ```
 
 ### Conflict resolution rules
-
-After the pull, check for conflicts:
 
 ```bash
 git status --short | grep -E '^(UU|AA|DD|AU|UA|DU|UD)'
 ```
 
-For each conflicted file, open its content and apply the following rules:
+**Rule A — Additive/structural**: both sides added independent content → keep both, remove markers.
 
-**Rule A — Non-logic conflicts (additive/structural)**
-If both sides added independent content (e.g. alias additions, plugin list additions, different config keys), **keep both**. Remove the conflict markers and include all content from both sides.
-
-**Rule B — Logic conflicts (same code path or option changed on both sides)**
-If both sides modified the same logical setting or code path, **keep the incoming (remote) version** — it is treated as the newest. Use:
-
+**Rule B — Logic conflict**: same setting changed on both sides → keep incoming (remote):
 ```bash
-git checkout --theirs -- <file>
-git add <file>
+git checkout --theirs -- <file> && git add <file>
 ```
 
-After resolving all conflicts, stage them:
-
-```bash
-git add -A
-```
+---
 
 ## Step 5 — Restow packages that gained new files
 
-After pulling, `ORIG_HEAD` points to where HEAD was before the pull. Use it to find every package that changed (covers all commits pulled, not just the last one):
+`ORIG_HEAD` is set by git during a pull. If it exists, find changed packages and restow:
 
 ```bash
 cd ~/.dotfiles
 git diff ORIG_HEAD HEAD --name-only 2>/dev/null | sed 's|/.*||' | sort -u
 ```
 
-If `ORIG_HEAD` doesn't exist (no pull was needed), skip this step.
+If `ORIG_HEAD` doesn't exist (already up to date), skip this step.
 
-For each package directory returned that exists in `~/.dotfiles`, restow it:
-
+For each package directory listed:
 ```bash
 cd ~/.dotfiles && stow -R <package>
-```
-
-If stow reports a conflict because a target file exists as a regular file (not a symlink), re-run with `--adopt` to take ownership of it:
-
-```bash
+# If conflict (regular file exists, not a symlink):
 cd ~/.dotfiles && stow --adopt -R <package>
 ```
 
 Report any remaining conflicts but do not abort.
 
-## Step 7 — Commit the merge (if a merge commit is needed)
+---
 
-If git left a pending merge commit, finalize it:
+## Step 6 — Commit and push
+
+Finalize any pending merge commit, then push:
 
 ```bash
+cd ~/.dotfiles
 git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"
+git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true
+git push origin main
 ```
 
-## Step 8 — Push with a tagged commit message
+---
 
-The commit message format must be:
-```
-sync: dotfiles update [<os>, machine-<id>]
-```
+## Step 7 — Report
 
-Example: `sync: dotfiles update [macOS, machine-3]`
-
-If the only new commit is the wip or merge commit, amend it:
-
-```bash
-git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]"
-```
-
-Then push:
-
-```bash
-cd ~/.dotfiles && git push origin main
-```
-
-## Step 9 — Report
-
-Print a summary of what was done:
-- Machine ID and OS used
-- Which submodules were synced (and whether any needed initialization or fallback URLs)
-- Whether any conflicts were resolved in parent or submodules (and how many)
-- Final git log of the last commit pushed
+- Machine ID and OS
+- SSH alias status (ok / fallback)
+- Submodules synced (which needed init, which had local changes, which were already up to date)
+- Conflicts resolved (count and files)
+- Packages restowed
+- Final pushed commit
