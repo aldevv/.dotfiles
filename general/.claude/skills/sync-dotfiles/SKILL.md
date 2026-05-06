@@ -25,6 +25,12 @@ export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null && echo "id=$id o
 ```
 If `$id` or `$os` is still empty after this (e.g. unwritable HOME), stop and report the failure.
 
+> **Important — env vars don't persist across Bash tool invocations.** Each Bash call is a fresh shell, so `export` from this step is **lost** in subsequent commands. Any later command that uses `${id}` or `${os}` (the wip/merge/amend commit messages in Steps 3c, 4, 6) **must** re-source the metadata inline, e.g. prefix with:
+> ```bash
+> export $(grep -v '^#' ~/.machine_metadata | xargs) && ...
+> ```
+> Templates throughout the skill already include this prefix — keep it.
+
 **1b — Check SSH alias and submodule status:**
 ```bash
 ssh -T git@personal -o ConnectTimeout=3 2>&1 | grep -q "successfully authenticated" && echo "ssh=ok" || echo "ssh=fallback"
@@ -85,7 +91,8 @@ If any file fails the scan, **stop and alert the user** — do not stage or comm
 cd ~/.dotfiles/<path>
 git status --short
 # If modified tracked files exist (and passed secret scan):
-git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+export $(grep -v '^#' ~/.machine_metadata | xargs) && \
+  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
 ```
 
 **3c — Pull:**
@@ -126,7 +133,8 @@ If any file fails the scan, **stop and alert the user** — do not stage or comm
 
 ```bash
 # Only if all files passed the scan:
-cd ~/.dotfiles && git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
+  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
 
 git pull --no-rebase origin main
 ```
@@ -173,10 +181,10 @@ Report any remaining conflicts but do not abort.
 Finalize any pending merge commit, then push:
 
 ```bash
-cd ~/.dotfiles
-git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"
-git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true
-git push origin main
+cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
+  { git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"; } && \
+  { git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true; } && \
+  git push origin main
 ```
 
 ---
