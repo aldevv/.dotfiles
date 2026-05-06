@@ -7,13 +7,13 @@ Sync the dotfiles repo at `~/.dotfiles` and all its submodules: pull remote chan
 
 ## Step 1 — Load machine metadata
 
-Read `~/.machine_metadata`:
+Read `~/.machine_metadata` and export the values so they persist across all subsequent commands:
 
 ```bash
-source ~/.machine_metadata 2>/dev/null
+export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null
 ```
 
-This sets `$id` and `$os`. If the file is missing or either value is empty, **stop and ask the user** to provide them, then write the file:
+This sets and exports `$id` and `$os`. If the file is missing or either value is empty, **stop and ask the user** to provide them, then write the file:
 
 ```bash
 printf "id=<number>\nos=<OS>\n" > ~/.machine_metadata
@@ -29,7 +29,10 @@ For each submodule defined in `~/.dotfiles/.gitmodules`, sync it independently b
 cd ~/.dotfiles && git submodule status
 ```
 
-For each submodule path listed:
+For each submodule path listed, note the prefix:
+- `-` = not yet initialized (needs cloning)
+- `+` = initialized but parent repo's recorded commit pointer is stale (needs pointer update after sync)
+- ` ` = in sync
 
 ### 2a — Resolve SSH alias
 
@@ -172,12 +175,14 @@ git add -A
 
 ## Step 5 — Restow packages that gained new files
 
-After pulling, check which dotfiles packages received new files and restow them so the new symlinks appear in `$HOME`:
+After pulling, `ORIG_HEAD` points to where HEAD was before the pull. Use it to find every package that changed (covers all commits pulled, not just the last one):
 
 ```bash
 cd ~/.dotfiles
-git diff HEAD~1 --name-only | sed 's|/.*||' | sort -u
+git diff ORIG_HEAD HEAD --name-only 2>/dev/null | sed 's|/.*||' | sort -u
 ```
+
+If `ORIG_HEAD` doesn't exist (no pull was needed), skip this step.
 
 For each package directory returned that exists in `~/.dotfiles`, restow it:
 
@@ -185,7 +190,13 @@ For each package directory returned that exists in `~/.dotfiles`, restow it:
 cd ~/.dotfiles && stow -R <package>
 ```
 
-Skip any package that produced no new files or where stow reports conflicts (report conflicts but do not abort).
+If stow reports a conflict because a target file exists as a regular file (not a symlink), re-run with `--adopt` to take ownership of it:
+
+```bash
+cd ~/.dotfiles && stow --adopt -R <package>
+```
+
+Report any remaining conflicts but do not abort.
 
 ## Step 7 — Commit the merge (if a merge commit is needed)
 
