@@ -131,9 +131,9 @@ afterwards.
 
 ## Pre-PR-create hook
 
-There's a companion hook at `~/.claude-epic/hooks/hunk-review-prepush.sh`
+There's a companion hook at `~/.claude/hooks/hunk-review-prepush.sh`
 that auto-runs this flow when a `gh pr create` is about to fire. It is
-**not enabled by default**. To enable, add to `~/.claude-epic/settings.json`
+**not enabled by default**. To enable, add to `~/.claude/settings.json`
 under `PreToolUse`:
 
 ```json
@@ -142,7 +142,7 @@ under `PreToolUse`:
   "hooks": [
     {
       "type": "command",
-      "command": "/home/kanon/.claude-epic/hooks/hunk-review-prepush.sh",
+      "command": "/home/kanon/.claude/hooks/hunk-review-prepush.sh",
       "timeout": 10
     }
   ]

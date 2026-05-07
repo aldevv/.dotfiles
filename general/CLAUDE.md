@@ -1,7 +1,7 @@
 # Claude Code Configuration
 
 ## CRITICAL: Memory Files
-**NEVER create memory files.** Do not write to `~/.claude-epic/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
+**NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
 
 ## CRITICAL: Playwright Browser Issues
 **NEVER ask the user to do anything with the browser.** Use the Playwright MCP plugin tools directly — they handle browser launch automatically.
@@ -47,7 +47,7 @@
 - **Work Startup**: `~/.config/.startup_work` (`.sw`)
 
 ## Skills
-- **Default location**: `$HOME/.claude-epic/skills/<skill-name>/SKILL.md` — use this for all skills unless the skill is tightly coupled to a specific project
+- **Default location**: `$HOME/.claude/skills/<skill-name>/SKILL.md` — use this for all skills unless the skill is tightly coupled to a specific project
 - **Project-specific** (rare): `.claude/skills/<skill-name>/SKILL.md` inside the repo — only when the skill depends on files, tooling, or context that only makes sense within that one project
 
 ## Commits & PRs
