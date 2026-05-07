@@ -154,19 +154,35 @@ git checkout --theirs -- <file> && git add <file>
 
 `ORIG_HEAD` is set by `git pull` only when something was actually merged. If absent → up-to-date pull → skip Step 5.
 
-```bash
-cd ~/.dotfiles && git diff ORIG_HEAD HEAD --name-only 2>/dev/null | sed 's|/.*||' | sort -u
-```
-
-For each package directory listed:
+Find packages that received **newly-added** files (modified files don't need restowing — their symlink already exists):
 
 ```bash
-cd ~/.dotfiles && stow -R <package>
-# If conflict (regular file exists, not a symlink):
-cd ~/.dotfiles && stow --adopt -R <package>
+cd ~/.dotfiles && git diff ORIG_HEAD HEAD --name-only --diff-filter=A 2>/dev/null | sed 's|/.*||' | sort -u
 ```
 
-Report any remaining conflicts but do not abort.
+For each package directory listed, run stow then verify each new file is actually a symlink. Stow can bail with `BUG in find_stowed_path? Absolute/relative mismatch` when it walks an unrelated symlink in `$HOME` (e.g. `~/.local/state/nix/profiles/profile`) — when that happens it leaves new files unlinked, so we always verify and fall back to manual symlinking. This is idempotent and cheap.
+
+```bash
+pkg=<package>
+cd ~/.dotfiles && stow -R "$pkg" 2>&1 || true
+# Verify + fix each newly-added file from the pull. Ignore the stow exit
+# code: success is "every new file is a symlink to the dotfiles source".
+git diff ORIG_HEAD HEAD --name-only --diff-filter=A | grep "^${pkg}/" | while IFS= read -r src; do
+  rel=${src#${pkg}/}
+  dest="$HOME/$rel"
+  expected="$HOME/.dotfiles/$src"
+  if [ -L "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$expected")" ]; then
+    continue
+  fi
+  # Wrong state: real file/dir, dangling link, or missing. Replace with a symlink.
+  rm -rf "$dest"
+  mkdir -p "$(dirname "$dest")"
+  ln -sfn "$expected" "$dest"
+  echo "manually linked $rel"
+done
+```
+
+Report any remaining conflicts (e.g. unwritable parent dirs) but do not abort.
 
 ---
 
