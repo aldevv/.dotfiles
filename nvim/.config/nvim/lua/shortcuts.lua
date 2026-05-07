@@ -1,4 +1,5 @@
-vim.keymap.set("n", "<M-p>", "<cmd>Telescope projectionist<cr>", { silent = true, noremap = true, desc = "Projectionist picker" })
+vim.keymap.set("n", "<M-b>", "<cmd>Telescope projectionist<cr>", { silent = true, noremap = true, desc = "Projectionist picker" })
+vim.keymap.set("n", "<M-p>", "<cmd>Telescope oldfiles<cr>", { silent = true, noremap = true, desc = "Recent files" })
 
 vim.keymap.set("n", "<backspace>H", "<cmd>e ~<cr>", {silent=true, noremap=true})
 vim.keymap.set("n","<backspace><a-p>H", ":lua require('telescope.builtin').find_files({prompt_title = '<~>', cwd = '~', hidden = 'true'})<cr>", { noremap = true, silent = true })
