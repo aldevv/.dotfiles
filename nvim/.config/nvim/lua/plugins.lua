@@ -13,6 +13,53 @@ return {
   "tpope/vim-dotenv",
   "tpope/vim-surround",
   "tpope/vim-repeat",
+  {
+    "tpope/vim-projectionist",
+    init = function()
+      vim.g.projectionist_heuristics = {
+        ["pkg/connector/connector.go"] = {
+          ["pkg/connector/connector.go"] = {
+            type = "connector",
+            alternate = {
+              "pkg/config/config.go",
+              "cmd/{project|basename}/main.go",
+            },
+          },
+          ["pkg/config/config.go"] = {
+            type = "config",
+            alternate = {
+              "pkg/connector/connector.go",
+              "cmd/{project|basename}/main.go",
+            },
+          },
+          ["cmd/*/main.go"] = {
+            type = "cmd",
+            alternate = {
+              "pkg/connector/connector.go",
+              "pkg/config/config.go",
+            },
+          },
+        },
+      }
+    end,
+  },
+  {
+    "adalessa/telescope-projectionist.nvim",
+    dependencies = {
+      "nvim-telescope/telescope.nvim",
+      "tpope/vim-projectionist",
+    },
+    config = function()
+      local tutils = require("telescope.utils")
+      if not tutils.get_default then
+        tutils.get_default = function(value, default)
+          if value == nil then return default end
+          return value
+        end
+      end
+      require("telescope").load_extension("projectionist")
+    end,
+  },
   "mbbill/undotree",
   "bkad/CamelCaseMotion",
   "nvim-tree/nvim-web-devicons",
