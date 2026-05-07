@@ -17,9 +17,11 @@ Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve
 
 ---
 
-## Step 1 — Load metadata + decide fast vs. full (single call)
+## Step 1 — Load metadata + decide fast vs. full **[PARALLEL]**
 
-One bash invocation that bootstraps metadata, snapshots submodule status (cheap), and prints whether the fast path is safe:
+Issue both calls in **a single message** so they run concurrently. They're independent reads — metadata bootstrap doesn't need submodule status and vice versa.
+
+**Call 1 — metadata + freshness check:**
 
 ```bash
 if [ ! -f ~/.machine_metadata ] || ! grep -q '^id=' ~/.machine_metadata || ! grep -q '^os=' ~/.machine_metadata; then
@@ -41,7 +43,11 @@ elif [ "$age" -ge "$threshold" ]; then
 else
   echo "full-sync: $((age/86400)) days old (<30) -> fast path OK"
 fi
+```
 
+**Call 2 — submodule status:**
+
+```bash
 echo "--- submodules ---"
 sub_status=$(cd ~/.dotfiles && git submodule status)
 echo "$sub_status"
@@ -50,9 +56,9 @@ if echo "$sub_status" | grep -q '^-'; then
 fi
 ```
 
-If the output contains either `-> DELEGATE` line, **stop following this skill** and follow `~/.claude/skills/sync-dotfiles-full/SKILL.md` from its Step 1. Do not continue with the steps below — the full skill handles the fast path's work too.
+If either call's output contains a `-> DELEGATE` line, **stop following this skill** and follow `~/.claude/skills/sync-dotfiles-full/SKILL.md` from its Step 1. Do not continue with the steps below — the full skill handles the fast path's work too.
 
-If `$id` or `$os` is empty after this (e.g. unwritable HOME), stop and report.
+If `$id` or `$os` is empty after Call 1 (e.g. unwritable HOME), stop and report.
 
 If neither delegation condition fired, continue with Step 2 below — submodules are skipped for the rest of this skill.
 
