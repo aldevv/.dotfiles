@@ -8,6 +8,9 @@
 - **NEVER delete** `~/.cache/ms-playwright/mcp-chrome-*` — contains Okta session data
 - If browser is frozen or errors out: call `browser_close`, then retry — Chrome relaunches automatically
 
+## Per-Machine Notes
+- See `~/CLAUDE-machines.md` for machine-specific info (hostnames, Tailscale IPs, machine-local quirks). That file is gitignored — each machine maintains its own.
+
 ## Development Environment
 - **Repos**: `~/repos` - Git repositories
 - **Projects**: `$PROJECTS` - Active project work
