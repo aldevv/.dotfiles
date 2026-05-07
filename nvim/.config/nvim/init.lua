@@ -33,7 +33,7 @@ end
 require("config")
 
 require("lazy").setup("plugins", {
-	dev = { path = "~/repos/github.com/rest-nvim", fallback = true, patterns = {} },
+	dev = { path = "~/repos/github.com/aldevv", fallback = true, patterns = {} },
 })
 
 require("keybindings")
