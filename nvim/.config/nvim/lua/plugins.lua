@@ -13,36 +13,9 @@ return {
   "tpope/vim-dotenv",
   "tpope/vim-surround",
   "tpope/vim-repeat",
-  {
-    "tpope/vim-projectionist",
-    init = function()
-      vim.g.projectionist_heuristics = {
-        ["pkg/connector/connector.go"] = {
-          ["pkg/connector/connector.go"] = {
-            type = "connector",
-            alternate = {
-              "pkg/config/config.go",
-              "cmd/{project|basename}/main.go",
-            },
-          },
-          ["pkg/config/config.go"] = {
-            type = "config",
-            alternate = {
-              "pkg/connector/connector.go",
-              "cmd/{project|basename}/main.go",
-            },
-          },
-          ["cmd/*/main.go"] = {
-            type = "cmd",
-            alternate = {
-              "pkg/connector/connector.go",
-              "pkg/config/config.go",
-            },
-          },
-        },
-      }
-    end,
-  },
+  -- Workspace-specific projectionist heuristics (e.g. ~/work/.nvim.lua) set
+  -- g:projectionist_heuristics via exrc; do not put project-specific config here.
+  "tpope/vim-projectionist",
   {
     "adalessa/telescope-projectionist.nvim",
     dependencies = {
