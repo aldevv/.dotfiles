@@ -1,5 +1,8 @@
 # Claude Code Configuration
 
+## Machine connection notes
+Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
+
 ## CRITICAL: Memory Files
 **NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
 
@@ -7,9 +10,6 @@
 **NEVER ask the user to do anything with the browser.** Use the Playwright MCP plugin tools directly — they handle browser launch automatically.
 - **NEVER delete** `~/.cache/ms-playwright/mcp-chrome-*` — contains Okta session data
 - If browser is frozen or errors out: call `browser_close`, then retry — Chrome relaunches automatically
-
-## Per-Machine Notes
-- See `~/CLAUDE-machines.md` for machine-specific info (hostnames, Tailscale IPs, machine-local quirks). That file is gitignored — each machine maintains its own.
 
 ## Development Environment
 - **Repos**: `~/repos` - Git repositories

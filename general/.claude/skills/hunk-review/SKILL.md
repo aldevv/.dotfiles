@@ -1,75 +1,100 @@
 ---
 name: hunk-review
-description: Open a Hunk diff review in a new tmux window and walk the user through the changes. Use when the user types `/hunk-review`, asks to "open hunk", "review with hunk", "show changes in hunk", or wants to review a PR/branch/commit interactively.
+description: Analyze a diff, compose review notes, then open a Hunk session in a new tmux window with the notes already attached. Use when the user types `/hunk-review`, asks to "open hunk", "review with hunk", "show changes in hunk", or wants to review a PR/branch/commit interactively.
 argument-hint: [target]   # e.g. "main...feature", "HEAD~1", "origin/master..HEAD", "--pr 581", omit for current-branch vs upstream default
 allowed-tools:
   - Bash
   - Read
+  - Edit
+  - Write
+  - AskUserQuestion
 ---
 
 # Hunk Review
 
-Spin up a Hunk diff review in a new tmux window so the user can see the
-changeset in a proper TUI, then leave inline review notes pointing at the
-parts worth scrutinizing.
+Read the diff and compose the review notes **before** opening Hunk, then
+open the TUI and attach the notes immediately. By the time the user looks
+at the window, the inline annotations are already there — no awkward gap
+where they're staring at an empty review while the model thinks.
 
 **User input**: $ARGUMENTS
 
-This skill orchestrates Hunk; the actual session control reference is the
-SKILL.md bundled with the binary. Locate it with `hunk skill path` and read
-it first if you need to recall any `hunk session ...` subcommand.
+## Step 0 — Always read the bundled hunk skill first
+
+Before doing anything else (parsing args, running git, opening tmux), read
+the upstream session-control reference shipped with the binary:
+
+```bash
+cat "$(hunk skill path)"
+```
+
+That file is the source of truth for `hunk session ...` subcommands, the
+exact `comment apply` payload schema, and `navigate` targeting rules. Do
+NOT skip this step — the rest of the workflow assumes you've just refreshed
+on it.
 
 ## Workflow
 
-### 1. Resolve the target
+The order matters: **read bundled skill → analyze diff → open Hunk → attach
+notes**. Don't open Hunk first and then go think about what to say.
+
+### 1. Resolve the target (parallel)
 
 Parse `$ARGUMENTS`:
 
-- `--pr <N>` or `pr <N>` or just `<N>` (numeric) → resolve to a branch
-  comparison via `gh pr view <N> --json baseRefName,headRefName,headRepository`,
-  then build the range `origin/<base>...<head-branch>`.
-  - Cleanup-service uses `main` as default; `system-mega` uses `master`.
-    Trust whatever `gh pr view` returns — don't hard-code.
+- `--pr <N>` / `pr <N>` / bare `<N>` (numeric) → resolve via
+  `gh pr view <N> --json baseRefName,headRefName,headRepository`, then
+  build `origin/<base>...<head-branch>`.
 - `<ref>` or `<range>` (e.g. `HEAD~1`, `main...HEAD`, `origin/master..HEAD`)
   → pass through verbatim.
 - Empty → default to `<remote>/<default-branch>...HEAD` based on
   `git remote show origin | sed -n 's/.*HEAD branch: //p'`.
 
-Always operate from the repo root the user is in (`pwd` of the agent).
-Confirm the diff has content with `git diff --stat <range>` before opening
-Hunk; if empty, tell the user and stop.
+Run **in a single message, in parallel**:
 
-### 2. Open in a new tmux window
+- `git rev-parse --show-toplevel`
+- `git remote show origin | sed -n 's/.*HEAD branch: //p'`
+- `pwd`
+- (when arg is a PR number) `gh pr view <N> --json baseRefName,headRefName,headRepository`
+
+Once the range is known, confirm the diff has content with
+`git diff --stat <RANGE>`. If empty, tell the user and stop — do not open
+Hunk.
+
+### 2. Read & analyze the diff (BEFORE opening Hunk)
 
 ```bash
+git diff --no-color <RANGE>
+```
+
+Read the full diff and compose the comment payload per "Comment style"
+below. Map files → 1-based hunk indices using the `@@ -X,Y +A,B @@`
+headers (the Nth hunk in a file's diff is `hunkNumber: N`).
+
+This step is the "review" — finish it before launching the TUI.
+
+### 3. Open Hunk + attach notes (parallel where possible)
+
+Fire these together in a single message:
+
+```bash
+# Call A — open Hunk in a new tmux window
 tmux new-window -t "$(tmux display-message -p '#{session_name}')" \
   -n hunk-review \
   "cd <REPO_ROOT> && hunk diff <RANGE>"
 ```
 
-The `tmux new-window` (without `-d`) auto-switches the user to the new
-window, which is what they want. Don't use `-d`.
-
-If the user says "open in a pane" instead, use `tmux split-window -h` with
-the same `cd && hunk diff …` command.
-
-### 3. Locate the live session and apply review notes
-
-After 2–3 seconds (so the daemon registers the new session):
-
 ```bash
-hunk session list
-hunk session review --repo <REPO_ROOT> --json
+# Call B — sleep + verify the session is live
+sleep 2 && hunk session list
 ```
 
-The review JSON contains a `review.files[*].hunks[*]` shape. For each
-non-trivial change pick a target — preferring `hunkNumber` over `newLine`
-because newLine targeting only works on lines literally added/changed (not
-context lines), and Hunk's `newRange` field shows ONLY the contiguous
-changed slice, not the full hunk window.
+(`tmux new-window` without `-d` auto-switches the user to the new window,
+which is what we want.) If the user said "open in a pane", swap call A
+for `tmux split-window -h "cd <REPO_ROOT> && hunk diff <RANGE>"`.
 
-Apply review notes in **one batch** via `comment apply` rather than many
-single calls:
+Once the session is live, apply notes in **one batch** and jump to the
+first one — both in parallel:
 
 ```bash
 cat <<'JSON' | hunk session comment apply --repo <REPO_ROOT> --stdin
@@ -82,13 +107,90 @@ cat <<'JSON' | hunk session comment apply --repo <REPO_ROOT> --stdin
 JSON
 ```
 
-Then jump to the first comment so the user lands there:
-
 ```bash
 hunk session navigate --repo <REPO_ROOT> --next-comment
 ```
 
-### 4. Comment style — what's worth highlighting
+If `comment apply` rejects a target (path or hunk index mismatch), re-run
+`hunk session review --repo <REPO_ROOT> --json` and reconcile the file
+paths and hunk counts before retrying — only fall back to this on error.
+
+### 4. One-time prompt: install the pre-PR hook
+
+State file: `$HOME/.claude/skills/hunk-review/.state.json`.
+
+After the review is attached, check for the state file:
+
+```bash
+test -f "$HOME/.claude/skills/hunk-review/.state.json" && cat "$HOME/.claude/skills/hunk-review/.state.json"
+```
+
+- **File exists** → skip this step entirely (already asked once).
+- **File missing** → ask once via AskUserQuestion:
+
+  Question: "Install a PreToolUse hook that auto-runs `hunk-review`
+  right before any `gh pr create`? You'll get the diff + review notes
+  in a tmux window the moment you fire the PR command."
+
+  Options:
+  1. **Yes, install it** — write the hook script + register in settings.json
+  2. **No, skip** — record the decision so we don't ask again
+  3. **Ask me later** — do NOT write state; re-asks next run
+
+On **Yes**:
+
+1. Write `$HOME/.claude/hooks/hunk-review-pre-pr.sh` (see "Hook script"
+   below) and `chmod +x` it.
+2. Read `$HOME/.claude/settings.json`, add a `PreToolUse` entry under
+   `hooks` matching `Bash(gh pr create:*)` calling the script. If
+   `PreToolUse[].matcher == "Bash"` already exists, append to its `hooks`
+   array — don't duplicate the matcher.
+3. Write `.state.json`:
+   ```json
+   {"hookInstalled": true, "promptedAt": "<ISO 8601>"}
+   ```
+
+On **No**: write `.state.json`:
+```json
+{"hookDeclined": true, "promptedAt": "<ISO 8601>"}
+```
+
+On **Ask me later**: do not write state.
+
+## Hook script
+
+`$HOME/.claude/hooks/hunk-review-pre-pr.sh`:
+
+```bash
+#!/usr/bin/env bash
+# PreToolUse hook for `Bash(gh pr create:*)`.
+# Opens Hunk in a new tmux window for the current branch vs its base.
+# Informational only — exits 0 so PR creation proceeds in parallel.
+set -euo pipefail
+
+[[ -n "${TMUX:-}" ]] || exit 0
+
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+
+base_branch="$(cd "$repo_root" && git remote show origin 2>/dev/null \
+  | sed -n 's/.*HEAD branch: //p')"
+[[ -n "$base_branch" ]] || base_branch=main
+
+range="origin/${base_branch}...HEAD"
+[[ -n "$(cd "$repo_root" && git diff --stat "$range" 2>/dev/null)" ]] || exit 0
+
+tmux new-window -t "$(tmux display-message -p '#{session_name}')" \
+  -n hunk-pre-pr \
+  "cd '$repo_root' && hunk diff '$range'" 2>/dev/null || true
+
+exit 0
+```
+
+To make it **block** PR creation until the user closes Hunk, change the
+final `exit 0` to `exit 2`; the user then re-runs `gh pr create` after
+reviewing.
+
+## Comment style — what's worth highlighting
 
 Don't comment on every hunk. Highlight:
 
@@ -96,20 +198,22 @@ Don't comment on every hunk. Highlight:
   flow, anything a casual reader might miss.
 - **Cross-file invariants** — when one change relies on a behavior in
   another file/repo (e.g. "this depends on legalhold-tool's SQS dispatch").
-- **Rollout footguns** — new Slack volume, new env vars, deploy ordering.
+- **Rollout footguns** — new env vars, deploy ordering, schema changes
+  that need regen, secrets handling.
 - **Test gaps** — areas not covered by the new tests, especially in repos
   that ban mocks.
 - **Skip the mechanical** — pure renames, signature widening, comment-only
-  changes.
+  changes, generated-file regenerations (mention once on the first hunk,
+  don't comment per-hunk).
 
 Each comment: a short `summary` (one-line headline) plus a `rationale`
-(why-it-matters). Both will render in the Hunk TUI.
+(why-it-matters). Both render in the Hunk TUI.
 
 ## Agent notes visibility
 
 If the user reports "I don't see the comments", they likely have
-`agent_notes = false` in their `~/.config/hunk/config.toml`. Reload with the
-flag set so the existing comments show up:
+`agent_notes = false` in their `~/.config/hunk/config.toml`. Reload with
+the flag set so the existing comments show up:
 
 ```bash
 hunk session reload --repo <REPO_ROOT> -- diff --agent-notes <RANGE>
@@ -128,32 +232,6 @@ afterwards.
 | `/hunk-review main..feature` | `hunk diff main..feature` |
 | (working tree changes) | `hunk diff` (no args) |
 | (staged changes) | `hunk diff --staged` |
-
-## Pre-PR-create hook
-
-There's a companion hook at `~/.claude/hooks/hunk-review-prepush.sh`
-that auto-runs this flow when a `gh pr create` is about to fire. It is
-**not enabled by default**. To enable, add to `~/.claude/settings.json`
-under `PreToolUse`:
-
-```json
-{
-  "matcher": "Bash",
-  "hooks": [
-    {
-      "type": "command",
-      "command": "/home/kanon/.claude/hooks/hunk-review-prepush.sh",
-      "timeout": 10
-    }
-  ]
-}
-```
-
-The hook is informational (exit 0) — it opens Hunk in a new window so the
-user can scan the diff in parallel with the PR being created. To make it
-strict (block until reviewed) edit the script and change the final `exit 0`
-to `exit 2`; the user will then need to re-run the `gh pr create` command
-after reviewing.
 
 ## Reference — bundled hunk session skill
 

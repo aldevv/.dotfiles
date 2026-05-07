@@ -12,4 +12,5 @@ zsh/.config/zsh/.zsh_sessions/*
 scripts/.local/state/
 scripts/.local/bin/
 CLAUDE-machines.md
+general/CLAUDE-machines.md
 **/.ssh/config
