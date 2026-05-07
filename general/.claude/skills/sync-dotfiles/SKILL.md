@@ -10,6 +10,8 @@ Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve
 1. `~/.cache/sync-dotfiles/last-full-sync` is missing or older than 30 days (= a full sync is overdue).
 2. Any submodule has a `-` prefix (= not initialized, fast path can't safely operate without it).
 
+**Fast-path shape**: in the common case (no merge conflicts, no newly-added files), this skill runs **two tool-call rounds total** — Step 1 (3 parallel reads, including a prefetch) and Step 2 (one bundled script that merges, amends, and pushes). Steps 3–5 only fire on the rare conflict / restow branches.
+
 > **Important — env vars don't persist across Bash tool invocations.** Each Bash call is a fresh shell, so `export` from one call is **lost** in subsequent ones. Any later command that uses `${id}` or `${os}` must re-source the metadata inline by prefixing with:
 > ```bash
 > export $(grep -v '^#' ~/.machine_metadata | xargs) && ...
@@ -17,9 +19,11 @@ Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve
 
 ---
 
-## Step 1 — Load metadata + decide fast vs. full **[PARALLEL]**
+## Step 1 — Metadata + freshness + prefetch **[PARALLEL × 3]**
 
-Issue both calls in **a single message** so they run concurrently. They're independent reads — metadata bootstrap doesn't need submodule status and vice versa.
+Issue all three calls in **a single message** so they run concurrently. They're independent: metadata bootstrap doesn't depend on submodule status, and `git fetch` only needs the remote — none of them touch each other.
+
+The point of the prefetch (Call 3) is that the network round-trip for `git fetch` is the slowest single op in this skill. Doing it in parallel with the cheap local reads hides its latency, so Step 2's `git merge` is purely local.
 
 **Call 1 — metadata + freshness check:**
 
@@ -56,21 +60,35 @@ if echo "$sub_status" | grep -q '^-'; then
 fi
 ```
 
-If either call's output contains a `-> DELEGATE` line, **stop following this skill** and follow `~/.claude/skills/sync-dotfiles-full/SKILL.md` from its Step 1. Do not continue with the steps below — the full skill handles the fast path's work too.
+**Call 3 — prefetch origin/main:**
+
+```bash
+cd ~/.dotfiles && git fetch origin main 2>&1
+```
+
+If any call's output contains a `-> DELEGATE` line, **stop following this skill** and follow `~/.claude/skills/sync-dotfiles-full/SKILL.md` from its Step 1. Do not continue with the steps below — the full skill handles the fast path's work too. (The prefetch was wasted but harmless.)
 
 If `$id` or `$os` is empty after Call 1 (e.g. unwritable HOME), stop and report.
 
-If neither delegation condition fired, continue with Step 2 below — submodules are skipped for the rest of this skill.
+If neither delegation condition fired, continue with Step 2 — submodules are skipped for the rest of this skill.
 
 ---
 
-## Step 2 — Sync the parent repo
+## Step 2 — Bundled merge + finalize (single call)
 
-Single bash call, mirrors the parent template from `sync-dotfiles-full`'s Step 3 but stands alone (no `[PARALLEL]` block since there's only one repo to sync):
+One bash invocation that does **everything** for the happy path: secret scan, commit local changes, merge the already-fetched remote, amend to the final sync message, push. Two early exits flag the rare branches:
+
+- **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve), then Step 5 (finalize).
+- **`exit 9`** = merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize).
+- **`exit 7`** = secret scan blocked. Stop and report.
+- **`exit 0`** = success, sync is done. Skip to Step 6 (report).
 
 ```bash
 set -e
 cd ~/.dotfiles
+export $(grep -v '^#' ~/.machine_metadata | xargs)
+
+# 1. Scan local changes for secrets, commit them as a wip checkpoint.
 diff_files=$(git diff --name-only HEAD)
 if [ -n "$diff_files" ]; then
   while IFS= read -r f; do
@@ -80,19 +98,37 @@ if [ -n "$diff_files" ]; then
       echo "BLOCKED: possible secret in $f"; exit 7
     fi
   done <<< "$diff_files"
-  export $(grep -v '^#' ~/.machine_metadata | xargs)
   git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
-git pull --no-rebase origin main
+
+# 2. Merge the remote (already fetched in Step 1 Call 3).
+pre_merge=$(git rev-parse HEAD)
+if ! git merge --no-edit origin/main; then
+  echo "MERGE_CONFLICT -> Step 3"; exit 8
+fi
+post_merge=$(git rev-parse HEAD)
+
+# 3. If the merge added new files, bail out so Step 4 can restow before we push.
+if [ "$pre_merge" != "$post_merge" ] \
+   && [ -n "$(git diff "$pre_merge" "$post_merge" --name-only --diff-filter=A)" ]; then
+  echo "RESTOW_NEEDED ($pre_merge..$post_merge) -> Step 4"; exit 9
+fi
+
+# 4. Finalize: rename the head commit to the canonical sync message and push.
+git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"
+git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true
+if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
+  git push origin main
+else
+  echo "parent: nothing to push"
+fi
 ```
 
-If the pull surfaces conflicts, resolve via Rule A / Rule B from Step 3 and re-run this command (or just re-run the conflict resolution + Step 4 onward — the pull's merge state is already in place).
+`set -e` plus the explicit `exit 7/8/9` codes makes Bash surface them to Claude. **Do not** treat exits 8 or 9 as failures — they're hand-offs to Steps 3 and 4.
 
 ---
 
-## Step 3 — Conflict resolution
-
-Only fires when Step 2's pull surfaced conflicts.
+## Step 3 — Conflict resolution (only on exit 8)
 
 ```bash
 cd ~/.dotfiles && git status --short | grep -E '^(UU|AA|DD|AU|UA|DU|UD)'
@@ -106,13 +142,13 @@ cd ~/.dotfiles && git status --short | grep -E '^(UU|AA|DD|AU|UA|DU|UD)'
 git checkout --theirs -- <file> && git add <file>
 ```
 
+After all conflicts are staged, jump to **Step 5** (the merge commit isn't finalized yet — Step 5's `git diff --cached --quiet || git commit ...` will create it from the staged resolution).
+
 ---
 
-## Step 4 — Restow packages that gained new files
+## Step 4 — Restow packages that gained new files (only on exit 9)
 
-`ORIG_HEAD` is set by `git pull` only when something was actually merged. If absent → up-to-date pull → skip this step.
-
-Find packages that received **newly-added** files (modified files don't need restowing — their symlink already exists):
+The Step 2 exit-9 message includes the pre/post merge SHAs. Use those (or `ORIG_HEAD..HEAD` — `git merge` sets `ORIG_HEAD` whenever the merge actually changed HEAD) to find packages that received newly-added files:
 
 ```bash
 cd ~/.dotfiles && git diff ORIG_HEAD HEAD --name-only --diff-filter=A 2>/dev/null | sed 's|/.*||' | sort -u
@@ -137,13 +173,13 @@ git diff ORIG_HEAD HEAD --name-only --diff-filter=A | grep "^${pkg}/" | while IF
 done
 ```
 
-Report any remaining conflicts (e.g. unwritable parent dirs) but do not abort.
+Report any remaining conflicts (e.g. unwritable parent dirs) but do not abort. Then continue to Step 5.
 
 ---
 
-## Step 5 — Commit and push parent
+## Step 5 — Finalize (only after Step 3 or 4)
 
-Finalize any pending merge commit and push, but skip the push if nothing's ahead:
+Step 2 already does this inline on the happy path. This step only fires after the conflict-resolution or restow branches: same logic, separate call.
 
 ```bash
 cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
@@ -158,7 +194,7 @@ This skill does **not** update `~/.cache/sync-dotfiles/last-full-sync` — only 
 
 ## Secret Scan Rules (reference)
 
-The Step 2 template inlines this scan. Reproduced here for one-off / manual use:
+The Step 2 bundle inlines this scan. Reproduced here for one-off / manual use:
 
 ```bash
 # 1. Suspicious filename
@@ -179,7 +215,8 @@ If either matches: don't stage/commit, print `BLOCKED: possible secret in <filep
 - Machine ID and OS
 - Mode: fast (parent-only) — note this explicitly so the user knows submodules were skipped
 - Days since last full sync
+- Path taken: happy / conflict / restow (= which exit code from Step 2)
 - Local changes committed / nothing to push / fast-forwarded
-- Conflicts resolved (count and files)
-- Packages restowed
+- Conflicts resolved (count and files), if any
+- Packages restowed, if any
 - Final pushed commit (or "nothing to push")

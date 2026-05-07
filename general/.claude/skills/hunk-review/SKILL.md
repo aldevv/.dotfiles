@@ -117,12 +117,12 @@ paths and hunk counts before retrying — only fall back to this on error.
 
 ### 4. One-time prompt: install the pre-PR hook
 
-State file: `$HOME/.claude/skills/hunk-review/.state.json`.
+State file: `$HOME/.cache/hunk-review/state.json` (XDG cache — machine-local, never synced into the dotfiles repo).
 
 After the review is attached, check for the state file:
 
 ```bash
-test -f "$HOME/.claude/skills/hunk-review/.state.json" && cat "$HOME/.claude/skills/hunk-review/.state.json"
+test -f "$HOME/.cache/hunk-review/state.json" && cat "$HOME/.cache/hunk-review/state.json"
 ```
 
 - **File exists** → skip this step entirely (already asked once).
@@ -145,14 +145,18 @@ On **Yes**:
    `hooks` matching `Bash(gh pr create:*)` calling the script. If
    `PreToolUse[].matcher == "Bash"` already exists, append to its `hooks`
    array — don't duplicate the matcher.
-3. Write `.state.json`:
-   ```json
-   {"hookInstalled": true, "promptedAt": "<ISO 8601>"}
+3. Write the state file (create the cache dir if missing):
+   ```bash
+   mkdir -p "$HOME/.cache/hunk-review" && \
+     printf '{"hookInstalled": true, "promptedAt": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+     > "$HOME/.cache/hunk-review/state.json"
    ```
 
-On **No**: write `.state.json`:
-```json
-{"hookDeclined": true, "promptedAt": "<ISO 8601>"}
+On **No**:
+```bash
+mkdir -p "$HOME/.cache/hunk-review" && \
+  printf '{"hookDeclined": true, "promptedAt": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  > "$HOME/.cache/hunk-review/state.json"
 ```
 
 On **Ask me later**: do not write state.
