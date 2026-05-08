@@ -1,13 +1,14 @@
 ---
 name: simplify-claude-md
-description: "Trim and reorganize a CLAUDE.md or CLAUDE.local.md so the upfront read stays lean and on-budget. Use this whenever the user says their CLAUDE file is too long, hard to navigate, or mixes always-relevant rules with one-off reference material — also when they ask to 'simplify', 'trim', 'reorganize', 'split up', 'extract from', or 'clean up' a CLAUDE.md / CLAUDE.local.md / ~/.claude/CLAUDE.md. The skill extracts sections that should only load on a specific trigger (hook reference → loads when a hook fires; Snowflake CLI setup → loads when the user runs `snow`) into `.claude/files/<topic>.md` with a `**Load this when:** <trigger>` line, collapses verbose-but-eager sections into tighter rules, and adds a 'Detail files (load on demand)' index + Table of Contents at the top. Critical behavioral rules stay inline. Strict about triggers: if you can't name a specific trigger that should cause Claude to read a section, it stays inline."
+description: "Trim and reorganize a CLAUDE.md or CLAUDE.local.md so the upfront read stays lean and on-budget. Use this whenever the user says their CLAUDE file is too long, hard to navigate, or mixes always-relevant rules with one-off reference material — also when they ask to 'simplify', 'trim', 'reorganize', 'split up', 'extract from', or 'clean up' a CLAUDE.md / CLAUDE.local.md / ~/.claude/CLAUDE.md. The skill extracts sections that should only load on a specific trigger (hook reference → loads when a hook fires; Snowflake CLI setup → loads when the user runs `snow`) into `.claude/files/<topic>.md` with a `**Load this when:** <trigger>` line, collapses verbose-but-eager sections into tighter rules, migrates referenced sibling files (always `CLAUDE-*.md`, optionally other reference docs) into `.claude/files/`, and adds a 'Detail files (load on demand)' index + Table of Contents at the top. Critical behavioral rules stay inline. Strict about triggers: if you can't name a specific trigger that should cause Claude to read a section, it stays inline."
 ---
 
 Reorganize a CLAUDE.md / CLAUDE.local.md so:
 1. **Only eager content** — short rules, directives, safety gates — stays inline.
 2. **Lazy reference content** (setup guides, troubleshooting, multi-step flows, long tables) moves to `.claude/files/<topic>.md`, linked from a top-of-file "Detail files" index.
 3. **Verbose sections that should stay** get simplified — if a bullet has more words than the rule it encodes, shorten it.
-4. A **Table of Contents** at the top lists the remaining sections with one-line descriptions and anchor links.
+4. **Referenced sibling files** (always `CLAUDE-*.md`, optionally other reference docs) get relocated under `.claude/files/` so all lazy-load content lives in one place.
+5. A **Table of Contents** at the top lists the remaining sections with one-line descriptions and anchor links.
 
 The goal: when Claude loads the file at the start of a conversation, it spends tokens only on content that matters for every interaction. Everything else is available on demand.
 
@@ -48,17 +49,41 @@ If you can't state a concrete trigger, **do not extract** — the content is eit
 
 Group related lazy sections under one file **only when they share the same trigger** (e.g. "Okta FastPass MFA" + "Snowflake CLI config" + "Auth troubleshooting" all trigger on "user runs `snow` or deals with Snowflake auth" → one `snow.md`). Do not merge sections with different triggers into one file — it breaks the lazy-loading contract.
 
+### Step 2b — Identify referenced sibling files to migrate
+
+The main file usually references sibling docs (a "References to Specialized Guides" index, inline `See CLAUDE-foo.md` mentions, etc.). These are already lazy-load reference content — they belong under `.claude/files/` for consistency. Walk every reference and decide whether it migrates.
+
+**Always migrate:** every `CLAUDE-*.md` sibling file referenced from the main file. The `CLAUDE-` prefix was a discovery convention for lazy-load docs *before* the `.claude/files/` directory existed; now the directory is the convention. Strip the `CLAUDE-` prefix and the `.md` extension to derive the topic name (e.g. `CLAUDE-testing.md` → `.claude/files/testing.md`, `CLAUDE-golang-connectors.md` → `.claude/files/golang-connectors.md`).
+
+**Migrate when triggerable:** other referenced reference docs (no `CLAUDE-` prefix — e.g. `cel-expressions.md`, `http-examples.md`, `*-reference.md`) migrate **only if** you can name a concrete trigger and they're clearly reference-style content (long, niche, not loaded on every turn). Apply the same trigger discipline as Step 2 section extraction. If you can't state the trigger, leave them where they are.
+
+**Never migrate:**
+- The main `CLAUDE.md` / `CLAUDE.local.md` itself
+- Files already inside `.claude/files/`
+- Files outside the working directory tree (e.g. absolute paths under `~/.claude/` or another project)
+- Files in a separate repository or git submodule
+- Files referenced only as code examples or external URLs (not actual sibling docs Claude is meant to read)
+
+**For each migration candidate, gather:**
+- Source path (resolve relative paths against the main file's directory)
+- Target path: `<root>/.claude/files/<stripped-topic>.md`
+- Trigger — derive it in this priority order: (1) the one-line description in the main file's index ("References to Specialized Guides" or equivalent); (2) the file's own first paragraph; (3) ask the user. The trigger has to be specific enough that the same `**Load this when:**` discipline from Step 2 applies — "working with X" is too broad; reject and tighten.
+- Whether the stripped name collides with a planned section extraction (Step 2). If yes, dedup or merge under shared headings.
+
+These candidates flow into the plan in Step 3 as a separate "Files to move" list.
+
 ---
 
 ## Step 3 — Propose a plan, get approval
 
 Output (no edits yet):
 - **Extractions**: list each section to move, target file name, one-line rationale
+- **Files to move**: list each `CLAUDE-*.md` (or other reference doc) being relocated to `.claude/files/`, with `old → new` path and the trigger that will be added. Note any collisions with extractions.
 - **Simplifications**: list each verbose section to collapse, with a preview of the one-liner
 - **Staying put**: name the eager sections (short list, just titles)
 - **TOC preview**: list of headings that will end up in the Table of Contents
 
-Ask the user to confirm before writing anything. Accept edits (drop an extraction, keep a section as-is, rename a target file).
+Ask the user to confirm before writing anything. Accept edits (drop an extraction, drop a migration, keep a section as-is, rename a target file, override a derived trigger).
 
 ---
 
@@ -111,15 +136,47 @@ For each approved extraction:
 
 ---
 
-## Step 6 — Update the main file
+## Step 6 — Move referenced sibling files
 
-Replace extracted sections with nothing (delete them — the link index at the top covers discoverability). Do not leave stub sections pointing at the extracted file; the TOC already does that.
+For each approved file migration:
+
+1. **Determine the new path.** Strip the `CLAUDE-` prefix and `.md` extension and lowercase the result. Final path: `<root>/.claude/files/<topic>.md` (same root-resolution rule as Step 5).
+2. **Handle collisions.** If the target file already exists (a Step 5 extraction landed there, or a prior run did): either merge the migrated content under a new `## <Original Heading>` subsection separated by `---`, or pick a different filename. Confirm the choice was approved in Step 3 — don't overwrite silently.
+3. **Read the source file.** Preserve its content verbatim. The migrated file MUST start with the trigger block, exactly like Step 5 extractions:
+   ```markdown
+   # <Topic Title — derive from the original H1, or the topic name title-cased>
+
+   **Load this when:** <trigger from Step 2b — same wording as the Detail-files index entry>.
+   **Referenced from:** `<source-file>.md`
+
+   <rest of the original content>
+   ```
+   If the source already has a `# Title`, demote it (or replace with the new H1) — only one H1 per file.
+4. **Delete the original.** Remove the source `CLAUDE-*.md` after the new file is written. (References to it get rewritten in Step 7.)
+5. **Note cross-references.** If a migrated file references *another* migrated file (e.g. `CLAUDE-testing.md` says "see CLAUDE-golang-connectors.md"), record the rewrite needed — Step 7 will fix both the main file and these in-file cross-refs to use the new bare names (e.g. `golang-connectors.md`).
+
+If a migration's stripped name conflicts with a Step 5 extraction the user wanted separate, fall back to a longer name (e.g. `testing-reference.md`) — never silently combine content the user didn't approve to merge.
 
 ---
 
-## Step 7 — Add / update the Table of Contents
+## Step 7 — Update the main file
 
-Place the TOC immediately after the `# <Title>` line, before any existing content. Format:
+Two passes:
+
+1. **Delete extracted sections** (from Step 5) — drop them entirely; the Detail-files index at the top covers discoverability. Do not leave stub sections pointing at the extracted file.
+2. **Rewrite references to migrated sibling files** (from Step 6). For every mention of a moved `CLAUDE-*.md` (or other migrated doc), update the path to the new `.claude/files/<topic>.md` location. Cover all forms:
+   - The "References to Specialized Guides" index entries (often need full reformat — they become Detail-files entries in Step 8)
+   - Inline mentions in eager sections (`See CLAUDE-testing.md`, `read $HOME/work/CLAUDE-foo.md before X`, etc.)
+   - Anchor fragments (`#some-section`) — verify they still resolve in the migrated file
+   - Cross-references inside the migrated files themselves (Step 6 noted these — fix them now in their new homes)
+
+After this step, no remaining mention of a migrated source path should appear anywhere under the working tree.
+
+---
+
+## Step 8 — Add / update the Table of Contents
+
+Place the TOC immediately after the `# <Title>` line, before any existing content. List **every** file under `.claude/files/` — both Step 5 extractions and Step 6 migrations — in one combined index. From the reader's perspective they're identical: lazy-load reference docs gated by a trigger. Format:
 
 ```markdown
 ## Detail files (load on demand)
@@ -139,11 +196,11 @@ Rules:
 - **Every Detail-files entry must name its trigger** using a `**read when:** <trigger>` clause. This mirrors the `**Load this when:**` line inside the extracted file — the two must agree. A reference without a trigger is a bug.
 - Anchor links use lowercase, spaces→hyphens, drop punctuation — match how GitHub/most markdown renderers generate anchors.
 - TOC one-line descriptions: what the section is *for*, not a restatement of its title.
-- If the file already had a "Quick map" or similar index, replace it with the TOC — don't leave both.
+- If the file already had a "Quick map", "References to Specialized Guides", or similar index, **delete it** — the migrated entries now live under "Detail files (load on demand)". Don't leave both indexes.
 
 ---
 
-## Step 8 — Update any "save in my claude" (or equivalent) guidance
+## Step 9 — Update any "save in my claude" (or equivalent) guidance
 
 If the main file has a rule that tells Claude where to save user-added content (common names: "Save in my claude", "Save in my CLAUDE.md", "When saving preferences"), update it to include the newly-created `.claude/files/*.md` files as valid save targets. After extraction, the rule needs to say: pick the best location — either the main file (for cross-cutting rules that apply every turn) or one of the `.claude/files/*.md` files (for content matching that file's `**Load this when:**` trigger).
 
@@ -152,31 +209,35 @@ If the main file has a rule that tells Claude where to save user-added content (
 
 Rules:
 - **Don't invent this rule** if the file doesn't already have one — this skill doesn't add new behavioral directives on its own. Just update what's there.
-- **If the file's existing rule lists specific CLAUDE*.md candidates** (e.g. "check `$HOME/work/` for CLAUDE-*.md files"), keep those and add `.claude/files/*.md` alongside them. The user's existing discovery logic still matters.
+- **If the file's existing rule lists specific CLAUDE*.md candidates** (e.g. "check `$HOME/work/` for CLAUDE-*.md files") and any of those candidates were migrated in Step 6, rewrite the wording so it points at the migrated locations instead — `CLAUDE-testing.md` no longer exists, but `.claude/files/testing.md` does. Keep candidates that *weren't* migrated as-is.
+- Add `.claude/files/*.md` as a save target alongside whatever surviving candidates the user's discovery logic still names.
 - **Mention trigger specificity** as the tie-breaker — it's the whole point of the split.
 
 ---
 
-## Step 9 — Locally ignore `.claude/files/`
+## Step 10 — Locally ignore `.claude/files/`
 
 If the CLAUDE.md being processed is inside a git repo, always locally ignore `.claude/files/` — regardless of whether the source file itself is tracked or gitignored. Extracted detail files are personal, lazy-loaded reference material and should not be surfaced as untracked noise.
 
 1. Check whether `.claude/files/` is already ignored: `git check-ignore -v .claude/files/<any-file-just-created>.md`.
 2. If not ignored, append `.claude/files/` to `.git/info/exclude`. **Never modify `.gitignore`** — that file is committed and shared with the team, so adding a personal ignore rule there would leak into the repo.
-3. Skip entirely if the CLAUDE.md target is not inside a git repo.
-4. Run `git status` at the end to confirm the new files don't show up as untracked.
+3. **If any migrated `CLAUDE-*.md` was tracked in git**, the move shows up as a delete + add. Surface this in the Step 11 report so the user can decide whether to commit the move (and whether to remove the now-stale `CLAUDE-*.md` paths from any committed `.gitignore`/docs). The skill itself never stages or commits.
+4. Skip the ignore step entirely if the CLAUDE.md target is not inside a git repo.
+5. Run `git status` at the end to confirm new `.claude/files/` entries don't show up as untracked.
 
 ---
 
-## Step 10 — Report
+## Step 11 — Report
 
 Summarize:
-- Files created under `.claude/files/`
+- Files created under `.claude/files/` (split: extracted from sections vs migrated from sibling files)
 - Sections extracted (count)
+- Sibling files migrated (count, with old → new paths)
 - Sections simplified (count, with line-delta)
 - Main file before/after line count
 - Whether `.git/info/exclude` was updated
-- Anything the user declined to extract that's still verbose (flag it for a future pass)
+- Whether any migrated files were tracked in git (flag for the user to commit the move)
+- Anything the user declined to extract or migrate that's still verbose (flag it for a future pass)
 
 ---
 
