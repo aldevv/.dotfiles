@@ -79,7 +79,7 @@ M.load_mappings = function()
   end, desc("Telescope fuzzy"))
   map(
     "n",
-    "<a-b>",
+    "<c-b>",
     ':lua require("telescope.builtin").buffers(require("telescope.themes").get_dropdown({cwd_only=false}))<cr>',
     nor_s
   )

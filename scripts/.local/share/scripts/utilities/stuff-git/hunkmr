@@ -1,0 +1,162 @@
+#!/bin/bash
+# Open `hunk diff` for a GitLab MR.
+# Usage: hunkmr [<mr-url-or-iid>]
+#
+#   no arg     → resolve via `glab mr view` (current branch's MR; cwd must be the repo)
+#   <iid>      → uses glab's repo detection from cwd
+#   <url>      → finds a local clone of the URL's project in ~/repos, ~/work,
+#                $PROJECTS, $CODE; falls back to cloning into ~/.cache/hunkmr/
+#
+# GitLab publishes merge-requests/<iid>/head for every MR (incl. forks),
+# so a clone of the *upstream* project is enough.
+#
+# Exit codes: 0 ok, 1 usage, 2 resolve, 3 fetch, 4 clone, 127 missing dep.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: hunkmr [<mr-url-or-iid>]
+
+Open `hunk diff` for a GitLab MR's branch (target...source).
+
+Examples:
+  hunkmr                                                    # current branch's MR
+  hunkmr 123                                                # MR in cwd's project
+  hunkmr https://gitlab.com/owner/repo/-/merge_requests/123 # auto-finds local clone
+
+Searches for the upstream clone in $PWD, ~/repos, ~/work, $PROJECTS, $CODE.
+Auto-clones to ~/.cache/hunkmr/<owner>/<repo> if no local clone is found.
+Requires: glab, hunk, jq.
+EOF
+}
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+esac
+[[ $# -le 1 ]] || { usage >&2; exit 1; }
+
+for cmd in glab hunk jq; do
+  command -v "$cmd" >/dev/null \
+    || { echo "hunkmr: \`$cmd\` not found on PATH" >&2; exit 127; }
+done
+
+arg="${1:-}"
+
+quiet=()
+[[ -t 2 ]] || quiet=(--quiet)
+
+# --- Resolve upstream + (when possible) MR iid from URL ---
+# GitLab path-with-namespace can include nested groups, so the URL pattern
+# is `https://host/<path>/-/merge_requests/<iid>` where path is anything
+# before the literal `/-/`.
+
+upstream=""
+iid_from_url=""
+if [[ "$arg" =~ ^https?://[^/]+/(.+)/-/merge_requests/([0-9]+) ]]; then
+  upstream="${BASH_REMATCH[1]%.git}"
+  iid_from_url="${BASH_REMATCH[2]}"
+elif [[ -z "$arg" || "$arg" =~ ^[0-9]+$ ]]; then
+  origin_url=$(git remote get-url origin 2>/dev/null) \
+    || { echo "hunkmr: not in a git repo and no URL given" >&2; exit 2; }
+  # HTTPS first — the SSH pattern `^[^:]+:` would otherwise eat `https:`
+  # and capture `//user@host/path`. Anchoring SSH on `user@host:` keeps
+  # them disjoint either way.
+  if   [[ "$origin_url" =~ ^https?://[^/]+/(.+)$ ]];   then upstream="${BASH_REMATCH[1]%.git}"
+  elif [[ "$origin_url" =~ ^[^/:@]+@[^:]+:(.+)$ ]];    then upstream="${BASH_REMATCH[1]%.git}"
+  fi
+fi
+[[ -n "$upstream" ]] \
+  || { echo "hunkmr: couldn't determine upstream project from \`$arg\` (not in a git repo, origin isn't a GitLab-style remote, or arg isn't an MR URL/iid)" >&2; exit 2; }
+
+# `$upstream` becomes part of the cache path, so reject traversal segments.
+case "/$upstream/" in
+  */../*|*/./*) echo "hunkmr: invalid path segment in upstream \`$upstream\`" >&2; exit 2 ;;
+esac
+
+# --- Find or clone the local working dir ---
+
+remote_matches() {
+  local url="$1" target="$2"
+  [[ "$url" == *"/${target}.git" || "$url" == *"/${target}" \
+    || "$url" == *":${target}.git" || "$url" == *":${target}" ]]
+}
+
+find_clone() {
+  local target="$1" basename="$2" url root dir
+  if root=$(git -C . rev-parse --show-toplevel 2>/dev/null); then
+    url=$(git -C "$root" remote get-url origin 2>/dev/null || true)
+    remote_matches "$url" "$target" && { echo "$root"; return 0; }
+  fi
+  for dir in "$HOME/repos" "$HOME/work" "${PROJECTS:-}" "${CODE:-}"; do
+    [[ -d "$dir/$basename/.git" ]] || continue
+    url=$(git -C "$dir/$basename" remote get-url origin 2>/dev/null || true)
+    remote_matches "$url" "$target" && { echo "$dir/$basename"; return 0; }
+  done
+  return 1
+}
+
+repo_dir="$(find_clone "$upstream" "${upstream##*/}")" || {
+  cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/hunkmr/$upstream"
+  if [[ ! -d "$cache_dir/.git" ]]; then
+    echo "hunkmr: no local clone for $upstream — cloning to $cache_dir" >&2
+    mkdir -p "$(dirname "$cache_dir")"
+    glab repo clone "$upstream" "$cache_dir" -- "${quiet[@]}" --filter=blob:none \
+      || { echo "hunkmr: failed to clone $upstream" >&2; exit 4; }
+  fi
+  repo_dir="$cache_dir"
+}
+
+# --- Speculative head fetch in parallel with `glab mr view` ---
+# When the URL gave us the iid, kick off the fetch now so it overlaps the
+# API call. Foreground block below handles ref naming.
+bg_fetch_pid=""
+if [[ -n "$iid_from_url" ]]; then
+  git -C "$repo_dir" fetch --quiet origin \
+    "merge-requests/${iid_from_url}/head:refs/remotes/origin/mr/${iid_from_url}" \
+    >/dev/null 2>&1 &
+  bg_fetch_pid=$!
+fi
+
+# --- Resolve MR metadata: iid, target branch, head SHA. ---
+# `--repo` is essential for URL inputs on older glab where positional URL
+# parsing isn't supported. Capturing stderr so glab's actual error surfaces.
+glab_args=(mr view --repo "$upstream" --output json)
+[[ -n "$arg" ]] && glab_args+=("$arg")
+if ! mr_json=$(glab "${glab_args[@]}" 2>&1); then
+  [[ -n "$bg_fetch_pid" ]] && { wait "$bg_fetch_pid" 2>/dev/null || true; }
+  printf 'hunkmr: failed to resolve MR `%s`\n%s\n' "${arg:-(current branch)}" "$mr_json" >&2
+  [[ -z "$arg" ]] && echo 'hint: pass an MR iid/URL, or push the branch and open an MR first' >&2
+  exit 2
+fi
+
+# `.sha` is the MR head SHA in glab's JSON; `.diff_refs.head_sha` is the
+# fallback for older glab versions where the top-level field was missing.
+{ IFS=$'\t' read -r iid target head_sha || true; } < <(
+  jq -r '[.iid, .target_branch, (.sha // .diff_refs.head_sha // "")] | @tsv' <<<"$mr_json"
+)
+[[ "$head_sha" =~ ^[0-9a-f]{40}$ ]] \
+  || { echo "hunkmr: glab returned invalid head SHA \`$head_sha\`" >&2; exit 2; }
+
+if [[ -n "$bg_fetch_pid" ]]; then
+  wait "$bg_fetch_pid" 2>/dev/null || true
+fi
+
+# Fast path: head commit already local → just point the mr/<iid> ref at it.
+if git -C "$repo_dir" rev-parse --verify "${head_sha}^{commit}" >/dev/null 2>&1; then
+  git -C "$repo_dir" update-ref "refs/remotes/origin/mr/${iid}" "$head_sha"
+else
+  git -C "$repo_dir" fetch "${quiet[@]}" origin \
+    "merge-requests/${iid}/head:refs/remotes/origin/mr/${iid}" \
+    || { echo "hunkmr: failed to fetch merge-requests/${iid}/head" >&2; exit 3; }
+fi
+
+# Only fetch the target ref if we don't have it — `A...B` for diff resolves
+# to the merge-base, which doesn't move unless the target is force-pushed,
+# so a stale `origin/<target>` is fine for diff context.
+if ! git -C "$repo_dir" rev-parse --verify "origin/$target" >/dev/null 2>&1; then
+  git -C "$repo_dir" fetch "${quiet[@]}" origin "$target" \
+    || { echo "hunkmr: failed to fetch target \`$target\`" >&2; exit 3; }
+fi
+
+cd "$repo_dir"
+exec hunk diff "origin/${target}...origin/mr/${iid}"

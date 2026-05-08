@@ -1,19 +1,32 @@
 ---
 name: sync-dotfiles
-description: "Pull dotfiles, resolve any merge conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), sync submodules, restow any packages that gained new files, then push with a commit message that includes the OS name and machine identifier. Metadata (id and os) is stored in ~/.machine_metadata — auto-created from hostname + /etc/os-release if missing."
+description: "Fast dotfiles sync — pulls/pushes the parent repo only and skips submodules entirely (they're almost never updated, so syncing them every run is wasted time). At least once every 30 days, or when any submodule is uninitialized (`-` prefix), this skill delegates to `sync-dotfiles-full` so submodules stay current. Resolves merge conflicts (keep both non-conflicting changes; keep newest/incoming for logic conflicts), restows packages with newly-added files, and pushes a machine-tagged commit. Metadata (id and os) is in ~/.machine_metadata; full-sync state is tracked in ~/.cache/sync-dotfiles/last-full-sync."
 ---
 
-Sync the dotfiles repo at `~/.dotfiles` and all its submodules: pull remote changes, resolve conflicts, restow packages with new files, and push with a machine-tagged commit.
+Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve conflicts, restow packages with new files, and push a machine-tagged commit. Submodules are intentionally **not** touched — they update rarely, and the periodic `sync-dotfiles-full` run handles them.
 
-**Parallelism rule**: wherever steps are marked **[PARALLEL]**, issue all their tool calls in a single message to run them concurrently.
+**Delegation contract**: at Step 1 this skill checks two conditions. If either is true, it stops and follows `~/.claude/skills/sync-dotfiles-full/SKILL.md` instead:
+
+1. `~/.cache/sync-dotfiles/last-full-sync` is missing or older than 30 days (= a full sync is overdue).
+2. Any submodule has a `-` prefix (= not initialized, fast path can't safely operate without it).
+
+**Fast-path shape**: in the common case (no merge conflicts, no newly-added files), this skill runs **two tool-call rounds total** — Step 1 (3 parallel reads, including a prefetch) and Step 2 (one bundled script that merges, amends, and pushes). Steps 3–5 only fire on the rare conflict / restow branches.
+
+> **Important — env vars don't persist across Bash tool invocations.** Each Bash call is a fresh shell, so `export` from one call is **lost** in subsequent ones. Any later command that uses `${id}` or `${os}` must re-source the metadata inline by prefixing with:
+> ```bash
+> export $(grep -v '^#' ~/.machine_metadata | xargs) && ...
+> ```
 
 ---
 
-## Step 1 — Load metadata + check SSH **[PARALLEL]**
+## Step 1 — Metadata + freshness + prefetch **[PARALLEL × 3]**
 
-Run both of these simultaneously:
+Issue all three calls in **a single message** so they run concurrently. They're independent: metadata bootstrap doesn't depend on submodule status, and `git fetch` only needs the remote — none of them touch each other.
 
-**1a — Load machine metadata (auto-create if missing):**
+The point of the prefetch (Call 3) is that the network round-trip for `git fetch` is the slowest single op in this skill. Doing it in parallel with the cheap local reads hides its latency, so Step 2's `git merge` is purely local.
+
+**Call 1 — metadata + freshness check:**
+
 ```bash
 if [ ! -f ~/.machine_metadata ] || ! grep -q '^id=' ~/.machine_metadata || ! grep -q '^os=' ~/.machine_metadata; then
   auto_id=$(hostname -s 2>/dev/null || hostname)
@@ -22,198 +35,188 @@ if [ ! -f ~/.machine_metadata ] || ! grep -q '^id=' ~/.machine_metadata || ! gre
   echo "created ~/.machine_metadata: id=$auto_id os=$auto_os"
 fi
 export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null && echo "id=$id os=$os"
+
+last=$(cat ~/.cache/sync-dotfiles/last-full-sync 2>/dev/null || echo 0)
+now=$(date +%s)
+age=$(( now - last ))
+threshold=$(( 30*24*60*60 ))
+if [ "$last" -eq 0 ]; then
+  echo "full-sync: never recorded -> DELEGATE"
+elif [ "$age" -ge "$threshold" ]; then
+  echo "full-sync: $((age/86400)) days old (>=30) -> DELEGATE"
+else
+  echo "full-sync: $((age/86400)) days old (<30) -> fast path OK"
+fi
 ```
-If `$id` or `$os` is still empty after this (e.g. unwritable HOME), stop and report the failure.
 
-> **Important — env vars don't persist across Bash tool invocations.** Each Bash call is a fresh shell, so `export` from this step is **lost** in subsequent commands. Any later command that uses `${id}` or `${os}` (the wip/merge/amend commit messages in Steps 3c, 4, 6) **must** re-source the metadata inline, e.g. prefix with:
-> ```bash
-> export $(grep -v '^#' ~/.machine_metadata | xargs) && ...
-> ```
-> Templates throughout the skill already include this prefix — keep it.
+**Call 2 — submodule status:**
 
-**1b — Check SSH alias and submodule status:**
 ```bash
-ssh -T git@personal -o ConnectTimeout=3 2>&1 | grep -q "successfully authenticated" && echo "ssh=ok" || echo "ssh=fallback"
+echo "--- submodules ---"
+sub_status=$(cd ~/.dotfiles && git submodule status)
+echo "$sub_status"
+if echo "$sub_status" | grep -q '^-'; then
+  echo "submodule uninitialized -> DELEGATE"
+fi
 ```
+
+**Call 3 — prefetch origin/main:**
+
 ```bash
-cd ~/.dotfiles && git submodule status
+cd ~/.dotfiles && git fetch origin main 2>&1
 ```
 
-If SSH check returns `fallback`, use `git@github.com:aldevv/<repo>.git` instead of `git@personal:aldevv/<repo>.git` for all submodule operations.
+If any call's output contains a `-> DELEGATE` line, **stop following this skill** and follow `~/.claude/skills/sync-dotfiles-full/SKILL.md` from its Step 1. Do not continue with the steps below — the full skill handles the fast path's work too. (The prefetch was wasted but harmless.)
 
-Submodule prefix legend:
-- `-` = not yet initialized (needs cloning)
-- `+` = pointer stale (pointer needs updating after sync)
-- ` ` = in sync
+If `$id` or `$os` is empty after Call 1 (e.g. unwritable HOME), stop and report.
+
+If neither delegation condition fired, continue with Step 2 — submodules are skipped for the rest of this skill.
 
 ---
 
-## Step 2 — Initialize any uncloned submodules **[PARALLEL if multiple]**
+## Step 2 — Bundled merge + finalize (single call)
 
-For each submodule with a `-` prefix, initialize it (all at once in parallel):
+One bash invocation that does **everything** for the happy path: secret scan, commit local changes, merge the already-fetched remote, amend to the final sync message, push. Two early exits flag the rare branches:
+
+- **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve), then Step 5 (finalize).
+- **`exit 9`** = merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize).
+- **`exit 7`** = secret scan blocked. Stop and report.
+- **`exit 0`** = success, sync is done. Skip to Step 6 (report).
 
 ```bash
-# personal alias works:
-git -C ~/.dotfiles submodule update --init <path>
+set -e
+cd ~/.dotfiles
+export $(grep -v '^#' ~/.machine_metadata | xargs)
 
-# personal alias unavailable — use insteadOf override:
-git -c "url.git@github.com:aldevv/<repo>.git.insteadOf=git@personal:aldevv/<repo>.git" \
-    -C ~/.dotfiles submodule update --init <path>
-```
-
----
-
-## Step 3 — Sync all submodules **[PARALLEL]**
-
-For every submodule (initialized or already cloned), run all of the following steps for each submodule simultaneously — issue one set of tool calls per submodule in a single message.
-
-For each submodule:
-
-**3a — Ensure on a branch:**
-```bash
-cd ~/.dotfiles/<path>
-git rev-parse --abbrev-ref HEAD
-# If output is "HEAD" (detached), run:
-git checkout main 2>/dev/null || git checkout master
-```
-
-**3b — Scan for secrets before staging:**
-```bash
-cd ~/.dotfiles/<path>
-# Get list of modified/added tracked files
-git diff --name-only HEAD
-```
-For each file in that list, run the secret scan (see Secret Scan Rules below).
-If any file fails the scan, **stop and alert the user** — do not stage or commit that repo.
-
-**3c — Commit any local changes:**
-```bash
-cd ~/.dotfiles/<path>
-git status --short
-# If modified tracked files exist (and passed secret scan):
-export $(grep -v '^#' ~/.machine_metadata | xargs) && \
+# 1. Scan local changes for secrets, commit them as a wip checkpoint.
+diff_files=$(git diff --name-only HEAD)
+if [ -n "$diff_files" ]; then
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    if echo "$f" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519' \
+       || grep -qiE 'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' "$f"; then
+      echo "BLOCKED: possible secret in $f"; exit 7
+    fi
+  done <<< "$diff_files"
   git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+fi
+
+# 2. Merge the remote (already fetched in Step 1 Call 3).
+pre_merge=$(git rev-parse HEAD)
+if ! git merge --no-edit origin/main; then
+  echo "MERGE_CONFLICT -> Step 3"; exit 8
+fi
+post_merge=$(git rev-parse HEAD)
+
+# 3. If the merge added new files, bail out so Step 4 can restow before we push.
+if [ "$pre_merge" != "$post_merge" ] \
+   && [ -n "$(git diff "$pre_merge" "$post_merge" --name-only --diff-filter=A)" ]; then
+  echo "RESTOW_NEEDED ($pre_merge..$post_merge) -> Step 4"; exit 9
+fi
+
+# 4. Finalize: rename the head commit to the canonical sync message and push.
+git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"
+git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true
+if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
+  git push origin main
+else
+  echo "parent: nothing to push"
+fi
 ```
 
-**3c — Pull:**
-```bash
-# personal alias works:
-git -C ~/.dotfiles/<path> pull --no-rebase origin <branch>
-# personal alias unavailable:
-git -C ~/.dotfiles/<path> pull --no-rebase git@github.com:aldevv/<repo>.git <branch>
-```
-
-**3d — Push:**
-```bash
-# personal alias works:
-git -C ~/.dotfiles/<path> push origin <branch>
-# personal alias unavailable:
-git -C ~/.dotfiles/<path> push git@github.com:aldevv/<repo>.git <branch>
-```
-
-Resolve any pull conflicts using Rule A / Rule B from Step 4.
-
-After all submodules finish, stage their updated pointers in the parent:
-```bash
-cd ~/.dotfiles && git add <path1> <path2> <path3>
-```
+`set -e` plus the explicit `exit 7/8/9` codes makes Bash surface them to Claude. **Do not** treat exits 8 or 9 as failures — they're hand-offs to Steps 3 and 4.
 
 ---
 
-## Step 4 — Pull parent repo
-
-Check for local changes, scan for secrets, then pull:
+## Step 3 — Conflict resolution (only on exit 8)
 
 ```bash
-cd ~/.dotfiles && git status --short
-```
-
-If there are modified tracked files, scan them for secrets first (see Secret Scan Rules below).
-If any file fails the scan, **stop and alert the user** — do not stage or commit.
-
-```bash
-# Only if all files passed the scan:
-cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
-  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
-
-git pull --no-rebase origin main
-```
-
-### Conflict resolution rules
-
-```bash
-git status --short | grep -E '^(UU|AA|DD|AU|UA|DU|UD)'
+cd ~/.dotfiles && git status --short | grep -E '^(UU|AA|DD|AU|UA|DU|UD)'
 ```
 
 **Rule A — Additive/structural**: both sides added independent content → keep both, remove markers.
 
 **Rule B — Logic conflict**: same setting changed on both sides → keep incoming (remote):
+
 ```bash
 git checkout --theirs -- <file> && git add <file>
 ```
 
----
-
-## Step 5 — Restow packages that gained new files
-
-`ORIG_HEAD` is set by git during a pull. If it exists, find changed packages and restow:
-
-```bash
-cd ~/.dotfiles
-git diff ORIG_HEAD HEAD --name-only 2>/dev/null | sed 's|/.*||' | sort -u
-```
-
-If `ORIG_HEAD` doesn't exist (already up to date), skip this step.
-
-For each package directory listed:
-```bash
-cd ~/.dotfiles && stow -R <package>
-# If conflict (regular file exists, not a symlink):
-cd ~/.dotfiles && stow --adopt -R <package>
-```
-
-Report any remaining conflicts but do not abort.
+After all conflicts are staged, jump to **Step 5** (the merge commit isn't finalized yet — Step 5's `git diff --cached --quiet || git commit ...` will create it from the staged resolution).
 
 ---
 
-## Step 6 — Commit and push
+## Step 4 — Restow packages that gained new files (only on exit 9)
 
-Finalize any pending merge commit, then push:
+The Step 2 exit-9 message includes the pre/post merge SHAs. Use those (or `ORIG_HEAD..HEAD` — `git merge` sets `ORIG_HEAD` whenever the merge actually changed HEAD) to find packages that received newly-added files:
+
+```bash
+cd ~/.dotfiles && git diff ORIG_HEAD HEAD --name-only --diff-filter=A 2>/dev/null | sed 's|/.*||' | sort -u
+```
+
+For each package directory listed, run stow then verify each new file is actually a symlink. Stow can bail with `BUG in find_stowed_path? Absolute/relative mismatch` when it walks an unrelated symlink in `$HOME` (e.g. `~/.local/state/nix/profiles/profile`) — when that happens it leaves new files unlinked, so we always verify and fall back to manual symlinking.
+
+```bash
+pkg=<package>
+cd ~/.dotfiles && stow -R "$pkg" 2>&1 || true
+git diff ORIG_HEAD HEAD --name-only --diff-filter=A | grep "^${pkg}/" | while IFS= read -r src; do
+  rel=${src#${pkg}/}
+  dest="$HOME/$rel"
+  expected="$HOME/.dotfiles/$src"
+  if [ -L "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$expected")" ]; then
+    continue
+  fi
+  rm -rf "$dest"
+  mkdir -p "$(dirname "$dest")"
+  ln -sfn "$expected" "$dest"
+  echo "manually linked $rel"
+done
+```
+
+Report any remaining conflicts (e.g. unwritable parent dirs) but do not abort. Then continue to Step 5.
+
+---
+
+## Step 5 — Finalize (only after Step 3 or 4)
+
+Step 2 already does this inline on the happy path. This step only fires after the conflict-resolution or restow branches: same logic, separate call.
 
 ```bash
 cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
   { git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"; } && \
   { git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true; } && \
-  git push origin main
+  if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then git push origin main; else echo "parent: nothing to push"; fi
 ```
+
+This skill does **not** update `~/.cache/sync-dotfiles/last-full-sync` — only `sync-dotfiles-full` does. Updating it here would defeat the monthly trigger.
 
 ---
 
-## Secret Scan Rules
+## Secret Scan Rules (reference)
 
-Before staging any file, check it with:
+The Step 2 bundle inlines this scan. Reproduced here for one-off / manual use:
 
 ```bash
 # 1. Suspicious filename
 echo "<filename>" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519'
 
-# 2. Suspicious content — run against the file in the working tree
+# 2. Suspicious content
 grep -qiE \
   'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' \
   "<filepath>"
 ```
 
-**If either check matches:**
-- Do **not** stage or commit the file
-- Print a clear warning: `BLOCKED: possible secret in <filepath>`
-- Continue syncing other files/repos, but skip this one
-- Include blocked files in the final report
+If either matches: don't stage/commit, print `BLOCKED: possible secret in <filepath>`, include in final report.
 
-## Step 7 — Report
+---
+
+## Step 6 — Report
 
 - Machine ID and OS
-- SSH alias status (ok / fallback)
-- Submodules synced (which needed init, which had local changes, which were already up to date)
-- Conflicts resolved (count and files)
-- Packages restowed
-- Final pushed commit
+- Mode: fast (parent-only) — note this explicitly so the user knows submodules were skipped
+- Days since last full sync
+- Path taken: happy / conflict / restow (= which exit code from Step 2)
+- Local changes committed / nothing to push / fast-forwarded
+- Conflicts resolved (count and files), if any
+- Packages restowed, if any
+- Final pushed commit (or "nothing to push")

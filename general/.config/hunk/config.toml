@@ -1,0 +1,18 @@
+# Hunk — terminal diff viewer for agent-authored changesets.
+# Docs: https://github.com/anthropics/hunk
+#
+# Supported keys (as of hunk 0.x): theme, mode, exclude_untracked,
+# line_numbers, wrap_lines, agent_notes. Unknown keys are silently ignored.
+#
+# NOTE on Colemak: Hunk does NOT yet support custom keybindings or layout
+# remapping via config. The internal "colemak" string in the binary comes
+# from Chromium's IME tables (Hunk is built on Electron), not from Hunk's
+# own keymap. If/when Hunk adds a [keybindings] section, mirror the lazygit
+# bindings in ../lazygit/config.yml (n/e for next/prev, h/i for blocks).
+
+theme = "midnight"      # graphite, midnight, paper, ember
+mode = "auto"           # auto, split, stack
+agent_notes = true      # show review comments by default
+line_numbers = true
+wrap_lines = false
+exclude_untracked = false

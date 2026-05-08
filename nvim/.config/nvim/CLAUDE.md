@@ -78,7 +78,7 @@ Defaults that diverge from upstream and matter for behavior:
 - `splitright`/`splitbelow` true.
 - `textwidth = 95`, `colorcolumn = "100"`, `shiftwidth = 2`, `expandtab` on.
 - Persistent `undofile` + timestamped `backup` (`bex` set to `@<date>.<HH:MM>` in a `BufWritePre` autocmd).
-- `exrc` enabled — local `.nvim.lua`/`.exrc` files in cwd will execute.
+- `exrc` enabled — local `.nvim.lua`/`.exrc` files in cwd will execute. Use this for workspace-scoped config (e.g. `~/work/.nvim.lua` sets `g:projectionist_heuristics` for Baton connectors); keep project-specific config out of dotfiles.
 - `cmdheight = 0`, `showmode = false`, `laststatus = 2` (per-window), `pumblend = 10`, `spell = true`.
 - `inccommand = "nosplit"`, `jumpoptions = "stack"`, `updatetime = 250`, `timeoutlen = 700`.
 - `grepprg = "rg --vimgrep --no-heading --smart-case"`.

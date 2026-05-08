@@ -24,8 +24,8 @@ end
 
 return {
   {
-    dir = vim.fn.stdpath("config") .. "/md-preview.nvim",
-    name = "md-preview.nvim",
+    "aldevv/md-preview.nvim",
+    dev = true,
     ft = { "markdown" },
     config = function()
       require("md-preview").setup()
