@@ -53,6 +53,10 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 - **Default location**: `$HOME/.claude/skills/<skill-name>/SKILL.md` — use this for all skills unless the skill is tightly coupled to a specific project
 - **Project-specific** (rare): `.claude/skills/<skill-name>/SKILL.md` inside the repo — only when the skill depends on files, tooling, or context that only makes sense within that one project
 
+## Reference Files
+Reference docs live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`). Read these before guessing or asking, when relevant:
+- **`~/.claude/files/hook-debugging.md`** — debugging Claude Code hooks. Read when a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
+
 ## Commits & PRs
 - **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
 
