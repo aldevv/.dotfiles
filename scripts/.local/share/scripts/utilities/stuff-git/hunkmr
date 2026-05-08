@@ -5,7 +5,7 @@
 #   no arg     → resolve via `glab mr view` (current branch's MR; cwd must be the repo)
 #   <iid>      → uses glab's repo detection from cwd
 #   <url>      → finds a local clone of the URL's project in ~/repos, ~/work,
-#                $PROJECTS, $CODE; falls back to cloning into ~/.cache/hunkmr/
+#                $PROJECTS, $CODE; falls back to cloning into ~/.cache/hunk/mr/
 #
 # GitLab publishes merge-requests/<iid>/head for every MR (incl. forks),
 # so a clone of the *upstream* project is enough.
@@ -25,7 +25,7 @@ Examples:
   hunkmr https://gitlab.com/owner/repo/-/merge_requests/123 # auto-finds local clone
 
 Searches for the upstream clone in $PWD, ~/repos, ~/work, $PROJECTS, $CODE.
-Auto-clones to ~/.cache/hunkmr/<owner>/<repo> if no local clone is found.
+Auto-clones to ~/.cache/hunk/mr/<owner>/<repo> if no local clone is found.
 Requires: glab, hunk, jq.
 EOF
 }
@@ -95,16 +95,77 @@ find_clone() {
   return 1
 }
 
-repo_dir="$(find_clone "$upstream" "${upstream##*/}")" || {
-  cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/hunkmr/$upstream"
-  if [[ ! -d "$cache_dir/.git" ]]; then
-    echo "hunkmr: no local clone for $upstream — cloning to $cache_dir" >&2
-    mkdir -p "$(dirname "$cache_dir")"
-    glab repo clone "$upstream" "$cache_dir" -- "${quiet[@]}" --filter=blob:none \
-      || { echo "hunkmr: failed to clone $upstream" >&2; exit 4; }
+# Cache key includes the host so the same `group/repo` on gitlab.com vs a
+# self-hosted GitLab doesn't collide. Shared with `h` and `hunkpr` via
+# ~/.cache/hunk/repos.tsv. Schema (4 cols):
+#   <host/owner/repo>\t<forge>\t<local-path>\t<base-branch>
+cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/hunk"
+cache_file="$cache_root/repos.tsv"
+cache_key=""
+cache_host=""
+if [[ "$arg" =~ ^https?://([^/]+)/ ]]; then
+  cache_host="${BASH_REMATCH[1]}"
+elif [[ -n "${origin_url:-}" ]]; then
+  if   [[ "$origin_url" =~ ^https?://([^/]+)/ ]]; then cache_host="${BASH_REMATCH[1]}"
+  elif [[ "$origin_url" =~ ^[^/:@]+@([^:]+):  ]]; then cache_host="${BASH_REMATCH[1]}"
   fi
-  repo_dir="$cache_dir"
-}
+fi
+[[ -n "$cache_host" ]] && cache_key="$cache_host/$upstream"
+
+# Read existing row once: pulls forge, path, base in a single awk pass.
+cached_forge=""
+cached_path=""
+cached_base=""
+if [[ -n "$cache_key" && -f "$cache_file" ]]; then
+  IFS=$'\t' read -r _ cached_forge cached_path cached_base < <(
+    awk -F'\t' -v k="$cache_key" '$1==k {print; exit}' "$cache_file"
+  ) || true
+fi
+
+# Resolve repo_dir: cache hit if path still valid, otherwise find_clone or clone.
+repo_dir=""
+[[ -n "$cached_path" && -d "$cached_path/.git" ]] && repo_dir="$cached_path"
+if [[ -z "$repo_dir" ]]; then
+  repo_dir="$(find_clone "$upstream" "${upstream##*/}")" || {
+    clone_dir="$cache_root/mr/$upstream"
+    if [[ ! -d "$clone_dir/.git" ]]; then
+      echo "hunkmr: no local clone for $upstream — cloning to $clone_dir" >&2
+      mkdir -p "$(dirname "$clone_dir")"
+      glab repo clone "$upstream" "$clone_dir" -- "${quiet[@]}" --filter=blob:none \
+        || { echo "hunkmr: failed to clone $upstream" >&2; exit 4; }
+    fi
+    repo_dir="$clone_dir"
+  }
+fi
+
+# Detect default base branch (`main` vs `master`, etc.) — try origin/HEAD,
+# then probe well-known names, then settle on `main`.
+base_branch="$cached_base"
+if [[ -z "$base_branch" ]]; then
+  base_branch=$(git -C "$repo_dir" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+  base_branch="${base_branch#origin/}"
+  if [[ -z "$base_branch" ]]; then
+    for cand in main master; do
+      git -C "$repo_dir" rev-parse --verify --quiet "origin/$cand" >/dev/null 2>&1 \
+        && { base_branch="$cand"; break; }
+    done
+  fi
+  base_branch="${base_branch:-main}"
+fi
+
+# Persist if anything changed. Preserves whichever of (forge, path, base)
+# was filled in by `h` / a prior run.
+if [[ -n "$cache_key" ]]; then
+  forge="${cached_forge:-gitlab}"
+  if [[ "$cached_forge" != "$forge" || "$cached_path" != "$repo_dir" || "$cached_base" != "$base_branch" ]]; then
+    mkdir -p "$cache_root"
+    [[ -f "$cache_file" ]] || : > "$cache_file"
+    tmp="${cache_file}.tmp.$$"
+    awk -F'\t' -v k="$cache_key" '$1!=k' "$cache_file" > "$tmp"
+    printf '%s\t%s\t%s\t%s\n' "$cache_key" "$forge" "$repo_dir" "$base_branch" >> "$tmp"
+    mv "$tmp" "$cache_file"
+  fi
+fi
 
 # --- Speculative head fetch in parallel with `glab mr view` ---
 # When the URL gave us the iid, kick off the fetch now so it overlaps the
@@ -120,10 +181,19 @@ fi
 # --- Resolve MR metadata: iid, target branch, head SHA. ---
 # `--repo` is essential for URL inputs on older glab where positional URL
 # parsing isn't supported. Capturing stderr so glab's actual error surfaces.
-glab_args=(mr view --repo "$upstream" --output json)
-[[ -n "$arg" ]] && glab_args+=("$arg")
+# `glab mr view --repo X` requires a positional arg, so for the no-arg case
+# we drop --repo and let glab auto-detect the current branch from cwd.
+glab_args=(mr view --output json)
+[[ -n "$arg" ]] && glab_args+=(--repo "$upstream" "$arg")
 if ! mr_json=$(glab "${glab_args[@]}" 2>&1); then
   [[ -n "$bg_fetch_pid" ]] && { wait "$bg_fetch_pid" 2>/dev/null || true; }
+  # No-arg + "no MR for this branch" → fall back to plain `hunk diff main`.
+  # Covers the "branch pushed, MR not yet open" flow without forcing the
+  # user to run a different command. Other glab failures still error out.
+  if [[ -z "$arg" ]] && grep -qiE 'no (open )?(merge request|merge requests)' <<<"$mr_json"; then
+    cd "$repo_dir"
+    exec hunk diff "$base_branch"
+  fi
   printf 'hunkmr: failed to resolve MR `%s`\n%s\n' "${arg:-(current branch)}" "$mr_json" >&2
   [[ -z "$arg" ]] && echo 'hint: pass an MR iid/URL, or push the branch and open an MR first' >&2
   exit 2
