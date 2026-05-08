@@ -3,6 +3,10 @@ name: sync-dotfiles
 description: "Fast dotfiles sync — pulls/pushes the parent repo only and skips submodules entirely (they're almost never updated, so syncing them every run is wasted time). At least once every 30 days, or when any submodule is uninitialized (`-` prefix), this skill delegates to `sync-dotfiles-full` so submodules stay current. Resolves merge conflicts (keep both non-conflicting changes; keep newest/incoming for logic conflicts), restows packages with newly-added files, and pushes a machine-tagged commit. Metadata (id and os) is in ~/.machine_metadata; full-sync state is tracked in ~/.cache/sync-dotfiles/last-full-sync."
 ---
 
+> **Thinking budget: none on the happy path — just execute.** The happy path is two deterministic tool-call rounds. Don't reason about strategy, don't evaluate alternatives, don't re-derive the flow — run the steps verbatim.
+>
+> **Exception — think hard on merge conflicts.** If Step 2 exits 8 (merge conflict) or Step 4 reports an unresolved conflict, switch on extended thinking for that branch only. Conflict resolution needs real reasoning: distinguish Rule A (additive/structural, keep both) from Rule B (logic conflict, keep incoming), and when it's ambiguous, think through which side represents the newer intent before choosing. Return to zero thinking once the conflict is staged.
+
 Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve conflicts, restow packages with new files, and push a machine-tagged commit. Submodules are intentionally **not** touched — they update rarely, and the periodic `sync-dotfiles-full` run handles them.
 
 **Delegation contract**: at Step 1 this skill checks two conditions. If either is true, it stops and follows `~/.claude/skills/sync-dotfiles-full/SKILL.md` instead:
