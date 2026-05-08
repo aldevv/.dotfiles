@@ -115,7 +115,7 @@ If `comment apply` rejects a target (path or hunk index mismatch), re-run
 `hunk session review --repo <REPO_ROOT> --json` and reconcile the file
 paths and hunk counts before retrying — only fall back to this on error.
 
-### 4. One-time prompt: install the pre-PR hook
+### 4. One-time prompt: install the pre-PR/MR hook
 
 State file: `$HOME/.cache/hunk-review/state.json` (XDG cache — machine-local, never synced into the dotfiles repo).
 
@@ -129,8 +129,9 @@ test -f "$HOME/.cache/hunk-review/state.json" && cat "$HOME/.cache/hunk-review/s
 - **File missing** → ask once via AskUserQuestion:
 
   Question: "Install a PreToolUse hook that auto-runs `hunk-review`
-  right before any `gh pr create`? You'll get the diff + review notes
-  in a tmux window the moment you fire the PR command."
+  right before any `gh pr create` or `glab mr create`? Hunk opens in a
+  new tmux window and a backgrounded `claude -p` subagent fills it with
+  AI review comments while the PR/MR is being created."
 
   Options:
   1. **Yes, install it** — write the hook script + register in settings.json
@@ -139,12 +140,21 @@ test -f "$HOME/.cache/hunk-review/state.json" && cat "$HOME/.cache/hunk-review/s
 
 On **Yes**:
 
-1. Write `$HOME/.claude/hooks/hunk-review-pre-pr.sh` (see "Hook script"
-   below) and `chmod +x` it.
-2. Read `$HOME/.claude/settings.json`, add a `PreToolUse` entry under
-   `hooks` matching `Bash(gh pr create:*)` calling the script. If
+1. Symlink the script that ships with this skill into `~/.claude/hooks/`
+   (single source of truth — the script lives in the skill dir alongside
+   `SKILL.md`):
+   ```bash
+   mkdir -p "$HOME/.claude/hooks" && \
+     ln -sf "$HOME/.claude/skills/hunk-review/hunk-review-pre-pr.sh" \
+            "$HOME/.claude/hooks/hunk-review-pre-pr.sh"
+   ```
+   (Use `cp -p` instead of `ln -sf` if you want a standalone copy that
+   doesn't update when the skill is synced.)
+2. Read `$HOME/.claude/settings.json`, add **two** `PreToolUse` entries
+   under `hooks` matching `Bash(gh pr create:*)` and
+   `Bash(glab mr create:*)`, both calling the same script. If
    `PreToolUse[].matcher == "Bash"` already exists, append to its `hooks`
-   array — don't duplicate the matcher.
+   array — don't duplicate the matcher object itself.
 3. Write the state file (create the cache dir if missing):
    ```bash
    mkdir -p "$HOME/.cache/hunk-review" && \
@@ -163,36 +173,42 @@ On **Ask me later**: do not write state.
 
 ## Hook script
 
-`$HOME/.claude/hooks/hunk-review-pre-pr.sh`:
+The shipped script lives next to this `SKILL.md` at
+`hunk-review-pre-pr.sh` (so editing it edits one file, and `/sync-dotfiles`
+distributes it across machines). Read it directly when you need to know
+exactly what runs:
 
 ```bash
-#!/usr/bin/env bash
-# PreToolUse hook for `Bash(gh pr create:*)`.
-# Opens Hunk in a new tmux window for the current branch vs its base.
-# Informational only — exits 0 so PR creation proceeds in parallel.
-set -euo pipefail
-
-[[ -n "${TMUX:-}" ]] || exit 0
-
-repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
-
-base_branch="$(cd "$repo_root" && git remote show origin 2>/dev/null \
-  | sed -n 's/.*HEAD branch: //p')"
-[[ -n "$base_branch" ]] || base_branch=main
-
-range="origin/${base_branch}...HEAD"
-[[ -n "$(cd "$repo_root" && git diff --stat "$range" 2>/dev/null)" ]] || exit 0
-
-tmux new-window -t "$(tmux display-message -p '#{session_name}')" \
-  -n hunk-pre-pr \
-  "cd '$repo_root' && hunk diff '$range'" 2>/dev/null || true
-
-exit 0
+cat "$HOME/.claude/skills/hunk-review/hunk-review-pre-pr.sh"
 ```
 
-To make it **block** PR creation until the user closes Hunk, change the
-final `exit 0` to `exit 2`; the user then re-runs `gh pr create` after
-reviewing.
+It fires for both `Bash(gh pr create:*)` and `Bash(glab mr create:*)`,
+and the body is git-only (uses `origin`'s default branch as the base),
+so it works for either provider.
+
+What it does at a glance:
+
+1. Bails if not inside tmux (no place to open a new window).
+2. Finds the repo root and `origin`'s default branch.
+3. Bails if there's no diff between `HEAD` and the remote default branch.
+4. Opens `hunk diff <range>` in a new tmux window (auto-switching focus).
+5. If `claude` is on `PATH`, spawns a backgrounded `claude -p` subagent
+   that reads the diff, composes review comments per the
+   "Comment style" section above, and pushes them into the live Hunk
+   session via `hunk session comment apply --stdin`. The subagent uses:
+   - `--dangerously-skip-permissions` — needs to run `git diff` /
+     `hunk session ...` without prompting (headless).
+   - `--no-session-persistence` — one-shot, no resumable session.
+   - stdout/stderr appended to `~/.claude/hooks/logs/hunk-review-pre-pr.log`
+     for debugging when comments don't appear.
+   - `& disown` so the hook returns immediately and PR/MR creation isn't
+     blocked.
+6. `exit 0` — informational only.
+
+To make the hook itself **block** PR/MR creation until the user closes
+Hunk, change the final `exit 0` to `exit 2`; the user then re-runs the
+PR/MR command after reviewing. (The subagent still runs async either
+way.)
 
 ## Comment style — what's worth highlighting
 
