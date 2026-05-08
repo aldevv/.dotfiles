@@ -11,6 +11,10 @@ nvim/.config/nvim/lua/work.lua
 zsh/.config/zsh/.zsh_sessions/*
 scripts/.local/state/
 scripts/.local/bin/
+scripts/.local/lib/
+scripts/.local/builds/
+scripts/.local/share/*
+!scripts/.local/share/scripts/
 CLAUDE-machines.md
 general/CLAUDE-machines.md
 **/.ssh/config

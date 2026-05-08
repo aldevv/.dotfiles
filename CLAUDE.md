@@ -41,4 +41,10 @@ To unblock other files in the package while resolving, pass `--ignore='<basename
 
 ## Repo-level gitignore
 
-`scripts/.local/share/` and `scripts/.local/state/` are gitignored at the repo root. Files inside those paths that are already tracked still work, but `git add` of a new file there needs `-f`.
+Under `scripts/.local/`, only `share/scripts/` is tracked. Everything else (`state/`, `bin/`, `lib/`, `builds/`, `share/*` except `share/scripts/`) is gitignored so that tools writing into `~/.local/` via the stow symlinks don't pollute the repo. Files inside ignored paths that are already tracked still work, but `git add` of a new file there needs `-f`.
+
+## Stow --no-folding for the scripts package
+
+The `scripts` package must be stowed with `stow --no-folding scripts` (not plain `stow scripts`). Without `--no-folding`, stow collapses `~/.local` into a single symlink pointing at `~/.dotfiles/scripts/.local/`, which causes every tool that writes to `~/.local/` (fnm, claude CLI, ranger, nvim, go, direnv, ansible, bob, certs, node_modules, etc.) to pollute the dotfiles repo. With `--no-folding`, `~/.local` stays a real directory and only leaf files under `share/scripts/` are symlinked.
+
+If you see leaked directories show up under `scripts/.local/share/` or `scripts/.local/lib/`, re-stow: `stow -D scripts && stow --no-folding scripts`.
