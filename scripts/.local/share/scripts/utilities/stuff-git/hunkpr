@@ -5,7 +5,7 @@
 #   no arg     → resolve via `gh pr view` (current branch's PR; cwd must be the repo)
 #   <number>   → uses gh's repo detection from cwd
 #   <url>      → finds a local clone of the URL's repo in ~/repos, ~/work,
-#                $PROJECTS, $CODE; falls back to cloning into ~/.cache/hunkpr/
+#                $PROJECTS, $CODE; falls back to cloning into ~/.cache/hunk/pr/
 #
 # GitHub publishes pull/<num>/head for every PR (incl. forks), so a clone
 # of the *upstream* repo is enough — no need to add the fork as a remote.
@@ -25,7 +25,7 @@ Examples:
   hunkpr https://github.com/owner/repo/pull/123   # auto-finds local clone
 
 Searches for the upstream clone in $PWD, ~/repos, ~/work, $PROJECTS, $CODE.
-Auto-clones to ~/.cache/hunkpr/<owner>/<repo> if no local clone is found.
+Auto-clones to ~/.cache/hunk/pr/<owner>/<repo> if no local clone is found.
 Requires: gh, hunk, jq.
 EOF
 }
@@ -90,16 +90,78 @@ find_clone() {
   return 1
 }
 
-repo_dir="$(find_clone "$upstream" "${upstream##*/}")" || {
-  cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/hunkpr/$upstream"
-  if [[ ! -d "$cache_dir/.git" ]]; then
-    echo "hunkpr: no local clone for $upstream — cloning to $cache_dir" >&2
-    mkdir -p "$(dirname "$cache_dir")"
-    gh repo clone "$upstream" "$cache_dir" -- "${quiet[@]}" --filter=blob:none \
-      || { echo "hunkpr: failed to clone $upstream" >&2; exit 4; }
+# Cache key includes the host so the same `owner/repo` on github.com vs an
+# enterprise host doesn't collide. Shared with `h` and `hunkmr` via
+# ~/.cache/hunk/repos.tsv. Schema (4 cols):
+#   <host/owner/repo>\t<forge>\t<local-path>\t<base-branch>
+cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/hunk"
+cache_file="$cache_root/repos.tsv"
+cache_key=""
+cache_host=""
+if [[ "$arg" =~ ^https?://([^/]+)/ ]]; then
+  cache_host="${BASH_REMATCH[1]}"
+elif [[ -n "${origin_url:-}" ]]; then
+  if   [[ "$origin_url" =~ ^https?://([^/]+)/ ]]; then cache_host="${BASH_REMATCH[1]}"
+  elif [[ "$origin_url" =~ ^[^/:@]+@([^:]+):  ]]; then cache_host="${BASH_REMATCH[1]}"
   fi
-  repo_dir="$cache_dir"
-}
+fi
+[[ -n "$cache_host" ]] && cache_key="$cache_host/$upstream"
+
+# Read existing row once: pulls forge, path, base in a single awk pass.
+cached_forge=""
+cached_path=""
+cached_base=""
+if [[ -n "$cache_key" && -f "$cache_file" ]]; then
+  IFS=$'\t' read -r _ cached_forge cached_path cached_base < <(
+    awk -F'\t' -v k="$cache_key" '$1==k {print; exit}' "$cache_file"
+  ) || true
+fi
+
+# Resolve repo_dir: cache hit if path still valid, otherwise find_clone or clone.
+repo_dir=""
+[[ -n "$cached_path" && -d "$cached_path/.git" ]] && repo_dir="$cached_path"
+if [[ -z "$repo_dir" ]]; then
+  repo_dir="$(find_clone "$upstream" "${upstream##*/}")" || {
+    clone_dir="$cache_root/pr/$upstream"
+    if [[ ! -d "$clone_dir/.git" ]]; then
+      echo "hunkpr: no local clone for $upstream — cloning to $clone_dir" >&2
+      mkdir -p "$(dirname "$clone_dir")"
+      gh repo clone "$upstream" "$clone_dir" -- "${quiet[@]}" --filter=blob:none \
+        || { echo "hunkpr: failed to clone $upstream" >&2; exit 4; }
+    fi
+    repo_dir="$clone_dir"
+  }
+fi
+
+# Detect default base branch (`main` vs `master`, etc.) — try origin/HEAD,
+# then probe well-known names, then settle on `main`. Cache means we only
+# pay this once per repo.
+base_branch="$cached_base"
+if [[ -z "$base_branch" ]]; then
+  base_branch=$(git -C "$repo_dir" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+  base_branch="${base_branch#origin/}"
+  if [[ -z "$base_branch" ]]; then
+    for cand in main master; do
+      git -C "$repo_dir" rev-parse --verify --quiet "origin/$cand" >/dev/null 2>&1 \
+        && { base_branch="$cand"; break; }
+    done
+  fi
+  base_branch="${base_branch:-main}"
+fi
+
+# Persist if anything changed. Preserves whichever of (forge, path, base)
+# was filled in by `h` / a prior run.
+if [[ -n "$cache_key" ]]; then
+  forge="${cached_forge:-github}"
+  if [[ "$cached_forge" != "$forge" || "$cached_path" != "$repo_dir" || "$cached_base" != "$base_branch" ]]; then
+    mkdir -p "$cache_root"
+    [[ -f "$cache_file" ]] || : > "$cache_file"
+    tmp="${cache_file}.tmp.$$"
+    awk -F'\t' -v k="$cache_key" '$1!=k' "$cache_file" > "$tmp"
+    printf '%s\t%s\t%s\t%s\n' "$cache_key" "$forge" "$repo_dir" "$base_branch" >> "$tmp"
+    mv "$tmp" "$cache_file"
+  fi
+fi
 
 # --- Speculative head fetch in parallel with `gh pr view` ---
 # When the URL gave us the PR number, kick off the fetch now. The gh call
@@ -117,10 +179,20 @@ fi
 # --- Resolve PR metadata: number, base ref, head SHA. ---
 # Capture stderr so failures (auth expired, rate-limit, network) surface
 # instead of being hidden behind a generic message.
-gh_args=(pr view --repo "$upstream" --json number,baseRefName,headRefOid)
-[[ -n "$arg" ]] && gh_args+=("$arg")
+# `gh pr view --repo X` requires a positional arg, so for the no-arg case
+# we drop --repo and let gh auto-detect the current branch from cwd.
+gh_args=(pr view --json number,baseRefName,headRefOid)
+[[ -n "$arg" ]] && gh_args+=(--repo "$upstream" "$arg")
 if ! pr_json=$(gh "${gh_args[@]}" 2>&1); then
   [[ -n "$bg_fetch_pid" ]] && { wait "$bg_fetch_pid" 2>/dev/null || true; }
+  # No-arg + "no PR for this branch" → fall back to plain `hunk diff main`.
+  # Covers the "branch pushed, PR not yet open" flow without forcing the
+  # user to run a different command. Other gh failures (auth, network) still
+  # error out so they're not silently masked.
+  if [[ -z "$arg" ]] && grep -qiE 'no (open )?(pull request|pull requests)' <<<"$pr_json"; then
+    cd "$repo_dir"
+    exec hunk diff "$base_branch"
+  fi
   printf 'hunkpr: failed to resolve PR `%s`\n%s\n' "${arg:-(current branch)}" "$pr_json" >&2
   [[ -z "$arg" ]] && echo 'hint: pass a PR number/URL, or push the branch and open a PR first' >&2
   exit 2

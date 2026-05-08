@@ -319,6 +319,7 @@ export LESSKEYIN="$HOME/.config/colemak-less"
 # shellcheck source=/dev/null
 [[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases
 [[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases
+[[ -f "$ZDOTDIR/pr-prompt.zsh" ]] && . "$ZDOTDIR/pr-prompt.zsh"
 [[ -f ~/.opam/ ]] && eval $(opam env)
 
 
