@@ -194,7 +194,11 @@ What it does at a glance:
 2. Finds the repo root and `origin`'s default branch.
 3. Bails if there's no diff between `HEAD` and the remote default branch.
 4. Opens `hunk diff <range>` in a new tmux window (auto-switching focus).
-5. If `claude` is on `PATH`, spawns a backgrounded `claude -p` subagent
+5. Spawns a placeholder poller in the background: waits up to 15s for the
+   hunk session to register, then drops a single `[pending] AI review in
+   progress…` comment so the user has visible signal during the ~1–2 min
+   the subagent takes to compose real comments.
+6. If `claude` is on `PATH`, spawns a backgrounded `claude -p` subagent
    that reads the diff, composes review comments per the
    "Comment style" section above, and pushes them into the live Hunk
    session via `hunk session comment apply --stdin`. The subagent uses:
@@ -205,7 +209,9 @@ What it does at a glance:
      for debugging when comments don't appear.
    - `& disown` so the hook returns immediately and PR/MR creation isn't
      blocked.
-6. `exit 0` — informational only.
+   The subagent's prompt instructs it to first remove any `[pending]`
+   placeholder comment (left by step 5) before applying its real batch.
+7. `exit 0` — informational only.
 
 To make the hook itself **block** PR/MR creation until the user closes
 Hunk, change the final `exit 0` to `exit 2`; the user then re-runs the
@@ -218,6 +224,11 @@ Don't comment on every hunk. Highlight:
 
 - **Behavioral changes** — return-shape changes, new branches in control
   flow, anything a casual reader might miss.
+- **Complex flows** — multi-step coordination, non-obvious state
+  transitions, recursion, async patterns. One brief comment at the entry
+  point explaining the *shape* of the flow ("this fans out N tasks then
+  awaits all, retrying any that return WouldBlock"), not per-step
+  narration. Skip if a careful read of the function makes it obvious.
 - **Cross-file invariants** — when one change relies on a behavior in
   another file/repo (e.g. "this depends on legalhold-tool's SQS dispatch").
 - **Rollout footguns** — new env vars, deploy ordering, schema changes

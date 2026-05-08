@@ -67,27 +67,65 @@ tmux new-window -t "$session_name" \
   -n "$window_name" \
   "cd '$repo_root' && hunk diff '$range'" 2>/dev/null || true
 
-# Background subagent: read the diff, compose review comments, apply them
-# to the live session. Skipped if `claude` isn't on PATH.
+log_dir="$HOME/.claude/hooks/logs"
+mkdir -p "$log_dir"
+log_file="$log_dir/hunk-review-pre-pr.log"
+
+# Sonnet's review takes ~1-2 min from spawn to comments-applied. During that
+# gap the hunk window looks empty and the user assumes the hook is broken.
+# Spawn a tiny background poller that drops a placeholder comment as soon as
+# the session registers — gives immediate "review pending" signal. The heavy
+# subagent below removes the placeholder before applying real comments.
+placeholder_summary="[pending] AI review in progress…"
+(
+  for _ in $(seq 1 15); do
+    sleep 1
+    if hunk session list 2>/dev/null | grep -qF "$repo_root"; then
+      first_file="$(hunk session review --repo "$repo_root" --json 2>/dev/null \
+        | jq -r '.review.selectedFile.path // empty')"
+      [[ -n "$first_file" ]] || break
+      printf '{"comments":[{"filePath":%s,"hunkNumber":1,"summary":%s,"rationale":%s}]}' \
+        "$(jq -Rn --arg s "$first_file" '$s')" \
+        "$(jq -Rn --arg s "$placeholder_summary" '$s')" \
+        "$(jq -Rn --arg s "Sonnet is composing review comments in the background. Real comments replace this placeholder when ready (typically 1–2 min)." '$s')" \
+        | hunk session comment apply --repo "$repo_root" --stdin >>"$log_file" 2>&1
+      break
+    fi
+  done
+) </dev/null >>"$log_file" 2>&1 & disown
+
+# Background subagent: pre-compute the diff in the hook (so the subagent
+# skips git startup), inline the apply schema + comment-style rules in the
+# prompt (so the subagent skips reading external docs), then spawn it. Cuts
+# the typical "click PR button → comments visible" gap roughly in half.
 if command -v claude >/dev/null 2>&1; then
-  log_dir="$HOME/.claude/hooks/logs"
-  mkdir -p "$log_dir"
-  log_file="$log_dir/hunk-review-pre-pr.log"
-
-  prompt="A Hunk TUI session is open in another tmux window for repo \
-$repo_root, range $range. Read the bundled hunk skill once: \
-\$(cat \"\$(hunk skill path)\"). Read $HOME/.claude/skills/hunk-review/SKILL.md \
-and follow its 'Comment style' section. Read the diff: \
-git -C $repo_root diff --no-color $range. Compose review comments — only \
-high-signal items (behavioral changes, cross-file invariants, rollout \
-footguns, test gaps); skip mechanical changes. Map files to 1-based hunk \
-indices via the @@ -X,Y +A,B @@ headers. If 'hunk session list' shows no \
-session yet for $repo_root, wait briefly and retry. Apply comments in one \
-batch: pipe JSON of shape {\\\"comments\\\":[{\\\"filePath\\\":...,\\\"hunkNumber\\\":...,\\\"summary\\\":...,\\\"rationale\\\":...}]} \
-to: hunk session comment apply --repo $repo_root --stdin. Do not modify \
-files, push commits, or run tests. Exit silently when done."
-
   (
+    diff_file="$(mktemp -t hunk-review-diff.XXXXXX)"
+    git -C "$repo_root" diff --no-color "$range" > "$diff_file" 2>/dev/null
+
+    prompt="A Hunk TUI session is open in another tmux window for repo \
+$repo_root (range $range). Diff is pre-computed at $diff_file — read it \
+with: cat $diff_file. Compose 3–7 high-signal review comments only: \
+behavioral changes, complex flows (one brief shape-of-the-flow comment at \
+the entry point — fan-out/await, state transitions, async/recursion — not \
+per-step narration; skip if a careful read makes it obvious), cross-file \
+invariants, rollout footguns, test gaps. Skip mechanical changes (renames, \
+signature widening, comment-only edits, generated files). Map files to \
+1-based hunk indices via the @@ -X,Y +A,B @@ headers (the Nth hunk in a \
+file's diff is hunkNumber: N).
+
+BEFORE applying real comments, remove the hook's placeholder: run \
+'hunk session comment list --repo $repo_root --json', find every comment \
+whose summary starts with '[pending]', and 'hunk session comment rm \
+--repo $repo_root <id>' each one. If 'hunk session list' shows no session \
+for $repo_root yet, wait 2s and retry up to 3 times.
+
+Then apply real comments in ONE batch (JSON via stdin):
+printf '%s' '{\"comments\":[{\"filePath\":\"path/to/file\",\"hunkNumber\":1,\"summary\":\"one-line headline\",\"rationale\":\"why-it-matters\"}]}' | hunk session comment apply --repo $repo_root --stdin
+
+Cleanup: rm $diff_file when done. Do not modify files, push commits, or \
+run tests. Exit silently."
+
     cd "$repo_root"
     nohup claude \
       -p "$prompt" \
@@ -95,7 +133,8 @@ files, push commits, or run tests. Exit silently when done."
       --no-session-persistence \
       --output-format text \
       >> "$log_file" 2>&1
-  ) </dev/null >/dev/null 2>&1 & disown
+    rm -f "$diff_file"
+  ) </dev/null >>"$log_file" 2>&1 & disown
 fi
 
 exit 0
