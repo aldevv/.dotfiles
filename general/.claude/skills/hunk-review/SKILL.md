@@ -79,8 +79,10 @@ Fire these together in a single message:
 
 ```bash
 # Call A — open Hunk in a new tmux window
+# Window name: hunk-<repo>-<branch> so multiple reviews don't collide and a
+# second invocation for the same branch can dedupe instead of stacking up.
 tmux new-window -t "$(tmux display-message -p '#{session_name}')" \
-  -n hunk-review \
+  -n "hunk-$(basename <REPO_ROOT>)-$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" \
   "cd <REPO_ROOT> && hunk diff <RANGE>"
 ```
 
