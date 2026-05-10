@@ -9,6 +9,12 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 ## Code organization
 **Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.) — one folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" / "keep it small" notes in older project READMEs or `CLAUDE.local.md` files — surface the conflict, update the project doc, then split.
 
+## Worktrees
+Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `$UTILITIES/stuff-git/wt`). Two rules when working in one:
+
+- **Mirror the main checkout's `.envrc`.** Worktrees inherit `.git` but NOT working-tree files like `.envrc`, so dev-env hooks defined there don't follow you in. When work starts in a worktree, copy `.envrc` from the main checkout (and run `direnv allow` once). If the main repo has no `.envrc`, do nothing — there's nothing to mirror.
+- **Promote repeated dev-binary build sequences to `.envrc`.** If the same multi-step build (e.g. `bun run build:bin && install -m 0755 dist/<repo> ~/.local/bin/<repo>-dev`) gets run more than a couple of times and the project has no Makefile target / `bin/` script for it, define it as an alias or shell function in `.envrc` (e.g. `<repo>-dev() { ... }`). Add it to **both** the main checkout's `.envrc` and every active worktree's copy so the command is available everywhere on `cd`. Don't pollute the project's source — `.envrc` stays gitignored and per-checkout.
+
 ## CRITICAL: Playwright Browser Issues
 **NEVER ask the user to do anything with the browser.** Use the Playwright MCP plugin tools directly — they handle browser launch automatically.
 - **NEVER delete** `~/.cache/ms-playwright/mcp-chrome-*` — contains Okta session data

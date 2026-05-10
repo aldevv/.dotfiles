@@ -92,11 +92,16 @@ set -e
 cd ~/.dotfiles
 export $(grep -v '^#' ~/.machine_metadata | xargs)
 
-# 1. Scan local changes for secrets and symlink loops, commit as a wip checkpoint.
-diff_files=$(git diff --name-only HEAD)
-if [ -n "$diff_files" ]; then
-  printf '%s\n' "$diff_files" | "$HOME/.claude/skills/sync-dotfiles/scripts/precommit-scan.sh"
-  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+# 1. Scan ALL local changes — modified-tracked AND untracked-not-gitignored —
+# and commit them as a wip checkpoint. The dotfiles repo is a personal config
+# store: any file the user dropped under it that isn't gitignored is meant to
+# travel between machines. Leaving untracked files behind silently strands new
+# scripts / configs on the originating machine. The precommit scan and
+# `.gitignore` are the safety net; honor them both, but don't second-guess.
+local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+if [ -n "$local_files" ]; then
+  printf '%s\n' "$local_files" | "$HOME/.claude/skills/sync-dotfiles/scripts/precommit-scan.sh"
+  git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
 
 # 2. Merge the remote (already fetched in Step 1 Call 3).
@@ -204,7 +209,7 @@ This skill does **not** update `~/.cache/sync-dotfiles/last-full-sync` — only 
 
 ## Pre-commit scan (reference)
 
-Implemented in `scripts/precommit-scan.sh`. Step 2 pipes `git diff --name-only HEAD` into it; the post-merge guard (Step 2b) pipes `git diff $pre $post --diff-filter=AM` with `--loop-only`.
+Implemented in `scripts/precommit-scan.sh`. Step 2 pipes the union of `git diff --name-only HEAD` (modified-tracked) and `git ls-files --others --exclude-standard` (untracked, gitignore-respecting) into it. The post-merge guard (Step 2b) pipes `git diff $pre $post --diff-filter=AM` with `--loop-only`. Untracked files are scanned the same way as modified ones — the secret/loop checks are the gate that keeps `git add -A` safe to use blindly.
 
 Three checks, in order — the symlink-loop guard runs first because a looping symlink makes the content grep fail silently with ELOOP and would otherwise let a self-loop slip through (real incident: dotfiles `dda112d8`):
 
@@ -226,7 +231,7 @@ Exits 0 if every input file passes; exits 7 (after scanning all of them) if any 
 - Mode: fast (parent-only) — note this explicitly so the user knows submodules were skipped
 - Days since last full sync
 - Path taken: happy / conflict / restow (= which exit code from Step 2)
-- Local changes committed / nothing to push / fast-forwarded
+- Local changes committed (split: modified-tracked count + newly-tracked count from `git ls-files --others --exclude-standard`) / nothing to push / fast-forwarded
 - Conflicts resolved (count and files), if any
 - Packages restowed, if any
 - Final pushed commit (or "nothing to push")

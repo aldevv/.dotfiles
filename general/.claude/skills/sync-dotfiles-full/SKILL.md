@@ -82,12 +82,12 @@ set -e
 cd ~/.dotfiles/<path>
 branch=$(git rev-parse --abbrev-ref HEAD)
 [ "$branch" = "HEAD" ] && { git checkout main 2>/dev/null || git checkout master; branch=$(git rev-parse --abbrev-ref HEAD); }
-diff_files=$(git diff --name-only HEAD)
-if [ -n "$diff_files" ]; then
-  printf '%s\n' "$diff_files" \
+local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+if [ -n "$local_files" ]; then
+  printf '%s\n' "$local_files" \
     | "$HOME/.claude/skills/sync-dotfiles-full/scripts/precommit-scan.sh" --prefix=<path>
   export $(grep -v '^#' ~/.machine_metadata | xargs)
-  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+  git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
 git pull --no-rebase origin "$branch"
 if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
@@ -102,12 +102,12 @@ fi
 ```bash
 set -e
 cd ~/.dotfiles
-diff_files=$(git diff --name-only HEAD)
-if [ -n "$diff_files" ]; then
-  printf '%s\n' "$diff_files" \
+local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+if [ -n "$local_files" ]; then
+  printf '%s\n' "$local_files" \
     | "$HOME/.claude/skills/sync-dotfiles-full/scripts/precommit-scan.sh"
   export $(grep -v '^#' ~/.machine_metadata | xargs)
-  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+  git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
 git pull --no-rebase origin main
 ```
@@ -205,7 +205,7 @@ If a hard failure occurred earlier (e.g. pre-commit scan blocked, unresolved con
 
 ## Pre-commit scan (reference)
 
-Implemented in `scripts/precommit-scan.sh`. Step 3 templates pipe `git diff --name-only HEAD` into it; per-submodule calls pass `--prefix=<path>` so parallel output identifies which repo flagged.
+Implemented in `scripts/precommit-scan.sh`. Step 3 templates pipe the union of `git diff --name-only HEAD` (modified-tracked) and `git ls-files --others --exclude-standard` (untracked, gitignore-respecting) into it; per-submodule calls pass `--prefix=<path>` so parallel output identifies which repo flagged. The wider net plus the scan is what makes `git add -A` safe: untracked configs / scripts the user dropped under `~/.dotfiles` travel between machines automatically, while gitignored files and anything matching the secret/loop checks are filtered out.
 
 Three checks, in order — the symlink-loop guard runs first because a looping symlink makes the content grep fail silently with ELOOP and would otherwise let a self-loop slip through (real incident: dotfiles `dda112d8`):
 
