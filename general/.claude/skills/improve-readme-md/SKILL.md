@@ -32,17 +32,15 @@ Multi-agent README review: 5 critique angles in parallel, synthesized into a tie
 
 ### 2. Detect the ecosystem and pick exemplars for angle 5
 
-Pick 1–3 exemplar READMEs from the same ecosystem so angle 5 has concrete reference points. Examples (use judgment, not a fixed list):
+Read `references/exemplar-readmes.md` (sibling of this SKILL.md). It carries 12 distilled exemplars — Rust CLI, Go CLI, TS lib, framework — with per-entry tagline shape, section order, install style, standout patterns, and "When to cite this exemplar" lines. Use the **Quick-pick table** at the top to choose 1–3 in-ecosystem exemplars for the target README.
 
-| Manifest | Ecosystem | Common exemplars |
-| --- | --- | --- |
-| `Cargo.toml` | Rust CLI/lib | ripgrep, fd, bat, zoxide, eza |
-| `package.json` | Node/JS/TS | vite, esbuild, zod, hono |
-| `pyproject.toml` / `setup.py` | Python | rich, httpx, ruff |
-| `go.mod` | Go | cobra, bubbletea, charm libraries |
-| (web framework / SaaS starter) | varies | depend on framework |
+**Before citing an exemplar, check freshness and liveness** (per the file's "Refresh policy"):
 
-If the project type is unclear, ask the user which 1–2 exemplars to compare against before fanning out.
+- If the entry's `Last fetched` is more than 12 months ago, re-fetch the README via `WebFetch`, update the distillation, and bump the `Last fetched` date in the same commit.
+- Quick liveness check: `curl -s https://api.github.com/repos/<owner>/<repo>` → if `archived: true`, status is 404, or `pushed_at` is more than 12 months stale, treat the repo as **dead**. Substitute an actively-maintained in-ecosystem exemplar (the Refresh policy section lists candidates per ecosystem), drop the dead row from the file's quick-pick table and per-repo section, and update the cross-cutting patterns section if it cited the dead exemplar. Note the substitution in a one-line comment under the new entry's `Last fetched` line.
+- Both staleness fixes happen as part of *this* skill run — don't postpone. The exemplar must be current at the moment angle-5 cites it.
+
+If the project type doesn't match any ecosystem in the file (e.g. Elixir/Phoenix, Haskell, Zig), ask the user which 1–2 exemplars to compare against before fanning out, and consider adding the new ecosystem to `references/exemplar-readmes.md` for future runs.
 
 ### 3. Spawn all 5 agents in parallel
 
@@ -56,7 +54,7 @@ Send a **single message with five `Agent` tool calls** so they run concurrently.
 
 **Angle 4 — Content gaps / completeness.** What a reader expects but doesn't find: License section, quickstart sequence, command/API cheat-sheet, supported integrations, screenshots, ecosystem badges, changelog link.
 
-**Angle 5 — Compare to exemplary READMEs in the same ecosystem.** Which conventions from the chosen exemplars (step 2) does this README miss? For each: name the convention, the exemplar that does it well, whether to adopt at this project's scope, and the cost/benefit. Tell the agent it may use `WebFetch` on at most 2–3 exemplars — don't browse the whole ecosystem.
+**Angle 5 — Compare to exemplary READMEs in the same ecosystem.** Which conventions from the chosen exemplars (step 2) does this README miss? For each: name the convention, the exemplar that does it well, whether to adopt at this project's scope, and the cost/benefit. Pass the agent the relevant entries from `references/exemplar-readmes.md` (already distilled — saves a round-trip). It may also use `WebFetch` on at most 2–3 exemplars when the distillation is stale or doesn't cover what's being asked — don't browse the whole ecosystem.
 
 ### 4. Per-agent boundaries
 
