@@ -84,7 +84,7 @@ One bash invocation that does **everything** for the happy path: secret scan, co
 
 - **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve), then Step 5 (finalize).
 - **`exit 9`** = merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize).
-- **`exit 7`** = secret scan blocked. Stop and report.
+- **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and report.
 - **`exit 0`** = success, sync is done. Skip to Step 6 (report).
 
 ```bash
@@ -92,24 +92,10 @@ set -e
 cd ~/.dotfiles
 export $(grep -v '^#' ~/.machine_metadata | xargs)
 
-# 1. Scan local changes for secrets, commit them as a wip checkpoint.
+# 1. Scan local changes for secrets and symlink loops, commit as a wip checkpoint.
 diff_files=$(git diff --name-only HEAD)
 if [ -n "$diff_files" ]; then
-  while IFS= read -r f; do
-    [ -z "$f" ] && continue
-    # Symlink-loop guard MUST run before the content grep below: a looping
-    # symlink makes `grep "$f"` fail silently with ELOOP (returns non-match),
-    # so without this the secret scan would let a self-loop slip through and
-    # we'd commit it. Real incident: dda112d8 turned claude-version into a
-    # `f -> f` symlink and broke .xprofile on every clone via PATH ELOOP.
-    if [ -L "$f" ] && stat -L "$f" 2>&1 | grep -qi 'too many levels'; then
-      echo "BLOCKED: looping symlink in $f -> $(readlink "$f")"; exit 7
-    fi
-    if echo "$f" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519' \
-       || grep -qiE 'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' "$f"; then
-      echo "BLOCKED: possible secret in $f"; exit 7
-    fi
-  done <<< "$diff_files"
+  printf '%s\n' "$diff_files" | "$HOME/.claude/skills/sync-dotfiles/scripts/precommit-scan.sh"
   git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
 
@@ -120,18 +106,16 @@ if ! git merge --no-edit origin/main; then
 fi
 post_merge=$(git rev-parse HEAD)
 
-# 2b. Post-merge symlink-loop guard: refuse to push a merge that introduced
-# (or kept) a looping symlink, even if it came from the remote. Without this
-# we'd happily fast-forward a bad commit onto every other machine.
+# 2b. Post-merge loop guard: refuse to push a merge that introduced (or kept)
+# a looping symlink, even if it came from the remote. Without this we'd
+# fast-forward a bad commit onto every other machine. --loop-only skips the
+# secret checks (committed-upstream secrets are a different policy concern).
 if [ "$pre_merge" != "$post_merge" ]; then
-  while IFS= read -r f; do
-    [ -z "$f" ] && continue
-    if [ -L "$f" ] && stat -L "$f" 2>&1 | grep -qi 'too many levels'; then
-      echo "BLOCKED: merge introduced looping symlink: $f -> $(readlink "$f")"
-      echo "To unwind: git reset --hard $pre_merge"
-      exit 7
-    fi
-  done <<< "$(git diff "$pre_merge" "$post_merge" --name-only --diff-filter=AM)"
+  if ! git diff "$pre_merge" "$post_merge" --name-only --diff-filter=AM \
+       | "$HOME/.claude/skills/sync-dotfiles/scripts/precommit-scan.sh" --loop-only; then
+    echo "Merge introduced a symlink loop. To unwind: git reset --hard $pre_merge"
+    exit 7
+  fi
 fi
 
 # 3. If the merge added new files, bail out so Step 4 can restow before we push.
@@ -218,24 +202,21 @@ This skill does **not** update `~/.cache/sync-dotfiles/last-full-sync` — only 
 
 ---
 
-## Pre-commit scan rules (reference)
+## Pre-commit scan (reference)
 
-The Step 2 bundle inlines these. Reproduced here for one-off / manual use. **Run the symlink-loop check first** — the secret content grep below will silently fail with ELOOP on a looping symlink.
+Implemented in `scripts/precommit-scan.sh`. Step 2 pipes `git diff --name-only HEAD` into it; the post-merge guard (Step 2b) pipes `git diff $pre $post --diff-filter=AM` with `--loop-only`.
 
-```bash
-# 1. Symlink loop (would corrupt the repo and trigger ELOOP on every machine)
-[ -L "<filepath>" ] && stat -L "<filepath>" 2>&1 | grep -qi 'too many levels'
+Three checks, in order — the symlink-loop guard runs first because a looping symlink makes the content grep fail silently with ELOOP and would otherwise let a self-loop slip through (real incident: dotfiles `dda112d8`):
 
-# 2. Suspicious filename
-echo "<filename>" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519'
+1. **Symlink loop** — `[ -L "$f" ] && stat -L "$f" 2>&1 | grep -qi 'too many levels'`
+2. **Suspicious filename** — matches `\.(env|pem|key|p12|pfx|ppk)$`, `^\.env(\.|$)`, or keywords `secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519`
+3. **Suspicious content** — `BEGIN PRIVATE KEY` blocks, `AKIA…`, `ghp_…`, `xox[baprs]-…`, `password=…`, `api_key:…`, `secret:…`
 
-# 3. Suspicious content
-grep -qiE \
-  'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' \
-  "<filepath>"
-```
+Flags:
+- `--loop-only` — skip checks 2 and 3 (post-merge use)
+- `--prefix=<path>` — prepend `<path>/` to BLOCKED messages (parallel-submodule use; the `sync-dotfiles-full` skill uses this)
 
-If any matches: don't stage/commit, print `BLOCKED: <reason> in <filepath>`, include in final report.
+Exits 0 if every input file passes; exits 7 (after scanning all of them) if any blocked. The script reads filenames from stdin (newline-separated) or from argv.
 
 ---
 
