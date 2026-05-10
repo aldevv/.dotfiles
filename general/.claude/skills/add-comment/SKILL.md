@@ -31,27 +31,14 @@ Read like a tired engineer on Slack, not a memo:
 
 ### Reference examples
 
-Match this voice.
+Real comments posted via this skill (deduped, with use counts) live at
+[`references/examples.md`](references/examples.md). Read that file before
+drafting — it's the canonical voice training set, and the `(×N)` counts make
+overused phrasings visible so you avoid parroting them.
 
-Reply (pushback):
-
-> i'd keep this one. nil just means the role doesn't exist (snowflake returns 200 empty), and the same missing role often shows up across lots of grant rows, so caching it saves a bunch of calls. callers already skip on nil anyway.
-
-Reply (agreeing, brief):
-
-> good catch, will fix.
-
-Reply (already done):
-
-> done.
-
-New line comment (feedback as reviewer):
-
-> could batch this with a GetManyJSON over the distinct ids before the loop. the old code was already doing that.
-
-> same on the writes. one SetManyJSON after the loop, like workersToStore.
-
-Notice: lowercase, no greeting, no em dash, position first, then the reason, then maybe one clarification. Stops.
+The list grows automatically: every successful post is recorded by step 7
+below. Same text in the same category bumps `(×N)`; new text appends a new
+bullet.
 
 ### Bad vs good
 
@@ -71,7 +58,7 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
 2. **Read the code.** For a reply, fetch the original with `gh api repos/OWNER/REPO/pulls/comments/COMMENT_ID` (GitHub) or `glab api projects/PROJECT_ID/merge_requests/MR_IID/notes/NOTE_ID` (GitLab) and read the file. For a new line comment, just read the file at the target line. Don't draft blind.
 
-3. **Draft** in the voice above. If a sentence sounds like a memo, rewrite it.
+3. **Draft** in the voice above. Skim [`references/examples.md`](references/examples.md) for prior posts — reuse phrasings that fit, and pick a different shape if a candidate line already has a high `(×N)` count. If a sentence sounds like a memo, rewrite it.
 
 4. **(Optional) Fact-check with subagents.** Run this only when the draft makes specific claims — names a function, cites a line, asserts behaviour, says "the old code did X", quotes a number. Skip for opinion replies ("i'd keep this", "agree, that's cleaner").
 
@@ -161,7 +148,28 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
      -F body="<the approved draft>"
    ```
 
-7. **Report the URL** so the user can verify.
+7. **Record the example.** After every successful post, append the chosen text to [`references/examples.md`](references/examples.md) so future runs can see it:
+
+   ```bash
+   python3 ~/.claude/skills/add-comment/scripts/record_example.py \
+     --category "<heading>" \
+     --body "<exact posted text>"
+   ```
+
+   Pick the category that fits — common ones already present:
+
+   - `Replies — agreeing or already done`
+   - `Replies — pushback`
+   - `Replies — clarifying / asking back`
+   - `New line comments — feedback`
+   - `New line comments — nit`
+   - `Top-level PR/MR comments`
+
+   The script dedups on body text within a category, so re-posting the same line just bumps its `(×N)`. Unknown categories are created at the end of `## Answers`.
+
+   Run this once per posted comment, even if a single skill invocation posted several (e.g. three replies in a loop).
+
+8. **Report the URL(s)** so the user can verify.
 
 ## Common failure modes
 

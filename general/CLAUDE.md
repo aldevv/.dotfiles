@@ -57,7 +57,18 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 ### Location
 - **Default**: `$HOME/.claude/skills/<skill-name>/SKILL.md` — use this for all skills unless the skill is tightly coupled to a specific project. User-level skills must live under `~/.dotfiles/general/.claude/skills/<skill-name>/` and be stowed into `~/.claude/skills/` via GNU Stow, so they're versioned and available on every machine after `personal-push-all`.
 - **Project-specific** (rare): `.claude/skills/<skill-name>/SKILL.md` inside the repo — only when the skill depends on files, tooling, or context that only makes sense within that one project.
-- **Skill scripts** (when a skill needs helper scripts): `.claude/skills/<skill-name>/scripts/<name>.py`. Use `scripts/` (plural) — matches the nearby `lib/` naming used by hooks and reads as "the scripts this skill runs," not "a library of reusable code."
+- **Standard layout — every skill folder follows this shape**:
+
+  ```
+  ~/.claude/skills/<skill-name>/
+  ├── SKILL.md          # required — frontmatter + workflow prose
+  ├── scripts/          # optional — helper scripts (`.py`, `.sh`, `.ts`...)
+  └── references/       # optional — markdown the skill reads at runtime
+  ```
+
+  - **`scripts/`** (plural). Helper scripts the skill invokes. Use `scripts/` to mirror the `lib/` naming used by hooks; reads as "the scripts this skill runs," not "a library of reusable code." Keep them executable + idempotent.
+  - **`references/`** (plural). Markdown files the skill READS during a run — voice training, examples logs, lookup tables, decision trees the LLM follows. Anything the skill cites verbatim or learns from. Distinct from `scripts/` (executable helpers) and from external links (web docs aren't checked in). Append-only logs (e.g. `examples.md` with use counts) belong here too.
+  - Add a folder only when the skill needs it. A pure-prose skill is just `SKILL.md`.
 
 ### Required properties — every skill I create must be:
 
