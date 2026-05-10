@@ -86,6 +86,13 @@ diff_files=$(git diff --name-only HEAD)
 if [ -n "$diff_files" ]; then
   while IFS= read -r f; do
     [ -z "$f" ] && continue
+    # Symlink-loop guard MUST run before the content grep below: a looping
+    # symlink makes `grep "$f"` fail silently with ELOOP, so the secret scan
+    # would let a self-loop slip through. See sync-dotfiles SKILL.md for the
+    # incident this prevents.
+    if [ -L "$f" ] && stat -L "$f" 2>&1 | grep -qi 'too many levels'; then
+      echo "BLOCKED: looping symlink in <path>/$f -> $(readlink "$f")"; exit 7
+    fi
     if echo "$f" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519' \
        || grep -qiE 'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' "$f"; then
       echo "BLOCKED: possible secret in <path>/$f"; exit 7

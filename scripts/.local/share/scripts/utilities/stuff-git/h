@@ -1,0 +1,268 @@
+#!/bin/bash
+# Dispatch to `hunkpr` (GitHub) or `hunkmr` (GitLab) based on the repo's
+# origin remote, or pass through to `hunk` for any other subcommand.
+#
+# Usage: h [<pr-or-mr-url-or-number>] | <hunk-subcommand> [args...]
+#
+#   no arg          → resolves repo from cwd's origin remote (cached);
+#                     refreshes origin/<base>, then lists open PRs/MRs
+#                     authored by `@me` plus the owner of every non-
+#                     `origin` remote (fork-based workflow → catches PRs
+#                     authored by your fork's account even when gh's
+#                     active login is a different identity):
+#                       - 1 PR/MR → hunkpr/hunkmr <num>
+#                       - 2+      → fzf picker, then hunkpr/hunkmr <num>
+#                       - 0       → hunk diff origin/<base>
+#                                   --exclude-untracked
+#   number          → resolves repo from cwd's origin remote (cached).
+#   URL             → forge detected directly from URL host (no cache).
+#   anything else   → exec hunk with all args (e.g. `h diff`, `h show`).
+#
+# Cache: ~/.cache/hunk/repos.tsv (4 cols, shared with hunkpr/hunkmr):
+#   <host/owner/repo>\t<github|gitlab>\t<local-path>\t<base-branch>
+# Exit codes: 0 ok, 1 usage, 2 resolve, 127 missing dep.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: h [<pr-or-mr-url-or-number>] | <hunk-subcommand> [args...]
+
+Dispatches to `hunkpr` (GitHub) or `hunkmr` (GitLab) for PR/MR review
+based on the repo's origin remote. Caches the choice per repo in
+~/.cache/hunk/repos.tsv so repeated calls in the same repo skip the
+host-detection step.
+
+With no args, refreshes origin/<base> and lists open PRs/MRs authored
+by you (gh `@me` plus the owner of any non-`origin` remote, so PRs from
+your fork show up even when gh's active login is a different account).
+Dispatches directly if there's exactly one, opens an fzf picker if
+there are several, or falls back to `hunk diff origin/<base>
+--exclude-untracked` if there are none.
+
+Any other (non-URL, non-numeric) argument is passed straight through to
+`hunk`, so `h diff`, `h show HEAD~1`, etc. behave exactly like the
+equivalent `hunk` invocation.
+
+Examples:
+  h                                                            # current branch
+  h 123                                                        # PR/MR in cwd's repo
+  h https://github.com/owner/repo/pull/123                     # GitHub URL
+  h https://gitlab.com/owner/repo/-/merge_requests/123         # GitLab URL
+  h diff                                                       # → hunk diff
+  h show HEAD~1                                                # → hunk show HEAD~1
+EOF
+}
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+esac
+
+arg="${1:-}"
+
+# 1. URL arg → dispatch from the URL host directly. No cache needed: the
+#    URL is self-describing, and caching by URL would conflate repos that
+#    happen to share part of their path on different forges.
+if [[ "$arg" =~ ^https?://([^/]+)/ ]]; then
+  [[ $# -le 1 ]] || { usage >&2; exit 1; }
+  host="${BASH_REMATCH[1]}"
+  case "$host" in
+    *github*) exec hunkpr "$arg" ;;
+    *gitlab*) exec hunkmr "$arg" ;;
+  esac
+  echo "h: can't dispatch host \`$host\` (not github/gitlab); use hunkpr/hunkmr directly" >&2
+  exit 2
+fi
+
+# 2. Non-empty, non-numeric first arg → treat the whole call as a hunk
+#    subcommand invocation. Lets `h diff`, `h show`, etc. mirror `hunk`.
+if [[ -n "$arg" && ! "$arg" =~ ^[0-9]+$ ]]; then
+  exec hunk "$@"
+fi
+
+# 3. No arg or numeric arg → resolve via cwd's origin remote.
+[[ $# -le 1 ]] || { usage >&2; exit 1; }
+origin_url=$(git remote get-url origin 2>/dev/null) || {
+  echo "h: not in a git repo, and no URL given" >&2
+  exit 2
+}
+
+# Normalize key so HTTPS and SSH clones of the same repo share a cache
+# entry: `https://github.com/foo/bar.git` and `git@github.com:foo/bar.git`
+# both become `github.com/foo/bar`.
+key="$origin_url"
+key="${key#http://}"; key="${key#https://}"
+key="${key#*@}"          # drop user@ if present
+key="${key/:/\/}"        # SSH `host:path` → `host/path`
+key="${key%.git}"
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/hunk"
+cache_file="$cache_dir/repos.tsv"
+mkdir -p "$cache_dir"
+[[ -f "$cache_file" ]] || : > "$cache_file"
+
+# Cache schema (4 cols, shared with hunkpr/hunkmr):
+#   <host/owner/repo>\t<github|gitlab>\t<local-path>\t<base-branch>
+# Read forge + base in a single awk pass; missing fields stay empty.
+choice=""
+base=""
+IFS=$'\t' read -r _ choice _ base < <(
+  awk -F'\t' -v k="$key" '$1==k {print; exit}' "$cache_file"
+) || true
+
+if [[ -z "$choice" ]]; then
+  case "$origin_url" in
+    *github*) choice="github" ;;
+    *gitlab*) choice="gitlab" ;;
+    *)
+      echo "h: can't determine forge from \`$origin_url\` — invoke hunkpr or hunkmr directly" >&2
+      exit 2
+      ;;
+  esac
+  # Write 4-col row; hunkpr/hunkmr will fill in path + base on first run.
+  printf '%s\t%s\t\t\n' "$key" "$choice" >> "$cache_file"
+fi
+
+case "$choice" in
+  github|gitlab) ;;
+  *)
+    echo "h: corrupt cache entry for \`$key\` (\`$choice\`); fix or delete $cache_file" >&2
+    exit 2
+    ;;
+esac
+
+# Numeric arg → trust the user's number, dispatch directly.
+if [[ -n "$arg" ]]; then
+  case "$choice" in
+    github) exec hunkpr "$arg" ;;
+    gitlab) exec hunkmr "$arg" ;;
+  esac
+fi
+
+# === No-arg case: fresh base + multi-PR aware dispatch. ====================
+
+command -v jq >/dev/null \
+  || { echo "h: \`jq\` not found on PATH (required for current-branch review)" >&2; exit 127; }
+
+fetch_base="${base:-main}"
+
+# Kick off the base fetch in the background so it overlaps with the gh/glab
+# queries below. We only block on it for the no-PR fallback (where the diff
+# target needs to be fresh); for PR/MR review hunkpr/hunkmr handle their own
+# fetching, so a slightly stale background fetch is harmless.
+git fetch --quiet origin "$fetch_base" >/dev/null 2>&1 &
+fetch_pid=$!
+
+# Build the author list to query. The user's active gh account may not
+# match the account that authored the PRs (fork-based workflow: `origin`
+# is upstream, `fork` is the personal clone). Mirror the zsh prompt's
+# approach: query `@me` plus the owner of every non-`origin` remote, then
+# dedupe by PR number. `gh pr list --author <user>` reads from the cwd's
+# repo and works regardless of which account is logged in — no
+# `gh auth switch` needed.
+declare -a authors=("@me")
+seen="|@me|"
+for r in $(git remote 2>/dev/null); do
+  [[ "$r" == "origin" ]] && continue
+  rurl=$(git remote get-url "$r" 2>/dev/null) || continue
+  owner=""
+  if [[ "$rurl" =~ [:/]([A-Za-z0-9_.-]+)/[A-Za-z0-9_.-]+(\.git)?/?$ ]]; then
+    owner="${BASH_REMATCH[1]}"
+  fi
+  [[ -n "$owner" && "$seen" != *"|$owner|"* ]] || continue
+  authors+=("$owner")
+  seen+="$owner|"
+done
+
+# Run all author queries in parallel. Each child writes its JSON to a
+# temp file; the parent collects + dedupes after all jobs complete.
+declare -a author_tmps=()
+declare -a author_pids=()
+trap '[[ ${#author_tmps[@]} -gt 0 ]] && rm -f "${author_tmps[@]}"' EXIT
+
+list_json="[]"
+case "$choice" in
+  github)
+    if command -v gh >/dev/null; then
+      for a in "${authors[@]}"; do
+        tmp=$(mktemp -t h-prs.XXXXXX)
+        author_tmps+=("$tmp")
+        ( gh pr list --author "$a" --state open \
+            --json number,title,baseRefName,headRefName \
+            > "$tmp" 2>/dev/null || echo "[]" > "$tmp" ) &
+        author_pids+=("$!")
+      done
+    fi
+    ;;
+  gitlab)
+    if command -v glab >/dev/null; then
+      for a in "${authors[@]}"; do
+        tmp=$(mktemp -t h-prs.XXXXXX)
+        author_tmps+=("$tmp")
+        if [[ "$a" == "@me" ]]; then
+          ( glab mr list --mine --opened --output json \
+              > "$tmp" 2>/dev/null || echo "[]" > "$tmp" ) &
+        else
+          ( glab mr list --author "$a" --opened --output json \
+              > "$tmp" 2>/dev/null || echo "[]" > "$tmp" ) &
+        fi
+        author_pids+=("$!")
+      done
+    fi
+    ;;
+esac
+
+for p in "${author_pids[@]}"; do wait "$p" 2>/dev/null || true; done
+
+# Combine, normalize (gitlab → {number, baseRefName, headRefName, title}),
+# dedupe by number, sort desc.
+acc="[]"
+for tmp in "${author_tmps[@]}"; do
+  one=$(<"$tmp")
+  [[ -n "$one" ]] || one="[]"
+  if [[ "$choice" == "gitlab" ]]; then
+    one=$(jq '[.[] | {number: .iid, baseRefName: .target_branch, headRefName: .source_branch, title: .title}]' <<<"$one" 2>/dev/null) || one="[]"
+  fi
+  acc=$(jq -s '.[0] + .[1]' <<<"$acc"$'\n'"$one")
+done
+list_json=$(jq 'unique_by(.number) | sort_by(-.number)' <<<"$acc" 2>/dev/null) || list_json="[]"
+
+count=$(jq 'length' <<<"$list_json" 2>/dev/null || echo 0)
+
+case "$count" in
+  0)
+    # No open PR/MR by me → working-tree review against the freshly fetched
+    # base, no untracked. This is the only path where staleness of
+    # origin/<base> matters, so wait for the background fetch here.
+    wait "$fetch_pid" 2>/dev/null || true
+    exec hunk diff "origin/$fetch_base" --exclude-untracked
+    ;;
+  1)
+    num=$(jq -r '.[0].number' <<<"$list_json")
+    case "$choice" in
+      github) exec hunkpr "$num" ;;
+      gitlab) exec hunkmr "$num" ;;
+    esac
+    ;;
+  *)
+    command -v fzf >/dev/null \
+      || { echo "h: multiple PRs/MRs but \`fzf\` not on PATH" >&2; exit 127; }
+    # Override the global FZF_DEFAULT_OPTS --preview (which assumes {} is a
+    # file path and fails on our PR lines) with one that calls gh/glab.
+    case "$choice" in
+      github) preview_cmd='GH_FORCE_TTY=100% gh pr view {1}' ;;
+      gitlab) preview_cmd='glab mr view {1}' ;;
+    esac
+    sel=$(jq -r '.[] | "\(.number)\t#\(.number) \(.baseRefName) ← \(.headRefName) | \(.title)"' <<<"$list_json" \
+      | fzf --prompt="Pick PR/MR> " \
+            --delimiter=$'\t' \
+            --with-nth=2.. \
+            --preview "$preview_cmd" \
+            --preview-window 'right:60%:wrap')
+    [[ -n "$sel" ]] || exit 1
+    num="${sel%%$'\t'*}"
+    case "$choice" in
+      github) exec hunkpr "$num" ;;
+      gitlab) exec hunkmr "$num" ;;
+    esac
+    ;;
+esac
