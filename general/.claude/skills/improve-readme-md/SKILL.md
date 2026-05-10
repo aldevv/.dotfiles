@@ -48,7 +48,7 @@ Send a **single message with five `Agent` tool calls** so they run concurrently.
 
 **Angle 1 — First impression / hook.** Tagline strength, jargon definition (does the first paragraph define domain terms?), visual hook (asciinema/GIF/screenshot), badge meaningfulness, where the value prop lands.
 
-**Angle 2 — Information architecture / structure.** Section order, heading hierarchy (`#` vs `##` consistency), where deep guides live (inline vs `docs/`), table-of-contents threshold, where Contributing should live.
+**Angle 2 — Information architecture + section internals.** Section order, heading hierarchy (`#` vs `##` consistency), where deep guides live (inline vs `docs/`), table-of-contents threshold, where Contributing should live. **Also scrutinizes *internal* section structure** — not just the H2 sequence: flat paragraph blocks that jam ≥3 unrelated topics together (each topic invisible to Cmd-F), H3s whose entire body is one paragraph that doesn't justify a heading, key/flag enumerations written as comma-strings when a table would be scannable, implementation-detail H3s (e.g. exhaustive lists of binary names or flag values) that should compress to a sentence and let `--help` / config comments carry the detail. The smell test: "could a reader find each topic by skimming, or are three topics hiding inside one prose block?"
 
 **Angle 3 — Install correctness + onboarding.** Cross-check every install method against the install script and release workflow. Verify supported platforms match the release matrix. PATH guidance, post-install verification (`<tool> --version`), Windows / PowerShell variants, MSRV / version pinning, libc detection.
 
@@ -92,6 +92,12 @@ Present the synthesis with the four tiers, then use `AskUserQuestion` with 3–4
 - **Collapse N overlapping sections into one.** `Features` + `Templates` + `Subcommands` is almost always one `Commands` section with a table; the bullet list of features tends to repeat the tagline and quickstart. Resist the urge to add a new heading whenever a new fact appears.
 - **Drop CI workflow badges.** Tests/Releases workflow status badges are signal for maintainers, not for visitors evaluating whether to install. Keep the version badge (crates.io / npm / pypi), the license badge, and at most one downloads/popularity signal.
 - **Quickstart before Install.** Hook before commitment. The reader needs to see the inner loop before being asked to run a curl-pipe.
+- **Break flat paragraph blocks that pack ≥3 unrelated topics.** Either promote each to its own H3 when each is independently load-bearing, or hoist the most distinctive one out and drop the rest under `### Notes`. Smell test: a reader Cmd-F-ing for one of those topics wouldn't find it because the heading doesn't name it.
+- **Turn key/flag enumerations into a table when an alt-mapping is involved.** A two-column `Default / Alt` table makes the mapping obvious in one glance; comma-strings only work when there's no alternate to align against. **Corollary**: include unchanged-on-alt rows in the *same* table — repeat the default in the alt column. Don't split half the reference into a prose afterthought; that fragments the lookup.
+- **An H3 whose body is a list of implementation-detail binaries or flags is too heavy.** Compress to a sentence and let `--help` or source carry the enumeration. Exhaustive lists belong in code, not the README.
+- **Don't pre-document runtime UX the reader only encounters in context.** Lines like "the installer warns if X" or "the CLI prints a banner on first run" describe behavior the user meets at runtime — at which point the runtime UX is its own teacher. Either give the reader an actionable instruction *now* ("Add `~/.local/bin` to your `PATH`") or drop the line. Documenting what stdout will print is filler.
+
+Worked **Bad → Better** examples for each of the patterns above live in `references/avoid.md`. Read them when applying changes — the **Better** form usually points at the specific replacement shape.
 
 ## Composition
 
