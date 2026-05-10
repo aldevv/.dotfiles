@@ -151,3 +151,31 @@ Or — if PATH guidance is actually load-bearing — give the actionable form di
 ```
 
 **Why it wins**: doc prose isn't the right surface for runtime CLI contracts. A reader-visible line should give them an action they can take *now*; otherwise it vacates the line. Same logic applies to "the build will fail if X," "you'll see a deprecation warning if Y," "the CLI prints a banner on first run" — either fix the underlying thing or remove the line.
+
+---
+
+## Embedding a video via `<video>` tag pointing at a `raw.githubusercontent.com` URL
+
+The instinct: drop an mp4 in the repo, reference it with `<video src="...raw...">`. It silently renders as **nothing** on github.com — the README sanitizer strips `<video>` tags whose `src` isn't from `github.com/user-attachments` or `user-images.githubusercontent.com`. The author tests it locally (where the tag works), commits, pushes, and discovers the demo is invisible on the rendered README.
+
+The naive next attempt — drop the tag and leave the bare `.../raw/.../demo.mp4` URL — is barely better. A bare raw URL on its own line renders as a *link*, not a player. The reader has to click through.
+
+**Bad** — committed mp4 + `<video>` tag:
+
+```markdown
+<video src="https://github.com/aldevv/md-preview/raw/main/docs/demo.mp4" controls width="100%"></video>
+```
+
+Renders as: nothing. The `<p>` containing the tag becomes empty in GitHub's HTML.
+
+**Better** — bare `user-attachments` URL on its own line:
+
+```markdown
+https://github.com/user-attachments/assets/19f64fa1-a4d6-4a9c-a94f-2c40ca5a979b
+```
+
+GitHub auto-wraps this in a native `<video>` player. The mp4 lives on GitHub's CDN, not in the repo.
+
+**Why it wins**: bare `user-attachments` URLs are the *only* repo-external pattern GitHub's renderer turns into a player. No tag needed; no repo bloat.
+
+**Where to look for the antidote**: `references/github-markdown.md` carries the full workflow — how the author obtains the `user-attachments` URL (drag-drop into a new issue editor), when to use a GIF instead (off-GitHub renderers), and the YouTube thumbnail fallback for longer walk-throughs.

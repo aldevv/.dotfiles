@@ -8,6 +8,27 @@ argument-hint: "[path-to-readme]" — optional. Defaults to ./README.md at the r
 
 Multi-agent README review: 5 critique angles in parallel, synthesized into a tiered punch-list, then applied with user confirmation.
 
+## Files
+
+- [`SKILL.md`](SKILL.md) — this file. Workflow, agent angles, concrete techniques.
+- [`references/exemplar-readmes.md`](references/exemplar-readmes.md) — 12 distilled exemplar READMEs across ecosystems. Backs angle-5 (ecosystem comparison). Carries a refresh policy with `Last fetched` dates and dead-repo substitution candidates.
+- [`references/avoid.md`](references/avoid.md) — Bad → Better antipatterns. Read during step 6 when applying changes — the **Better** form usually points at the specific replacement shape.
+- [`references/github-markdown.md`](references/github-markdown.md) — Positive reference for GitHub-flavored markdown features (alerts, video embedding via `user-attachments`, GIF / YouTube fallbacks). Read when those come up in step 6.
+
+## Table of contents
+
+- [When to use](#when-to-use)
+- [When NOT to use](#when-not-to-use)
+- [Steps](#steps)
+  - [1. Locate the README and gather context](#1-locate-the-readme-and-gather-context)
+  - [2. Detect the ecosystem and pick exemplars for angle 5](#2-detect-the-ecosystem-and-pick-exemplars-for-angle-5)
+  - [3. Spawn all 5 agents in parallel](#3-spawn-all-5-agents-in-parallel)
+  - [4. Per-agent boundaries](#4-per-agent-boundaries)
+  - [5. Synthesize into a tiered punch-list](#5-synthesize-into-a-tiered-punch-list)
+  - [6. Apply selected changes](#6-apply-selected-changes)
+- [Composition](#composition)
+- [Guardrails](#guardrails)
+
 ## When to use
 
 - User says "improve the readme", "review my readme", "audit the readme", "make the readme better", or invokes `/improve-readme-md`.
@@ -46,7 +67,7 @@ If the project type doesn't match any ecosystem in the file (e.g. Elixir/Phoenix
 
 Send a **single message with five `Agent` tool calls** so they run concurrently. Each agent gets a different angle, and each prompt names the angles the others own so they don't overlap.
 
-**Angle 1 — First impression / hook.** Tagline strength, jargon definition (does the first paragraph define domain terms?), visual hook (asciinema/GIF/screenshot), badge meaningfulness, where the value prop lands.
+**Angle 1 — First impression / hook.** Tagline strength, jargon definition (does the first paragraph define domain terms?), visual hook (asciinema/GIF/screenshot/video), badge meaningfulness, where the value prop lands. **If a video is embedded**, check it uses the working pattern — bare `https://github.com/user-attachments/assets/<uuid>` URL on its own line, OR a GIF under `docs/`. A `<video src="...raw.githubusercontent.com/.../demo.mp4">` tag renders as nothing on github.com (the sanitizer strips it) — flag this as a real bug, not a style nit.
 
 **Angle 2 — Information architecture + section internals.** Section order, heading hierarchy (`#` vs `##` consistency), where deep guides live (inline vs `docs/`), table-of-contents threshold, where Contributing should live. **Also scrutinizes *internal* section structure** — not just the H2 sequence: flat paragraph blocks that jam ≥3 unrelated topics together (each topic invisible to Cmd-F), H3s whose entire body is one paragraph that doesn't justify a heading, key/flag enumerations written as comma-strings when a table would be scannable, implementation-detail H3s (e.g. exhaustive lists of binary names or flag values) that should compress to a sentence and let `--help` / config comments carry the detail. The smell test: "could a reader find each topic by skimming, or are three topics hiding inside one prose block?"
 
@@ -96,8 +117,10 @@ Present the synthesis with the four tiers, then use `AskUserQuestion` with 3–4
 - **Turn key/flag enumerations into a table when an alt-mapping is involved.** A two-column `Default / Alt` table makes the mapping obvious in one glance; comma-strings only work when there's no alternate to align against. **Corollary**: include unchanged-on-alt rows in the *same* table — repeat the default in the alt column. Don't split half the reference into a prose afterthought; that fragments the lookup.
 - **An H3 whose body is a list of implementation-detail binaries or flags is too heavy.** Compress to a sentence and let `--help` or source carry the enumeration. Exhaustive lists belong in code, not the README.
 - **Don't pre-document runtime UX the reader only encounters in context.** Lines like "the installer warns if X" or "the CLI prints a banner on first run" describe behavior the user meets at runtime — at which point the runtime UX is its own teacher. Either give the reader an actionable instruction *now* ("Add `~/.local/bin` to your `PATH`") or drop the line. Documenting what stdout will print is filler.
+- **Embedding a video.** GitHub strips `<video>` tags whose `src` isn't from `github.com/user-attachments` or `user-images.githubusercontent.com`, and a bare `raw.githubusercontent.com/.../demo.mp4` URL renders as a plain link, not a player. Use a `user-attachments` URL (renders inline on github.com only), a GIF under `docs/` (renders everywhere a README ends up), or a YouTube thumbnail (long walk-throughs). The `user-attachments` workflow requires a manual drag-drop the skill can't perform — surface the steps to the user and wait for the URL. See `references/github-markdown.md` for the full workflow and `references/avoid.md` for the stripped-`<video>` antipattern.
+- **Use GitHub-flavored alerts for callouts.** Replace `**Note:**`, plain `> Note:`, or emoji-prefixed callouts with the native alert syntax (`> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`) — github.com renders styled icon-bearing boxes; off-GitHub renderers fall back to plain blockquotes. Pick semantics deliberately: `[!IMPORTANT]` for must-notice info (security caveats, required env vars), `[!NOTE]` for neutral facts (supported platforms), `[!CAUTION]` only when the user could actually lose data. See `references/github-markdown.md` for the syntax and the full type-to-use-case table.
 
-Worked **Bad → Better** examples for each of the patterns above live in `references/avoid.md`. Read them when applying changes — the **Better** form usually points at the specific replacement shape.
+Worked **Bad → Better** antipatterns for each of the patterns above live in `references/avoid.md` — read them when applying changes, the **Better** form usually points at the specific replacement shape. Positive reference for GitHub-flavored markdown features (alerts, video embeds, future additions) lives in `references/github-markdown.md`.
 
 ## Composition
 
