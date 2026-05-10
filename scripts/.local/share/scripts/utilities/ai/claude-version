@@ -1,1 +1,89 @@
-/home/kanon/.dotfiles/scripts/.local/share/scripts/utilities/ai/claude-version
+#!/usr/bin/env bash
+set -euo pipefail
+
+SETTINGS_FILE="$HOME/.claude/settings.json"
+
+get_current_version() {
+    claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1
+}
+
+decrement_patch() {
+    local version="$1"
+    local major minor patch
+    IFS='.' read -r major minor patch <<< "$version"
+    if (( patch <= 0 )); then
+        echo "Error: patch version is already 0 ($version), cannot decrement" >&2
+        exit 1
+    fi
+    echo "${major}.${minor}.$((patch - 1))"
+}
+
+set_autoupdater() {
+    local action="$1"
+    if [[ ! -f "$SETTINGS_FILE" ]]; then
+        echo "Error: $SETTINGS_FILE not found" >&2
+        exit 1
+    fi
+
+    if [[ "$action" == "disable" ]]; then
+        jq '.env.DISABLE_AUTOUPDATER = "1"' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp" \
+            && mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
+        echo "  Auto-updater disabled in settings.json"
+    else
+        jq 'del(.env.DISABLE_AUTOUPDATER)' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp" \
+            && mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
+        echo "  Auto-updater re-enabled in settings.json"
+    fi
+}
+
+cmd_downgrade() {
+    local current target
+    current="$(get_current_version)"
+    if [[ -z "$current" ]]; then
+        echo "Error: could not detect current Claude version" >&2
+        exit 1
+    fi
+    target="$(decrement_patch "$current")"
+
+    echo "Current version: $current"
+    echo "Downgrading to:  $target"
+    echo ""
+
+    curl -fsSL https://claude.ai/install.sh | bash -s -- "$target"
+
+    set_autoupdater "disable"
+
+    echo ""
+    echo "Done. Claude pinned to $target."
+}
+
+cmd_upgrade() {
+    echo "Upgrading to latest Claude version..."
+    echo ""
+
+    set_autoupdater "enable"
+
+    curl -fsSL https://claude.ai/install.sh | bash -s
+
+    local new_version
+    new_version="$(get_current_version)"
+    echo ""
+    echo "Done. Claude updated to ${new_version:-latest}."
+}
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") <command>
+
+Commands:
+  downgrade   Install previous patch version and pin it (disable auto-updater)
+  upgrade     Update to latest version and unpin (re-enable auto-updater)
+
+EOF
+}
+
+case "${1:-}" in
+    downgrade) cmd_downgrade ;;
+    upgrade)   cmd_upgrade ;;
+    *)         usage; exit 1 ;;
+esac
