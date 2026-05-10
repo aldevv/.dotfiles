@@ -82,10 +82,13 @@ set -e
 cd ~/.dotfiles/<path>
 branch=$(git rev-parse --abbrev-ref HEAD)
 [ "$branch" = "HEAD" ] && { git checkout main 2>/dev/null || git checkout master; branch=$(git rev-parse --abbrev-ref HEAD); }
+set -o pipefail
 local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
 if [ -n "$local_files" ]; then
-  printf '%s\n' "$local_files" \
-    | "$HOME/.claude/skills/sync-dotfiles-full/scripts/precommit-scan.sh" --prefix=<path>
+  if ! printf '%s\n' "$local_files" \
+       | "$HOME/.claude/skills/sync-dotfiles-full/scripts/precommit-scan.sh" --prefix=<path>; then
+    echo "precommit-scan blocked <path>"; exit 7
+  fi
   export $(grep -v '^#' ~/.machine_metadata | xargs)
   git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
@@ -100,12 +103,14 @@ fi
 **Parent template** (run in the same message as the submodules):
 
 ```bash
-set -e
+set -e -o pipefail
 cd ~/.dotfiles
 local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
 if [ -n "$local_files" ]; then
-  printf '%s\n' "$local_files" \
-    | "$HOME/.claude/skills/sync-dotfiles-full/scripts/precommit-scan.sh"
+  if ! printf '%s\n' "$local_files" \
+       | "$HOME/.claude/skills/sync-dotfiles-full/scripts/precommit-scan.sh"; then
+    echo "precommit-scan blocked the parent wip commit"; exit 7
+  fi
   export $(grep -v '^#' ~/.machine_metadata | xargs)
   git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi

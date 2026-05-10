@@ -88,7 +88,7 @@ One bash invocation that does **everything** for the happy path: secret scan, co
 - **`exit 0`** = success, sync is done. Skip to Step 6 (report).
 
 ```bash
-set -e
+set -e -o pipefail
 cd ~/.dotfiles
 export $(grep -v '^#' ~/.machine_metadata | xargs)
 
@@ -98,9 +98,17 @@ export $(grep -v '^#' ~/.machine_metadata | xargs)
 # travel between machines. Leaving untracked files behind silently strands new
 # scripts / configs on the originating machine. The precommit scan and
 # `.gitignore` are the safety net; honor them both, but don't second-guess.
+#
+# `set -o pipefail` plus an explicit `if !`-guarded scan invocation makes the
+# commit unreachable when the scan exits non-zero. Without pipefail, the pipe's
+# overall exit code is the printf's (always 0) and the scan's BLOCKED status
+# silently slips by — that's how an earlier ad-hoc run committed flagged files.
 local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
 if [ -n "$local_files" ]; then
-  printf '%s\n' "$local_files" | "$HOME/.claude/skills/sync-dotfiles/scripts/precommit-scan.sh"
+  if ! printf '%s\n' "$local_files" | "$HOME/.claude/skills/sync-dotfiles/scripts/precommit-scan.sh"; then
+    echo "precommit-scan blocked the wip commit. Resolve the flagged files (or rephrase the docs that triggered the false positive) and retry."
+    exit 7
+  fi
   git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
 
