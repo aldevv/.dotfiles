@@ -213,9 +213,9 @@ Implemented in `scripts/precommit-scan.sh`. Step 2 pipes the union of `git diff 
 
 Three checks, in order — the symlink-loop guard runs first because a looping symlink makes the content grep fail silently with ELOOP and would otherwise let a self-loop slip through (real incident: dotfiles `dda112d8`):
 
-1. **Symlink loop** — `[ -L "$f" ] && stat -L "$f" 2>&1 | grep -qi 'too many levels'`
-2. **Suspicious filename** — matches `\.(env|pem|key|p12|pfx|ppk)$`, `^\.env(\.|$)`, or keywords `secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519`
-3. **Suspicious content** — `BEGIN PRIVATE KEY` blocks, `AKIA…`, `ghp_…`, `xox[baprs]-…`, `password=…`, `api_key:…`, `secret:…`
+1. **Symlink loop** — files where `stat -L` reports the recursion-limit error.
+2. **Suspicious filename** — common credential-bearing extensions (env / pem / key / pfx / ppk family) and dotenv variants, plus paths that name themselves after a credential type (passwords, private keys, ssh identities). Exact regex lives in the script.
+3. **Suspicious content** — RSA / ed25519 private-key headers, AWS access-key prefixes, GitHub personal-access-token prefixes, Slack tokens, and credential-style key=value or `key:` assignments. Exact regex lives in the script — kept out of these docs so the scan doesn't trip on its own description.
 
 Flags:
 - `--loop-only` — skip checks 2 and 3 (post-merge use)
