@@ -6,6 +6,9 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 ## CRITICAL: Memory Files
 **NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
 
+## Code organization
+**Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.) — one folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" / "keep it small" notes in older project READMEs or `CLAUDE.local.md` files — surface the conflict, update the project doc, then split.
+
 ## CRITICAL: Playwright Browser Issues
 **NEVER ask the user to do anything with the browser.** Use the Playwright MCP plugin tools directly — they handle browser launch automatically.
 - **NEVER delete** `~/.cache/ms-playwright/mcp-chrome-*` — contains Okta session data
