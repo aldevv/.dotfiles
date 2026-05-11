@@ -33,6 +33,7 @@ return {
   },
   {
     "MeanderingProgrammer/render-markdown.nvim",
+    enabled = false,
     dependencies = {
       "nvim-treesitter/nvim-treesitter",
       "nvim-tree/nvim-web-devicons",
@@ -62,6 +63,7 @@ return {
   },
   {
     "iamcco/markdown-preview.nvim",
+    -- enabled = false,
     build = function()
       local plugin_path = require("lazy.core.config").options.root .. "/markdown-preview.nvim/app"
       vim.fn.system("cd " .. vim.fn.shellescape(plugin_path) .. " && npm install")

@@ -6,6 +6,20 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 ## CRITICAL: Memory Files
 **NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
 
+## CRITICAL: Writing style
+**Forbidden punctuation: em-dash (—) and double-hyphen (--).** Do not use either in any user-facing text, commit messages, PR descriptions, READMEs, comments, docs, or chat replies. They make writing sound robotic. Rewrite with a comma, period, parenthesis, or colon instead. CLI flags like `--flag` are fine; the ban is on em-dashes and double-hyphens used as prose punctuation.
+
+**Forbidden: emojis.** Do not use emojis anywhere (chat, commits, PRs, READMEs, comments, docs, file contents). Applies even if the surrounding text or an existing file already uses them. Only exception: the user explicitly asks for an emoji in this turn.
+
+## Code organization
+**Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.) — one folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" / "keep it small" notes in older project READMEs or `CLAUDE.local.md` files — surface the conflict, update the project doc, then split.
+
+## Worktrees
+Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `$UTILITIES/stuff-git/wt`). Two rules when working in one:
+
+- **Mirror the main checkout's `.envrc`.** Worktrees inherit `.git` but NOT working-tree files like `.envrc`, so dev-env hooks defined there don't follow you in. When work starts in a worktree, copy `.envrc` from the main checkout (and run `direnv allow` once). If the main repo has no `.envrc`, do nothing — there's nothing to mirror.
+- **Promote repeated dev-binary build sequences to `.envrc`.** If the same multi-step build (e.g. `bun run build:bin && install -m 0755 dist/<repo> ~/.local/bin/<repo>-dev`) gets run more than a couple of times and the project has no Makefile target / `bin/` script for it, define it as an alias or shell function in `.envrc` (e.g. `<repo>-dev() { ... }`). Add it to **both** the main checkout's `.envrc` and every active worktree's copy so the command is available everywhere on `cd`. Don't pollute the project's source — `.envrc` stays gitignored and per-checkout.
+
 ## CRITICAL: Playwright Browser Issues
 **NEVER ask the user to do anything with the browser.** Use the Playwright MCP plugin tools directly — they handle browser launch automatically.
 - **NEVER delete** `~/.cache/ms-playwright/mcp-chrome-*` — contains Okta session data
@@ -54,7 +68,18 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 ### Location
 - **Default**: `$HOME/.claude/skills/<skill-name>/SKILL.md` — use this for all skills unless the skill is tightly coupled to a specific project. User-level skills must live under `~/.dotfiles/general/.claude/skills/<skill-name>/` and be stowed into `~/.claude/skills/` via GNU Stow, so they're versioned and available on every machine after `personal-push-all`.
 - **Project-specific** (rare): `.claude/skills/<skill-name>/SKILL.md` inside the repo — only when the skill depends on files, tooling, or context that only makes sense within that one project.
-- **Skill scripts** (when a skill needs helper scripts): `.claude/skills/<skill-name>/scripts/<name>.py`. Use `scripts/` (plural) — matches the nearby `lib/` naming used by hooks and reads as "the scripts this skill runs," not "a library of reusable code."
+- **Standard layout — every skill folder follows this shape**:
+
+  ```
+  ~/.claude/skills/<skill-name>/
+  ├── SKILL.md          # required — frontmatter + workflow prose
+  ├── scripts/          # optional — helper scripts (`.py`, `.sh`, `.ts`...)
+  └── references/       # optional — markdown the skill reads at runtime
+  ```
+
+  - **`scripts/`** (plural). Helper scripts the skill invokes. Use `scripts/` to mirror the `lib/` naming used by hooks; reads as "the scripts this skill runs," not "a library of reusable code." Keep them executable + idempotent.
+  - **`references/`** (plural). Markdown files the skill READS during a run — voice training, examples logs, lookup tables, decision trees the LLM follows. Anything the skill cites verbatim or learns from. Distinct from `scripts/` (executable helpers) and from external links (web docs aren't checked in). Append-only logs (e.g. `examples.md` with use counts) belong here too.
+  - Add a folder only when the skill needs it. A pure-prose skill is just `SKILL.md`.
 
 ### Required properties — every skill I create must be:
 

@@ -70,8 +70,8 @@ Run **one bash call per repo** (each submodule **and** the parent) in a single m
 
 1. ensures we're on a branch,
 2. checks for local changes,
-3. fast-paths empty diff (skip secret scan and commit),
-4. otherwise scans for secrets, commits if clean,
+3. fast-paths empty diff (skip pre-commit scan and commit),
+4. otherwise scans for secrets and symlink loops, commits if clean,
 5. pulls,
 6. pushes only if `@{u}..HEAD` is non-empty.
 
@@ -82,17 +82,15 @@ set -e
 cd ~/.dotfiles/<path>
 branch=$(git rev-parse --abbrev-ref HEAD)
 [ "$branch" = "HEAD" ] && { git checkout main 2>/dev/null || git checkout master; branch=$(git rev-parse --abbrev-ref HEAD); }
-diff_files=$(git diff --name-only HEAD)
-if [ -n "$diff_files" ]; then
-  while IFS= read -r f; do
-    [ -z "$f" ] && continue
-    if echo "$f" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519' \
-       || grep -qiE 'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' "$f"; then
-      echo "BLOCKED: possible secret in <path>/$f"; exit 7
-    fi
-  done <<< "$diff_files"
+set -o pipefail
+local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+if [ -n "$local_files" ]; then
+  if ! printf '%s\n' "$local_files" \
+       | "$HOME/.claude/skills/sync-dotfiles-full/scripts/precommit-scan.sh" --prefix=<path>; then
+    echo "precommit-scan blocked <path>"; exit 7
+  fi
   export $(grep -v '^#' ~/.machine_metadata | xargs)
-  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+  git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
 git pull --no-rebase origin "$branch"
 if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
@@ -105,19 +103,16 @@ fi
 **Parent template** (run in the same message as the submodules):
 
 ```bash
-set -e
+set -e -o pipefail
 cd ~/.dotfiles
-diff_files=$(git diff --name-only HEAD)
-if [ -n "$diff_files" ]; then
-  while IFS= read -r f; do
-    [ -z "$f" ] && continue
-    if echo "$f" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519' \
-       || grep -qiE 'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' "$f"; then
-      echo "BLOCKED: possible secret in $f"; exit 7
-    fi
-  done <<< "$diff_files"
+local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+if [ -n "$local_files" ]; then
+  if ! printf '%s\n' "$local_files" \
+       | "$HOME/.claude/skills/sync-dotfiles-full/scripts/precommit-scan.sh"; then
+    echo "precommit-scan blocked the parent wip commit"; exit 7
+  fi
   export $(grep -v '^#' ~/.machine_metadata | xargs)
-  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+  git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
 git pull --no-rebase origin main
 ```
@@ -209,25 +204,25 @@ Always run, regardless of whether anything was pushed. The fast `sync-dotfiles` 
 mkdir -p ~/.cache/sync-dotfiles && date +%s > ~/.cache/sync-dotfiles/last-full-sync && echo "recorded full-sync timestamp: $(date -d @$(cat ~/.cache/sync-dotfiles/last-full-sync))"
 ```
 
-If a hard failure occurred earlier (e.g. secret scan blocked, unresolved conflict), **skip this step** — the next `sync-dotfiles` invocation should still treat the full sync as overdue.
+If a hard failure occurred earlier (e.g. pre-commit scan blocked, unresolved conflict), **skip this step** — the next `sync-dotfiles` invocation should still treat the full sync as overdue.
 
 ---
 
-## Secret Scan Rules (reference)
+## Pre-commit scan (reference)
 
-The Step 3 templates inline this scan. Reproduced here for one-off / manual use:
+Implemented in `scripts/precommit-scan.sh`. Step 3 templates pipe the union of `git diff --name-only HEAD` (modified-tracked) and `git ls-files --others --exclude-standard` (untracked, gitignore-respecting) into it; per-submodule calls pass `--prefix=<path>` so parallel output identifies which repo flagged. The wider net plus the scan is what makes `git add -A` safe: untracked configs / scripts the user dropped under `~/.dotfiles` travel between machines automatically, while gitignored files and anything matching the secret/loop checks are filtered out.
 
-```bash
-# 1. Suspicious filename
-echo "<filename>" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519'
+Three checks, in order — the symlink-loop guard runs first because a looping symlink makes the content grep fail silently with ELOOP and would otherwise let a self-loop slip through (real incident: dotfiles `dda112d8`):
 
-# 2. Suspicious content
-grep -qiE \
-  'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' \
-  "<filepath>"
-```
+1. **Symlink loop** — files where `stat -L` reports the recursion-limit error.
+2. **Suspicious filename** — common credential-bearing extensions (env / pem / key / pfx / ppk family) and dotenv variants, plus paths that name themselves after a credential type (passwords, private keys, ssh identities). Exact regex lives in the script.
+3. **Suspicious content** — RSA / ed25519 private-key headers, AWS access-key prefixes, GitHub personal-access-token prefixes, Slack tokens, and credential-style key=value or `key:` assignments. Exact regex lives in the script — kept out of these docs so the scan doesn't trip on its own description.
 
-If either matches: don't stage/commit, print `BLOCKED: possible secret in <filepath>`, continue with other repos, include in final report.
+Flags:
+- `--loop-only` — skip checks 2 and 3 (the fast `sync-dotfiles` skill uses this for its post-merge guard)
+- `--prefix=<path>` — prepend `<path>/` to BLOCKED messages (used by Step 3's per-submodule template)
+
+Exits 0 if every input file passes; exits 7 (after scanning all of them) if any blocked. Reads filenames from stdin (newline-separated) or argv.
 
 ---
 

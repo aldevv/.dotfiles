@@ -195,6 +195,20 @@ alias gwtA/=". _worktree_create_branch 'first'"
 alias toworktree=". _toworktree"
 alias gg='cd $(gitRoot)'
 
+# wt — worktree helper at ~/worktrees/<repo>/<branch>. Bare `wt` fzf-picks a
+# worktree and cd's into it; subcommands (new, list, rm, clean, root, help)
+# delegate straight through.
+wt() {
+  local script="$UTILITIES/stuff-git/wt"
+  if [ "$#" -eq 0 ]; then
+    local target
+    target="$("$script" pick)" || return $?
+    [ -n "$target" ] && cd "$target"
+  else
+    "$script" "$@"
+  fi
+}
+
 # dotfiles
 alias dgp=". _dgp $DOTFILES"
 alias dgpa="personal-push"
