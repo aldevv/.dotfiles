@@ -154,6 +154,42 @@ Or — if PATH guidance is actually load-bearing — give the actionable form di
 
 ---
 
+## Describing internal mechanics that are transparent to the user
+
+A README line explains *how* the tool finds, resolves, or wires something — but the mechanic is invisible to the reader (they don't run it, see it, or pick between alternatives). The user gets working behavior; they don't need the call graph.
+
+**Bad** — from a Neovim plugin README's `## Install` section:
+
+```markdown
+`build` runs once at install/update time. `:MdPreviewInstall` is the user command the plugin registers in `setup()`; it shells out to the canonical `install.sh` with `PREFIX` pointing at the plugin's lazy.nvim directory, so the prebuilt `mdp` binary lands at `<plugin_dir>/bin/mdp`. Nothing is added to your `$PATH`; the plugin resolves the in-tree binary directly.
+```
+
+Five transparent-to-the-user mechanics in one paragraph:
+- "the user command the plugin registers in `setup()`" — internal wiring; the user types the command, they don't care where it's registered
+- "shells out to the canonical install.sh" — the user already followed the install instructions, they don't need the call chain
+- "with PREFIX pointing at the plugin's lazy.nvim directory" — internal env-var plumbing
+- "the plugin resolves the in-tree binary directly" — internal lookup logic
+- (the only user-visible facts here are: where the binary lands, and that `$PATH` is untouched)
+
+**Better** — keep only the parts with user-visible consequences:
+
+```markdown
+`build` runs once at install/update time. `:MdPreviewInstall` drops the prebuilt `mdp` binary into the plugin's own directory (`<plugin_dir>/bin/mdp`, typically `~/.local/share/nvim/lazy/md-preview.nvim/bin/mdp`); nothing is added to your `$PATH`.
+```
+
+Two user-visible facts (where the artifact lives, that the shell environment isn't polluted) survive. The internal lookup logic, the env var, the install-script call, and the `setup()`-registers-it phrasing are all dropped — they're how the code works, not how the user uses it.
+
+**Why it wins**: the user can act on "the binary lives at *X*" (delete it, debug it, point another tool at it) and on "nothing's added to your `$PATH`" (predict their shell behavior). They can't act on "the plugin resolves the in-tree binary directly" — that's narration of internal control flow. The code is the doc for code; the README is the doc for the user-facing surface.
+
+**Common variants to watch for:**
+
+- "uses *X* if available, otherwise falls back to *Y*" — when both produce the same end state, the user doesn't need the fork. Mention the fork only if it changes a user-visible outcome (different artifact, different runtime cost, different external dependency).
+- "the resolver prefers *A* over *B*" / "the plugin reads its config from *X* then *Y*" — internal lookup order. Cut unless the order is something the user can deliberately exploit.
+- "shells out to *X* under the hood" — implementation. Reframe to the user-facing effect ("downloads a prebuilt release", not "shells out to install.sh which downloads...").
+- "the user command the plugin registers in `setup()`" — wiring detail. The command's name is the only thing the user needs.
+
+---
+
 ## Embedding a video via `<video>` tag pointing at a `raw.githubusercontent.com` URL
 
 The instinct: drop an mp4 in the repo, reference it with `<video src="...raw...">`. It silently renders as **nothing** on github.com — the README sanitizer strips `<video>` tags whose `src` isn't from `github.com/user-attachments` or `user-images.githubusercontent.com`. The author tests it locally (where the tag works), commits, pushes, and discovers the demo is invisible on the rendered README.

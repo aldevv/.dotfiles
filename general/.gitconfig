@@ -31,8 +31,8 @@
 [credential "https://live.roost.on.epicgames.com"]
 	helper = /home/kanon/.local/bin/claude-gateway credential-helper
 [credential "https://github.com"]
-	helper =
+	helper = 
 	helper = !/usr/bin/gh auth git-credential
 [credential "https://gist.github.com"]
-	helper =
+	helper = 
 	helper = !/usr/bin/gh auth git-credential
