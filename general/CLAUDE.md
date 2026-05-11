@@ -158,6 +158,16 @@ Every `hook.sh` / `hook.py` begins with a comment block containing:
 Reference docs live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`). Read these before guessing or asking, when relevant:
 - **`~/.claude/files/hook-debugging.md`** — debugging Claude Code hooks. Read when a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
 
+## Code style
+
+### Comments
+Default to writing no comments. Add one only when the **why** is non-obvious —
+a hidden constraint, a subtle invariant, a workaround for a specific bug, or
+behavior that would surprise a reader. If well-named identifiers and the code
+already make the **what** obvious, the comment is redundant; delete it.
+This applies to existing comments too: when touching code, if a comment
+restates what the next line already says, trim it.
+
 ## Commits & PRs
 - **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
 
