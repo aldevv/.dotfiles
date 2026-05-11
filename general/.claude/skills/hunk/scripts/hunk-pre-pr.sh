@@ -77,7 +77,7 @@ range="origin/${base_branch}...HEAD"
 repo_name="$(basename "$repo_root")"
 branch_name="$(cd "$repo_root" && git rev-parse --abbrev-ref HEAD 2>/dev/null)"
 [[ -n "$repo_name" && -n "$branch_name" ]] || exit 0
-window_name="hunk-${repo_name}-${branch_name}"
+window_name="hunk-${repo_name}:${branch_name}"
 session_name="$(tmux display-message -p '#{session_name}')"
 
 state_root="${XDG_RUNTIME_DIR:-/tmp}/hunk-state"

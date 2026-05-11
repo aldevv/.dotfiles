@@ -74,7 +74,8 @@ Once `<RANGE>` is known, single message with these in parallel:
 - `git diff --no-color <RANGE>` (full diff for you to read; serves double duty as the emptiness check, no separate `--stat` call needed)
 - Open Hunk in tmux. Pick from Round 1's pane count:
   - 1 pane → `tmux split-window -h "cd <REPO_ROOT> && hunk diff <RANGE>"`
-  - >1 panes → `tmux new-window -t "$(tmux display-message -p '#{session_name}')" -n "hunk-$(basename <REPO_ROOT>)-$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" "cd <REPO_ROOT> && hunk diff <RANGE>"`
+  - >1 panes → `tmux new-window -t "$(tmux display-message -p '#{session_name}')" -n "hunk-$(basename <REPO_ROOT>):$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" "cd <REPO_ROOT> && hunk diff <RANGE>"`
+  - The window-name shape is `hunk-<repo>:<branch>`. The status-bar regex splits on the first non-path char, so the left ("folder" color, slightly whiter) reads `hunk-<repo>` and the right ("program" color, soft blue) reads the branch — branch becomes the most visible signal at a glance. The repo-included prefix keeps dedupe per-branch across multiple repos in the same tmux session.
   - If the user said "open in a new window" even with one pane, skip the conditional and go straight to `new-window`.
 - `sleep 2 && hunk session list` (delayed probe: gives Hunk ~2s to register, then confirms the session is live)
 
