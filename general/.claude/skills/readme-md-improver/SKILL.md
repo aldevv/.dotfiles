@@ -1,10 +1,10 @@
 ---
-name: improve-readme-md
-description: Spawn 5 parallel critique agents to review a README from distinct angles (first impression, information architecture, install correctness, content gaps, ecosystem comparison), synthesize the findings into a tiered punch-list, and apply the changes the user picks. Triggers on "/improve-readme-md", "improve the readme", "review my readme", "audit the readme", "make the readme better", "have agents look at the readme", or any request for a multi-angle README review. Do NOT trigger for typo passes, single-section tweaks, or when the user just wants a one-line edit — direct edits are faster than a 5-agent fan-out.
+name: readme-md-improver
+description: Spawn 5 parallel critique agents to review a README from distinct angles (first impression, information architecture, install correctness, content gaps, ecosystem comparison), synthesize the findings into a tiered punch-list, and apply the changes the user picks. Triggers on "/readme-md-improver", "improve the readme", "review my readme", "audit the readme", "make the readme better", "have agents look at the readme", or any request for a multi-angle README review. Do NOT trigger for typo passes, single-section tweaks, or when the user just wants a one-line edit — direct edits are faster than a 5-agent fan-out.
 argument-hint: "[path-to-readme]" — optional. Defaults to ./README.md at the repo root. Pass a different path for a non-root README (e.g. crates/foo/README.md, docs/README.md).
 ---
 
-# improve-readme-md
+# readme-md-improver
 
 Multi-agent README review: 5 critique angles in parallel, synthesized into a tiered punch-list, then applied with user confirmation.
 
@@ -31,7 +31,7 @@ Multi-agent README review: 5 critique angles in parallel, synthesized into a tie
 
 ## When to use
 
-- User says "improve the readme", "review my readme", "audit the readme", "make the readme better", or invokes `/improve-readme-md`.
+- User says "improve the readme", "review my readme", "audit the readme", "make the readme better", or invokes `/readme-md-improver`.
 - The user wants a *thorough* multi-perspective critique, not a typo pass.
 
 ## When NOT to use

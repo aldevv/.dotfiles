@@ -1,6 +1,6 @@
 # Skill conventions reference
 
-Distilled from `~/CLAUDE.md`'s "Skills" section. Backs angle-1 (frontmatter / triggering) and angle-5 (portability / guardrails) of `improve-skill-md`. Read this before fanning out so the critics' rules match the user's project-wide conventions.
+Distilled from `~/CLAUDE.md`'s "Skills" section. Backs angle-1 (frontmatter / triggering) and angle-5 (portability / guardrails) of `skill-md-improver`. Read this before fanning out so the critics' rules match the user's project-wide conventions.
 
 **When to read this**: during step 1 (gather context). Pass the relevant rules into the angle-1 and angle-5 agent prompts so they critique against this baseline.
 

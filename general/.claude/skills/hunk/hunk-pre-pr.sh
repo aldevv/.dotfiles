@@ -168,12 +168,17 @@ Apply a comment ONLY when the diff contains:
 
 DO NOT comment on: behavioral changes obvious from the diff, cross-file invariants/rollout footguns/test gaps/env-var changes (those belong in the PR description, not the hunk session), pure renames, signature widening, comment-only edits, generated files, or anything a careful read makes obvious.
 
+TONE — when you do apply a comment:
+- Short. One or two sentences max. If you need more, split it or drop it.
+- Informal, plain language. No jargon, no hedges, no ceremony. Write like you'd explain it to a colleague over chat. Lowercase, contractions, fragments are fine.
+- \`summary\` is the headline (~80 chars, no period needed). \`rationale\` is the "why" in one or two short sentences — don't restate the summary.
+
 If \`hunk session list\` shows no session for $repo_root yet, wait 2s and retry up to 3 times.
 
 STEP 1 — REMOVE THE PLACEHOLDER (always, regardless of whether you have comments to apply):
 
   hunk session comment list --repo $repo_root --json | \\
-    jq -r '.comments[] | select(.summary | startswith("[pending]")) | .id' | \\
+    jq -r '.comments[] | select(.summary | startswith("[pending]")) | .commentId' | \\
     while read -r cid; do hunk session comment rm "" "\$cid" --repo $repo_root; done
 
   (The empty positional is required: hunk's rm command takes [sessionId] then <commentId> as positionals; --repo replaces session lookup but leaves the first positional slot needing an empty string.)

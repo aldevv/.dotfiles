@@ -12,201 +12,126 @@ allowed-tools:
 
 # Hunk
 
-Read the diff and compose the review notes **before** opening Hunk, then
-open the TUI and attach the notes immediately. By the time the user looks
-at the window, the inline annotations are already there — no awkward gap
-where they're staring at an empty review while the model thinks.
-
-**Comments are reserved for complex flows and difficult paths.** If the
-diff doesn't have any, do not apply any comments — clear the `[pending]`
-placeholder (see "Skip-when-trivial" below) and stop. Mechanical changes,
-renames, signature widening, simple bug fixes, and clearly-readable
-refactors don't get comments.
+Open the Hunk TUI and attach review notes for any complex flows or
+difficult paths in the diff. Default to applying nothing: comments are
+reserved for things a careful reader would still find non-obvious.
 
 **User input**: $ARGUMENTS
 
-## Step 0 — Always read the bundled hunk skill first
+## Parallelism rules
 
-Before doing anything else (parsing args, running git, opening tmux), read
-the upstream session-control reference shipped with the binary:
+Fire as much as possible in parallel. The workflow is structured as three
+rounds, where everything within a round goes in a single message with
+parallel tool calls. Inter-round work is serial only because later rounds
+need earlier rounds' outputs (range, pane count, diff text).
 
-```bash
-cat "$(hunk skill path)"
-```
+The rounds:
 
-That file is the source of truth for `hunk session ...` subcommands, the
-exact `comment apply` payload schema, and `navigate` targeting rules. Do
-NOT skip this step — the rest of the workflow assumes you've just refreshed
-on it.
+1. **Discovery** (parallel): bundled skill, repo root, default branch, pane count, hook-prompt state, (if PR arg) `gh pr view`.
+2. **Open + read** (parallel): full diff, open Hunk in tmux, verify session.
+3. **Apply** (sequential within the round): `comment apply` then `navigate`. These race if parallel.
 
-## Workflow
+## Round 1 — Discovery (everything parallel)
 
-The order matters: **read bundled skill → analyze diff → open Hunk → attach
-notes (or clear placeholder)**. Don't open Hunk first and then go think
-about what to say.
+Fire ALL of these in a single message:
 
-### 1. Resolve the target (parallel)
-
-Parse `$ARGUMENTS`:
-
-- `--pr <N>` / `pr <N>` / bare `<N>` (numeric) → resolve via
-  `gh pr view <N> --json baseRefName,headRefName,headRepository`, then
-  build `origin/<base>...<head-branch>`.
-- `<ref>` or `<range>` (e.g. `HEAD~1`, `main...HEAD`, `origin/master..HEAD`)
-  → pass through verbatim.
-- Empty → default to `<remote>/<default-branch>...HEAD` based on
-  `git remote show origin | sed -n 's/.*HEAD branch: //p'`.
-
-Run **in a single message, in parallel**:
-
+- `cat "$(hunk skill path)"` (bundled session-control reference, the source of truth for `hunk session ...` semantics)
 - `git rev-parse --show-toplevel`
-- `git remote show origin | sed -n 's/.*HEAD branch: //p'`
-- `pwd`
-- (when arg is a PR number) `gh pr view <N> --json baseRefName,headRefName,headRepository`
+- `git symbolic-ref --short refs/remotes/origin/HEAD` (faster than `git remote show origin`; the default branch is `${out#origin/}`)
+- `tmux display-message -p '#{window_panes}'` (drives split-vs-new-window in Round 2)
+- `test -f "$HOME/.cache/hunk/state.json" && cat "$HOME/.cache/hunk/state.json" || echo MISSING` (Round 4 prompt state)
+- If `$ARGUMENTS` looks like a PR number (`--pr N` / `pr N` / bare `N`): also fire `gh pr view <N> --json baseRefName,headRefName,headRepository`
 
-Once the range is known, confirm the diff has content with
-`git diff --stat <RANGE>`. If empty, tell the user and stop — do not open
-Hunk.
+If `$TMUX` is unset (you're not inside tmux), tell the user to run Hunk in a tmux session first and stop. `tmux display-message` in Round 1 will fail loudly if there's no server.
 
-### 2. Read & analyze the diff (BEFORE opening Hunk)
+Resolve `<RANGE>` from `$ARGUMENTS`:
 
-```bash
-git diff --no-color <RANGE>
-```
+| `$ARGUMENTS` | `<RANGE>` |
+|---|---|
+| empty | `origin/<default>...HEAD` |
+| `HEAD~1`, `main..feature`, `origin/master..HEAD`, etc. | pass through verbatim |
+| `--pr N` / `pr N` / numeric `N` | `origin/<base>...<head>` from `gh pr view` |
+| (working-tree review, no commits) | no range; use `hunk diff` / `git diff` with no args |
+| (staged review) | `hunk diff --staged` / `git diff --staged` |
 
-Read the full diff and decide whether it contains any **complex flows or
-difficult paths** (see "Comment scope" below). If yes, compose the comment
-payload and map files → 1-based hunk indices using the `@@ -X,Y +A,B @@`
-headers (the Nth hunk in a file's diff is `hunkNumber: N`). If no, prepare
-to skip.
+## Round 2 — Open Hunk + read diff (parallel)
 
-This step is the "review" — finish it before launching the TUI.
+Once `<RANGE>` is known, single message with these in parallel:
 
-### 3. Open Hunk + attach notes (or clear placeholder)
+- `git diff --no-color <RANGE>` (full diff for you to read; serves double duty as the emptiness check, no separate `--stat` call needed)
+- Open Hunk in tmux. Pick from Round 1's pane count:
+  - 1 pane → `tmux split-window -h "cd <REPO_ROOT> && hunk diff <RANGE>"`
+  - >1 panes → `tmux new-window -t "$(tmux display-message -p '#{session_name}')" -n "hunk-$(basename <REPO_ROOT>)-$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" "cd <REPO_ROOT> && hunk diff <RANGE>"`
+  - If the user said "open in a new window" even with one pane, skip the conditional and go straight to `new-window`.
+- `sleep 2 && hunk session list` (gives Hunk time to register, then confirms the session is live)
 
-Fire these together in a single message:
+Both `split-window` and `new-window` auto-switch focus to the new pane/window.
 
-```bash
-# Call A — open Hunk. If the current tmux window only has one pane, split
-# right (less window churn for casual use); otherwise open a new window.
-# Window name (multi-pane case): hunk-<repo>-<branch> so multiple reviews
-# don't collide and a second invocation for the same branch can dedupe
-# instead of stacking up.
-if [[ "$(tmux display-message -p '#{window_panes}')" == "1" ]]; then
-  tmux split-window -h "cd <REPO_ROOT> && hunk diff <RANGE>"
-else
-  tmux new-window -t "$(tmux display-message -p '#{session_name}')" \
-    -n "hunk-$(basename <REPO_ROOT>)-$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" \
-    "cd <REPO_ROOT> && hunk diff <RANGE>"
-fi
-```
+If the diff returns empty, tell the user and stop. The Hunk window will be empty too; either close it (`tmux kill-pane -t <pane>`) or leave it for the user.
+
+## Round 3 — Apply (or skip)
+
+Read the diff. Decide whether it contains complex flows or difficult paths (see "Comment scope"). Then:
+
+**If real comments to apply** — fire these two SEQUENTIALLY (do not parallelize: navigate races apply and may find nothing):
 
 ```bash
-# Call B — sleep + verify the session is live
-sleep 2 && hunk session list
+cat <<'JSON' | hunk session comment apply --repo <REPO_ROOT> --stdin
+{
+  "comments": [
+    {"filePath": "path/to/file.go", "hunkNumber": 1, "summary": "...", "rationale": "..."}
+  ]
+}
+JSON
 ```
-
-(`tmux new-window` and `tmux split-window` without `-d` auto-switch focus
-to the new pane/window, which is what we want.) If the user explicitly
-asks to "open in a new window" even when only one pane is present, skip
-the conditional and go straight to `tmux new-window`.
-
-Once the session is live:
-
-- **If complex flows or difficult paths exist** — apply notes in **one
-  batch** and jump to the first one:
-  ```bash
-  cat <<'JSON' | hunk session comment apply --repo <REPO_ROOT> --stdin
-  {
-    "comments": [
-      {"filePath": "path/to/file.go", "hunkNumber": 1, "summary": "...", "rationale": "..."},
-      ...
-    ]
-  }
-  JSON
-  ```
-  ```bash
-  hunk session navigate --repo <REPO_ROOT> --next-comment
-  ```
-
-- **If nothing complex** — go straight to "Skip-when-trivial" below.
-
-If `comment apply` rejects a target (path or hunk index mismatch), re-run
-`hunk session review --repo <REPO_ROOT> --json` and reconcile the file
-paths and hunk counts before retrying — only fall back to this on error.
-
-### 3b. Skip-when-trivial — clear the placeholder
-
-The hook drops a single `[pending] AI review in progress…` comment as soon
-as the Hunk session registers (so the user sees the window isn't empty
-while the parent session thinks). When the diff has nothing complex worth
-explaining, you must remove that placeholder so the user isn't left
-staring at "AI review in progress" forever:
 
 ```bash
-hunk session comment list --repo <REPO_ROOT> --json \
-  | jq -r '.comments[] | select(.summary | startswith("[pending]")) | .id' \
-  | while read -r cid; do
-      hunk session comment rm "" "$cid" --repo <REPO_ROOT>
-    done
+hunk session navigate --repo <REPO_ROOT> --next-comment
 ```
 
-(The empty positional is required: `hunk session comment rm` takes
-`[sessionId]` then `<commentId>` as positionals; `--repo` replaces session
-lookup but leaves the first slot needing an empty string.)
+Map files → 1-based hunk indices from the `@@ -X,Y +A,B @@` headers in the diff text. If `comment apply` rejects on a path/hunk mismatch, fall back to `hunk session review --repo <REPO_ROOT> --json` to confirm structure (the JSON shape is `.review.files[].path` and `.review.files[].hunks[]`), then retry.
 
-After clearing, briefly tell the user the diff was straightforward and no
-review comments were warranted — don't apply an empty placeholder of your
-own, just leave the session uncommented.
-
-### 4. One-time prompt: install the pre-PR/MR hook
-
-State file: `$HOME/.cache/hunk/state.json` (XDG cache — machine-local, never synced into the dotfiles repo).
-
-After the review is attached (or the placeholder cleared), check for the
-state file:
+**If nothing worth commenting on** — clear any `[pending]` placeholder (the pre-PR/MR hook drops one; `/hunk` usually doesn't) and stop:
 
 ```bash
-test -f "$HOME/.cache/hunk/state.json" && cat "$HOME/.cache/hunk/state.json"
+hunk session comment list --repo <REPO_ROOT> --json | \
+  jq -r '.comments[] | select(.summary | startswith("[pending]")) | .commentId' | \
+  while read -r cid; do hunk session comment rm "" "$cid" --repo <REPO_ROOT>; done
 ```
 
-- **File exists** → skip this step entirely (already asked once).
-- **File missing** → ask once via AskUserQuestion:
+The empty positional is required: `hunk session comment rm` takes `[sessionId]` then `<commentId>` as positionals; `--repo` replaces session lookup but leaves the first slot needing an empty string.
 
-  Question: "Install a PreToolUse hook that auto-runs `hunk`
-  right before any `gh pr create` or `glab mr create`? Hunk opens in a
-  new tmux window and the parent Claude session fills it with review
-  comments for any complex flows in the diff (or clears the placeholder
-  if there's nothing complex)."
+Tell the user the diff was straightforward and no review comments were warranted.
+
+## Round 4 — One-time hook-install prompt
+
+You already loaded `$HOME/.cache/hunk/state.json` in Round 1.
+
+- File exists → skip this step entirely (already asked once).
+- File missing → ask once via AskUserQuestion:
+
+  Question: "Install a PreToolUse hook that auto-runs `hunk` right before any `gh pr create` or `glab mr create`? Hunk opens in a new tmux window and the parent Claude session fills it with review comments for any complex flows in the diff (or clears the placeholder if there's nothing complex)."
 
   Options:
   1. **Yes, install it** — write the hook script + register in settings.json
   2. **No, skip** — record the decision so we don't ask again
   3. **Ask me later** — do NOT write state; re-asks next run
 
-On **Yes**:
+On **Yes**, fire these two in parallel:
 
-1. Symlink the script that ships with this skill into `~/.claude/hooks/`
-   (single source of truth — the script lives in the skill dir alongside
-   `SKILL.md`):
-   ```bash
-   mkdir -p "$HOME/.claude/hooks" && \
-     ln -sf "$HOME/.claude/skills/hunk/hunk-pre-pr.sh" \
-            "$HOME/.claude/hooks/hunk-pre-pr.sh"
-   ```
-   (Use `cp -p` instead of `ln -sf` if you want a standalone copy that
-   doesn't update when the skill is synced.)
-2. Read `$HOME/.claude/settings.json`, add **two** `PreToolUse` entries
-   under `hooks` matching `Bash(gh pr create:*)` and
-   `Bash(glab mr create:*)`, both calling the same script. If
-   `PreToolUse[].matcher == "Bash"` already exists, append to its `hooks`
-   array — don't duplicate the matcher object itself.
-3. Write the state file (create the cache dir if missing):
-   ```bash
-   mkdir -p "$HOME/.cache/hunk" && \
-     printf '{"hookInstalled": true, "promptedAt": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-     > "$HOME/.cache/hunk/state.json"
-   ```
+```bash
+mkdir -p "$HOME/.claude/hooks" && \
+  ln -sf "$HOME/.claude/skills/hunk/hunk-pre-pr.sh" \
+         "$HOME/.claude/hooks/hunk-pre-pr.sh"
+```
+
+```bash
+mkdir -p "$HOME/.cache/hunk" && \
+  printf '{"hookInstalled": true, "promptedAt": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  > "$HOME/.cache/hunk/state.json"
+```
+
+Then read `$HOME/.claude/settings.json` and add **two** `PreToolUse` entries under `hooks` matching `Bash(gh pr create:*)` and `Bash(glab mr create:*)`, both calling the same script. If a matcher entry for `Bash` already exists, append to its `hooks` array instead of duplicating the matcher object.
 
 On **No**:
 ```bash
@@ -217,99 +142,116 @@ mkdir -p "$HOME/.cache/hunk" && \
 
 On **Ask me later**: do not write state.
 
+## Comment scope — only complex flows and difficult paths
+
+**The bar is high.** Default to applying nothing.
+
+Apply when:
+
+- **Complex flows** — fan-out/await, retry loops with subtle conditions, async patterns, recursion, non-obvious state transitions. One brief shape-of-the-flow note at the entry point ("this fans out N tasks then awaits all, retrying any that return WouldBlock"). Never per-step narration.
+- **Difficult paths** — a non-obvious invariant the reader has to hold in their head, a subtle ordering requirement, a workaround for a specific bug or platform quirk, a control-flow edge that's easy to misread.
+
+Do NOT comment on:
+
+- Behavioral changes obvious from the diff itself (return-shape changes, new branches a careful reader will catch).
+- Cross-file invariants, rollout footguns, test gaps, env-var changes. Those belong in the PR description, not in Hunk.
+- Pure renames, signature widening, comment-only changes, generated files.
+- Anything a careful read of the function makes obvious.
+
+## Tone — short, informal, plain words
+
+When you do apply a comment:
+
+- **Match length to complexity.** A simple observation gets a one-line rationale. A genuinely complex flow can get two or three sentences. Don't pad simple things with caveats, restatements, or background. If the rationale repeats the summary in longer words, cut the rationale.
+- **Plain words.** Write like you'd tell a colleague over chat. Lowercase, contractions, fragments are fine. Skip "moreover", "thus", "ensure that", "deliberately maintains", "asymmetric invariant", "subsequently", "in order to".
+- `summary` is a chat-line headline (~80 chars, no period). `rationale` is the "why" in one or two sentences. Don't restate the summary.
+
+### Be unambiguous about who you're talking to
+
+A Hunk note is read by the reviewer (and possibly the PR author). It's NOT a code comment, NOT a TODO for future-you, and NOT an instruction the reviewer can act on. So avoid bare imperatives like "don't unify these" or "remember to X" — the reviewer can't tell whether you're telling them, the PR author, or some hypothetical future maintainer, and they can't act on any of those.
+
+Instead:
+
+- **Explain what the code is doing and why** (informational — the most common case). Phrase as "this works like X because Y", or open with "intentional:" / "heads-up:" if the thing might look like a bug at first glance.
+- **Flag something the PR author should change** (actionable). Phrase as "this should be X" or "would [the PR author] mind doing Y here". Say it's a suggestion if it's a suggestion.
+- If you find yourself writing an imperative aimed at no one in particular, it's a code comment, not a review note. Drop it.
+
+### Don't narrate the act of reviewing
+
+Write the observation, not a description of the act of writing it. Cut:
+
+- "flagging this so…"
+- "noting that…"
+- "calling this out because…"
+- "just FYI…"
+- "for the reviewer's awareness…"
+
+The comment **is** the flag/note/call-out — saying "I am flagging this" is the same kind of noise as "I am writing this paragraph". A reviewer doesn't need to be told that the comment exists; they're reading it.
+
+If you need a one-word signal that a note is informational and needs no action, the compact options are `intentional:`, `heads-up:`, or just letting the explanation speak for itself.
+
+Direct consequence: if you write a note describing a deliberate-looking-weird thing, end with the *consequence of getting it wrong* rather than meta-talk. "unifying these would break X" is better than "flagging so future-me doesn't unify these."
+
+### Worked example
+
+The diff: an install function checks `paths.mdp_bin()` (in-tree only) while the runtime resolver `paths.resolve_mdp()` accepts in-tree OR `$PATH`. The asymmetry is deliberate.
+
+Bad (formal, jargon, redundant):
+> "Install check is in-tree-only; runtime resolve falls back to $PATH. Keep them asymmetric."
+> "M.run() short-circuits on paths.mdp_bin() (not mdp_available()) on purpose: :MdPreviewInstall must always produce the self-contained..."
+
+Bad-but-better (informal, but ambiguous — who is "don't unify" aimed at?):
+> "install always grabs the in-tree copy; runtime takes whatever's around. don't unify these with `mdp_available()`."
+
+Still bad (meta-narration — "flagging" describes the act of commenting):
+> rationale ends with: "flagging so it doesn't look like a bug worth unifying later."
+
+Still too long (correct content, but padded for a simple observation):
+> summary: "intentional: install short-circuits on in-tree only, runtime resolver takes in-tree OR $PATH"
+> rationale: "the check here is `paths.mdp_bin()`, not `paths.mdp_available()`. if install also short-circuited on a global `mdp`, `:MdPreviewInstall` would silently do nothing for anyone who'd already `go install`'d the binary, so they'd never get the self-contained in-tree copy. `resolve_mdp()` at runtime accepts either, so those users still work without re-installing. unifying the two checks would break the install step for them."
+
+Good (chat-line, length matches complexity):
+> summary: "intentional: install checks in-tree only, runtime takes either"
+> rationale: "if install short-circuited on global `mdp` too, users with a pre-existing `go install` would never get the in-tree copy. `resolve_mdp()` still handles them at runtime."
+
 ## Hook script
 
-The shipped script lives next to this `SKILL.md` at
-`hunk-pre-pr.sh` (so editing it edits one file, and `/sync-dotfiles`
-distributes it across machines). Read it directly when you need to know
-exactly what runs:
+The shipped script lives next to this `SKILL.md` at `hunk-pre-pr.sh` (single source of truth, distributed via `/sync-dotfiles`). Read it when you need to know exactly what runs:
 
 ```bash
 cat "$HOME/.claude/skills/hunk/hunk-pre-pr.sh"
 ```
 
-It fires for both `Bash(gh pr create:*)` and `Bash(glab mr create:*)`,
-and the body is git-only (uses `origin`'s default branch as the base),
-so it works for either provider.
+It fires for both `Bash(gh pr create:*)` and `Bash(glab mr create:*)`, and the body is git-only (uses `origin`'s default branch as the base), so it works for either provider.
 
 What it does at a glance:
 
-1. Bails if not inside tmux (no place to open a new window).
+1. Bails if not inside tmux.
 2. Finds the repo root and `origin`'s default branch.
 3. Bails if there's no diff between `HEAD` and the remote default branch.
-4. Opens `hunk diff <range>` in a new tmux window (auto-switching focus).
-5. Spawns a placeholder poller in the background: waits up to 15s for the
-   hunk session to register, then drops a single `[pending] AI review in
-   progress…` comment so the user has visible signal during the ~20–60s
-   the parent session takes to read the diff.
-6. Returns `permissionDecision: "deny"` with a brief instructing the
-   parent session to:
-   - Read the pre-computed diff.
-   - Decide whether the diff has complex flows or difficult paths.
-   - If yes: remove the `[pending]` placeholder and apply real comments.
-   - If no: remove the `[pending]` placeholder and apply nothing.
-   - Re-run the original `gh pr create` / `glab mr create` command.
-7. On retry the hook surfaces an Allow/Deny prompt (default mode) or
-   asks the user to confirm in conversation (bypassPermissions mode).
+4. Opens `hunk diff <range>` in a new tmux window or pane.
+5. Background: waits up to 15s for the session to register, then drops a single `[pending] AI review in progress…` comment so the user has visible signal during the ~20–60s the parent session takes to compose comments.
+6. Returns `permissionDecision: "deny"` with a brief telling the parent session to read the diff, decide complex-vs-trivial, clear the placeholder, apply real comments (or none), then re-run the PR/MR command.
+7. On retry the hook surfaces an Allow/Deny prompt.
 
-To make the hook itself **block** PR/MR creation until the user closes
-Hunk, change the final `exit 0` to `exit 2`; the user then re-runs the
-PR/MR command after reviewing.
-
-## Comment scope — only complex flows and difficult paths
-
-**The bar is high.** A comment must explain something a careful reader
-would still find non-obvious after reading the function. Default to
-applying nothing.
-
-Apply a comment when:
-
-- **Complex flows** — multi-step coordination, non-obvious state
-  transitions, recursion, async patterns, fan-out/await, retry loops with
-  subtle conditions. One brief comment at the entry point explaining the
-  *shape* of the flow ("this fans out N tasks then awaits all, retrying
-  any that return WouldBlock") — never per-step narration.
-- **Difficult paths** — code with a non-obvious invariant the reader has
-  to hold in their head, a subtle ordering requirement, a workaround for
-  a specific bug or platform quirk, or a control-flow edge that's easy to
-  misread.
-
-**Do NOT comment on:**
-
-- Behavioral changes that are clear from the diff itself (return-shape
-  changes, new branches that any careful reader will catch).
-- Cross-file invariants, rollout footguns, test gaps, env-var changes —
-  those belong in the PR description, not in the hunk session.
-- Pure renames, signature widening, comment-only changes, generated-file
-  regenerations.
-- Anything a careful read of the function makes obvious.
-
-If the diff is entirely mechanical or the new code is straightforward,
-**apply nothing** and clear the placeholder per "Skip-when-trivial".
-
-Each comment that does get applied: a short `summary` (one-line headline)
-plus a `rationale` (why-it-matters / what-shape-the-flow-has). Both render
-in the Hunk TUI.
+To make the hook **block** PR/MR creation until the user closes Hunk, change the final `exit 0` to `exit 2`.
 
 ## Agent notes visibility
 
-If the user reports "I don't see the comments", they likely have
-`agent_notes = false` in their `~/.config/hunk/config.toml`. Reload with
-the flag set so the existing comments show up:
+If the user reports "I don't see the comments", they likely have `agent_notes = false` in their `~/.config/hunk/config.toml`. Reload with the flag so existing comments show up:
 
 ```bash
 hunk session reload --repo <REPO_ROOT> -- diff --agent-notes <RANGE>
 ```
 
-**WARNING**: `reload` clears all live comments. Re-apply the batch
-afterwards.
+**WARNING**: `reload` clears all live comments. Re-apply the batch afterwards.
 
 ## Common arguments → command mapping
 
 | User says | Command to run |
 |---|---|
 | `/hunk` (no arg) | `hunk diff <remote-default>...HEAD` |
-| `/hunk HEAD~1` | `hunk diff HEAD~1` (last commit) |
+| `/hunk HEAD~1` | `hunk diff HEAD~1` |
 | `/hunk --pr 30` | resolve via `gh pr view`, `hunk diff <base>...<head>` |
 | `/hunk main..feature` | `hunk diff main..feature` |
 | (working tree changes) | `hunk diff` (no args) |
@@ -317,19 +259,10 @@ afterwards.
 
 ## Reference — bundled hunk session skill
 
-For any `hunk session ...` subcommand or comment-targeting question, the
-upstream skill in the binary is the source of truth:
+The bundled skill `cat "$(hunk skill path)"` (already loaded in Round 1) is the source of truth. Key reminders:
 
-```bash
-cat "$(hunk skill path)"
-```
-
-Key reminders from there:
-
-- `--repo <path>` selects sessions by their loaded repo root
-- `comment apply` requires `--stdin` for batch JSON
-- `comment apply` payload items must specify `filePath` + `summary` + one
-  target (`hunk`, `hunkNumber`, `oldLine`, `newLine`)
-- `navigate` requires `--file` plus exactly one of `--hunk` / `--new-line`
-  / `--old-line`, OR a relative `--next-comment` / `--prev-comment`
-- `reload` needs `--` before the nested Hunk command
+- `--repo <path>` selects sessions by their loaded repo root.
+- `comment apply` requires `--stdin` for batch JSON.
+- `comment apply` payload items must specify `filePath` + `summary` + one target (`hunk`, `hunkNumber`, `oldLine`, `newLine`).
+- `navigate` requires `--file` plus exactly one of `--hunk` / `--new-line` / `--old-line`, OR a relative `--next-comment` / `--prev-comment`.
+- `reload` needs `--` before the nested Hunk command.

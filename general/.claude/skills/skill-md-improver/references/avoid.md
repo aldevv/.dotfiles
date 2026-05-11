@@ -21,7 +21,7 @@ A reader skimming the available-skills list sees "README review" and moves on. T
 **Better**:
 
 ```yaml
-description: Spawn 5 parallel critique agents to review a README from distinct angles (first impression, information architecture, install correctness, content gaps, ecosystem comparison), synthesize the findings into a tiered punch-list, and apply the changes the user picks. Triggers on "/improve-readme-md", "improve the readme", "review my readme", "audit the readme", "make the readme better", "have agents look at the readme", or any request for a multi-angle README review. Do NOT trigger for typo passes, single-section tweaks, or when the user just wants a one-line edit — direct edits are faster than a 5-agent fan-out.
+description: Spawn 5 parallel critique agents to review a README from distinct angles (first impression, information architecture, install correctness, content gaps, ecosystem comparison), synthesize the findings into a tiered punch-list, and apply the changes the user picks. Triggers on "/readme-md-improver", "improve the readme", "review my readme", "audit the readme", "make the readme better", "have agents look at the readme", or any request for a multi-angle README review. Do NOT trigger for typo passes, single-section tweaks, or when the user just wants a one-line edit — direct edits are faster than a 5-agent fan-out.
 ```
 
 **Why it wins**: the description spells out the *shape* (5-agent fan-out → synthesis → apply), the trigger phrases the user is likely to say, and the negative cases. The dispatcher has surfaces to match against; the "Do NOT trigger" line keeps it from being invoked for typo passes that don't justify a fan-out.
@@ -32,10 +32,10 @@ description: Spawn 5 parallel critique agents to review a README from distinct a
 
 When sibling skills share triggers — even partially — the description must name them and explain who wins on contested phrasing.
 
-**Bad** — a new `improve-skill-md` skill that ignores `skill-creator:skill-creator`'s overlap:
+**Bad** — a new `skill-md-improver` skill that ignores `skill-creator:skill-creator`'s overlap:
 
 ```yaml
-description: Review a SKILL.md and suggest improvements. Triggers on "/improve-skill-md", "review my skill", "audit this skill".
+description: Review a SKILL.md and suggest improvements. Triggers on "/skill-md-improver", "review my skill", "audit this skill".
 ```
 
 Both skills match "review my skill". The dispatcher picks arbitrarily; the user gets surprising behaviour.
@@ -43,7 +43,7 @@ Both skills match "review my skill". The dispatcher picks arbitrarily; the user 
 **Better** — explicit disambiguation:
 
 ```yaml
-description: ...spawn 5 parallel critique agents... Do NOT trigger for brand-new skill scaffolding (use `skill-creator:skill-creator` instead — it scaffolds frontmatter + folder layout from scratch), or quick description-triggering checks (also `skill-creator` — it's narrower and faster for a one-shot description optimization). Sibling skills for related artifacts — `improve-readme-md` (READMEs), `hook-review` (Claude Code hooks), `neovim-plugin-review` (nvim plugins) — defer to those when the target is one of those artifact types.
+description: ...spawn 5 parallel critique agents... Do NOT trigger for brand-new skill scaffolding (use `skill-creator:skill-creator` instead — it scaffolds frontmatter + folder layout from scratch), or quick description-triggering checks (also `skill-creator` — it's narrower and faster for a one-shot description optimization). Sibling skills for related artifacts — `readme-md-improver` (READMEs), `hook-review` (Claude Code hooks), `neovim-plugin-review` (nvim plugins) — defer to those when the target is one of those artifact types.
 ```
 
 **Why it wins**: names every sibling that shares triggers, says who wins on contested phrasing, and explains the boundary (scaffolding vs audit). The dispatcher has the disambiguation it needs.

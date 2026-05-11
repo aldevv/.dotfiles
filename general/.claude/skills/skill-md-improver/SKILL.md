@@ -1,12 +1,12 @@
 ---
-name: improve-skill-md
-description: Spawn 5 parallel critique agents to review a SKILL.md from distinct angles (triggering accuracy, workflow executability, organization, composition/delegation, guardrails & portability), synthesize the findings into a tiered punch-list, and apply the changes the user picks. Triggers on "/improve-skill-md", "improve this skill", "review my skill", "audit my skill", "audit skill", "audit this SKILL.md", "make this skill better", "have agents look at the skill", or any explicit request for a multi-angle SKILL.md review. Do NOT trigger for typo passes or single-step tweaks (direct edit is faster). On contested triggers vs `skill-creator:skill-creator`: `skill-creator` is the right call for scaffolding a new skill from scratch AND for eval-driven iteration with quantitative benchmarks (test prompts, with-skill vs baseline runs, pass-rate scoring, programmatic description-triggering optimization). `improve-skill-md` is the right call for a qualitative multi-angle audit of an existing SKILL.md — no eval harness, no benchmark scoring, just 5 lensed critics and a tiered punch-list. If the user wants to *score* or *eval* the skill, defer to `skill-creator`. Sibling skills for related artifacts — `improve-readme-md` (READMEs), `hook-review` (Claude Code hooks), `neovim-plugin-review` (nvim plugins) — defer to those when the target is one of those artifact types.
+name: skill-md-improver
+description: Spawn 5 parallel critique agents to review a SKILL.md from distinct angles (triggering accuracy, workflow executability, organization, composition/delegation, guardrails & portability), synthesize the findings into a tiered punch-list, and apply the changes the user picks. Triggers on "/skill-md-improver", "improve this skill", "review my skill", "audit my skill", "audit skill", "audit this SKILL.md", "make this skill better", "have agents look at the skill", or any explicit request for a multi-angle SKILL.md review. Do NOT trigger for typo passes or single-step tweaks (direct edit is faster). On contested triggers vs `skill-creator:skill-creator`: `skill-creator` is the right call for scaffolding a new skill from scratch AND for eval-driven iteration with quantitative benchmarks (test prompts, with-skill vs baseline runs, pass-rate scoring, programmatic description-triggering optimization). `skill-md-improver` is the right call for a qualitative multi-angle audit of an existing SKILL.md — no eval harness, no benchmark scoring, just 5 lensed critics and a tiered punch-list. If the user wants to *score* or *eval* the skill, defer to `skill-creator`. Sibling skills for related artifacts — `readme-md-improver` (READMEs), `hook-review` (Claude Code hooks), `neovim-plugin-review` (nvim plugins) — defer to those when the target is one of those artifact types.
 argument-hint: "[path-to-skill-md]" — optional. Defaults to ./SKILL.md when invoked from inside a skill folder. Pass an explicit path otherwise (e.g. `~/.claude/skills/foo/SKILL.md` or `~/.dotfiles/general/.claude/skills/foo/SKILL.md`).
 ---
 
-# improve-skill-md
+# skill-md-improver
 
-Multi-agent SKILL.md review: 5 critique angles in parallel, synthesized into a tiered punch-list, then applied with user confirmation. Sister skill to `improve-readme-md`, shaped the same way but lensed at SKILL.md files.
+Multi-agent SKILL.md review: 5 critique angles in parallel, synthesized into a tiered punch-list, then applied with user confirmation. Sister skill to `readme-md-improver`, shaped the same way but lensed at SKILL.md files.
 
 ## Files
 
@@ -29,16 +29,16 @@ Multi-agent SKILL.md review: 5 critique angles in parallel, synthesized into a t
 
 ## When to use
 
-- User says "improve this skill", "review my skill", "audit my skill", "audit this SKILL.md", "make this skill better", or invokes `/improve-skill-md`.
+- User says "improve this skill", "review my skill", "audit my skill", "audit this SKILL.md", "make this skill better", or invokes `/skill-md-improver`.
 - The user wants a *thorough* multi-perspective critique of an existing SKILL.md — not a typo pass, not a description tweak, not an eval-driven scoring run.
 
 ## When NOT to use
 
 - **Brand-new skill from scratch** → `skill-creator:skill-creator` scaffolds the folder + frontmatter.
-- **Eval-driven iteration / benchmark scoring** → `skill-creator` runs the with-skill vs baseline harness and produces quantitative pass-rate / time / token deltas. `improve-skill-md` produces a qualitative punch-list with no scoring.
-- **Programmatic description-triggering optimization** → also `skill-creator` (`run_loop.py`). `improve-skill-md`'s angle-1 critic flags description issues but doesn't optimize them in a loop.
+- **Eval-driven iteration / benchmark scoring** → `skill-creator` runs the with-skill vs baseline harness and produces quantitative pass-rate / time / token deltas. `skill-md-improver` produces a qualitative punch-list with no scoring.
+- **Programmatic description-triggering optimization** → also `skill-creator` (`run_loop.py`). `skill-md-improver`'s angle-1 critic flags description issues but doesn't optimize them in a loop.
 - Typo, grammar, or single-step tweaks → direct edit.
-- Hooks → `hook-review`. READMEs → `improve-readme-md`. Neovim plugins → `neovim-plugin-review`.
+- Hooks → `hook-review`. READMEs → `readme-md-improver`. Neovim plugins → `neovim-plugin-review`.
 - The skill folder exists but `SKILL.md` is near-empty (a stub) → recommend `skill-creator` first, then come back here once there's substance to review.
 
 ## Steps
@@ -100,7 +100,7 @@ Present the synthesis with the four tiers, then use `AskUserQuestion` with 4 sco
 
 - **Subagents**: invoked via `Agent` with `subagent_type=general-purpose`. They are scoped Agent calls, not separate skills, because each one needs a custom angle prompt.
 - **Post-edit handoff to `skill-creator:skill-creator`**: when frontmatter (description, argument-hint, name) or delegation changed in step 5, hand off to `skill-creator` for the description-triggering / overlap pass — it's the canonical referee per the user's `~/CLAUDE.md` convention. Don't duplicate that work here.
-- This skill does not delegate to other review skills (`improve-readme-md`, `hook-review`, `neovim-plugin-review`) — they're for different artifact types.
+- This skill does not delegate to other review skills (`readme-md-improver`, `hook-review`, `neovim-plugin-review`) — they're for different artifact types.
 
 ## Guardrails
 

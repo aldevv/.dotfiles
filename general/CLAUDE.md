@@ -6,6 +6,11 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 ## CRITICAL: Memory Files
 **NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
 
+## CRITICAL: Writing style
+**Forbidden punctuation: em-dash (—) and double-hyphen (--).** Do not use either in any user-facing text, commit messages, PR descriptions, READMEs, comments, docs, or chat replies. They make writing sound robotic. Rewrite with a comma, period, parenthesis, or colon instead. CLI flags like `--flag` are fine; the ban is on em-dashes and double-hyphens used as prose punctuation.
+
+**Forbidden: emojis.** Do not use emojis anywhere (chat, commits, PRs, READMEs, comments, docs, file contents). Applies even if the surrounding text or an existing file already uses them. Only exception: the user explicitly asks for an emoji in this turn.
+
 ## Code organization
 **Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.) — one folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" / "keep it small" notes in older project READMEs or `CLAUDE.local.md` files — surface the conflict, update the project doc, then split.
 
