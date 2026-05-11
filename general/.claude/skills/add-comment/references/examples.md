@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×4)
+- done. (×7)
 - good catch, will fix. (×1)
 
 ### Replies — pushback

@@ -6,6 +6,16 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 ## CRITICAL: Memory Files
 **NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
 
+## CRITICAL: Code comments
+**Keep comments to a minimum.** Default to writing zero comments. Only add one when it explains a complex flow, a hidden invariant, a non-obvious WHY, or a workaround. Never write narrative comments that restate the code, summarize a function's purpose, document obvious sequencing, or reference the current task/PR/caller. If removing a comment wouldn't actively confuse a future reader, do not write it. Applies to existing comments too: when touching code, if a comment restates what the next line already says, trim it.
+
+## CRITICAL: Readability
+**Readability is priority #1.** Apply clean-code practices only when they make the code easier to read, not as ends in themselves.
+- **Long or hard-to-grasp `if` conditions get extracted to a named predicate function.** `if isEligibleForRefund(order) { ... }` reads better than five chained boolean clauses. Same rule for switch/case guards, `while`/`for` loop conditions, and nested ternaries: name the predicate.
+- **Prefer many small named functions over one long function with inline comments.** A well-named function call is self-documenting; a comment above an inline block isn't.
+- **Don't refactor for purity alone.** DRY, SRP, Hexagonal, dependency injection are fine when they make a specific reader's life easier here. If a refactor adds indirection a future reader has to chase without paying for itself in clarity, skip it. Three similar lines is better than a premature abstraction.
+- **When in conflict, readability wins.** If a "clean" pattern obscures what the code does, the pattern is wrong for this spot.
+
 ## CRITICAL: Writing style
 **Forbidden punctuation: em-dash (—) and double-hyphen (--).** Do not use either in any user-facing text, commit messages, PR descriptions, READMEs, comments, docs, or chat replies. They make writing sound robotic. Rewrite with a comma, period, parenthesis, or colon instead. CLI flags like `--flag` are fine; the ban is on em-dashes and double-hyphens used as prose punctuation.
 
@@ -182,16 +192,6 @@ Every `hook.sh` / `hook.py` begins with a comment block containing:
 ## Reference Files
 Reference docs live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`). Read these before guessing or asking, when relevant:
 - **`~/.claude/files/hook-debugging.md`** — debugging Claude Code hooks. Read when a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
-
-## Code style
-
-### Comments
-Default to writing no comments. Add one only when the **why** is non-obvious —
-a hidden constraint, a subtle invariant, a workaround for a specific bug, or
-behavior that would surprise a reader. If well-named identifiers and the code
-already make the **what** obvious, the comment is redundant; delete it.
-This applies to existing comments too: when touching code, if a comment
-restates what the next line already says, trim it.
 
 ## Commits & PRs
 - **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
