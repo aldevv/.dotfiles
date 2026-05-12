@@ -4,7 +4,7 @@
 
 A `CLAUDE.md` (or `SKILL.md`) may include a "Lazy load" section near the top listing files that should be read on demand, only when a specific trigger fires, rather than eagerly on every session. Each entry pairs a path with a `**Read when:**` clause naming its trigger. Pull a file in only when its trigger matches the current context.
 
-For this CLAUDE.md, the on-demand files live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`):
+By convention (universal, not specific to this file), lazy-loaded detail files always live in a sibling `.claude/files/` directory: next to the parent `CLAUDE.md`, at the project root for repo-level files, or under `~/.claude/files/` for the global user-level file. For this CLAUDE.md that resolves to `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`):
 
 - [`~/.claude/files/skills.md`](.claude/files/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
 - [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
