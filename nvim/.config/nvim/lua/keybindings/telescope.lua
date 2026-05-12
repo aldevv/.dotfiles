@@ -125,8 +125,11 @@ M.load_mappings = function()
   -- map("n", "<localleader>Vl", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/"})<cr>', nor_s)
   -- map("n", "<localleader>Vd", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/dap"})<cr>', nor_s)
 
-  map("n", "<a-a>", ':lua require("utils.lua.telescope").find_folders({})<cr>', nor_s)
+  map("n", "<a-a>", function() require("utils.lua.telescope").alternates() end, desc("Projectionist alternates (edit)"))
+  map("n", "<a-e>", function() require("utils.lua.telescope").alternates("split") end, desc("Projectionist alternates (split)"))
   map("n", "<a-A>", ':lua require("utils.lua.telescope").find_folders({git=true})<cr>', nor_s)
+
+  map("n", "<a-b>", function() require("utils.lua.telescope").projectionist() end, desc("Projectionist types -> files"))
 
   -- live_grep
   -- map("n", "<localleader>gn.", ':lua require("utils.lua.telescope").notes_grep()<cr>', nor_s)
