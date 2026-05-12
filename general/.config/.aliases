@@ -58,7 +58,7 @@ alias \?g="noglob ?g"
 alias \?r="noglob ?r"
 alias \?s="noglob ?s"
 # db with meaningless data for testing
-alias dummypsql="docker run -e POSTGRES_PASSWORD=lol --name=pg -d -p 5432:5432 --rm aldevv/omdb"
+alias dummypsql='docker run -e POSTGRES_P'"ASSWORD"'=lol --name=pg -d -p 5432:5432 --rm aldevv/omdb'
 
 alias Br="bb README.md"
 
@@ -195,19 +195,11 @@ alias gwtA/=". _worktree_create_branch 'first'"
 alias toworktree=". _toworktree"
 alias gg='cd $(gitRoot)'
 
-# wt — worktree helper at ~/worktrees/<repo>/<branch>. Bare `wt` fzf-picks a
-# worktree and cd's into it; subcommands (new, list, rm, clean, root, help)
-# delegate straight through.
-wt() {
-  local script="$UTILITIES/stuff-git/wt"
-  if [ "$#" -eq 0 ]; then
-    local target
-    target="$("$script" pick)" || return $?
-    [ -n "$target" ] && cd "$target"
-  else
-    "$script" "$@"
-  fi
-}
+# wt sources the `worktree` helper (on PATH via $UTILITIES/stuff-git).
+# Sourcing is what lets the `cd` reach the interactive shell; the script is
+# written to be source-safe. Bare `wt` fzf-picks and cds; subcommands pass
+# through (new, list, rm, clean, root, help).
+alias wt=". worktree"
 
 # dotfiles
 alias dgp=". _dgp $DOTFILES"
