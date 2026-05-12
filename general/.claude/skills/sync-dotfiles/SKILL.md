@@ -196,7 +196,12 @@ git diff ORIG_HEAD HEAD --name-only --diff-filter=A | grep "^${pkg}/" | while IF
   rel=${src#${pkg}/}
   dest="$HOME/$rel"
   expected="$HOME/.dotfiles/$src"
-  if [ -L "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$expected")" ]; then
+  # -e (not -L): catches both a direct file-level symlink AND a folded
+  # parent directory. With directory folding, $dest's final component is
+  # a regular file reached through a folded parent; -L would miss that
+  # and the rm/ln branch below would traverse the folded parent, delete
+  # the real file in the package, and write a self-looping symlink.
+  if [ -e "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$expected")" ]; then
     continue
   fi
   rm -rf "$dest"
