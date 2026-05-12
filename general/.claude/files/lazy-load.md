@@ -4,7 +4,7 @@
 
 ## The pattern
 
-Near the top of the `CLAUDE.md` / `SKILL.md` (after the H1 and any always-on critical rules), add a `## Detail files (load on demand)` section. Each entry follows this shape:
+Near the top of the `CLAUDE.md` / `SKILL.md` (after the H1 and any always-on critical rules), add a `## Lazy load` section. Each entry follows this shape:
 
 ```
 - [<name-or-path>](<path>). **Read when:** <specific trigger>.
@@ -17,7 +17,7 @@ Near the top of the `CLAUDE.md` / `SKILL.md` (after the H1 and any always-on cri
 Concrete example (a CLAUDE.md):
 
 ```
-## Detail files (load on demand)
+## Lazy load
 
 Each file has a specific trigger. Do not pre-load; pull it in only when its trigger fires.
 

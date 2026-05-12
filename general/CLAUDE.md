@@ -16,7 +16,7 @@
 - [Build Environment](#build-environment)
 - [Commands to Remember](#commands-to-remember)
 - [Work Environment](#work-environment)
-- [Reference Files](#reference-files)
+- [Lazy load](#lazy-load)
 - [Code style](#code-style)
 - [Commits & PRs](#commits--prs)
 - [Notes](#notes)
@@ -103,8 +103,8 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 - **Work Aliases**: `~/.config/.aliases_work` (`.aw`)
 - **Work Startup**: `~/.config/.startup_work` (`.sw`)
 
-## Reference Files
-Reference docs live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`). Load these on demand:
+## Lazy load
+Detail files live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`). Each entry has a specific trigger; do not pre-load, pull it in only when its trigger fires.
 - [`~/.claude/files/skills.md`](.claude/files/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
 - [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
 - [`~/.claude/files/hook-debugging.md`](.claude/files/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
