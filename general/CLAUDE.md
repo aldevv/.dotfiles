@@ -108,7 +108,7 @@ Reference docs live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/gene
 - [`~/.claude/files/skills.md`](.claude/files/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
 - [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
 - [`~/.claude/files/hook-debugging.md`](.claude/files/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
-- [`~/.claude/files/lazy-load.md`](.claude/files/lazy-load.md). **Read when:** generating an audit/quality/review report that names file paths, OR writing/editing a `SKILL.md` with a `references/` folder, OR writing a doc over ~100 lines. Defines the `[path](path)` link convention, the Detail-files-with-Read-when pattern, and TOC rules.
+- [`~/.claude/files/lazy-load.md`](.claude/files/lazy-load.md). **Read when:** writing or improving a `CLAUDE.md` / `SKILL.md` and considering whether to extract a section into a `.claude/files/<topic>.md` detail file with a `**Read when:**` trigger. Defines the `## Detail files (load on demand)` index pattern and the trigger-clause rules.
 
 ## Code style
 
