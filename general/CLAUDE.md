@@ -1,6 +1,17 @@
 # Claude Code Configuration
 
+## Lazy load
+
+A `CLAUDE.md` (or `SKILL.md`) may include a "Lazy load" section near the top listing files that should be read on demand, only when a specific trigger fires, rather than eagerly on every session. Each entry pairs a path with a `**Read when:**` clause naming its trigger. Pull a file in only when its trigger matches the current context.
+
+For this CLAUDE.md, the on-demand files live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`):
+
+- [`~/.claude/files/skills.md`](.claude/files/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
+- [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
+- [`~/.claude/files/hook-debugging.md`](.claude/files/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
+
 ## Table of Contents
+- [Lazy load](#lazy-load)
 - [Machine connection notes](#machine-connection-notes)
 - [CRITICAL: Memory Files](#critical-memory-files)
 - [CRITICAL: Readability](#critical-readability)
@@ -16,7 +27,6 @@
 - [Build Environment](#build-environment)
 - [Commands to Remember](#commands-to-remember)
 - [Work Environment](#work-environment)
-- [Lazy load](#lazy-load)
 - [Code style](#code-style)
 - [Commits & PRs](#commits--prs)
 - [Notes](#notes)
@@ -102,13 +112,6 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 - **Work Directory**: `$WORK` - Work-related projects
 - **Work Aliases**: `~/.config/.aliases_work` (`.aw`)
 - **Work Startup**: `~/.config/.startup_work` (`.sw`)
-
-## Lazy load
-Detail files live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`). Each entry has a specific trigger; do not pre-load, pull it in only when its trigger fires.
-- [`~/.claude/files/skills.md`](.claude/files/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
-- [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
-- [`~/.claude/files/hook-debugging.md`](.claude/files/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
-- [`~/.claude/files/lazy-load.md`](.claude/files/lazy-load.md). **Read when:** writing or improving a `CLAUDE.md` / `SKILL.md` and considering whether to extract a section into a `.claude/files/<topic>.md` detail file with a `**Read when:**` trigger. Defines the `## Detail files (load on demand)` index pattern and the trigger-clause rules.
 
 ## Code style
 
