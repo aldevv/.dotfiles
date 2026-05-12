@@ -105,9 +105,10 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 
 ## Reference Files
 Reference docs live under `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`). Load these on demand:
-- **`~/.claude/files/skills.md`**: skill location, layout, portability/composability requirements, frontmatter checklist. Load when creating, editing, or auditing a skill.
-- **`~/.claude/files/hook-conventions.md`**: hook naming, folder layout, README structure, when a helper becomes a skill. Load when creating or reorganizing a hook.
-- **`~/.claude/files/hook-debugging.md`**: debugging Claude Code hooks (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape). Load when a hook isn't behaving.
+- [`~/.claude/files/skills.md`](.claude/files/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
+- [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
+- [`~/.claude/files/hook-debugging.md`](.claude/files/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
+- [`~/.claude/files/lazy-load.md`](.claude/files/lazy-load.md). **Read when:** generating an audit/quality/review report that names file paths, OR writing/editing a `SKILL.md` with a `references/` folder, OR writing a doc over ~100 lines. Defines the `[path](path)` link convention, the Detail-files-with-Read-when pattern, and TOC rules.
 
 ## Code style
 
