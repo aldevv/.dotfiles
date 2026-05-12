@@ -138,8 +138,18 @@ if [ "$pre_merge" != "$post_merge" ] \
 fi
 
 # 4. Finalize: rename the head commit to the canonical sync message and push.
+#
+# The amend is gated on "HEAD is ahead of upstream" because amending an
+# already-pushed commit rewrites its SHA and the subsequent push lands
+# as non-fast-forward. The two paths through Step 2 that end here with
+# HEAD == @{u} are (a) no local changes + no remote changes (merge said
+# "Already up to date") and (b) no local changes + remote was strictly
+# ahead (merge fast-forwarded to the remote tip). In both, there's
+# nothing new to relabel.
 git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"
-git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then
+  git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]"
+fi
 if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
   git push origin main
 else
@@ -204,10 +214,12 @@ Report any remaining conflicts (e.g. unwritable parent dirs) but do not abort. T
 
 Step 2 already does this inline on the happy path. This step only fires after the conflict-resolution or restow branches: same logic, separate call.
 
+The amend is gated on "HEAD is ahead of upstream" for the same reason as Step 2: if no new commit was made this run (rare here, but possible if Step 4's restow finished with nothing left to commit), amending would rewrite a previously-pushed commit and the push would be rejected as non-fast-forward.
+
 ```bash
 cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
   { git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"; } && \
-  { git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true; } && \
+  { if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]"; fi; } && \
   if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then git push origin main; else echo "parent: nothing to push"; fi
 ```
 
