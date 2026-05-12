@@ -1,0 +1,308 @@
+#!/usr/bin/env bash
+# worktree: git worktree helper using ~/worktrees/<repo>/<branch> layout.
+#
+# Safe to source or execute:
+#   - executed (`worktree pick`)     prints the selected worktree path
+#   - sourced  (`. worktree` / `wt`) cds the calling shell into it
+#
+# Subcommands:
+#   worktree new <branch> [base]   create ~/worktrees/<repo>/<branch> tracking
+#                                  <base> (defaults to a new branch off HEAD)
+#   worktree -a <branch> [base]    create (or attach) ~/worktrees/<repo>/<branch>
+#                                  and cd into it when sourced. If the branch
+#                                  doesn't exist it's created off HEAD (or
+#                                  <base>); if the worktree already exists we
+#                                  just move to it.
+#   worktree list                  list every worktree of the current repo
+#   worktree rm <branch>           remove the worktree for <branch>
+#   worktree clean [name] [--force]
+#   worktree -c    [name] [--force]
+#                                  with no name: remove every worktree of the
+#                                  current repo except the one you're standing
+#                                  in. With a name: remove just that one.
+#                                  --force drops uncommitted changes too.
+#   worktree pick                  fzf-pick a worktree and print its path.
+#                                  Inside the picker, ctrl-x removes the
+#                                  highlighted worktree and reloads the list.
+#                                  When sourced with no subcommand, the `wt`
+#                                  alias turns that path into a `cd`.
+#   worktree root                  print the worktrees-root for the current
+#                                  repo (~/worktrees/<reponame>)
+#   worktree help                  show this help
+#
+# With no subcommand the script behaves like `worktree pick`.
+# Override the parent dir with WT_HOME=... in the environment.
+
+# Detect whether we were sourced or executed. The sourced path has to cd in
+# the caller's shell; the executed path just prints.
+__wt_sourced() {
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    case "${ZSH_EVAL_CONTEXT:-}" in *:file*) return 0 ;; esac
+    return 1
+  fi
+  if [ -n "${BASH_VERSION:-}" ]; then
+    [ "${BASH_SOURCE[0]}" != "${0}" ]
+    return
+  fi
+  return 1
+}
+
+# Core logic runs in a subshell (function body is `(...)` not `{...}`) so
+# `set -euo pipefail` and any helper functions defined below don't leak into
+# the caller's interactive shell when sourced.
+__wt_run() (
+  set -eu -o pipefail
+
+  WORKTREE_HOME="${WT_HOME:-$HOME/worktrees}"
+
+  die() {
+    printf 'wt: %s\n' "$*" >&2
+    return 1
+  }
+
+  require_git_repo() {
+    git rev-parse --show-toplevel >/dev/null 2>&1 \
+      || die "not in a git repository"
+  }
+
+  # Group worktrees under the main checkout's directory name, so `wt` from
+  # inside a worktree still resolves to the same parent.
+  canonical_repo_name() {
+    local main_root
+    main_root="$(git worktree list --porcelain \
+      | awk '/^worktree / { print $2; exit }')"
+    basename "$main_root"
+  }
+
+  worktrees_root() {
+    printf '%s/%s' "$WORKTREE_HOME" "$(canonical_repo_name)"
+  }
+
+  main_worktree_path() {
+    git worktree list --porcelain | awk '/^worktree / { print $2; exit }'
+  }
+
+  print_help() {
+    cat <<'EOF'
+worktree: git worktree helper
+
+Usage:
+  worktree                       same as `worktree pick`
+  worktree new <branch> [base]   create ~/worktrees/<repo>/<branch>
+  worktree -a  <branch> [base]   create or attach, then cd when sourced
+  worktree list                  list worktrees of the current repo
+  worktree rm <branch>           remove one worktree
+  worktree clean [name] [--force]
+  worktree -c    [name] [--force]
+                                 no name: remove every non-main, non-current
+                                 worktree. with name: remove just that one.
+  worktree pick                  print the fzf-selected worktree path
+                                 (ctrl-x removes the highlighted worktree)
+  worktree root                  print the worktrees-root for the current repo
+  worktree help                  show this help
+
+Layout: ~/worktrees/<reponame>/<branchname>.
+Override the parent dir with WT_HOME=... in the environment.
+
+The `wt` alias sources this script so bare `wt` cds you into the chosen
+worktree; running `worktree` directly keeps the print-only behavior for
+`$(worktree)` callers.
+EOF
+  }
+
+  cmd_root() {
+    require_git_repo
+    printf '%s\n' "$(worktrees_root)"
+  }
+
+  cmd_list() {
+    require_git_repo
+    git worktree list
+  }
+
+  cmd_picker_list() {
+    require_git_repo
+    git worktree list --porcelain \
+      | awk '
+          $1 == "worktree" { wt = $2; branch = ""; next }
+          $1 == "branch"   { sub(/^refs\/heads\//, "", $2); branch = $2 }
+          $1 == "detached" { branch = "(detached)" }
+          /^$/ && wt {
+            printf "%s\t%s\n", branch ? branch : "(no branch)", wt
+            wt = ""; branch = ""
+          }
+          END {
+            if (wt) printf "%s\t%s\n", branch ? branch : "(no branch)", wt
+          }
+        '
+  }
+
+  cmd_pick() {
+    require_git_repo
+    command -v fzf >/dev/null 2>&1 || die "fzf not installed"
+
+    # ctrl-x removes the highlighted worktree and reloads the list. We call
+    # back into this same script (`worktree _picker-list`) so the reload
+    # command stays a single line and doesn't duplicate the awk pipeline.
+    local selection
+    selection="$(
+      cmd_picker_list \
+        | fzf --delimiter=$'\t' --with-nth=1,2 \
+              --height=80% --reverse \
+              --prompt='worktree> ' \
+              --header='enter: cd   ctrl-x: remove worktree' \
+              --bind='ctrl-x:execute-silent(git worktree remove {2} 2>/dev/null || git worktree remove --force {2} 2>/dev/null)+reload(worktree _picker-list)' \
+              --preview='git -C {2} log --color=always --format="%C(auto)%h%d%C(reset)%n  %s" -25' \
+              --preview-window='right:60%:wrap'
+    )" || return 1
+
+    [ -z "$selection" ] && return 1
+    printf '%s\n' "${selection##*$'\t'}"
+  }
+
+  cmd_add() {
+    require_git_repo
+    local branch="${1:-}"
+    local base="${2:-}"
+    [ -n "$branch" ] || die "usage: worktree -a <branch> [base]"
+
+    local target
+    target="$(worktrees_root)/$branch"
+    mkdir -p "$(dirname "$target")"
+
+    # Redirect `git worktree add` chatter to stderr so stdout is only the
+    # target path (captured by the sourced wrapper for the cd).
+    if [ -d "$target" ]; then
+      :
+    elif git show-ref --verify --quiet "refs/heads/$branch"; then
+      git worktree add "$target" "$branch" >&2
+    elif [ -n "$base" ]; then
+      git worktree add -b "$branch" "$target" "$base" >&2
+    else
+      git worktree add -b "$branch" "$target" >&2
+    fi
+
+    printf '%s\n' "$target"
+  }
+
+  cmd_new() {
+    require_git_repo
+    local branch="${1:-}"
+    local base="${2:-}"
+    [ -n "$branch" ] || die "usage: worktree new <branch> [base]"
+
+    local target
+    target="$(worktrees_root)/$branch"
+
+    mkdir -p "$(dirname "$target")"
+
+    if git show-ref --verify --quiet "refs/heads/$branch"; then
+      git worktree add "$target" "$branch"
+    elif [ -n "$base" ]; then
+      git worktree add -b "$branch" "$target" "$base"
+    else
+      git worktree add -b "$branch" "$target"
+    fi
+  }
+
+  cmd_rm() {
+    require_git_repo
+    local branch="${1:-}"
+    [ -n "$branch" ] || die "usage: worktree rm <branch>"
+
+    local target
+    target="$(worktrees_root)/$branch"
+
+    [ -d "$target" ] || die "no worktree at $target"
+    git worktree remove "$target"
+    rmdir "$(dirname "$target")" 2>/dev/null || true
+  }
+
+  cmd_clean() {
+    require_git_repo
+    local force=0 name=""
+
+    # Accept any order of `[name]` and `--force/-f`. Multiple bare args would
+    # be ambiguous; first non-flag wins, the rest are an error.
+    for arg in "$@"; do
+      case "$arg" in
+        --force|-f) force=1 ;;
+        -*) die "unknown flag: $arg" ;;
+        *)
+          [ -z "$name" ] || die "unexpected extra argument: $arg"
+          name="$arg"
+          ;;
+      esac
+    done
+
+    # With a name, act as a targeted remove (delete just that worktree).
+    if [ -n "$name" ]; then
+      local target
+      target="$(worktrees_root)/$name"
+      [ -d "$target" ] || die "no worktree at $target"
+      if [ "$force" = "1" ]; then
+        git worktree remove --force "$target"
+      else
+        git worktree remove "$target"
+      fi
+      rmdir "$(dirname "$target")" 2>/dev/null || true
+      return
+    fi
+
+    local current_root main_root removed=0 line wt
+    current_root="$(git rev-parse --show-toplevel)"
+    main_root="$(main_worktree_path)"
+
+    while IFS= read -r line; do
+      case "$line" in
+        "worktree "*) wt="${line#worktree }" ;;
+        *) continue ;;
+      esac
+      [ "$wt" = "$main_root" ] && continue
+      [ "$wt" = "$current_root" ] && continue
+
+      if [ "$force" = "1" ]; then
+        git worktree remove --force "$wt" && removed=$((removed + 1))
+      else
+        git worktree remove "$wt" && removed=$((removed + 1))
+      fi
+    done < <(git worktree list --porcelain)
+
+    rmdir "$(worktrees_root)" 2>/dev/null || true
+    printf 'wt: removed %d worktree(s)\n' "$removed"
+  }
+
+  local sub="${1:-pick}"
+  [ "$#" -gt 0 ] && shift
+  case "$sub" in
+    new) cmd_new "$@" ;;
+    -a|add) cmd_add "$@" ;;
+    list|ls) cmd_list "$@" ;;
+    rm|remove) cmd_rm "$@" ;;
+    clean|-c) cmd_clean "$@" ;;
+    pick) cmd_pick "$@" ;;
+    _picker-list) cmd_picker_list ;;
+    root) cmd_root "$@" ;;
+    -h|--help|help) print_help ;;
+    *) die "unknown subcommand: $sub (try 'worktree help')" ;;
+  esac
+)
+
+if __wt_sourced; then
+  # Bare `wt` → pick + cd. `wt -a <branch>` → create/attach + cd.
+  # Other subcommands just pass through (stdout flows to the terminal).
+  if [ "$#" -eq 0 ]; then
+    __wt_target="$(__wt_run pick)"
+    [ -n "${__wt_target:-}" ] && cd "$__wt_target"
+    unset __wt_target
+  elif [ "${1:-}" = "-a" ] || [ "${1:-}" = "add" ]; then
+    __wt_target="$(__wt_run "$@")"
+    [ -n "${__wt_target:-}" ] && cd "$__wt_target"
+    unset __wt_target
+  else
+    __wt_run "$@"
+  fi
+  unset -f __wt_sourced __wt_run
+else
+  __wt_run "$@"
+fi
