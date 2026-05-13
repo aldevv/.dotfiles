@@ -1,0 +1,47 @@
+#compdef worktree wt
+
+_worktree_root() {
+  local main_root
+  main_root="$(git worktree list --porcelain 2>/dev/null | awk '/^worktree / { print $2; exit }')"
+  [[ -n $main_root ]] || return 1
+  print -- "${WT_HOME:-$HOME/worktrees}/${main_root:t}"
+}
+
+_worktree_entries() {
+  local root
+  root="$(_worktree_root)" || return
+  [[ -d $root ]] || return
+  local -a entries
+  entries=("$root"/*(/N:t))
+  (( ${#entries} )) || return
+  compadd -X 'worktree' -- "${entries[@]}"
+}
+
+_worktree_branches() {
+  local -a branches
+  branches=(${(f)"$(git branch --format='%(refname:short)' 2>/dev/null)"})
+  (( ${#branches} )) || return
+  compadd -X 'branch' -- "${branches[@]}"
+}
+
+_worktree() {
+  local -a subcommands
+  subcommands=(new add -a cd list ls rm remove clean -c pick root skill help)
+
+  if (( CURRENT == 2 )); then
+    compadd -X 'subcommand' -- "${subcommands[@]}"
+    _worktree_entries
+    return
+  fi
+
+  case "$words[2]" in
+    -a|add)
+      _worktree_branches
+      ;;
+    cd|rm|remove|clean|-c)
+      _worktree_entries
+      ;;
+  esac
+}
+
+_worktree "$@"

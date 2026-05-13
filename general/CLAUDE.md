@@ -120,6 +120,8 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 ### Comments
 Default to writing zero comments. Only add one when it explains a complex flow, a hidden invariant, a non-obvious WHY, or a workaround. Never write narrative comments that restate the code, summarize a function's purpose, document obvious sequencing, or reference the current task/PR/caller. If removing a comment wouldn't actively confuse a future reader, do not write it. Applies to existing comments too: when touching code, if a comment restates what the next line already says, trim it.
 
+When a comment is justified, keep it to **one short, plain-English line**. No multi-line function-header docstrings unless the flow is truly complex (subtle invariants, surprising ordering, platform workarounds). The bar is high, and three-clause sentences with semicolons are a smell. When in doubt, **delete the comment** and trust the reader.
+
 ## Commits & PRs
 - **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
 
