@@ -63,12 +63,22 @@ load_fly() {
 }
 load_fly 
 
-load_fnm() { 
+load_fnm() {
   if [[ ! -d $HOME/.local/share/fnm ]]; then
     return
   fi
   export PATH=$HOME/.local/share/fnm:$PATH
-  eval "$(fnm env --use-on-cd --shell zsh)" 2>/dev/null
+  # If a parent shell already set up an fnm multishell, just ensure its bin
+  # is back on PATH (something we sourced may have wiped it). Otherwise,
+  # initialize a fresh multishell.
+  if [[ -n "$FNM_MULTISHELL_PATH" && -d "$FNM_MULTISHELL_PATH/bin" ]]; then
+    case ":$PATH:" in
+      *":$FNM_MULTISHELL_PATH/bin:"*) ;;
+      *) export PATH="$FNM_MULTISHELL_PATH/bin:$PATH" ;;
+    esac
+  else
+    eval "$(fnm env --use-on-cd --shell zsh)" 2>/dev/null
+  fi
 }
 load_fnm
 

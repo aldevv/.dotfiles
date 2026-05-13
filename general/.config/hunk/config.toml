@@ -15,4 +15,4 @@ mode = "auto"           # auto, split, stack
 agent_notes = true      # show review comments by default
 line_numbers = true
 wrap_lines = false
-exclude_untracked = false
+exclude_untracked = true

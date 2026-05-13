@@ -173,7 +173,12 @@ git diff ORIG_HEAD HEAD --name-only --diff-filter=A | grep "^${pkg}/" | while IF
   rel=${src#${pkg}/}
   dest="$HOME/$rel"
   expected="$HOME/.dotfiles/$src"
-  if [ -L "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$expected")" ]; then
+  # Skip when $dest already resolves to $expected — covers both leaf-symlink and
+  # parent-symlink cases (e.g. ~/.local/share/scripts is itself a symlink into the
+  # repo, so its children are real files but already reachable at the right path).
+  # Using -L here would miss the parent-symlink case and our `rm -rf` would
+  # recurse through the parent symlink and delete the real file in the repo.
+  if [ -e "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$expected")" ]; then
     continue
   fi
   # Wrong state: real file/dir, dangling link, or missing. Replace with a symlink.
@@ -195,7 +200,12 @@ Finalize any pending merge commit and push, but skip the push if nothing's ahead
 ```bash
 cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
   { git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"; } && \
-  { git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true; } && \
+  # Only rename the head commit if THIS run just made it (wip:/merge:). On a
+  # clean fast-forward with no local changes, HEAD is the upstream tip; amending
+  # it would rewrite the upstream commit's message and produce a non-FF push.
+  case "$(git log -1 --format=%s)" in
+    "wip: "*|"merge: "*) git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" ;;
+  esac && \
   if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then git push origin main; else echo "parent: nothing to push"; fi
 ```
 
