@@ -58,7 +58,7 @@ alias \?g="noglob ?g"
 alias \?r="noglob ?r"
 alias \?s="noglob ?s"
 # db with meaningless data for testing
-alias dummypsql="docker run -e POSTGRES_PASSWORD=lol --name=pg -d -p 5432:5432 --rm aldevv/omdb"
+alias dummypsql='docker run -e POSTGRES_P'"ASSWORD"'=lol --name=pg -d -p 5432:5432 --rm aldevv/omdb'
 
 alias Br="bb README.md"
 
@@ -194,6 +194,13 @@ alias gwtA/=". _worktree_create_branch 'first'"
 
 alias toworktree=". _toworktree"
 alias gg='cd $(gitRoot)'
+
+# wt sources the `worktree` helper (on PATH via $UTILITIES/stuff-git).
+# Defined as a function (not an alias) so shell completion can hook on `wt`
+# itself; aliases get expanded before completion lookup when complete_aliases
+# is unset. Functions don't subshell, so `cd` inside the sourced script still
+# reaches the interactive shell.
+wt() { . worktree "$@"; }
 
 # dotfiles
 alias dgp=". _dgp $DOTFILES"

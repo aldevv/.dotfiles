@@ -301,4 +301,100 @@ M.sort_notes = function()
   picker:find()
 end
 
+M.alternates = function(open_cmd)
+  open_cmd = open_cmd or "edit"
+  local ok, alternates = pcall(vim.fn["projectionist#query_file"], "alternate")
+  if not ok or not alternates or #alternates == 0 then
+    vim.notify("projectionist: no alternates for current file", vim.log.levels.WARN)
+    return
+  end
+  pickers.new({}, {
+    prompt_title = "Alternates",
+    finder = finders.new_table({
+      results = alternates,
+      entry_maker = function(path)
+        local rel = vim.fn.fnamemodify(path, ":.")
+        return { value = path, display = rel, ordinal = rel, path = path }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    previewer = conf.file_previewer({}),
+    attach_mappings = function(prompt_bufnr, _)
+      a.select_default:replace(function()
+        local entry = s.get_selected_entry()
+        a.close(prompt_bufnr)
+        if entry then vim.cmd(open_cmd .. " " .. vim.fn.fnameescape(entry.path)) end
+      end)
+      return true
+    end,
+  }):find()
+end
+
+local function projectionist_files(type, type_entries)
+  local files = {}
+  local seen = {}
+  for _, entry in ipairs(type_entries) do
+    local glob = entry[1] .. "/" .. entry[2]
+    for _, path in ipairs(vim.fn["projectionist#glob"](glob)) do
+      if not seen[path] then
+        seen[path] = true
+        table.insert(files, path)
+      end
+    end
+  end
+  if #files == 0 then
+    vim.notify("projectionist: no files for type '" .. type .. "'", vim.log.levels.WARN)
+    return
+  end
+  pickers.new({}, {
+    prompt_title = type .. " files",
+    finder = finders.new_table({
+      results = files,
+      entry_maker = function(path)
+        local rel = vim.fn.fnamemodify(path, ":.")
+        return { value = path, display = rel, ordinal = rel, path = path }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    previewer = conf.file_previewer({}),
+    attach_mappings = function(prompt_bufnr, _)
+      a.select_default:replace(function()
+        local entry = s.get_selected_entry()
+        a.close(prompt_bufnr)
+        if entry then vim.cmd("edit " .. vim.fn.fnameescape(entry.path)) end
+      end)
+      return true
+    end,
+  }):find()
+end
+
+M.projectionist = function()
+  local ok, navcmds = pcall(vim.fn["projectionist#navigation_commands"])
+  if not ok or vim.tbl_isempty(navcmds or {}) then
+    vim.notify("projectionist: no navigation commands (no .projections.json or matching heuristic)", vim.log.levels.WARN)
+    return
+  end
+  local types = {}
+  for type, _ in pairs(navcmds) do table.insert(types, type) end
+  table.sort(types)
+  pickers.new({}, {
+    prompt_title = "Projectionist Types",
+    finder = finders.new_table({
+      results = types,
+      entry_maker = function(type)
+        return { value = type, display = type, ordinal = type }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    attach_mappings = function(prompt_bufnr, _)
+      a.select_default:replace(function()
+        local entry = s.get_selected_entry()
+        a.close(prompt_bufnr)
+        if entry then projectionist_files(entry.value, navcmds[entry.value]) end
+      end)
+      return true
+    end,
+  }):find()
+end
+
 return M

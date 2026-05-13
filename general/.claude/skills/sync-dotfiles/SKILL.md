@@ -84,25 +84,32 @@ One bash invocation that does **everything** for the happy path: secret scan, co
 
 - **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve), then Step 5 (finalize).
 - **`exit 9`** = merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize).
-- **`exit 7`** = secret scan blocked. Stop and report.
+- **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and report.
 - **`exit 0`** = success, sync is done. Skip to Step 6 (report).
 
 ```bash
-set -e
+set -e -o pipefail
 cd ~/.dotfiles
 export $(grep -v '^#' ~/.machine_metadata | xargs)
 
-# 1. Scan local changes for secrets, commit them as a wip checkpoint.
-diff_files=$(git diff --name-only HEAD)
-if [ -n "$diff_files" ]; then
-  while IFS= read -r f; do
-    [ -z "$f" ] && continue
-    if echo "$f" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519' \
-       || grep -qiE 'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' "$f"; then
-      echo "BLOCKED: possible secret in $f"; exit 7
-    fi
-  done <<< "$diff_files"
-  git add -u && git commit -m "wip: local changes before sync [machine-${id}]"
+# 1. Scan ALL local changes — modified-tracked AND untracked-not-gitignored —
+# and commit them as a wip checkpoint. The dotfiles repo is a personal config
+# store: any file the user dropped under it that isn't gitignored is meant to
+# travel between machines. Leaving untracked files behind silently strands new
+# scripts / configs on the originating machine. The precommit scan and
+# `.gitignore` are the safety net; honor them both, but don't second-guess.
+#
+# `set -o pipefail` plus an explicit `if !`-guarded scan invocation makes the
+# commit unreachable when the scan exits non-zero. Without pipefail, the pipe's
+# overall exit code is the printf's (always 0) and the scan's BLOCKED status
+# silently slips by — that's how an earlier ad-hoc run committed flagged files.
+local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+if [ -n "$local_files" ]; then
+  if ! printf '%s\n' "$local_files" | "$HOME/.claude/skills/sync-dotfiles/scripts/precommit-scan.sh"; then
+    echo "precommit-scan blocked the wip commit. Resolve the flagged files (or rephrase the docs that triggered the false positive) and retry."
+    exit 7
+  fi
+  git add -A && git commit -m "wip: local changes before sync [machine-${id}]"
 fi
 
 # 2. Merge the remote (already fetched in Step 1 Call 3).
@@ -112,6 +119,18 @@ if ! git merge --no-edit origin/main; then
 fi
 post_merge=$(git rev-parse HEAD)
 
+# 2b. Post-merge loop guard: refuse to push a merge that introduced (or kept)
+# a looping symlink, even if it came from the remote. Without this we'd
+# fast-forward a bad commit onto every other machine. --loop-only skips the
+# secret checks (committed-upstream secrets are a different policy concern).
+if [ "$pre_merge" != "$post_merge" ]; then
+  if ! git diff "$pre_merge" "$post_merge" --name-only --diff-filter=AM \
+       | "$HOME/.claude/skills/sync-dotfiles/scripts/precommit-scan.sh" --loop-only; then
+    echo "Merge introduced a symlink loop. To unwind: git reset --hard $pre_merge"
+    exit 7
+  fi
+fi
+
 # 3. If the merge added new files, bail out so Step 4 can restow before we push.
 if [ "$pre_merge" != "$post_merge" ] \
    && [ -n "$(git diff "$pre_merge" "$post_merge" --name-only --diff-filter=A)" ]; then
@@ -119,13 +138,18 @@ if [ "$pre_merge" != "$post_merge" ] \
 fi
 
 # 4. Finalize: rename the head commit to the canonical sync message and push.
-#    Only amend if THIS run just made the head (wip:/merge:). On a clean
-#    fast-forward with no local changes, HEAD is the upstream tip and amending
-#    it would rewrite the upstream commit's message → non-FF push rejection.
+#
+# The amend is gated on "HEAD is ahead of upstream" because amending an
+# already-pushed commit rewrites its SHA and the subsequent push lands
+# as non-fast-forward. The two paths through Step 2 that end here with
+# HEAD == @{u} are (a) no local changes + no remote changes (merge said
+# "Already up to date") and (b) no local changes + remote was strictly
+# ahead (merge fast-forwarded to the remote tip). In both, there's
+# nothing new to relabel.
 git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"
-case "$(git log -1 --format=%s)" in
-  "wip: "*|"merge: "*) git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" ;;
-esac
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then
+  git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]"
+fi
 if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
   git push origin main
 else
@@ -172,11 +196,11 @@ git diff ORIG_HEAD HEAD --name-only --diff-filter=A | grep "^${pkg}/" | while IF
   rel=${src#${pkg}/}
   dest="$HOME/$rel"
   expected="$HOME/.dotfiles/$src"
-  # Skip when $dest already resolves to $expected — covers both leaf-symlink and
-  # parent-symlink cases (e.g. ~/.local/share/scripts is itself a symlink into the
-  # repo, so its children are real files but already reachable at the right path).
-  # Using -L here would miss the parent-symlink case and our `rm -rf` would
-  # recurse through the parent symlink and delete the real file in the repo.
+  # -e (not -L): catches both a direct file-level symlink AND a folded
+  # parent directory. With directory folding, $dest's final component is
+  # a regular file reached through a folded parent; -L would miss that
+  # and the rm/ln branch below would traverse the folded parent, delete
+  # the real file in the package, and write a self-looping symlink.
   if [ -e "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$expected")" ]; then
     continue
   fi
@@ -195,12 +219,12 @@ Report any remaining conflicts (e.g. unwritable parent dirs) but do not abort. T
 
 Step 2 already does this inline on the happy path. This step only fires after the conflict-resolution or restow branches: same logic, separate call.
 
+The amend is gated on "HEAD is ahead of upstream" for the same reason as Step 2: if no new commit was made this run (rare here, but possible if Step 4's restow finished with nothing left to commit), amending would rewrite a previously-pushed commit and the push would be rejected as non-fast-forward.
+
 ```bash
 cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
   { git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"; } && \
-  case "$(git log -1 --format=%s)" in \
-    "wip: "*|"merge: "*) git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" ;; \
-  esac && \
+  { if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]"; fi; } && \
   if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then git push origin main; else echo "parent: nothing to push"; fi
 ```
 
@@ -208,21 +232,21 @@ This skill does **not** update `~/.cache/sync-dotfiles/last-full-sync` — only 
 
 ---
 
-## Secret Scan Rules (reference)
+## Pre-commit scan (reference)
 
-The Step 2 bundle inlines this scan. Reproduced here for one-off / manual use:
+Implemented in `scripts/precommit-scan.sh`. Step 2 pipes the union of `git diff --name-only HEAD` (modified-tracked) and `git ls-files --others --exclude-standard` (untracked, gitignore-respecting) into it. The post-merge guard (Step 2b) pipes `git diff $pre $post --diff-filter=AM` with `--loop-only`. Untracked files are scanned the same way as modified ones — the secret/loop checks are the gate that keeps `git add -A` safe to use blindly.
 
-```bash
-# 1. Suspicious filename
-echo "<filename>" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519'
+Three checks, in order — the symlink-loop guard runs first because a looping symlink makes the content grep fail silently with ELOOP and would otherwise let a self-loop slip through (real incident: dotfiles `dda112d8`):
 
-# 2. Suspicious content
-grep -qiE \
-  'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' \
-  "<filepath>"
-```
+1. **Symlink loop** — files where `stat -L` reports the recursion-limit error.
+2. **Suspicious filename** — common credential-bearing extensions (env / pem / key / pfx / ppk family) and dotenv variants, plus paths that name themselves after a credential type (passwords, private keys, ssh identities). Exact regex lives in the script.
+3. **Suspicious content** — RSA / ed25519 private-key headers, AWS access-key prefixes, GitHub personal-access-token prefixes, Slack tokens, and credential-style key=value or `key:` assignments. Exact regex lives in the script — kept out of these docs so the scan doesn't trip on its own description.
 
-If either matches: don't stage/commit, print `BLOCKED: possible secret in <filepath>`, include in final report.
+Flags:
+- `--loop-only` — skip checks 2 and 3 (post-merge use)
+- `--prefix=<path>` — prepend `<path>/` to BLOCKED messages (parallel-submodule use; the `sync-dotfiles-full` skill uses this)
+
+Exits 0 if every input file passes; exits 7 (after scanning all of them) if any blocked. The script reads filenames from stdin (newline-separated) or from argv.
 
 ---
 
@@ -232,7 +256,7 @@ If either matches: don't stage/commit, print `BLOCKED: possible secret in <filep
 - Mode: fast (parent-only) — note this explicitly so the user knows submodules were skipped
 - Days since last full sync
 - Path taken: happy / conflict / restow (= which exit code from Step 2)
-- Local changes committed / nothing to push / fast-forwarded
+- Local changes committed (split: modified-tracked count + newly-tracked count from `git ls-files --others --exclude-standard`) / nothing to push / fast-forwarded
 - Conflicts resolved (count and files), if any
 - Packages restowed, if any
 - Final pushed commit (or "nothing to push")
