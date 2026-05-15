@@ -18,6 +18,7 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 - [CRITICAL: Work files boundary](#critical-work-files-boundary)
 - [CRITICAL: Saving dotfiles changes](#critical-saving-dotfiles-changes)
 - [CRITICAL: Writing style](#critical-writing-style)
+- [CRITICAL: Comments](#critical-comments)
 - [Code organization](#code-organization)
 - [Worktrees](#worktrees)
 - [CRITICAL: Playwright Browser Issues](#critical-playwright-browser-issues)
@@ -60,6 +61,21 @@ When the user says "save the changes in my dotfiles" (or any equivalent), they m
 **Forbidden punctuation: em-dash (`—`) and double-hyphen (`--`).** Do not use either in any user-facing text, commit messages, PR descriptions, READMEs, comments, docs, or chat replies. They make writing sound robotic. Rewrite with a comma, period, parenthesis, or colon instead. CLI flags like `--flag` are fine; the ban is on em-dashes and double-hyphens used as prose punctuation.
 
 **Forbidden: emojis.** Do not use emojis anywhere (chat, commits, PRs, READMEs, comments, docs, file contents). Applies even if the surrounding text or an existing file already uses them. Only exception: the user explicitly asks for an emoji in this turn.
+
+## CRITICAL: Comments
+**Adding any comment is a rule violation by default.** Before writing any comment, state in chat first: `comment justified: <complex flow / hidden invariant / non-obvious WHY / workaround>`. If you can't articulate that justification in chat first, you have not earned the comment.
+
+Forbidden:
+- Narrative comments that restate the next line.
+- Function-purpose summaries on functions whose name and signature already convey it.
+- "Used by X" / "For the Y flow" / cross-cutting consistency notes. Those belong in the PR description, not the code.
+- Multi-line docstrings, unless the flow is truly hairy (subtle invariants, surprising ordering, platform workaround).
+
+Exception: tests. A one-line function-header comment on a test that names a non-obvious scenario is OK (`// Workday quirk: ref ID without name, require both`). Per-line narration inside the test body is not. Default is still zero, only add when the test name alone wouldn't tell a future reader what's being checked.
+
+When a comment IS justified: one short plain-English line. Three-clause sentences with semicolons are a smell, cut.
+
+When touching existing code: if a comment restates the line that follows it, delete the comment.
 
 ## Code organization
 **Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.). One folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" or "keep it small" notes in older project READMEs or `CLAUDE.local.md` files: surface the conflict, update the project doc, then split.
@@ -118,9 +134,7 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 **Everything in this section is a RULE, not a guideline.** Apply without exception unless an explicit exception is given in the current turn. "I thought it would be cleaner" is not an exception.
 
 ### Comments
-Default to writing zero comments. Only add one when it explains a complex flow, a hidden invariant, a non-obvious WHY, or a workaround. Never write narrative comments that restate the code, summarize a function's purpose, document obvious sequencing, or reference the current task/PR/caller. If removing a comment wouldn't actively confuse a future reader, do not write it. Applies to existing comments too: when touching code, if a comment restates what the next line already says, trim it.
-
-When a comment is justified, keep it to **one short, plain-English line**. No multi-line function-header docstrings unless the flow is truly complex (subtle invariants, surprising ordering, platform workarounds). The bar is high, and three-clause sentences with semicolons are a smell. When in doubt, **delete the comment** and trust the reader.
+See `## CRITICAL: Comments` above.
 
 ## Commits & PRs
 - **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
