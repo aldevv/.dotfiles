@@ -134,7 +134,7 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 **Everything in this section is a RULE, not a guideline.** Apply without exception unless an explicit exception is given in the current turn. "I thought it would be cleaner" is not an exception.
 
 ### Comments
-See `## CRITICAL: Comments` above.
+**Disabled by default.** Full rule, forbidden cases, and the test-file exception live in `## CRITICAL: Comments` above.
 
 ## Commits & PRs
 - **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions

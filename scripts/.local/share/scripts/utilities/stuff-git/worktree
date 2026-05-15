@@ -24,13 +24,20 @@
 #                                  current repo except the one you're standing
 #                                  in. With a name: remove just that one.
 #                                  --force drops uncommitted changes too.
-#   worktree pick                  fzf-pick a worktree and print its path.
-#                                  Inside the picker, ctrl-c creates the typed
-#                                  worktree (and cds into it when sourced),
-#                                  ctrl-x removes the highlighted worktree and
-#                                  reloads the list. When sourced with no
-#                                  subcommand, the `wt` alias turns that path
-#                                  into a `cd`.
+#   worktree pick                  fzf-pick a worktree of the current repo
+#                                  and print its path. Inside the picker,
+#                                  ctrl-c creates the typed worktree (and cds
+#                                  into it when sourced), ctrl-x removes the
+#                                  highlighted worktree and reloads the list.
+#                                  When sourced with no subcommand, the `wt`
+#                                  alias turns that path into a `cd`.
+#   worktree pick-all              fzf-pick a worktree across EVERY managed
+#                                  repo under WT_HOME and print its path.
+#                                  Used automatically when bare `worktree` /
+#                                  `wt` runs outside any git repo. ctrl-x
+#                                  still removes the highlighted worktree;
+#                                  ctrl-c is fzf's default abort because
+#                                  creating a worktree needs repo context.
 #   worktree root                  print the worktrees-root for the current
 #                                  repo (~/worktrees/<reponame>)
 #   worktree skill [--base <path>] install a Claude skill at
@@ -40,7 +47,8 @@
 #                                  ${WT_HOME:-$HOME/worktrees}.
 #   worktree help                  show this help
 #
-# With no subcommand the script behaves like `worktree pick`.
+# With no subcommand the script behaves like `worktree pick` inside a git
+# repo, and like `worktree pick-all` outside one.
 # Override the parent dir with WT_HOME=... in the environment.
 
 # Detect whether we were sourced or executed. The sourced path has to cd in
@@ -92,6 +100,24 @@ __wt_run() (
     git worktree list --porcelain | awk '/^worktree / { print $2; exit }'
   }
 
+  # Worktrees only inherit `.git`, not working-tree files. Symlink the main
+  # checkout's per-checkout config (direnv, Claude project memory, agent
+  # configs) so they follow you into a new worktree. Skips a name if the
+  # source is missing, if the target already exists (including as a checked-in
+  # file from the branch), or if target == main.
+  link_main_files() {
+    local target="$1"
+    local main_root="$2"
+    [ "$target" != "$main_root" ] || return 0
+    local name
+    for name in .envrc CLAUDE.md CLAUDE.local.md .claude; do
+      [ -e "$main_root/$name" ] || [ -L "$main_root/$name" ] || continue
+      [ -e "$target/$name" ] && continue
+      [ -L "$target/$name" ] && continue
+      ln -s "$main_root/$name" "$target/$name"
+    done
+  }
+
   print_help() {
     cat <<'EOF'
 worktree: git worktree helper
@@ -109,6 +135,9 @@ Usage:
                                  worktree. with name: remove just that one.
   worktree pick                  print the fzf-selected worktree path
                                  (ctrl-c creates typed name, ctrl-x removes)
+  worktree pick-all              fzf-pick across EVERY managed repo under
+                                 WT_HOME (ctrl-x removes). used automatically
+                                 when bare `worktree` runs outside any repo
   worktree root                  print the worktrees-root for the current repo
   worktree skill [--base <path>] install a Claude skill describing the layout
   worktree help                  show this help
@@ -130,6 +159,75 @@ EOF
   cmd_list() {
     require_git_repo
     git worktree list
+  }
+
+  # TSV rows for every worktree under WORKTREE_HOME, across every managed
+  # repo. Format: <repo>\t<branch>\t<worktree-path>. The main checkout is
+  # excluded so the picker only offers actual worktrees to cd into.
+  #
+  # `find` instead of globs so we don't trip zsh's NOMATCH when a managed
+  # <repo>/ dir is empty (this script is sourced by the `wt` zsh function).
+  # Porcelain is captured into a variable so awk can read it without an
+  # early `exit`, which would SIGPIPE the producer under pipefail.
+  cmd_picker_list_all() {
+    [ -d "$WORKTREE_HOME" ] || die "no worktrees root at $WORKTREE_HOME"
+
+    local repo_dir first_wt porcelain main_path main_name
+    while IFS= read -r repo_dir; do
+      first_wt="$(find "$repo_dir" -mindepth 1 -maxdepth 1 -type d \
+        -print -quit 2>/dev/null)"
+      [ -n "$first_wt" ] || continue
+
+      porcelain="$(git -C "$first_wt" worktree list --porcelain 2>/dev/null || true)"
+      [ -n "$porcelain" ] || continue
+
+      main_path="$(printf '%s\n' "$porcelain" \
+        | awk '$1 == "worktree" && p == "" { p = $2 } END { print p }')"
+      [ -n "$main_path" ] || continue
+      main_name="$(basename "$main_path")"
+
+      printf '%s\n' "$porcelain" \
+        | awk -v main="$main_path" -v repo="$main_name" '
+            $1 == "worktree" { wt = $2; branch = ""; next }
+            $1 == "branch"   { sub(/^refs\/heads\//, "", $2); branch = $2 }
+            $1 == "detached" { branch = "(detached)" }
+            /^$/ && wt {
+              if (wt != main) printf "%s\t%s\t%s\n", repo, branch ? branch : "(no branch)", wt
+              wt = ""; branch = ""
+            }
+            END {
+              if (wt && wt != main) printf "%s\t%s\t%s\n", repo, branch ? branch : "(no branch)", wt
+            }
+          '
+    done < <(find "$WORKTREE_HOME" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+  }
+
+  # fzf picker for bare `worktree` / `wt` run outside any git repo. Lists
+  # every worktree across every managed repo, lets the user cd into one
+  # (Enter) or remove one (ctrl-x + reload). ctrl-c is left as fzf's
+  # default abort: creating a new worktree from outside a repo has no
+  # repo context to anchor against.
+  cmd_pick_all() {
+    [ -d "$WORKTREE_HOME" ] || die "no worktrees root at $WORKTREE_HOME"
+    command -v fzf >/dev/null 2>&1 || die "fzf not installed"
+
+    local rows selection
+    rows="$(cmd_picker_list_all)"
+    [ -n "$rows" ] || die "no worktrees found under $WORKTREE_HOME"
+
+    selection="$(
+      printf '%s\n' "$rows" \
+        | fzf --delimiter=$'\t' --with-nth=1,2,3 \
+              --height=80% --reverse \
+              --prompt='worktree> ' \
+              --header='enter: cd   ctrl-x: remove worktree' \
+              --bind="ctrl-x:execute-silent(git worktree remove {3} 2>/dev/null || git worktree remove --force {3} 2>/dev/null)+reload(worktree _picker-list-all)" \
+              --preview='git -C {3} log --color=always --format="%C(auto)%h%d%C(reset)%n  %s" -25' \
+              --preview-window='right:60%:wrap'
+    )" || true
+
+    [ -n "$selection" ] || return 1
+    printf '%s\n' "${selection##*$'\t'}"
   }
 
   cmd_picker_list() {
@@ -244,6 +342,8 @@ EOF
       git worktree add -b "$branch" "$target" >&2
     fi
 
+    link_main_files "$target" "$(main_worktree_path)" >&2 || true
+
     printf '%s\n' "$target"
   }
 
@@ -265,6 +365,8 @@ EOF
     else
       git worktree add -b "$branch" "$target"
     fi
+
+    link_main_files "$target" "$(main_worktree_path)"
   }
 
   cmd_cd() {
@@ -395,6 +497,17 @@ A \`worktree\` script (on \`PATH\`, also exposed as the \`wt\` shell function) m
 | \`worktree root\`             | print \`${base}/<repo>\` for the current repo     |
 | \`worktree help\`             | show full usage                                  |
 
+## Symlinks created on \`new\` / \`-a\`
+
+When a worktree is created via \`worktree new\` or \`worktree -a\`, the helper symlinks the following from the main checkout into the new worktree, so per-checkout config follows you in:
+
+- \`.envrc\` (direnv)
+- \`CLAUDE.md\`
+- \`CLAUDE.local.md\`
+- \`.claude/\`
+
+A name is skipped when the source doesn't exist in the main checkout or when the new worktree already has its own (e.g. checked into the branch). This means inside a worktree those paths typically resolve to the main checkout; treat edits to them as edits to the main checkout's copy.
+
 ## Resolving names
 
 When the user references "the \`X\` worktree" from inside a repo, resolve to \`${base}/<current-repo>/X\`. To get \`<current-repo>\`:
@@ -411,6 +524,15 @@ EOF
 
   local sub="${1:-pick}"
   [ "$#" -gt 0 ] && shift
+
+  # Bare `worktree` outside any repo runs the global picker across every
+  # managed repo instead of dying inside cmd_pick's require_git_repo.
+  # Explicit subcommands still error out when they need a repo.
+  if [ "$sub" = "pick" ] \
+     && ! git rev-parse --show-toplevel >/dev/null 2>&1; then
+    sub="pick-all"
+  fi
+
   case "$sub" in
     new) cmd_new "$@" ;;
     -a|add) cmd_add "$@" ;;
@@ -419,7 +541,9 @@ EOF
     rm|remove) cmd_rm "$@" ;;
     clean|-c) cmd_clean "$@" ;;
     pick) cmd_pick "$@" ;;
+    pick-all|all) cmd_pick_all "$@" ;;
     _picker-list) cmd_picker_list ;;
+    _picker-list-all) cmd_picker_list_all ;;
     root) cmd_root "$@" ;;
     skill) cmd_skill "$@" ;;
     -h|--help|help) print_help ;;
@@ -428,8 +552,10 @@ EOF
 )
 
 if __wt_sourced; then
-  # Bare `wt` → pick + cd. `wt -a <branch>` → create/attach + cd.
-  # Other subcommands just pass through (stdout flows to the terminal).
+  # Bare `wt` → pick + cd. Inside a repo: picks among the repo's worktrees.
+  # Outside any repo: picks across every managed repo (dispatch routes
+  # `pick` → `pick-all` in that case). `wt -a <branch>` → create/attach +
+  # cd. Other subcommands just pass through (stdout flows to the terminal).
   if [ "$#" -eq 0 ]; then
     __wt_target="$(__wt_run pick)"
     [ -n "${__wt_target:-}" ] && cd "$__wt_target"
