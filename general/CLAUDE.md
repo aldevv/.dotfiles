@@ -64,10 +64,13 @@ When the user says "save the changes in my dotfiles" (or any equivalent), they m
 ## Code organization
 **Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.). One folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" or "keep it small" notes in older project READMEs or `CLAUDE.local.md` files: surface the conflict, update the project doc, then split.
 
-## Worktrees
-Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `$UTILITIES/stuff-git/wt`). Two rules when working in one:
+**Hard ceiling: 1000 lines per source file.** Any file pushing past 1000 lines is too big and should be refactored across multiple files by concern. When you produce or touch a file that crosses 1000 lines, split it before the change lands; don't ship a >1000-line file just because "it works".
 
-- **Mirror the main checkout's `.envrc`.** Worktrees inherit `.git` but NOT working-tree files like `.envrc`, so dev-env hooks defined there don't follow you in. When work starts in a worktree, copy `.envrc` from the main checkout (and run `direnv allow` once). If the main repo has no `.envrc`, do nothing; there's nothing to mirror.
+## Worktrees
+Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `$UTILITIES/stuff-git/wt`). Rules when working in one:
+
+- **Use the `worktrees` skill for setup, not manual `cp`.** The skill symlinks gitignored-but-important files (`.envrc`, vendored `audit/` trees, local-only assets) from the main checkout into the worktree so they stay in sync. Manual `cp` makes a fork that drifts. When you need a fresh worktree or notice a worktree is missing files, invoke the skill rather than improvising. The skill knows the base path (`~/worktrees/<repo>/<branch>`) and naming convention.
+- **Mirror the main checkout's `.envrc`** (the skill handles this; if you bypass the skill, do it by hand and `direnv allow` once). If the main repo has no `.envrc`, nothing to mirror.
 - **Promote repeated dev-binary build sequences to `.envrc`.** If the same multi-step build (e.g. `bun run build:bin && install -m 0755 dist/<repo> ~/.local/bin/<repo>-dev`) gets run more than a couple of times and the project has no Makefile target / `bin/` script for it, define it as an alias or shell function in `.envrc` (e.g. `<repo>-dev() { ... }`). Add it to **both** the main checkout's `.envrc` and every active worktree's copy so the command is available everywhere on `cd`. Don't pollute the project's source: `.envrc` stays gitignored and per-checkout.
 
 ## CRITICAL: Playwright Browser Issues
@@ -118,9 +121,9 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 **Everything in this section is a RULE, not a guideline.** Apply without exception unless an explicit exception is given in the current turn. "I thought it would be cleaner" is not an exception.
 
 ### Comments
-Default to writing zero comments. Only add one when it explains a complex flow, a hidden invariant, a non-obvious WHY, or a workaround. Never write narrative comments that restate the code, summarize a function's purpose, document obvious sequencing, or reference the current task/PR/caller. If removing a comment wouldn't actively confuse a future reader, do not write it. Applies to existing comments too: when touching code, if a comment restates what the next line already says, trim it.
+**Comments are disabled by default.** Only add one when it explains a complex flow, a hidden invariant, a non-obvious WHY, or a workaround. Never write narrative comments that restate the code, summarize a function's purpose, document obvious sequencing, or reference the current task/PR/caller. If removing a comment wouldn't actively confuse a future reader, do not write it. Applies to existing comments too: when touching code, if a comment restates what the next line already says, trim it.
 
-When a comment is justified, keep it to **one short, plain-English line**. No multi-line function-header docstrings unless the flow is truly complex (subtle invariants, surprising ordering, platform workarounds). The bar is high, and three-clause sentences with semicolons are a smell. When in doubt, **delete the comment** and trust the reader.
+When a comment IS justified by a genuinely complex flow, write as much as the reader actually needs. Multi-line is fine. Multi-paragraph is fine if the flow earns it. But still aim short: a complex flow doesn't entitle the comment to be three times longer than necessary. Cut every sentence that doesn't add information. When in doubt about whether the flow is complex enough, **delete the comment** and trust the reader.
 
 ## Commits & PRs
 - **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
