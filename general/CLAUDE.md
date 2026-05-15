@@ -73,7 +73,7 @@ Forbidden:
 
 Exception: tests. A one-line function-header comment on a test that names a non-obvious scenario is OK (`// Workday quirk: ref ID without name, require both`). Per-line narration inside the test body is not. Default is still zero, only add when the test name alone wouldn't tell a future reader what's being checked.
 
-When a comment IS justified: one short plain-English line. Three-clause sentences with semicolons are a smell, cut.
+When a comment IS justified: as short as possible, as long as it needs to be. Understanding is the priority, brevity is second. If the complexity can be untangled by a small refactor that makes the code self-explanatory, prefer the refactor.
 
 When touching existing code: if a comment restates the line that follows it, delete the comment.
 
