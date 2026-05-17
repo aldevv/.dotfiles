@@ -497,10 +497,6 @@ end, desc("LeetCodeSubmit"))
 -- vim.keymap.set("n", "<leader>,fls", ":LeetCodeSubmit<cr>")
 vim.keymap.set("n", "<leader>,fli", ":LeetCodeSignIn<cr>")
 
--- paste image
-map("n", "<leader>,mP", ":PasteImg<cr>")
-map("n", "m<leader>", ":PasteImg<cr>")
-
 require("keybindings.Sbindings")
 
 -- treesitter
@@ -526,8 +522,6 @@ map("n", "<Del>", "<cmd>lua vim.diagnostic.goto_next()<cr>", nor)
 map("n", "<S-Del>", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
 
 map("n", "<leader><leader>x", "<cmd>luafile %<cr>", nor)
-
-require("keybindings.ai")
 
 -- Run current line / visual selection through zsh
 map("n", "!!", ":. !zsh<space>", { noremap = true })

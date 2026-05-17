@@ -12,7 +12,6 @@ return {
       vim.opt.diffopt = "internal,vertical,closeoff,filler"
     end,
   },
-  { "junegunn/gv.vim", cmd = "GV" },
   {
     'pwntester/octo.nvim',
     dependencies = {

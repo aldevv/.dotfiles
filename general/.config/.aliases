@@ -155,8 +155,8 @@ alias gcsr="git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
 alias cop="copilot -i "
 alias copilot="copilot --allow-tool 'write' --allow-all-paths --allow-all-tools"
 
-alias hp="hunkpr"
-alias hm="hunkmr"
+alias hp="hunkpr_deprecated"
+alias hm="hunkmr_deprecated"
 
 
 alias yt="cd ~/.local/bin/ && yt"

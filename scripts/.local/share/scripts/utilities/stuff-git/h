@@ -1,55 +1,33 @@
 #!/bin/bash
-# Dispatch to `hunkpr` (GitHub) or `hunkmr` (GitLab) based on the repo's
-# origin remote, or pass through to `hunk` for any other subcommand.
+# h: thin wrapper around `hunk` plus one shortcut for URLs.
 #
-# Usage: h [<pr-or-mr-url-or-number>] | <hunk-subcommand> [args...]
+# Usage:
+#   h                                                  exec hunk (its own no-arg behavior)
+#   h <hunk-subcommand> [args...]                      exec hunk "$@"
+#   h https://github.com/owner/repo                    clone via _clone, hunk diff origin/<main>
+#   h https://github.com/owner/repo/pull/123           clone, fetch pull/123/head, hunk diff origin/<base>...origin/pr/123
+#   h https://gitlab.com/g/p                           clone via _clone, hunk diff origin/<main>
+#   h https://gitlab.com/g/p/-/merge_requests/45       clone, fetch merge-requests/45/head, hunk diff origin/<target>...origin/mr/45
 #
-#   no arg          → resolves repo from cwd's origin remote (cached);
-#                     refreshes origin/<base>, then lists open PRs/MRs
-#                     authored by `@me` plus the owner of every non-
-#                     `origin` remote (fork-based workflow → catches PRs
-#                     authored by your fork's account even when gh's
-#                     active login is a different identity):
-#                       - 1 PR/MR → hunkpr/hunkmr <num>
-#                       - 2+      → fzf picker, then hunkpr/hunkmr <num>
-#                       - 0       → hunk diff origin/<base>
-#                                   --exclude-untracked
-#   number          → resolves repo from cwd's origin remote (cached).
-#   URL             → forge detected directly from URL host (no cache).
-#   anything else   → exec hunk with all args (e.g. `h diff`, `h show`).
+# Clones go to $REPOS/<host>/<owner>/<repo> via the _clone helper (which prompts
+# before overwriting an existing checkout). PR/MR head is fetched as
+# origin/(pr|mr)/<N>; no working-tree checkout, fork heads work without adding
+# a remote.
 #
-# Cache: ~/.cache/hunk/repos.tsv (4 cols, shared with hunkpr/hunkmr):
-#   <host/owner/repo>\t<github|gitlab>\t<local-path>\t<base-branch>
-# Exit codes: 0 ok, 1 usage, 2 resolve, 127 missing dep.
+# Exit codes: 0 ok, 1 usage, 2 resolve, 3 fetch, 4 clone, 127 missing dep.
 set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: h [<pr-or-mr-url-or-number>] | <hunk-subcommand> [args...]
+Usage: h [<github-or-gitlab-url> | <hunk-subcommand> [args...]]
 
-Dispatches to `hunkpr` (GitHub) or `hunkmr` (GitLab) for PR/MR review
-based on the repo's origin remote. Caches the choice per repo in
-~/.cache/hunk/repos.tsv so repeated calls in the same repo skip the
-host-detection step.
+  no arg                                    exec hunk
+  github/gitlab repo URL                    clone, hunk diff origin/<main>
+  github PR URL / gitlab MR URL             clone, fetch head, diff base..head
+  anything else                             exec hunk with all args
 
-With no args, refreshes origin/<base> and lists open PRs/MRs authored
-by you (gh `@me` plus the owner of any non-`origin` remote, so PRs from
-your fork show up even when gh's active login is a different account).
-Dispatches directly if there's exactly one, opens an fzf picker if
-there are several, or falls back to `hunk diff origin/<base>
---exclude-untracked` if there are none.
-
-Any other (non-URL, non-numeric) argument is passed straight through to
-`hunk`, so `h diff`, `h show HEAD~1`, etc. behave exactly like the
-equivalent `hunk` invocation.
-
-Examples:
-  h                                                            # current branch
-  h 123                                                        # PR/MR in cwd's repo
-  h https://github.com/owner/repo/pull/123                     # GitHub URL
-  h https://gitlab.com/owner/repo/-/merge_requests/123         # GitLab URL
-  h diff                                                       # → hunk diff
-  h show HEAD~1                                                # → hunk show HEAD~1
+Clones go to $REPOS/<host>/<owner>/<repo> via the _clone helper.
+Requires: hunk, jq; gh for GitHub PR URLs; glab for GitLab MR URLs.
 EOF
 }
 
@@ -59,210 +37,186 @@ esac
 
 arg="${1:-}"
 
-# 1. URL arg → dispatch from the URL host directly. No cache needed: the
-#    URL is self-describing, and caching by URL would conflate repos that
-#    happen to share part of their path on different forges.
-if [[ "$arg" =~ ^https?://([^/]+)/ ]]; then
-  [[ $# -le 1 ]] || { usage >&2; exit 1; }
-  host="${BASH_REMATCH[1]}"
-  case "$host" in
-    *github*) exec hunkpr "$arg" ;;
-    *gitlab*) exec hunkmr "$arg" ;;
-  esac
-  echo "h: can't dispatch host \`$host\` (not github/gitlab); use hunkpr/hunkmr directly" >&2
-  exit 2
-fi
-
-# 2. Non-empty, non-numeric first arg → treat the whole call as a hunk
-#    subcommand invocation. Lets `h diff`, `h show`, etc. mirror `hunk`.
-if [[ -n "$arg" && ! "$arg" =~ ^[0-9]+$ ]]; then
+# Pass-through path: no arg, or arg doesn't look like an http(s) URL.
+if [[ ! "$arg" =~ ^https?:// ]]; then
+  if [[ $# -eq 0 ]]; then
+    exec hunk
+  fi
   exec hunk "$@"
 fi
 
-# 3. No arg or numeric arg → resolve via cwd's origin remote.
 [[ $# -le 1 ]] || { usage >&2; exit 1; }
-origin_url=$(git remote get-url origin 2>/dev/null) || {
-  echo "h: not in a git repo, and no URL given" >&2
-  exit 2
-}
 
-# Normalize key so HTTPS and SSH clones of the same repo share a cache
-# entry: `https://github.com/foo/bar.git` and `git@github.com:foo/bar.git`
-# both become `github.com/foo/bar`.
-key="$origin_url"
-key="${key#http://}"; key="${key#https://}"
-key="${key#*@}"          # drop user@ if present
-key="${key/:/\/}"        # SSH `host:path` → `host/path`
-key="${key%.git}"
+command -v hunk >/dev/null || { echo "h: \`hunk\` not on PATH" >&2; exit 127; }
+[[ -n "${REPOS:-}" ]] || { echo "h: \$REPOS is not set (needed by _clone)" >&2; exit 2; }
 
-cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/hunk"
-cache_file="$cache_dir/repos.tsv"
-mkdir -p "$cache_dir"
-[[ -f "$cache_file" ]] || : > "$cache_file"
+url_clean="${arg%%\?*}"
+url_clean="${url_clean%%#*}"
+url_clean="${url_clean%/}"
 
-# Cache schema (4 cols, shared with hunkpr/hunkmr):
-#   <host/owner/repo>\t<github|gitlab>\t<local-path>\t<base-branch>
-# Read forge + base in a single awk pass; missing fields stay empty.
-choice=""
-base=""
-IFS=$'\t' read -r _ choice _ base < <(
-  awk -F'\t' -v k="$key" '$1==k {print; exit}' "$cache_file"
-) || true
+rest="${url_clean#http://}"; rest="${rest#https://}"
+host="${rest%%/*}"
+path_part="${rest#*/}"
 
-if [[ -z "$choice" ]]; then
-  case "$origin_url" in
-    *github*) choice="github" ;;
-    *gitlab*) choice="gitlab" ;;
-    *)
-      echo "h: can't determine forge from \`$origin_url\` — invoke hunkpr or hunkmr directly" >&2
-      exit 2
-      ;;
-  esac
-  # Write 4-col row; hunkpr/hunkmr will fill in path + base on first run.
-  printf '%s\t%s\t\t\n' "$key" "$choice" >> "$cache_file"
-fi
-
-case "$choice" in
-  github|gitlab) ;;
-  *)
-    echo "h: corrupt cache entry for \`$key\` (\`$choice\`); fix or delete $cache_file" >&2
-    exit 2
-    ;;
+case "$host" in
+  *github*) forge=github ;;
+  *gitlab*) forge=gitlab ;;
+  *) echo "h: unsupported host \`$host\` (expected github or gitlab)" >&2; exit 2 ;;
 esac
 
-# Numeric arg → trust the user's number, dispatch directly.
-if [[ -n "$arg" ]]; then
-  case "$choice" in
-    github) exec hunkpr "$arg" ;;
-    gitlab) exec hunkmr "$arg" ;;
-  esac
-fi
-
-# === No-arg case: fresh base + multi-PR aware dispatch. ====================
-
-command -v jq >/dev/null \
-  || { echo "h: \`jq\` not found on PATH (required for current-branch review)" >&2; exit 127; }
-
-fetch_base="${base:-main}"
-
-# Kick off the base fetch in the background so it overlaps with the gh/glab
-# queries below. We only block on it for the no-PR fallback (where the diff
-# target needs to be fresh); for PR/MR review hunkpr/hunkmr handle their own
-# fetching, so a slightly stale background fetch is harmless.
-git fetch --quiet origin "$fetch_base" >/dev/null 2>&1 &
-fetch_pid=$!
-
-# Build the author list to query. The user's active gh account may not
-# match the account that authored the PRs (fork-based workflow: `origin`
-# is upstream, `fork` is the personal clone). Mirror the zsh prompt's
-# approach: query `@me` plus the owner of every non-`origin` remote, then
-# dedupe by PR number. `gh pr list --author <user>` reads from the cwd's
-# repo and works regardless of which account is logged in — no
-# `gh auth switch` needed.
-declare -a authors=("@me")
-seen="|@me|"
-for r in $(git remote 2>/dev/null); do
-  [[ "$r" == "origin" ]] && continue
-  rurl=$(git remote get-url "$r" 2>/dev/null) || continue
-  owner=""
-  if [[ "$rurl" =~ [:/]([A-Za-z0-9_.-]+)/[A-Za-z0-9_.-]+(\.git)?/?$ ]]; then
-    owner="${BASH_REMATCH[1]}"
-  fi
-  [[ -n "$owner" && "$seen" != *"|$owner|"* ]] || continue
-  authors+=("$owner")
-  seen+="$owner|"
-done
-
-# Run all author queries in parallel. Each child writes its JSON to a
-# temp file; the parent collects + dedupes after all jobs complete.
-declare -a author_tmps=()
-declare -a author_pids=()
-trap '[[ ${#author_tmps[@]} -gt 0 ]] && rm -f "${author_tmps[@]}"' EXIT
-
-list_json="[]"
-case "$choice" in
+pr_num=""
+repo_path=""
+case "$forge" in
   github)
-    if command -v gh >/dev/null; then
-      for a in "${authors[@]}"; do
-        tmp=$(mktemp -t h-prs.XXXXXX)
-        author_tmps+=("$tmp")
-        ( gh pr list --author "$a" --state open \
-            --json number,title,baseRefName,headRefName \
-            > "$tmp" 2>/dev/null || echo "[]" > "$tmp" ) &
-        author_pids+=("$!")
-      done
+    if   [[ "$path_part" =~ ^([^/]+/[^/]+)/pull/([0-9]+) ]]; then
+      repo_path="${BASH_REMATCH[1]}"; pr_num="${BASH_REMATCH[2]}"
+    elif [[ "$path_part" =~ ^([^/]+/[^/]+) ]]; then
+      repo_path="${BASH_REMATCH[1]}"
+    else
+      echo "h: can't parse GitHub URL \`$arg\`" >&2; exit 2
     fi
     ;;
   gitlab)
-    if command -v glab >/dev/null; then
-      for a in "${authors[@]}"; do
-        tmp=$(mktemp -t h-prs.XXXXXX)
-        author_tmps+=("$tmp")
-        if [[ "$a" == "@me" ]]; then
-          ( glab mr list --mine --opened --output json \
-              > "$tmp" 2>/dev/null || echo "[]" > "$tmp" ) &
-        else
-          ( glab mr list --author "$a" --opened --output json \
-              > "$tmp" 2>/dev/null || echo "[]" > "$tmp" ) &
-        fi
-        author_pids+=("$!")
-      done
+    # GitLab uses /-/ as the path-vs-resource separator. Anything before it is
+    # the project path (groups can nest, so it isn't just owner/repo).
+    if [[ "$path_part" =~ ^(.+)/-/merge_requests/([0-9]+) ]]; then
+      repo_path="${BASH_REMATCH[1]}"; pr_num="${BASH_REMATCH[2]}"
+    else
+      repo_path="${path_part%%/-/*}"
     fi
     ;;
 esac
+repo_path="${repo_path%.git}"
+[[ -n "$repo_path" ]] || { echo "h: empty repo path in URL \`$arg\`" >&2; exit 2; }
 
-for p in "${author_pids[@]}"; do wait "$p" 2>/dev/null || true; done
+repo_url="https://$host/$repo_path"
+canonical_dir="$REPOS/$host/$repo_path"
+repo_basename="${repo_path##*/}"
+current_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
 
-# Combine, normalize (gitlab → {number, baseRefName, headRefName, title}),
-# dedupe by number, sort desc.
-acc="[]"
-for tmp in "${author_tmps[@]}"; do
-  one=$(<"$tmp")
-  [[ -n "$one" ]] || one="[]"
-  if [[ "$choice" == "gitlab" ]]; then
-    one=$(jq '[.[] | {number: .iid, baseRefName: .target_branch, headRefName: .source_branch, title: .title}]' <<<"$one" 2>/dev/null) || one="[]"
+# Match an origin URL against a `<owner>/<repo>` or nested path, host-agnostic
+# so SSH and HTTPS clones of the same project both match.
+remote_matches() {
+  local url="$1" target="$2"
+  [[ "$url" == *"/${target}.git" || "$url" == *"/${target}" \
+     || "$url" == *":${target}.git" || "$url" == *":${target}" ]]
+}
+
+resolved_dir=""
+
+# 1. Already standing in a clone of this URL (any path).
+if [[ -n "$current_root" ]]; then
+  cur_url=$(git -C "$current_root" remote get-url origin 2>/dev/null || true)
+  if remote_matches "$cur_url" "$repo_path"; then
+    resolved_dir="$current_root"
   fi
-  acc=$(jq -s '.[0] + .[1]' <<<"$acc"$'\n'"$one")
-done
-list_json=$(jq 'unique_by(.number) | sort_by(-.number)' <<<"$acc" 2>/dev/null) || list_json="[]"
+fi
 
-count=$(jq 'length' <<<"$list_json" 2>/dev/null || echo 0)
+# 2. fd-search under each known code root in priority order. Bounded depth
+# keeps the walk fast on deep trees; the URL check filters false positives if
+# multiple dirs share the basename.
+if [[ -z "$resolved_dir" ]] && command -v fd >/dev/null; then
+  search_roots=("${WORK:-}" "${PROJECTS:-}" "${CODE:-}" "${LEARN:-}")
+  for root in "${search_roots[@]}"; do
+    [[ -n "$root" && -d "$root" ]] || continue
+    while IFS= read -r candidate; do
+      [[ -d "$candidate/.git" ]] || continue
+      cand_url=$(git -C "$candidate" remote get-url origin 2>/dev/null || true)
+      [[ -n "$cand_url" ]] || continue
+      if remote_matches "$cand_url" "$repo_path"; then
+        resolved_dir="$candidate"
+        break 2
+      fi
+    done < <(fd --type d --hidden --no-ignore --absolute-path --max-depth 6 \
+                "^${repo_basename}$" "$root" 2>/dev/null || true)
+  done
+fi
 
-case "$count" in
-  0)
-    # No open PR/MR by me → working-tree review against the freshly fetched
-    # base, no untracked. This is the only path where staleness of
-    # origin/<base> matters, so wait for the background fetch here.
-    wait "$fetch_pid" 2>/dev/null || true
-    exec hunk diff "origin/$fetch_base" --exclude-untracked
+# 3. Canonical $REPOS path.
+if [[ -z "$resolved_dir" && -d "$canonical_dir/.git" ]]; then
+  resolved_dir="$canonical_dir"
+fi
+
+just_cloned=0
+if [[ -n "$resolved_dir" ]]; then
+  [[ "$PWD" == "$resolved_dir" ]] || cd "$resolved_dir"
+else
+  # _clone runs without strict mode and uses unquoted $REPOS / nullable vars,
+  # so relax our flags around the source call.
+  clone_helper="$HOME/.local/share/scripts/utilities/stuff-git/_clone"
+  [[ -f "$clone_helper" ]] || { echo "h: missing helper \`$clone_helper\`" >&2; exit 4; }
+  set +e +u +o pipefail
+  # shellcheck source=/dev/null
+  source "$clone_helper" "$repo_url"
+  set -e -u -o pipefail
+  git rev-parse --git-dir >/dev/null 2>&1 \
+    || { echo "h: clone failed; cwd \`$PWD\` is not a git repo" >&2; exit 4; }
+  just_cloned=1
+fi
+
+# Always refresh refs when reusing an existing clone; a fresh clone is current.
+if (( ! just_cloned )); then
+  git fetch --quiet origin 2>/dev/null || true
+fi
+
+detect_base() {
+  local b
+  b=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+  b="${b#origin/}"
+  if [[ -z "$b" ]]; then
+    for cand in main master; do
+      git rev-parse --verify --quiet "origin/$cand" >/dev/null 2>&1 \
+        && { b="$cand"; break; }
+    done
+  fi
+  echo "${b:-main}"
+}
+
+if [[ -z "$pr_num" ]]; then
+  base=$(detect_base)
+  exec hunk diff "origin/$base"
+fi
+
+command -v jq >/dev/null || { echo "h: \`jq\` not on PATH" >&2; exit 127; }
+
+case "$forge" in
+  github)
+    command -v gh >/dev/null || { echo "h: \`gh\` not on PATH" >&2; exit 127; }
+    pr_json=$(gh pr view --repo "$repo_path" "$pr_num" --json baseRefName,headRefOid 2>&1) \
+      || { printf 'h: gh pr view failed\n%s\n' "$pr_json" >&2; exit 2; }
+    { IFS=$'\t' read -r base head_sha || true; } < <(
+      jq -r '[.baseRefName, .headRefOid] | @tsv' <<<"$pr_json"
+    )
+    ref_name="pr/$pr_num"
+    fetch_spec="pull/$pr_num/head:refs/remotes/origin/$ref_name"
     ;;
-  1)
-    num=$(jq -r '.[0].number' <<<"$list_json")
-    case "$choice" in
-      github) exec hunkpr "$num" ;;
-      gitlab) exec hunkmr "$num" ;;
-    esac
-    ;;
-  *)
-    command -v fzf >/dev/null \
-      || { echo "h: multiple PRs/MRs but \`fzf\` not on PATH" >&2; exit 127; }
-    # Override the global FZF_DEFAULT_OPTS --preview (which assumes {} is a
-    # file path and fails on our PR lines) with one that calls gh/glab.
-    case "$choice" in
-      github) preview_cmd='GH_FORCE_TTY=100% gh pr view {1}' ;;
-      gitlab) preview_cmd='glab mr view {1}' ;;
-    esac
-    sel=$(jq -r '.[] | "\(.number)\t#\(.number) \(.baseRefName) ← \(.headRefName) | \(.title)"' <<<"$list_json" \
-      | fzf --prompt="Pick PR/MR> " \
-            --delimiter=$'\t' \
-            --with-nth=2.. \
-            --preview "$preview_cmd" \
-            --preview-window 'right:60%:wrap')
-    [[ -n "$sel" ]] || exit 1
-    num="${sel%%$'\t'*}"
-    case "$choice" in
-      github) exec hunkpr "$num" ;;
-      gitlab) exec hunkmr "$num" ;;
-    esac
+  gitlab)
+    command -v glab >/dev/null || { echo "h: \`glab\` not on PATH" >&2; exit 127; }
+    mr_json=$(glab mr view --repo "$repo_path" "$pr_num" --output json 2>&1) \
+      || { printf 'h: glab mr view failed\n%s\n' "$mr_json" >&2; exit 2; }
+    { IFS=$'\t' read -r base head_sha || true; } < <(
+      jq -r '[.target_branch, (.sha // .diff_refs.head_sha // "")] | @tsv' <<<"$mr_json"
+    )
+    ref_name="mr/$pr_num"
+    fetch_spec="merge-requests/$pr_num/head:refs/remotes/origin/$ref_name"
     ;;
 esac
+
+[[ "$head_sha" =~ ^[0-9a-f]{40}$ ]] \
+  || { echo "h: invalid head SHA \`$head_sha\`" >&2; exit 2; }
+
+# Fast path: head commit already local (warm clone) so we can name the ref
+# without a fetch.
+if git rev-parse --verify "${head_sha}^{commit}" >/dev/null 2>&1; then
+  git update-ref "refs/remotes/origin/$ref_name" "$head_sha"
+else
+  git fetch --quiet origin "$fetch_spec" \
+    || { echo "h: failed to fetch $fetch_spec" >&2; exit 3; }
+fi
+
+if ! git rev-parse --verify "origin/$base" >/dev/null 2>&1; then
+  git fetch --quiet origin "$base" \
+    || { echo "h: failed to fetch base \`$base\`" >&2; exit 3; }
+fi
+
+exec hunk diff "origin/${base}...origin/${ref_name}"

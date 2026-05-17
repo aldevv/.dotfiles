@@ -18,3 +18,4 @@ scripts/.local/share/*
 CLAUDE-machines.md
 general/CLAUDE-machines.md
 **/.ssh/config
+nvim/.config/nvim/KeymapTracker/.id

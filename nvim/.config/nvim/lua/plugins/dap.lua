@@ -16,7 +16,6 @@ return {
       { "theHamsta/nvim-dap-virtual-text",  module = "nvim-dap-virtual-text" },
       { "nvim-telescope/telescope-dap.nvim" },
       { "mfussenegger/nvim-dap-python" },
-      { "mxsdev/nvim-dap-vscode-js" },
       { "leoluz/nvim-dap-go" },
       "williamboman/mason.nvim",
     },

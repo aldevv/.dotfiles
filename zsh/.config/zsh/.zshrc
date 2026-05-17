@@ -315,6 +315,8 @@ export LESSKEYIN="$HOME/.config/colemak-less"
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
 
+setopt COMBINING_CHARS  # allows emojis in the prompt
+
 # shellcheck source=/dev/null
 [[ -f "$ZDOTDIR/.aliases" ]] && . "$ZDOTDIR/.aliases" # old aliases
 

@@ -53,8 +53,6 @@ map("n", "<leader>gm", ":G mergetool<CR>", nor)
 
 -- for this file
 map("n", "<leader>0", ":0Gclog<cr>", descv("git log current file <0Gclog>"))
-map("n", "<leader>gv", ":GV<cr>", descv("GV"))
-map("n", "<leader>gV", ":GV!<CR>", nor) -- only list commits current file
 
 map("n", "<leader>g0<space>", ":0Gclog ", descv("git log current file <0Gclog>"))
 map("n", "<leader>g0g", ":0Gclog<cr>", nor)
@@ -69,7 +67,6 @@ map("n", "<leader>gl0g", ":0Gclog!<cr>", nor)
 map("n", "<leader>gl0G", ":G log --decorate=short --all %<cr>", nor)
 map("n", "<leader>gl0m", ":0Gclog! ", nor)
 map("n", "<leader>gl0M", ":G! log % ", nor)
-map("n", "<leader>gl0v", ":GV!<CR>", nor) -- only list commits current file
 
 map("n", "gC", ":G commit<CR>", nor) -- only list commits current file
 
@@ -115,25 +112,6 @@ map("n", "<leader>gR", ":Gread -<CR>", nor) -- use commit
 map("n", "<leader>gw", ":Gwrite<CR>", nor)
 map("n", "<leader>ge", ":Gedit<CR>", nor)
 map("n", "<leader>gS", ":Gsplit @~", nor)
-
--- GV
--- o or <cr> on a commit to display the content of it
--- o or <cr> on commits to display the diff in the range
--- O opens a new tab instead
--- gb for :GBrowse
--- ]] and [[ to move between commits
--- . to start command-line with :Git [CURSOR] SHA à la fugitive
--- q or gq to close
-map("n", "<leader>glvv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
-map("n", "<leader>glv?", ":GV!<CR>", nor) -- location list fill
-map("v", "<leader>glvv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
-map("v", "<leader>glv0", ":GV!<CR>", nor) -- only list commits current file
-map("v", "<leader>glv?", ":GV!<CR>", nor) -- location list fill
-
-map("n", "<leader>gVv", ":GV<CR>", nor) -- commit history
-map("n", "<leader>gV0", ":GV!<CR>", nor) -- commit history current file
-map("v", "<leader>gVv", ":GV<CR>", nor) -- other plugin to visualize repo, you can use visual mode too
-map("v", "<leader>gV0", ":GV!<CR>", nor) -- only list commits current file
 
 map("n", "<leader>gv", ":Gvsplit @~", nor)
 
