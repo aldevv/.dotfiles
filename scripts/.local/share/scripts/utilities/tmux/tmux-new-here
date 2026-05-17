@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Move the current tmux window into a session named after the current pane's
+# git repo root (or the cwd basename when not in a repo). Creates the session
+# if it doesn't exist.
+
+set -euo pipefail
+
+if [[ -z "${TMUX:-}" ]]; then
+    echo "tmux-new-here: must be run inside tmux" >&2
+    exit 1
+fi
+
+cwd="$(tmux display-message -p '#{pane_current_path}')"
+repo_root="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null || true)"
+target="${repo_root:-$cwd}"
+session="$(basename "$target")"
+session="${session#.}"
+# tmux rewrites '.' and ':' to '_' in session names; mirror that so
+# has-session / new-session look up the same normalized name.
+session="${session//[.:]/_}"
+
+cur_session="$(tmux display-message -p '#{session_name}')"
+if [[ "$cur_session" == "$session" ]]; then
+    exit 0
+fi
+
+winid="$(tmux display-message -p '#{window_id}')"
+
+# Batch the move + switch into a single tmux invocation. Each separate `tmux`
+# call lets the client repaint, so splitting move-window from switch-client
+# briefly flashes whichever agent-side window tmux auto-focused after the move.
+if tmux has-session -t="$session" 2>/dev/null; then
+    tmux move-window -s "$winid" -t "$session:" \; switch-client -t "$session"
+else
+    tmux new-session -ds "$session" -c "$target"
+    placeholder="$(tmux list-windows -t "$session" -F '#{window_id}' | head -n1)"
+    tmux \
+        move-window -s "$winid" -t "$session:" \; \
+        kill-window -t "$placeholder" \; \
+        move-window -r -t "$session" \; \
+        switch-client -t "$session"
+fi
