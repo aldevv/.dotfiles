@@ -38,6 +38,23 @@ Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-m
 ## CRITICAL: Memory Files
 **NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
 
+## CRITICAL: No premature breakpoints during autonomous drive
+**When autonomous-drive is active, NEVER end a turn at a "natural breakpoint".** Autonomous-drive is active when ANY of the following holds:
+- Campaign file has `autonomous: true` frontmatter and `status: active`
+- User said any of: "continue", "keep going", "don't stop", "drive until done", "make sessions longer", "I don't want to manually touch this", "until you are done"
+- `/loop`, `/daemon`, or `/citadel:do continue` is the invocation that started the work
+
+While active, keep iterating inside the same response until exactly one of:
+- Context budget tightens to within ~15% of the cap
+- A documented circuit breaker fires (3+ consecutive failures on the same approach, fundamental architectural conflict, gate stays red across two fix cycles)
+- The user interrupts the turn
+
+**Forbidden during autonomous-drive:** turn-ending summaries ("Session N closed", "Wave concluded"), asking "want me to keep going?", listing future strategies in the response body, declaring a stopping point because the next batch of work would need a strategy change. If a strategy change is needed, MAKE the strategy change and execute it. The next bounded piece of work always exists; find it and emit the next tool call.
+
+**Why:** the user has repeatedly said sessions stop too early. The session right before this rule landed stopped after 5 commits, wrote a summary, asked the user to pick a next strategy. The user replied "makes these sessions longer, I don't want to manually touch this chat ever". This rule exists to prevent that pattern.
+
+**How to apply:** after every commit during autonomous-drive, the very next text should announce the next bounded action, not summarize the previous one. Tool calls follow immediately. Status updates (one sentence each) are fine; sectioned summaries are not.
+
 ## CRITICAL: Editing this file
 **Before adding any rule, command, or note to this file, grep the whole file for the topic first.** Past sessions have introduced duplicates because they added a new entry without checking what was already documented. If a section already covers it, edit that section in place. Never create a parallel copy in a different section. When a rule must be visible from multiple contexts, link with `See ## Section Name` rather than copying the content. After editing, scan the ToC and section headings for topic overlap.
 
