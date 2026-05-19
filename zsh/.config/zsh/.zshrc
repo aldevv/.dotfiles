@@ -23,6 +23,9 @@ setopt extended_glob
 # adds completion to alias arguments
 unsetopt complete_aliases
 
+# extend fpath BEFORE compinit so #compdef directives in our completions get registered
+[[ -n "$ZDOTDIR" ]] && fpath=($ZDOTDIR/completions $fpath)
+
 # only source if you dont login from a terminal
 # source ~/.zprofile
 #COLEMAK DOTFILES
@@ -312,9 +315,10 @@ export LESSKEYIN="$HOME/.config/colemak-less"
 # config
 #https://github.com/relastle/pmy/wiki/Gallery#git-cherry-pickcp
 
+setopt COMBINING_CHARS  # allows emojis in the prompt
+
 # shellcheck source=/dev/null
 [[ -f "$ZDOTDIR/.aliases" ]] && . "$ZDOTDIR/.aliases" # old aliases
-[[ -n "$ZDOTDIR" ]] && fpath=($ZDOTDIR/completions $fpath)  
 
 # shellcheck source=/dev/null
 [[ -f ~/.config/.aliases ]] && . ~/.config/.aliases # new aliases

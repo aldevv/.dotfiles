@@ -155,8 +155,8 @@ alias gcsr="git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
 alias cop="copilot -i "
 alias copilot="copilot --allow-tool 'write' --allow-all-paths --allow-all-tools"
 
-alias hp="hunkpr"
-alias hm="hunkmr"
+alias hp="hunkpr_deprecated"
+alias hm="hunkmr_deprecated"
 
 
 alias yt="cd ~/.local/bin/ && yt"
@@ -196,10 +196,11 @@ alias toworktree=". _toworktree"
 alias gg='cd $(gitRoot)'
 
 # wt sources the `worktree` helper (on PATH via $UTILITIES/stuff-git).
-# Sourcing is what lets the `cd` reach the interactive shell; the script is
-# written to be source-safe. Bare `wt` fzf-picks and cds; subcommands pass
-# through (new, list, rm, clean, root, help).
-alias wt=". worktree"
+# Defined as a function (not an alias) so shell completion can hook on `wt`
+# itself; aliases get expanded before completion lookup when complete_aliases
+# is unset. Functions don't subshell, so `cd` inside the sourced script still
+# reaches the interactive shell.
+wt() { . worktree "$@"; }
 
 # dotfiles
 alias dgp=". _dgp $DOTFILES"

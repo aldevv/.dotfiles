@@ -82,10 +82,10 @@ If neither delegation condition fired, continue with Step 2 — submodules are s
 
 One bash invocation that does **everything** for the happy path: secret scan, commit local changes, merge the already-fetched remote, amend to the final sync message, push. Two early exits flag the rare branches:
 
-- **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve), then Step 5 (finalize).
-- **`exit 9`** = merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize).
-- **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and report.
-- **`exit 0`** = success, sync is done. Skip to Step 6 (report).
+- **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve), then Step 5 (finalize), then Step 6 (report).
+- **`exit 9`** = merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize), then Step 6 (report).
+- **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and run Step 6 (report) so the user sees what blocked.
+- **`exit 0`** = success, sync is done. **Always** continue to Step 6 (report) — this includes the "Already up to date / nothing to push" no-op case. The report is the user-visible signal that the skill actually ran; skipping it on a no-op leaves the user guessing whether anything happened.
 
 ```bash
 set -e -o pipefail
@@ -252,10 +252,12 @@ Exits 0 if every input file passes; exits 7 (after scanning all of them) if any 
 
 ## Step 6 — Report
 
+**Always run this step, including on the "already up to date / nothing to push" no-op path.** The report is the only user-visible signal that the skill executed; suppressing it on a clean run looks indistinguishable from the skill never starting. State "already in sync, nothing to do" explicitly rather than going silent.
+
 - Machine ID and OS
 - Mode: fast (parent-only) — note this explicitly so the user knows submodules were skipped
 - Days since last full sync
-- Path taken: happy / conflict / restow (= which exit code from Step 2)
+- Path taken: happy / already-synced / conflict / restow (= which exit code from Step 2; "already-synced" is the exit-0 sub-case where the merge said "Already up to date" and there was nothing to push)
 - Local changes committed (split: modified-tracked count + newly-tracked count from `git ls-files --others --exclude-standard`) / nothing to push / fast-forwarded
 - Conflicts resolved (count and files), if any
 - Packages restowed, if any

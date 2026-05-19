@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# fzf-pick an existing tmux session and switch to it. The current session is
+# filtered out so you can't pick yourself.
+
+set -euo pipefail
+
+current="$(tmux display-message -p '#S' 2>/dev/null || true)"
+
+sessions="$(tmux list-sessions -F '#{session_name}' 2>/dev/null || true)"
+if [[ -n "$current" ]]; then
+    sessions="$(printf '%s\n' "$sessions" | grep -vFx "$current" || true)"
+fi
+
+[[ -z "$sessions" ]] && exit 0
+
+selected="$(printf '%s\n' "$sessions" | fzf \
+    --prompt='session: ' \
+    --no-sort --reverse \
+    --preview="tmux list-windows -t {} -F '#I: #W (#{window_panes}p)' | bat --color=always --style=plain --paging=never" \
+    --preview-window=right:50%:wrap)"
+[[ -z "$selected" ]] && exit 0
+
+if [[ -z "${TMUX:-}" ]]; then
+    exec tmux attach -t "$selected"
+else
+    tmux switch-client -t "$selected"
+fi

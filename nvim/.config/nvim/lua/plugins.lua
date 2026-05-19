@@ -16,23 +16,6 @@ return {
   -- Workspace-specific projectionist heuristics (e.g. ~/work/.nvim.lua) set
   -- g:projectionist_heuristics via exrc; do not put project-specific config here.
   "tpope/vim-projectionist",
-  {
-    "adalessa/telescope-projectionist.nvim",
-    dependencies = {
-      "nvim-telescope/telescope.nvim",
-      "tpope/vim-projectionist",
-    },
-    config = function()
-      local tutils = require("telescope.utils")
-      if not tutils.get_default then
-        tutils.get_default = function(value, default)
-          if value == nil then return default end
-          return value
-        end
-      end
-      require("telescope").load_extension("projectionist")
-    end,
-  },
   "mbbill/undotree",
   "bkad/CamelCaseMotion",
   "nvim-tree/nvim-web-devicons",
@@ -87,16 +70,6 @@ return {
     dependencies = { "JoosepAlviste/nvim-ts-context-commentstring" }, -- better commentstring using treesitter
   },
 
-  -- optional
-  {
-    "iamcco/markdown-preview.nvim",
-    cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-    build = "cd app && yarn install",
-    init = function()
-      vim.g.mkdp_filetypes = { "markdown" }
-    end,
-    ft = { "markdown" },
-  },
   {
     "preservim/tagbar",
     init = function()

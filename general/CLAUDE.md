@@ -10,33 +10,60 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 - [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
 - [`~/.claude/files/hook-debugging.md`](.claude/files/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
 - [`~/.claude/files/code_quality_examples.md`](.claude/files/code_quality_examples.md). **Read when:** writing or reviewing code and deciding whether to factor logic into its own function/class. Catalog of code-quality preferences captured from feedback.
+- [`~/.claude/files/comment_examples.md`](.claude/files/comment_examples.md). **Read when:** writing or reviewing a code comment, or unsure whether one is justified. Concrete pairs of forbidden vs. justified examples for the rules in `## CRITICAL: Comments`.
 
 ## Table of Contents
 - [Lazy load](#lazy-load)
 - [Machine connection notes](#machine-connection-notes)
 - [CRITICAL: Memory Files](#critical-memory-files)
+- [CRITICAL: Editing this file](#critical-editing-this-file)
 - [CRITICAL: Readability](#critical-readability)
 - [CRITICAL: Work files boundary](#critical-work-files-boundary)
 - [CRITICAL: Saving dotfiles changes](#critical-saving-dotfiles-changes)
 - [CRITICAL: Writing style](#critical-writing-style)
+- [CRITICAL: Comments](#critical-comments)
+- [CRITICAL: Playwright Browser Issues](#critical-playwright-browser-issues)
 - [Code organization](#code-organization)
 - [Worktrees](#worktrees)
-- [CRITICAL: Playwright Browser Issues](#critical-playwright-browser-issues)
 - [Development Environment](#development-environment)
 - [Key Configurations](#key-configurations)
 - [Automation & Tools](#automation--tools)
 - [Build Environment](#build-environment)
 - [Commands to Remember](#commands-to-remember)
 - [Work Environment](#work-environment)
-- [Code style](#code-style)
 - [Commits & PRs](#commits--prs)
-- [Notes](#notes)
 
 ## Machine connection notes
 Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
 
 ## CRITICAL: Memory Files
 **NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
+
+## CRITICAL: No premature breakpoints during autonomous drive
+**When autonomous-drive is active, NEVER end a turn at a "natural breakpoint".** Autonomous-drive is active when ANY of the following holds:
+- Campaign file has `autonomous: true` frontmatter and `status: active`
+- User said any of: "continue", "keep going", "don't stop", "drive until done", "make sessions longer", "I don't want to manually touch this", "until you are done"
+- `/loop`, `/daemon`, or `/citadel:do continue` is the invocation that started the work
+
+While active, keep iterating inside the same response until exactly one of:
+- Context budget tightens to within ~15% of the cap
+- A documented circuit breaker fires (3+ consecutive failures on the same approach, fundamental architectural conflict, gate stays red across two fix cycles)
+- The user interrupts the turn
+
+**Forbidden during autonomous-drive:** turn-ending summaries ("Session N closed", "Wave concluded"), asking "want me to keep going?", listing future strategies in the response body, declaring a stopping point because the next batch of work would need a strategy change. If a strategy change is needed, MAKE the strategy change and execute it. The next bounded piece of work always exists; find it and emit the next tool call.
+
+**Why:** the user has repeatedly said sessions stop too early. The session right before this rule landed stopped after 5 commits, wrote a summary, asked the user to pick a next strategy. The user replied "makes these sessions longer, I don't want to manually touch this chat ever". This rule exists to prevent that pattern.
+
+**How to apply:** after every commit during autonomous-drive, the very next text should announce the next bounded action, not summarize the previous one. Tool calls follow immediately. Status updates (one sentence each) are fine; sectioned summaries are not.
+
+## CRITICAL: Editing this file
+**Before adding any rule, command, or note to this file, grep the whole file for the topic first.** Past sessions have introduced duplicates because they added a new entry without checking what was already documented. If a section already covers it, edit that section in place. Never create a parallel copy in a different section. When a rule must be visible from multiple contexts, link with `See ## Section Name` rather than copying the content. After editing, scan the ToC and section headings for topic overlap.
+
+**When the user asks to add a rule that's already documented, treat it as a signal the existing rule didn't stick in a past session and needs more weight.** Don't just point at the existing entry. Promote the rule by applying one or more of the following:
+1. Rename the section to `## CRITICAL: ...` if it isn't already.
+2. Strengthen the wording: vague verbs (`should`, `prefer`) become hard verbs (`NEVER`, `MUST`, `always`). Add a one-line consequence if useful (e.g. `...otherwise X breaks`).
+3. Add the concrete example the user just brought up. Concrete violations stick harder than abstract rules.
+4. Move the section higher in the file if it's buried; CRITICAL sections cluster near the top so they get the highest attention on load.
 
 ## CRITICAL: Readability
 **Readability is priority #1.** Apply clean-code practices only when they make the code easier to read, not as ends in themselves.
@@ -62,6 +89,26 @@ When the user says "save the changes in my dotfiles" (or any equivalent), they m
 
 **Forbidden: emojis.** Do not use emojis anywhere (chat, commits, PRs, READMEs, comments, docs, file contents). Applies even if the surrounding text or an existing file already uses them. Only exception: the user explicitly asks for an emoji in this turn.
 
+## CRITICAL: Comments
+**Adding any comment is a rule violation by default.** Before writing any comment, state in chat first: `comment justified: <complex flow / hidden invariant / non-obvious WHY / workaround>`. If you can't articulate that justification in chat first, you have not earned the comment.
+
+Forbidden:
+- Narrative comments that restate the next line.
+- Function-purpose summaries on functions whose name and signature already convey it.
+- "Used by X" / "For the Y flow" / cross-cutting consistency notes. Those belong in the PR description, not the code.
+- Multi-line docstrings, unless the flow is truly hairy (subtle invariants, surprising ordering, platform workaround).
+
+Exception: tests. A one-line function-header comment on a test that names a non-obvious scenario is OK (`// Workday quirk: ref ID without name, require both`). Per-line narration inside the test body is not. Default is still zero, only add when the test name alone wouldn't tell a future reader what's being checked.
+
+When a comment IS justified: as short as possible, as long as it needs to be. Understanding is the priority, brevity is second. If the complexity can be untangled by a small refactor that makes the code self-explanatory, prefer the refactor.
+
+When touching existing code: if a comment restates the line that follows it, delete the comment.
+
+## CRITICAL: Playwright Browser Issues
+**NEVER ask the user to do anything with the browser.** Use the Playwright MCP plugin tools directly; they handle browser launch automatically.
+- **NEVER delete** `~/.cache/ms-playwright/mcp-chrome-*`. Contains Okta session data.
+- If browser is frozen or errors out: call `browser_close`, then retry. Chrome relaunches automatically.
+
 ## Code organization
 **Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.). One folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" or "keep it small" notes in older project READMEs or `CLAUDE.local.md` files: surface the conflict, update the project doc, then split.
 
@@ -70,11 +117,6 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 
 - **Mirror the main checkout's `.envrc`.** Worktrees inherit `.git` but NOT working-tree files like `.envrc`, so dev-env hooks defined there don't follow you in. When work starts in a worktree, copy `.envrc` from the main checkout (and run `direnv allow` once). If the main repo has no `.envrc`, do nothing; there's nothing to mirror.
 - **Promote repeated dev-binary build sequences to `.envrc`.** If the same multi-step build (e.g. `bun run build:bin && install -m 0755 dist/<repo> ~/.local/bin/<repo>-dev`) gets run more than a couple of times and the project has no Makefile target / `bin/` script for it, define it as an alias or shell function in `.envrc` (e.g. `<repo>-dev() { ... }`). Add it to **both** the main checkout's `.envrc` and every active worktree's copy so the command is available everywhere on `cd`. Don't pollute the project's source: `.envrc` stays gitignored and per-checkout.
-
-## CRITICAL: Playwright Browser Issues
-**NEVER ask the user to do anything with the browser.** Use the Playwright MCP plugin tools directly; they handle browser launch automatically.
-- **NEVER delete** `~/.cache/ms-playwright/mcp-chrome-*`. Contains Okta session data.
-- If browser is frozen or errors out: call `browser_close`, then retry. Chrome relaunches automatically.
 
 ## Development Environment
 - **Repos**: `~/repos` - Git repositories
@@ -103,29 +145,14 @@ Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `
 - **QMK**: `~/qmk_firmware` - Keyboard firmware
 
 ## Commands to Remember
-- **Lint/Typecheck**: Check project for standard commands (npm run lint, ruff, etc.)
 - **Auto-suspend**: Managed via systemd service `xautolock@kanon.service`
 - **Stow**: Use `cd ~/.dotfiles && stow <folder>` to manage symlinks
 - **Shortcuts**: File shortcuts in `~/.config/shortcuts/sf`, dir shortcuts in `sd`
-- **Save dotfiles**: prefer the `sync-dotfiles` skill (fast, smart about submodules). `personal-push-all` / `dgpA` is the broader sweep across notes|wiki|dotfiles|ansible. See `## CRITICAL: Saving dotfiles changes` above.
 
 ## Work Environment
 - **Work Directory**: `$WORK` - Work-related projects
 - **Work Aliases**: `~/.config/.aliases_work` (`.aw`)
 - **Work Startup**: `~/.config/.startup_work` (`.sw`)
 
-## Code style
-
-**Everything in this section is a RULE, not a guideline.** Apply without exception unless an explicit exception is given in the current turn. "I thought it would be cleaner" is not an exception.
-
-### Comments
-Default to writing zero comments. Only add one when it explains a complex flow, a hidden invariant, a non-obvious WHY, or a workaround. Never write narrative comments that restate the code, summarize a function's purpose, document obvious sequencing, or reference the current task/PR/caller. If removing a comment wouldn't actively confuse a future reader, do not write it. Applies to existing comments too: when touching code, if a comment restates what the next line already says, trim it.
-
 ## Commits & PRs
 - **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
-
-## Notes
-- Uses environment variables for key paths (check shortcuts in `~/.config/shortcuts/`)
-- Dotfiles are symlinked from `~/.dotfiles/` using GNU Stow
-- Prefers systemd services over autostart desktop files
-- System uses `xautolock` (not systemd-logind) for user-input-only idle detection

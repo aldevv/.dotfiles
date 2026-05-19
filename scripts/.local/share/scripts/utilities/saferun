@@ -1,0 +1,129 @@
+#!/usr/bin/bash
+# saferun: run a command in a cgroup with a hard memory cap so a runaway
+# build (Go compiler, ld, anything) can't eat all RAM and freeze the box.
+# Backed by systemd-run --user --scope so MemoryMax is enforced as an
+# OOM kill, not swap thrash. Swap is also pinned at 0 so the cap is a
+# real cap.
+#
+# Usage:
+#   saferun <command> [args ...]                   # 8 GB default
+#   saferun --memory-max 16 <command> [args ...]   # 16 GB cap (GB units)
+#   saferun --memory-max 1500M <command> [args ...] # explicit M/G suffix
+#   saferun --timeout 60 --memory-max 4 <command> [args ...]
+#
+# Flags:
+#   --memory-max  N | NG | NM   Memory cap. Bare number = GB. Default 8.
+#   --timeout     SECONDS       Wall-clock cap. Default unlimited.
+#   --no-swap-block             Allow systemd to use swap (default: block).
+#   -h, --help                  Print this help.
+#
+# Exit code: the wrapped command's exit code, OR
+#   124 = killed by timeout, 137 = killed by OOM (cgroup MemoryMax).
+
+set -u
+
+usage() {
+    sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//' >&2
+}
+
+mem=8
+timeout_secs=0
+block_swap=1
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --memory-max)
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "saferun: --memory-max requires an argument" >&2
+                exit 2
+            fi
+            mem="$1"
+            shift
+            ;;
+        --memory-max=*)
+            mem="${1#--memory-max=}"
+            shift
+            ;;
+        --timeout)
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "saferun: --timeout requires an argument" >&2
+                exit 2
+            fi
+            timeout_secs="$1"
+            shift
+            ;;
+        --timeout=*)
+            timeout_secs="${1#--timeout=}"
+            shift
+            ;;
+        --no-swap-block)
+            block_swap=0
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            echo "saferun: unknown flag $1" >&2
+            usage
+            exit 2
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [[ $# -eq 0 ]]; then
+    echo "saferun: no command given" >&2
+    usage
+    exit 2
+fi
+
+# Normalise memory cap. Bare number means GB; M / G suffix passes through.
+case "$mem" in
+    *[Gg])    mem_arg="${mem%[Gg]}G" ;;
+    *[Mm])    mem_arg="${mem%[Mm]}M" ;;
+    *[Kk])    mem_arg="${mem%[Kk]}K" ;;
+    *[0-9])   mem_arg="${mem}G" ;;
+    *)
+        echo "saferun: bad --memory-max value: $mem" >&2
+        exit 2
+        ;;
+esac
+
+if ! command -v systemd-run >/dev/null 2>&1; then
+    echo "saferun: systemd-run not found on PATH; falling back to ulimit + timeout" >&2
+    # Translate the cap to kilobytes for ulimit -v.
+    case "$mem_arg" in
+        *G) kb=$(( ${mem_arg%G} * 1024 * 1024 )) ;;
+        *M) kb=$(( ${mem_arg%M} * 1024 )) ;;
+        *K) kb=${mem_arg%K} ;;
+    esac
+    ulimit -v "$kb"
+    if [[ $timeout_secs -gt 0 ]]; then
+        exec timeout "${timeout_secs}s" "$@"
+    fi
+    exec "$@"
+fi
+
+# systemd-run --scope: stays in the foreground, inherits TTY, applies
+# MemoryMax to the wrapped process (and children). -q suppresses the
+# "Running scope as unit" banner.
+runner=(systemd-run --user --scope -q -p "MemoryMax=$mem_arg")
+if [[ $block_swap -eq 1 ]]; then
+    runner+=(-p "MemorySwapMax=0")
+fi
+
+if [[ $timeout_secs -gt 0 ]]; then
+    "${runner[@]}" timeout "${timeout_secs}s" "$@"
+else
+    "${runner[@]}" "$@"
+fi
