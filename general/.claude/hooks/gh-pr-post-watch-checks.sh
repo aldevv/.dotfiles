@@ -203,27 +203,12 @@ else
   NOTIFY_SOUND=Basso
 fi
 
-case "$(uname -s)" in
-  Darwin)
-    if command -v terminal-notifier >/dev/null 2>&1; then
-      terminal-notifier -title "$NOTIFY_TITLE" -message "$NOTIFY_BODY" -open "$URL" -sound "$NOTIFY_SOUND" -sender com.apple.Terminal || true
-    elif command -v osascript >/dev/null 2>&1; then
-      AS_TITLE=${NOTIFY_TITLE//\"/\\\"}
-      AS_BODY=${NOTIFY_BODY//\"/\\\"}
-      osascript -e "display notification \"$AS_BODY\" with title \"$AS_TITLE\" sound name \"$NOTIFY_SOUND\"" || true
-    fi
-    ;;
-  *)
-    if command -v notify-send >/dev/null 2>&1; then
-      # The bgcolor/frcolor hints are dunst-specific; harmless on other notifiers.
-      notify-send -u "$NOTIFY_URGENCY" -a claude-code \
-        -h "string:bgcolor:$NOTIFY_BG" \
-        -h "string:frcolor:$NOTIFY_BG" \
-        -h "string:fgcolor:#ffffff" \
-        "$NOTIFY_TITLE" "$NOTIFY_BODY" || true
-    fi
-    ;;
-esac
+NOTIFY_TITLE="$NOTIFY_TITLE" \
+NOTIFY_BODY="$NOTIFY_BODY" \
+NOTIFY_SOUND="$NOTIFY_SOUND" \
+NOTIFY_URGENCY="$NOTIFY_URGENCY" \
+NOTIFY_BG="$NOTIFY_BG" \
+  "$HOME/.claude/hooks/notify.sh" custom || true
 
 # --- Spawn fixer ---
 if [ "$STATUS" != "fail" ]; then

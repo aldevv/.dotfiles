@@ -30,14 +30,6 @@ if os.getenv("NVIM_DEBUG") then
 	return
 end
 
-do
-	local p = vim.fn.expand("~/repos/github.com/aldevv/keymap-tracker.nvim")
-	if (vim.uv or vim.loop).fs_stat(p) then
-		vim.opt.rtp:prepend(p)
-		pcall(function() require("keymap-tracker").setup() end)
-	end
-end
-
 require("config")
 
 require("lazy").setup("plugins", {
