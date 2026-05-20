@@ -168,26 +168,12 @@ spawning fixer in new tmux window
 log: $LOG"
 NOTIFY_BG="#8e24aa"   # purple
 
-case "$(uname -s)" in
-  Darwin)
-    if command -v terminal-notifier >/dev/null 2>&1; then
-      terminal-notifier -title "$NOTIFY_TITLE" -message "$NOTIFY_BODY" -open "$URL" -sound Submarine -sender com.apple.Terminal || true
-    elif command -v osascript >/dev/null 2>&1; then
-      AS_TITLE=${NOTIFY_TITLE//\"/\\\"}
-      AS_BODY=${NOTIFY_BODY//\"/\\\"}
-      osascript -e "display notification \"$AS_BODY\" with title \"$AS_TITLE\" sound name \"Submarine\"" || true
-    fi
-    ;;
-  *)
-    if command -v notify-send >/dev/null 2>&1; then
-      notify-send -u normal -a claude-code \
-        -h "string:bgcolor:$NOTIFY_BG" \
-        -h "string:frcolor:$NOTIFY_BG" \
-        -h "string:fgcolor:#ffffff" \
-        "$NOTIFY_TITLE" "$NOTIFY_BODY" || true
-    fi
-    ;;
-esac
+NOTIFY_TITLE="$NOTIFY_TITLE" \
+NOTIFY_BODY="$NOTIFY_BODY" \
+NOTIFY_SOUND="Submarine" \
+NOTIFY_URGENCY="normal" \
+NOTIFY_BG="$NOTIFY_BG" \
+  "$HOME/.claude/hooks/notify.sh" custom || true
 
 # --- Spawn fixer ---
 AUTOFIX="${PR_COMMENT_WATCH_AUTOFIX:-1}"

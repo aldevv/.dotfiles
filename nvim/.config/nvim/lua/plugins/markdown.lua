@@ -10,7 +10,7 @@ return {
     dev = true,
     ft = { "markdown" },
     config = function()
-      require("md-preview").setup()
+      require("md-preview").setup({ prefer_global_mdp = true })
     end,
   },
   {
