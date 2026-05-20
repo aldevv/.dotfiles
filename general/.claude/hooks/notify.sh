@@ -82,6 +82,10 @@ fi
 
 case "$(uname -s)" in
   Darwin)
+    # osascript host (Script Editor) is Apple-signed, so notifications
+    # actually reach the user. To make notifications persist past the
+    # ~3s banner default, flip Script Editor to "Alerts" in
+    # System Settings -> Notifications (one-time).
     TITLE="$title" SUBTITLE="$subtitle" MSG="$body" SOUND="$sound" \
       osascript -e 'display notification (system attribute "MSG") with title (system attribute "TITLE") subtitle (system attribute "SUBTITLE") sound name (system attribute "SOUND")' \
       >/dev/null 2>&1 || true
@@ -96,7 +100,10 @@ ${body}"
         # dunst-specific colour hints; harmless on other notifiers.
         hints+=(-h "string:bgcolor:$bg" -h "string:frcolor:$bg" -h "string:fgcolor:#ffffff")
       fi
-      notify-send -u "$urgency" -a claude-code "${hints[@]}" "$title" "$ns_body" >/dev/null 2>&1 || true
+      # 5-minute floor; notification daemons may ignore for urgency=critical
+      # (which stays indefinite per freedesktop spec). Either satisfies
+      # "at least 5 minutes".
+      notify-send -u "$urgency" -t 300000 -a claude-code "${hints[@]}" "$title" "$ns_body" >/dev/null 2>&1 || true
     fi
     ;;
 esac
