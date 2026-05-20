@@ -36,6 +36,7 @@ case "$event" in
     body="Claude finished its turn"
     sound="Glass"
     urgency="low"
+    fg="#dddddd"
     ;;
   permission)
     base_title="Claude Code"
@@ -98,7 +99,9 @@ ${body}"
       hints=()
       if [[ -n "${bg:-}" ]]; then
         # dunst-specific colour hints; harmless on other notifiers.
-        hints+=(-h "string:bgcolor:$bg" -h "string:frcolor:$bg" -h "string:fgcolor:#ffffff")
+        hints+=(-h "string:bgcolor:$bg" -h "string:frcolor:$bg" -h "string:fgcolor:${fg:-#ffffff}")
+      elif [[ -n "${fg:-}" ]]; then
+        hints+=(-h "string:fgcolor:$fg")
       fi
       # 5-minute floor; notification daemons may ignore for urgency=critical
       # (which stays indefinite per freedesktop spec). Either satisfies
