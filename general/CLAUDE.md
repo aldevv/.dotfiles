@@ -9,6 +9,7 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 - [`~/.claude/files/skills.md`](.claude/files/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
 - [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
 - [`~/.claude/files/hook-debugging.md`](.claude/files/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
+- [`~/.claude/files/code_quality_examples.md`](.claude/files/code_quality_examples.md). **Read when:** writing or reviewing code and deciding whether to factor logic into its own function/class. Catalog of code-quality preferences captured from feedback.
 - [`~/.claude/files/comment_examples.md`](.claude/files/comment_examples.md). **Read when:** writing or reviewing a code comment, or unsure whether one is justified. Concrete pairs of forbidden vs. justified examples for the rules in `## CRITICAL: Comments`.
 
 ## Table of Contents
