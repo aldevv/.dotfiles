@@ -190,12 +190,14 @@ Report any remaining conflicts (e.g. unwritable parent dirs) but do not abort.
 
 ## Step 6 — Commit and push parent
 
-Finalize any pending merge commit and push, but skip the push if nothing's ahead:
+Finalize any pending merge commit and push, but skip the push if nothing's ahead.
+
+The amend is gated on "HEAD is ahead of upstream". Amending when `HEAD == @{u}` rewrites an already-pushed commit, which lands the subsequent push as a non-fast-forward and rejects it. The common case where this fires: every submodule is already at its remote tip and the parent has no local changes, so Step 3 produces no new parent commit; Step 6 then runs amend against a pushed commit and the push fails.
 
 ```bash
 cd ~/.dotfiles && export $(grep -v '^#' ~/.machine_metadata | xargs) && \
   { git diff --cached --quiet || git commit -m "merge: sync from remote [machine-${id}, ${os}]"; } && \
-  { git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]" 2>/dev/null || true; } && \
+  { if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then git commit --amend -m "sync: dotfiles update [${os}, machine-${id}]"; fi; } && \
   if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then git push origin main; else echo "parent: nothing to push"; fi
 ```
 

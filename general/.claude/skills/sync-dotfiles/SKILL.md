@@ -9,10 +9,14 @@ description: "Fast dotfiles sync — pulls/pushes the parent repo only and skips
 
 Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve conflicts, restow packages with new files, and push a machine-tagged commit. Submodules are intentionally **not** touched — they update rarely, and the periodic `sync-dotfiles-full` run handles them.
 
-**Delegation contract**: at Step 1 this skill checks two conditions. If either is true, it stops and follows `~/.claude/skills/sync-dotfiles-full/SKILL.md` instead:
+**Delegation contract**: at Step 1 this skill checks several conditions. If any of them fires, it stops and follows `~/.claude/skills/sync-dotfiles-full/SKILL.md` instead:
 
 1. `~/.cache/sync-dotfiles/last-full-sync` is missing or older than 30 days (= a full sync is overdue).
 2. Any submodule has a `-` prefix (= not initialized, fast path can't safely operate without it).
+3. Any submodule has a `+` prefix (= pointer drift, the parent's recorded SHA disagrees with the submodule HEAD).
+4. Any initialized submodule has a dirty worktree (`git status --porcelain` non-empty) or unpushed commits (`@{u}..HEAD` non-empty). The fast skill never enters submodules, so these go un-synced and the user thinks "I edited the wiki, why didn't it push?" — this trigger catches that.
+
+A fifth check **stops** the skill (no delegation) and asks the user for manual cleanup: **stow-link mismatch**. If a submodule's stow target (`$HOME/<path-with-leading-package-stripped>`) is a real directory with its own `.git` instead of a stow symlink to the submodule, the user has a standalone clone shadowing where the symlink should be. Their edits go into the standalone, never into the submodule; no amount of syncing fixes the divergence. The full skill doesn't fix this either, so STOP and report rather than delegating.
 
 **Fast-path shape**: in the common case (no merge conflicts, no newly-added files), this skill runs **two tool-call rounds total** — Step 1 (3 parallel reads, including a prefetch) and Step 2 (one bundled script that merges, amends, and pushes). Steps 3–5 only fire on the rare conflict / restow branches.
 
@@ -53,7 +57,7 @@ else
 fi
 ```
 
-**Call 2 — submodule status:**
+**Call 2 — submodule status + dirty/unpushed/mismatch scan:**
 
 ```bash
 echo "--- submodules ---"
@@ -61,6 +65,43 @@ sub_status=$(cd ~/.dotfiles && git submodule status)
 echo "$sub_status"
 if echo "$sub_status" | grep -q '^-'; then
   echo "submodule uninitialized -> DELEGATE"
+fi
+if echo "$sub_status" | grep -q '^+'; then
+  echo "submodule pointer drift -> DELEGATE"
+fi
+
+# Walk each initialized submodule once and check three things:
+# 1. Dirty worktree → delegate (full skill commits + pushes inside the submodule).
+# 2. Unpushed commits → delegate (full skill pushes).
+# 3. Stow-link mismatch — the submodule's stow target ($HOME/<rest>) is a real
+#    directory with its own .git instead of a stow symlink. The user's edits go
+#    into that standalone clone, the submodule never sees them, sync passes blindly.
+#    Cannot delegate: the full skill doesn't reconcile two diverged clones either.
+#    STOP and report so the user can converge them manually.
+sub_report=$(cd ~/.dotfiles && git submodule foreach --quiet '
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "$displaypath: dirty worktree"
+  fi
+  if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
+    echo "$displaypath: unpushed commits"
+  fi
+  # Stow target = $HOME/<displaypath with leading package dir stripped>.
+  # e.g. wiki/.local/share/wiki -> $HOME/.local/share/wiki
+  rel=$(echo "$displaypath" | cut -d/ -f2-)
+  if [ -n "$rel" ] && [ "$rel" != "$displaypath" ]; then
+    target="$HOME/$rel"
+    if [ -e "$target" ] && [ ! -L "$target" ] && { [ -d "$target/.git" ] || [ -f "$target/.git" ]; }; then
+      echo "$displaypath: STOW_MISMATCH at $target (real dir with .git, expected symlink to ~/.dotfiles/$displaypath)"
+    fi
+  fi
+' 2>/dev/null)
+if [ -n "$sub_report" ]; then
+  echo "$sub_report"
+  if echo "$sub_report" | grep -q 'STOW_MISMATCH'; then
+    echo "stow-link mismatch -> STOP (manual cleanup required: merge the standalone clone into the submodule, delete the real dir, then re-stow the package)"
+  else
+    echo "submodule has unsynced work -> DELEGATE"
+  fi
 fi
 ```
 
@@ -70,11 +111,13 @@ fi
 cd ~/.dotfiles && git fetch origin main 2>&1
 ```
 
-If any call's output contains a `-> DELEGATE` line, **stop following this skill** and follow `~/.claude/skills/sync-dotfiles-full/SKILL.md` from its Step 1. Do not continue with the steps below — the full skill handles the fast path's work too. (The prefetch was wasted but harmless.)
+Routing after Step 1:
 
-If `$id` or `$os` is empty after Call 1 (e.g. unwritable HOME), stop and report.
+- If any call's output contains `-> STOP`, **stop the skill entirely** and report the STOW_MISMATCH lines to the user. Do NOT delegate — the full skill doesn't reconcile two diverged clones either. The user has to: (a) commit and push everything in the standalone clone, (b) pull the same state into the dotfiles submodule, (c) delete the standalone, (d) `cd ~/.dotfiles && stow <package>` to recreate the symlink, (e) commit + push the updated submodule pointer in the parent. Past incident: the wiki standalone at `~/.local/share/wiki/` shadowed the would-be stow link for months while `/sync-dotfiles` silently reported success.
+- Else if any call's output contains `-> DELEGATE`, **stop following this skill** and follow `~/.claude/skills/sync-dotfiles-full/SKILL.md` from its Step 1. Do not continue with the steps below — the full skill handles the fast path's work too. (The prefetch was wasted but harmless.)
+- Else continue with Step 2 — submodules are skipped for the rest of this skill.
 
-If neither delegation condition fired, continue with Step 2 — submodules are skipped for the rest of this skill.
+If `$id` or `$os` is empty after Call 1 (e.g. unwritable HOME), stop and report regardless of the other checks.
 
 ---
 
