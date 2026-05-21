@@ -18,6 +18,22 @@ Do NOT comment on:
 - Pure renames, signature widening, comment-only changes, generated files.
 - Anything a careful read of the function makes obvious.
 
+## Content — explain the code, not the history of how you got here
+
+**The reviewer may not have your context.** They probably haven't read the ticket, the sibling MR you're mirroring, your pre-flight queries, or the chat where you decided what to do. A note that opens with "intentional: 8 entries here vs 6 in ST DISP-2914" or "mirrors the approach from PR #482" expects all of that as background and gives the reviewer nowhere to land.
+
+**Lead with what the code does.** Plain words. Then, if it's still useful, note why it diverges from a sibling or what the alternative would be.
+
+- **Bad** (assumes context the reviewer doesn't have, jargon-loaded):
+  > intentional: 8 entries here vs 6 in ST DISP-2914, no top re-grant block. pre-flight on prod CONFIG showed two legacy grants already COMPLETED on this role, so they get folded in to make the file the single source of truth.
+
+- **Good** (explains the mechanism in plain words, then the divergence):
+  > the `WHERE NOT EXISTS` skips any grant_sql that already has a COMPLETED row in the log, so re-running the file is safe and only `galileo_dedup_ro` actually inserts a new PENDING row. the other 7 entries are already COMPLETED in prod and just sit here as a manifest of what the role should hold. (ST DISP-2914 added a separate top-of-file INSERT for `galileo_dedup_ro` to bypass the same guard because it had a stale COMPLETED row from a prior grant+revoke; prod doesn't.)
+
+Self-test before applying: imagine a reviewer who has only the diff in front of them. Does the note tell them what the code does and why? If they'd have to leave Hunk and read another MR, ticket, or chat thread before your note made sense, rewrite it. Comparisons to a sibling are fine, but they go *after* the standalone explanation, not in place of it.
+
+Jargon trap: words like "idempotent guard", "single source of truth", "stale row", "fold in", "manifest" carry meaning *for you* because you just lived through deciding to use them. To a fresh reader they're labels for ideas that haven't been introduced yet. Either name the mechanism in plain words ("WHERE NOT EXISTS skips X") or define the term in the same sentence you use it.
+
 ## Tone — short, informal, plain words
 
 When you do apply a comment:
