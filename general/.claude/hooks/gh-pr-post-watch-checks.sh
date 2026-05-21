@@ -4,13 +4,31 @@
 # notifies the user AND spawns a Claude session in a new tmux window to
 # attempt a one-shot fix.
 #
+# REQUIRED settings.json wiring (PostToolUse, Bash matcher). Keep these 3
+# entries and only these 3. Do NOT add `gh pr view *`, `gh pr checks *`,
+# `gh pr edit *`, or any read-only command. That re-introduces the misfire
+# where the hook latches onto a PR you were just inspecting.
+#   - if: "Bash(gh pr create *)"     timeout: 3600  async: true
+#   - if: "Bash(git push *)"         timeout: 3600  async: true
+#   - if: "Bash(glab mr create *)"   timeout: 3600  async: true
+#
 # Platform detection:
-#   - URL pattern github.com/.../pull/<n>      → GitHub (gh)
-#   - URL pattern .../merge_requests/<n>       → GitLab (glab)
+#   - URL pattern github.com/.../pull/<n>      -> GitHub (gh)
+#   - URL pattern .../merge_requests/<n>       -> GitLab (glab)
 # For PR-create / MR-create commands, the URL is parsed from stdout.
 # For `git push`, the URL is looked up via `gh pr list` (then `glab mr list`)
 # for the current branch in the tool's cwd; if no PR/MR exists yet, the hook
 # exits silently.
+#
+# AUTHOR GUARD. Prevents the "reviewing a friend's PR and the hook almost
+# fixed CI for them" misfire. After URL resolution, the hook verifies the
+# PR author equals the current `gh` / `glab` user; if not, it exits silently.
+# Fail-closed: if either side cannot be resolved, the hook also exits. There
+# is intentionally no env-var bypass. Spawn a fresh claude session manually
+# if you really need to auto-fix someone else's PR.
+#
+# Disable per-invocation:
+#   - PR_WATCH_AUTOFIX=0  -> still watch + notify, but do not spawn the fixer.
 #
 # Logs to ~/.claude/hooks/logs/pr-watch-<timestamp>.log.
 
@@ -109,6 +127,37 @@ case "$URL" in
   *) echo "unknown platform for URL — exiting"; exit 0 ;;
 esac
 echo "PLATFORM: $PLATFORM"
+
+# --- Author guard ---
+# Only watch PRs/MRs the current user opened. Prevents misfires when reviewing
+# someone else's PR locally (e.g. `gh pr checkout` + `git push` suggestion).
+PR_AUTHOR=""
+ME=""
+case "$PLATFORM" in
+  github)
+    if command -v gh >/dev/null 2>&1; then
+      PR_AUTHOR=$(cd "$REPO_DIR" && gh pr view "$URL" --json author --jq '.author.login // ""' 2>/dev/null || true)
+      ME=$(gh api user --jq '.login // ""' 2>/dev/null || true)
+    fi
+    ;;
+  gitlab)
+    if command -v glab >/dev/null 2>&1; then
+      MR_NUM_GUARD=$(echo "$URL" | grep -Eo '[0-9]+$')
+      PR_AUTHOR=$(cd "$REPO_DIR" && glab mr view "$MR_NUM_GUARD" --output json 2>/dev/null \
+                    | jq -r '.author.username // ""' 2>/dev/null || true)
+      ME=$(glab api user 2>/dev/null | jq -r '.username // ""' 2>/dev/null || true)
+    fi
+    ;;
+esac
+echo "author_guard: pr_author='$PR_AUTHOR' me='$ME'"
+if [ -z "$ME" ] || [ -z "$PR_AUTHOR" ]; then
+  echo "could not resolve PR author or current user — exiting (fail-closed)"
+  exit 0
+fi
+if [ "$PR_AUTHOR" != "$ME" ]; then
+  echo "PR authored by '$PR_AUTHOR', not '$ME' — exiting (not my PR)"
+  exit 0
+fi
 
 # --- Watch CI ---
 STATUS="" # "pass" | "fail" | "skip"

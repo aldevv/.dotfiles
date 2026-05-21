@@ -1,0 +1,20 @@
+#!/bin/sh
+# Show dunst notification history in dmenu. Selecting an entry re-pops it
+# as a fresh dunst popup. Bound via sxhkd (super + n).
+
+history_json=$(dunstctl history 2>/dev/null)
+
+if ! printf '%s' "$history_json" | jq -e '.data[0] | length > 0' >/dev/null 2>&1; then
+    notify-send -i utilities-terminal "Notifications" "no history yet"
+    exit 0
+fi
+
+selected=$(printf '%s' "$history_json" | jq -r '
+    .data[0][] |
+    "[\(.id.data)] \(.summary.data) │ \((.body.data // "") | gsub("\n"; " "))"
+' | /usr/bin/dmenu -p notifications -l 15)
+
+[ -z "$selected" ] && exit 0
+
+id=$(printf '%s' "$selected" | sed -E 's/^\[([0-9]+)\].*/\1/')
+[ -n "$id" ] && dunstctl history-pop "$id"

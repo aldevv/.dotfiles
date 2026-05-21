@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+# GtkStatusIcon is deprecated in GTK3+ but still supported by trayer-srg on
+# X11. AppIndicator/StatusNotifier is the modern replacement but requires
+# extra packages; staying on StatusIcon keeps zero extra deps.
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib  # noqa: E402
+
+import subprocess
+
+
+ICON_NAME = "mail-message-new"
+POLL_SECONDS = 5
+
+
+def run(*cmd):
+    subprocess.Popen(cmd, stdin=subprocess.DEVNULL)
+
+
+def history_count():
+    try:
+        out = subprocess.run(
+            ["dunstctl", "count", "history"],
+            capture_output=True, text=True, timeout=2,
+        ).stdout.strip()
+        return int(out) if out.isdigit() else 0
+    except Exception:
+        return 0
+
+
+def on_left_click(_icon):
+    run("notification-menu")
+
+
+def on_right_click(icon, button, time):
+    menu = Gtk.Menu()
+    for label, action in (
+        ("Show notifications", lambda *_: run("notification-menu")),
+        ("Clear history", lambda *_: run("dunstctl", "history-clear")),
+        ("Quit tray", lambda *_: Gtk.main_quit()),
+    ):
+        item = Gtk.MenuItem(label=label)
+        item.connect("activate", action)
+        menu.append(item)
+    menu.show_all()
+    menu.popup_at_pointer(None)
+
+
+def refresh_tooltip(icon):
+    n = history_count()
+    icon.set_tooltip_text(
+        "no notifications" if n == 0 else f"{n} notification" + ("s" if n != 1 else "")
+    )
+    return True
+
+
+def main():
+    icon = Gtk.StatusIcon.new_from_icon_name(ICON_NAME)
+    icon.set_title("dunst notifications")
+    refresh_tooltip(icon)
+    icon.connect("activate", on_left_click)
+    icon.connect("popup-menu", on_right_click)
+    GLib.timeout_add_seconds(POLL_SECONDS, refresh_tooltip, icon)
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

@@ -12,7 +12,7 @@ allowed-tools:
 
 # Hunk
 
-Open the Hunk TUI and attach review notes for any complex flows or difficult paths in the diff. Default to applying nothing: comments are reserved for things a careful reader would still find non-obvious.
+Open the Hunk TUI and attach review notes for any complex flows or difficult paths in the diff. Targeted notes are reserved for things a careful reader would still find non-obvious. When none are warranted, always leave a single `Feature Explanation:` orientation comment at the top of the diff so the reader has a starting point without having to derive the feature from the code.
 
 **User input**: $ARGUMENTS
 
@@ -188,7 +188,9 @@ If the validator prints any `MISSING` lines, stop and surface them to the caller
 
 If `comment apply` errors for any reason (path mismatch, hunk mismatch, session vanished), run `hunk session review --repo <REPO_ROOT> --json` to confirm the file/hunk structure (iterate `.review.files[].path` and `.review.files[].hunks[]`). If the session is gone, stop and tell the user; don't try to reopen Hunk on its own.
 
-**If nothing worth commenting on** — clear any `[pending]` placeholder (the pre-PR/MR hook drops one; `/hunk` usually doesn't) and stop:
+**If nothing worth commenting on** — still leave one `Feature Explanation:` orientation note at the top of the diff. This is the minimum bar so the reader doesn't have to derive the feature from the code.
+
+First, clear any `[pending]` placeholder (the pre-PR/MR hook drops one; `/hunk` usually doesn't):
 
 ```bash
 hunk session comment list --repo <REPO_ROOT> --json | \
@@ -198,7 +200,24 @@ hunk session comment list --repo <REPO_ROOT> --json | \
 
 The empty first positional is required: `hunk session comment rm` takes `[sessionId]` then `<commentId>`; `--repo` replaces session lookup but the first arg slot still needs `""`.
 
-Tell the user the diff was straightforward and no review comments were warranted.
+Then apply the orientation note:
+
+- **Anchor**: pick the file that best represents the feature surface (proto/schema, public API, primary handler). Skip generated files (`*.pb.go`, `*.pb.validate.go`, `*_protoopaque.pb.go`, `*.gen.go`), vendored code (`vendor/`), test files, and trivial one-liners (e.g. version bumps). If everything in the diff is generated/vendored/trivial, fall back to the first added line in the first file. Use the first `+` line in the chosen file as `newLine`.
+- **Summary**: `"Feature Explanation: <one-line headline>"` (chat-line, no period).
+- **Rationale**: 2-3 sentences in plain words. What the feature does, what the change adds, and (if relevant) the design tradeoff. This is the only note the reader gets, so make it count. The tone rules and meta-narration bans in `references/review-guidance.md` still apply.
+
+```bash
+cat <<'JSON' | hunk session comment apply --repo <REPO_ROOT> --stdin && \
+hunk session navigate --repo <REPO_ROOT> --next-comment
+{
+  "comments": [
+    {"filePath": "<central-file>", "newLine": <N>, "summary": "Feature Explanation: ...", "rationale": "..."}
+  ]
+}
+JSON
+```
+
+Tell the user that no targeted notes were warranted and a top-of-diff `Feature Explanation:` note was left as the orientation.
 
 ## Round 4 — One-time hook-install prompt
 

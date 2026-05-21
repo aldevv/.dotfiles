@@ -6,14 +6,31 @@
 #   - sends a purple notify-send so the operator sees a PR-review touch
 #   - opens a new tmux window with monitor-bell enabled
 #   - launches a Claude session whose prompt instructs it to:
-#       clear-cut → fix + push
-#       ambiguous → fix but do NOT push, ring the tmux bell, wait for input
+#       clear-cut -> fix + push
+#       ambiguous -> fix but do NOT push, ring the tmux bell, wait for input
+#
+# REQUIRED settings.json wiring (PostToolUse, Bash matcher). Keep these 3
+# entries and only these 3. Do NOT add `gh pr view *`, `gh pr checks *`,
+# `gh pr edit *`, or any read-only command. That re-introduces the misfire
+# where the hook latches onto a PR you were just inspecting.
+#   - if: "Bash(gh pr create *)"     timeout: 3600  async: true
+#   - if: "Bash(git push *)"         timeout: 3600  async: true
+#   - if: "Bash(glab mr create *)"   timeout: 3600  async: true
 #
 # Runs in parallel with gh-pr-post-watch-checks.sh; uses a distinct lock key.
 # Both GitHub PRs and GitLab MRs are supported; reviews are matched by the
 # `last_reviewed_sha` HTML-comment marker in the body, not by author.
 #
-# Disable per-invocation: PR_COMMENT_WATCH_AUTOFIX=0.
+# AUTHOR GUARD. Prevents the "reviewing a friend's PR and the hook almost
+# fixed CI for them" misfire. After URL resolution, the hook verifies the
+# PR author equals the current `gh` / `glab` user; if not, it exits silently.
+# Fail-closed: if either side cannot be resolved, the hook also exits. There
+# is intentionally no env-var bypass. Spawn a fresh claude session manually
+# if you really need to auto-fix someone else's PR.
+#
+# Disable per-invocation:
+#   - PR_COMMENT_WATCH_AUTOFIX=0  -> still poll + notify, do not spawn fixer.
+#
 # Logs to ~/.claude/hooks/logs/pr-comments-<timestamp>.log.
 
 set -u
@@ -94,6 +111,32 @@ case "$PLATFORM" in
     echo "host=$HOST proj=$PROJ_PATH iid=$MR_IID"
     ;;
 esac
+
+# --- Author guard ---
+# Only watch PRs/MRs the current user opened. Prevents misfires when reviewing
+# someone else's PR locally (e.g. `gh pr checkout` + `git push` suggestion).
+PR_AUTHOR=""
+ME=""
+case "$PLATFORM" in
+  github)
+    PR_AUTHOR=$(cd "$REPO_DIR" && gh pr view "$URL" --json author --jq '.author.login // ""' 2>/dev/null || true)
+    ME=$(gh api user --jq '.login // ""' 2>/dev/null || true)
+    ;;
+  gitlab)
+    PR_AUTHOR=$(cd "$REPO_DIR" && glab api --hostname "$HOST" "projects/${PROJ_PATH_ENC}/merge_requests/${MR_IID}" 2>/dev/null \
+                  | jq -r '.author.username // ""' 2>/dev/null || true)
+    ME=$(glab api user 2>/dev/null | jq -r '.username // ""' 2>/dev/null || true)
+    ;;
+esac
+echo "author_guard: pr_author='$PR_AUTHOR' me='$ME'"
+if [ -z "$ME" ] || [ -z "$PR_AUTHOR" ]; then
+  echo "could not resolve PR author or current user — exiting (fail-closed)"
+  exit 0
+fi
+if [ "$PR_AUTHOR" != "$ME" ]; then
+  echo "PR authored by '$PR_AUTHOR', not '$ME' — exiting (not my PR)"
+  exit 0
+fi
 
 HEAD_SHA=$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || echo "")
 if [ -z "$HEAD_SHA" ]; then

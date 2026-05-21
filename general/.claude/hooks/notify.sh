@@ -14,7 +14,7 @@
 #     [NOTIFY_SUBTITLE="..."] [NOTIFY_SOUND="Glass"] [NOTIFY_URGENCY="normal"] \
 #     notify.sh custom
 #
-# When inside tmux, the title is replaced with "session:window" and the
+# When inside tmux, the title is replaced with "session -> window" and the
 # original title becomes the subtitle (macOS) or body prefix (Linux).
 
 set -euo pipefail
@@ -26,7 +26,7 @@ tmux_info=""
 if [[ -n "${TMUX:-}" && -n "${TMUX_PANE:-}" ]] && command -v tmux >/dev/null 2>&1; then
   session="$(tmux display-message -p -t "$TMUX_PANE" '#S' 2>/dev/null || true)"
   window="$(tmux display-message -p -t "$TMUX_PANE" '#W' 2>/dev/null || true)"
-  [[ -n "$session" && -n "$window" ]] && tmux_info="${session}:${window}"
+  [[ -n "$session" && -n "$window" ]] && tmux_info="${session} -> ${window}"
 fi
 
 case "$event" in
