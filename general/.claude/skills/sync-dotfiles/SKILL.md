@@ -5,7 +5,7 @@ description: "Fast dotfiles sync — pulls/pushes the parent repo only and skips
 
 > **Thinking budget: none on the happy path — just execute.** The happy path is two deterministic tool-call rounds. Don't reason about strategy, don't evaluate alternatives, don't re-derive the flow — run the steps verbatim.
 >
-> **Exception — think hard on merge conflicts.** If Step 2 exits 8 (merge conflict) or Step 4 reports an unresolved conflict, switch on extended thinking for that branch only. Conflict resolution needs real reasoning: distinguish Rule A (additive/structural, keep both) from Rule B (logic conflict, keep incoming), and when it's ambiguous, think through which side represents the newer intent before choosing. Return to zero thinking once the conflict is staged.
+> **Exception — think hard on merge conflicts, but never pause the turn.** If Step 2 exits 8 (merge conflict) or Step 4 reports an unresolved conflict, think harder while picking Rule A vs Rule B per file. Thinking is internal: do NOT end the turn after announcing the rule. Listing, deciding, and running the resolution command happen in the SAME response. The only legitimate pause is the "genuinely ambiguous" case defined in Step 3, and even then state the reason and proceed to ask — don't pause silently. Return to zero thinking once every conflict is staged.
 
 Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve conflicts, restow packages with new files, and push a machine-tagged commit. Submodules are intentionally **not** touched — they update rarely, and the periodic `sync-dotfiles-full` run handles them.
 
@@ -82,8 +82,8 @@ If neither delegation condition fired, continue with Step 2 — submodules are s
 
 One bash invocation that does **everything** for the happy path: secret scan, commit local changes, merge the already-fetched remote, amend to the final sync message, push. Two early exits flag the rare branches:
 
-- **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve), then Step 5 (finalize), then Step 6 (report).
-- **`exit 9`** = merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize), then Step 6 (report).
+- **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve). Step 3 then checks whether the merge ALSO added new files: if yes → Step 4 → Step 5 → Step 6; if no → Step 5 → Step 6.
+- **`exit 9`** = clean merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize), then Step 6 (report).
 - **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and run Step 6 (report) so the user sees what blocked.
 - **`exit 0`** = success, sync is done. **Always** continue to Step 6 (report) — this includes the "Already up to date / nothing to push" no-op case. The report is the user-visible signal that the skill actually ran; skipping it on a no-op leaves the user guessing whether anything happened.
 
@@ -163,36 +163,65 @@ fi
 
 ## Step 3 — Conflict resolution (only on exit 8)
 
+> **CRITICAL — anti-stop rule.** Do NOT end the turn between listing the conflicts and resolving them. Listing, deciding, and executing the resolution all happen in the SAME response. After announcing the rule for a file, the next tool call must be the resolution command — no "let me explain what I'm about to do, then wait" turn endings, no implicit pause for user confirmation. The user invoked `/sync-dotfiles` expecting it to finish; pausing for "is Rule B OK?" defeats the skill. The only legitimate pause is the narrow "genuinely ambiguous" case below, and when it fires you must say it out loud: "Conflict on `<file>` is ambiguous because `<reason>`; pausing for user input."
+>
+> Past failure: a session announced "lazy-lock.json — Rule B applies (keep incoming)" and ended the turn without running the `checkout --theirs`. The user had to ask why the run stalled. This block exists to make that mistake unmissable on a future read.
+
+List the unresolved conflicts:
+
 ```bash
 cd ~/.dotfiles && git status --short | grep -E '^(UU|AA|DD|AU|UA|DU|UD)'
 ```
 
-**Rule A — Additive/structural**: both sides added independent content → keep both, remove markers.
+For each conflicted file, pick a rule and execute its command in the same turn:
 
-**Rule B — Logic conflict**: same setting changed on both sides → keep incoming (remote):
+- **Rule A — Additive/structural** (both sides added independent content). Open the file, drop the conflict markers so both blocks remain, then `git add <file>`.
+- **Rule B — Logic conflict on the same setting/lockfile/generated artifact** (same key changed both sides, or same auto-generated content updated both sides). Keep incoming:
+  ```bash
+  git checkout --theirs -- <file> && git add <file>
+  ```
+
+**Default to Rule B for generated artifacts and lockfiles** — they're meant to be replaced wholesale, not three-way-merged. No thinking needed for these: `lazy-lock.json`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Cargo.lock`, `poetry.lock`, `Pipfile.lock`, `Gemfile.lock`, `composer.lock`, `flake.lock`, `*.lock`, any file under a `__generated__/` / `dist/` / `build/` directory.
+
+**When to actually pause** (genuinely ambiguous, narrow set):
+- Hand-edited config (NOT a generated artifact) where both sides changed the same key to different meaningful values and context can't tell which is the user's current intent.
+- Multiple unrelated hunks in one file where the rule would differ per hunk and the right call isn't obvious.
+
+In those cases, post the conflict body and ask. In all other cases, pick and run in the same turn.
+
+After every conflict is staged, check whether the merge ALSO added new files. If yes, hop to **Step 4** before finalizing (Step 4 will restow the new files, then Step 5 commits). If no, jump straight to **Step 5**.
 
 ```bash
-git checkout --theirs -- <file> && git add <file>
+cd ~/.dotfiles && new_files=$(git diff ORIG_HEAD --cached --name-only --diff-filter=A)
+if [ -n "$new_files" ]; then
+  echo "RESTOW_NEEDED -> Step 4"; echo "$new_files"
+else
+  echo "no new files added by merge -> Step 5"
+fi
 ```
 
-After all conflicts are staged, jump to **Step 5** (the merge commit isn't finalized yet — Step 5's `git diff --cached --quiet || git commit ...` will create it from the staged resolution).
+The merge commit is not finalized yet; the staged conflict resolutions + any new files will become the merge commit in Step 5 (or Step 4 → Step 5).
 
 ---
 
-## Step 4 — Restow packages that gained new files (only on exit 9)
+## Step 4 — Restow packages that gained new files
 
-The Step 2 exit-9 message includes the pre/post merge SHAs. Use those (or `ORIG_HEAD..HEAD` — `git merge` sets `ORIG_HEAD` whenever the merge actually changed HEAD) to find packages that received newly-added files:
+Called in two cases:
+1. **From Step 2 exit 9** — clean merge that added new files. The merge commit has been made; new files are in HEAD.
+2. **From Step 3** — conflict resolution finished and the staged result includes new files from the remote side. Merge commit not yet made; new files are only in the INDEX.
+
+The diff form below covers both because `git diff ORIG_HEAD --cached` compares ORIG_HEAD against the INDEX, and the INDEX equals HEAD post-commit (case 1) or "pre-merge HEAD + staged resolutions" mid-conflict (case 2):
 
 ```bash
-cd ~/.dotfiles && git diff ORIG_HEAD HEAD --name-only --diff-filter=A 2>/dev/null | sed 's|/.*||' | sort -u
+cd ~/.dotfiles && git diff ORIG_HEAD --cached --name-only --diff-filter=A 2>/dev/null | sed 's|/.*||' | sort -u
 ```
 
-For each package directory listed, run stow then verify each new file is actually a symlink. Stow can bail with `BUG in find_stowed_path? Absolute/relative mismatch` when it walks an unrelated symlink in `$HOME` (e.g. `~/.local/state/nix/profiles/profile`) — when that happens it leaves new files unlinked, so we always verify and fall back to manual symlinking.
+For each package directory listed, run stow then verify each new file is actually a symlink. Stow can bail with `BUG in find_stowed_path? Absolute/relative mismatch` (or "WARNING! stowing X would cause conflicts: existing target is not owned by stow") when it walks unrelated absolute symlinks in `$HOME` (e.g. `~/.local/state/nix/profiles/profile`, or other dotfiles symlinks created by hand) — when that happens it leaves new files unlinked, so we always verify and fall back to manual symlinking.
 
 ```bash
 pkg=<package>
 cd ~/.dotfiles && stow -R "$pkg" 2>&1 || true
-git diff ORIG_HEAD HEAD --name-only --diff-filter=A | grep "^${pkg}/" | while IFS= read -r src; do
+git diff ORIG_HEAD --cached --name-only --diff-filter=A | grep "^${pkg}/" | while IFS= read -r src; do
   rel=${src#${pkg}/}
   dest="$HOME/$rel"
   expected="$HOME/.dotfiles/$src"
