@@ -46,7 +46,12 @@ export SECRETS_EXTENSION=".scr"
 export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NIXPKGS_ALLOW_UNFREE=1
 
-export CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com/:$REPOS/github.com/aldevv:$PROJECTS"
+CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com:$REPOS/gitlab.com:$PROJECTS"
+for _d in $REPOS/*(N/) $REPOS/github.com/*(N/) $REPOS/gitlab.com/*(N/); do
+  CDPATH="$CDPATH:$_d"
+done
+unset _d
+export CDPATH
 
 export SCRIPTS="$HOME/.local/share/scripts"
 export SHARED="$SCRIPTS/shared"
