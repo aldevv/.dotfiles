@@ -182,8 +182,14 @@ Place the TOC immediately after the `# <Title>` line, before any existing conten
 ## Detail files (load on demand)
 Extracted reference content lives in `.claude/lazy/`. Each entry names the trigger that should cause you to read it — do not load these proactively.
 
-- [<topic>](.claude/lazy/<topic>.md) — **read when:** <specific trigger, e.g. "a hook fires or blocks, or when running a Quavo replication skill">
-- [<topic2>](.claude/lazy/<topic2>.md) — **read when:** <specific trigger>
+- [<topic>](.claude/lazy/<topic>.md). **Read when:** <single concrete trigger>. Covers <one-line content summary>.
+
+- [<topic2>](.claude/lazy/<topic2>.md). **Read when** any of:
+  - <distinct signal 1>
+  - <distinct signal 2>
+  - <distinct signal 3>
+
+  Covers <one-line content summary>.
 
 ## Table of contents
 - [Section Heading 1](#section-heading-1) — one-line description
@@ -193,7 +199,12 @@ Extracted reference content lives in `.claude/lazy/`. Each entry names the trigg
 
 Rules:
 - **Detail files** come first (they're the lazy-load contract), then **Table of contents** for the eager content.
-- **Every Detail-files entry must name its trigger** using a `**read when:** <trigger>` clause. This mirrors the `**Load this when:**` line inside the extracted file — the two must agree. A reference without a trigger is a bug.
+- **Every Detail-files entry must name its trigger** using a `**Read when**` clause. This mirrors the `**Load this when:**` line inside the extracted file — the two must agree. A reference without a trigger is a bug.
+- **Trigger format depends on signal count:**
+  - One concrete signal (or several verb-forms of the same concept) → single-line: `**Read when:** <trigger>.`
+  - Multiple distinct signals / load moments → bulleted: `**Read when** any of:` + indented bullet list. Use this whenever spelling out the signals as a comma-list would make the trigger dense or ambiguous.
+- **Every entry ends with a one-line `Covers <content summary>.`** tail that names what's IN the file (sub-topics, rules, examples), not a restatement of the trigger. Drop the tail only if filename + trigger already imply the content exhaustively.
+- **Blank line between entries.** Put one empty line between consecutive Detail-files bullets so multi-line entries don't visually collide.
 - Anchor links use lowercase, spaces→hyphens, drop punctuation — match how GitHub/most markdown renderers generate anchors.
 - TOC one-line descriptions: what the section is *for*, not a restatement of its title.
 - If the file already had a "Quick map", "References to Specialized Guides", or similar index, **delete it** — the migrated entries now live under "Detail files (load on demand)". Don't leave both indexes.
