@@ -4,19 +4,80 @@
 
 A `CLAUDE.md` (or `SKILL.md`) may include a "Lazy load" section near the top listing files that should be read on demand, only when a specific trigger fires, rather than eagerly on every session. Each entry pairs a path with a `**Read when:**` clause naming its trigger. Pull a file in only when its trigger matches the current context.
 
+### Good vs bad triggers
+
+Every `**Read when:**` clause must be broad enough to catch every situation it should fire on AND concrete enough that the match is unambiguous. Err broader: a wasted load is fine, a silently-missed load is not.
+
+**Completeness beats brevity.** A good trigger carries all the information Claude needs to recognize the load moment, even if that takes multiple lines or a bulleted list. Don't truncate a trigger to fit a one-liner if the result loses signals. A complex file with many entry points gets a complex trigger; that's fine.
+
+**Good triggers tie to observable signals:**
+- file paths or extensions about to be edited (`editing any .go file`, `editing pkg/config/config.go`)
+- commands about to run (`running ANY gh subcommand`, `running pass otp`)
+- syntactic content in the tool call (`Write/Edit with //, #, /* in new content`)
+- specific tool calls (`before any gh pr create`)
+- explicit user phrases (`given a Linear ticket URL/ID`)
+
+**Bad triggers rely on introspection or abstract categories:**
+- `implementing a feature` (no signal, too abstract)
+- `working with PRs` (vague self-categorization)
+- `about to add a comment` (introspective, fires too late: Claude has already composed the comment in the Edit payload before the trigger registers)
+- `considering whether X applies` (only loads after the work is done)
+- `when in doubt, read this` (no concrete moment to anchor to)
+
+**Fix recipe when a trigger is ignored:** replace the introspective phrasing with the file/tool/syntax signal that was actually observable at the moment the trigger should have fired.
+
+### Files
+
 By convention (universal, not specific to this file), lazy-loaded detail files always live in a sibling `.claude/lazy/` directory: next to the parent `CLAUDE.md`, at the project root for repo-level files, or under `~/.claude/lazy/` for the global user-level file. For this CLAUDE.md that resolves to `~/.claude/lazy/` (dotfiles source: `~/.dotfiles/general/.claude/lazy/`):
 
-- [`~/.claude/lazy/skills.md`](.claude/lazy/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
-- [`~/.claude/lazy/hook-conventions.md`](.claude/lazy/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
-- [`~/.claude/lazy/hook-debugging.md`](.claude/lazy/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
-- [`~/.claude/lazy/code/quality.md`](.claude/lazy/code/quality.md). **Read when:** writing, reviewing, modifying, refactoring, or deleting any code. Line-level decisions: naming, function extraction, hardcoded strings, magic separators.
-- [`~/.claude/lazy/code/design.md`](.claude/lazy/code/design.md). **Read when:** planning a code implementation, designing architecture, choosing file or module layout, deciding where logic should live, or modifying / reading / updating / deleting code that crosses multiple files. Separation of responsibilities and the works-then-readable-then-optimized priority.
-- [`~/.claude/lazy/code/comments.md`](.claude/lazy/code/comments.md). **Read when:** writing or reviewing any code comment, considering whether to add one, or planning code you suspect will need a comment. Forbidden / justified pairs anchored to `## CRITICAL: Comments`.
+- [`~/.claude/lazy/skills.md`](.claude/lazy/skills.md). **Read when** any of:
+  - creating, editing, or auditing a skill
+  - editing any `SKILL.md` file or anything under a `.claude/skills/` directory
+
+  Covers location, layout, portability/composability requirements, frontmatter checklist.
+
+- [`~/.claude/lazy/hook-conventions.md`](.claude/lazy/hook-conventions.md). **Read when** any of:
+  - creating or reorganizing a Claude Code hook
+  - editing hook entries in `settings.json`
+  - editing any script under `~/.claude/hooks/` (or a project-local `.claude/hooks/`)
+
+  Covers naming, folder layout, README structure, when a helper becomes a skill.
+
+- [`~/.claude/lazy/hook-debugging.md`](.claude/lazy/hook-debugging.md). **Read when** any of:
+  - a hook fires but does nothing visible
+  - a hook exits silently or hangs
+  - a hook's matcher doesn't fire when it should
+  - a `set -e` script aborts unexplained
+
+  Covers manual test recipes, output JSON shape, common matcher pitfalls.
+
+- [`~/.claude/lazy/code/quality.md`](.claude/lazy/code/quality.md). **Read when** any of:
+  - writing new code (naming, extraction, choice of literal vs constant)
+  - modifying or refactoring existing code
+  - reviewing or auditing code for quality issues
+
+  Covers naming, function extraction, hardcoded strings, magic separators.
+
+- [`~/.claude/lazy/code/design.md`](.claude/lazy/code/design.md). **Read when** any of:
+  - creating a new source file (`Write` of a path that doesn't exist)
+  - splitting one file into multiple
+  - moving functions or types between files
+  - adding a new package or module
+  - the user asks where logic should live or how to structure something
+
+  Covers separation of responsibilities and the works-then-readable-then-optimized priority.
+
+- [`~/.claude/lazy/code/comments.md`](.claude/lazy/code/comments.md). **Read when** any of:
+  - writing, editing, or removing any code comment (`//`, `#`, `/*`, docstrings)
+  - reviewing existing comments to trim
+
+  Covers forbidden/justified examples, docstring rules, and header-comment guidance.
 
 ## Table of Contents
 - [Lazy load](#lazy-load)
 - [Machine connection notes](#machine-connection-notes)
 - [CRITICAL: Memory Files](#critical-memory-files)
+- [CRITICAL: No premature breakpoints during autonomous drive](#critical-no-premature-breakpoints-during-autonomous-drive)
 - [CRITICAL: Editing this file](#critical-editing-this-file)
 - [CRITICAL: Readability](#critical-readability)
 - [CRITICAL: Work files boundary](#critical-work-files-boundary)
@@ -97,13 +158,17 @@ When the user says "save the changes in my dotfiles" (or any equivalent), they m
 **README.md is for humans.** It's the project intro for a new reader (engineer, recruiter, drive-by browser), not Claude-facing memory, runbook, or agent-routing material. Lead with what the project is and how to start using it; keep the tone casual and short.
 
 ## CRITICAL: Comments
-**Adding any comment is a rule violation by default.** Before writing any comment, state in chat first: `comment justified: <complex flow / hidden invariant / non-obvious WHY / workaround>`. If you can't articulate that justification in chat first, you have not earned the comment.
+**Adding any comment is a rule violation by default.** Before writing any comment, state in chat first: `comment justified: <complex flow / hidden invariant / non-obvious WHY / workaround>`. **No comment goes into a tool call without that chat utterance preceding it.** If you can't articulate the justification in advance, don't write the comment. The check is pre-write, not post-write. There is no cleanup pass to fall back on.
 
 Forbidden:
 - Narrative comments that restate the next line.
-- Function-purpose summaries on functions whose name and signature already convey it.
+- Function-purpose summaries on functions whose name and signature already convey it. Default for small helpers and single-purpose conversion functions: zero comments.
+- File-level header comments that merely inventory what the file contains (filename plus declared types already say it). A short header IS justified when the file handles a complex flow and the header genuinely orients the reader.
+- Type/struct comments that restate the type name as a sentence.
 - "Used by X" / "For the Y flow" / cross-cutting consistency notes. Those belong in the PR description, not the code.
 - Multi-line docstrings, unless the flow is truly hairy (subtle invariants, surprising ordering, platform workaround).
+
+See [`~/.claude/lazy/code/comments.md`](.claude/lazy/code/comments.md) for worked forbidden/justified pairs.
 
 Exception: tests. A one-line function-header comment on a test that names a non-obvious scenario is OK (`// Workday quirk: ref ID without name, require both`). Per-line narration inside the test body is not. Default is still zero, only add when the test name alone wouldn't tell a future reader what's being checked.
 

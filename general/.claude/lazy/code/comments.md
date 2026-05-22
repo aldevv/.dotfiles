@@ -94,6 +94,41 @@ func (h *Handler) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 Delete. Two failures at once: it's a cross-cutting "the work lives elsewhere" pointer (rule #3), AND the moment someone moves auth back into the handler (or replaces the gateway) the note silently lies. Cross-cutting notes age badly because nobody updates them when refactoring the thing they describe.
 
+### 8. Doc-comment on a small helper function
+
+```go
+// refToUser builds a user resource from a list-endpoint ref.
+func refToUser(ref Ref) (*User, error) {
+    return &User{ID: ref.ID, Login: ref.ID}, nil
+}
+```
+
+Delete. The function name plus its three-line body says everything. Same for any single-purpose conversion function (`formatHeader`, `parseFoo`, `toPrincipal`). Default for small helpers: zero comments.
+
+### 9. File-level header comment that inventories what the file contains
+
+```go
+// Package client provides the REST client, OAuth helpers, and response model
+// types for talking to the Foo API. It exposes the Client struct and a set
+// of construction options (WithBaseURL, WithAccessToken, ...).
+package client
+```
+
+Delete. The package name plus the types declared at the top of the file already tell the reader. Same rule for `/* This file contains ... */` preambles in any language. **A header IS justified when it orients the reader to a complex flow they can't infer from the types**, see Justified #8 below.
+
+### 10. Type or struct comment that restates the type name
+
+```go
+// Order represents an order placed by a customer.
+type Order struct {
+    ID       int
+    Customer string
+    Total    float64
+}
+```
+
+Delete. The type name plus its fields says it. A comment is only justified if it documents an invariant the fields cannot express (e.g., "Total includes shipping but excludes tax").
+
 ## Justified comments
 
 ### 1. Hidden invariant the reader can't infer
@@ -184,7 +219,20 @@ fields := []string{"id", "name", "owner"}
 
 `owner` looks like a harmless extra field a future "cleanup" might trim. The comment warns that removing it widens the result set past the access-control boundary, which is a correctness regression and not a test failure.
 
-## When a refactor beats a comment
+### 8. File-level header that orients the reader to a complex flow
+
+```go
+// Package payments orchestrates the two-phase capture flow:
+//
+//   Authorize → optional Hold (7-day window) → Capture | Void.
+//
+// State is held in the database, NOT the gateway, so the flow survives
+// gateway downtime. Retry logic in retry.go assumes any state past
+// "Authorized" can be safely retried; "PreAuth" cannot.
+package payments
+```
+
+The two-phase flow, the state location (db vs gateway), and the retry-safety boundary are all load-bearing facts a reader cannot infer from the type signatures. Without this header, the reader has to reconstruct the flow from `authorize.go`, `capture.go`, `retry.go`, and the schema before any of the individual files make sense. Counter-example to Forbidden #9: this header is not an inventory of contents, it is a map of the flow.
 
 Before (forbidden, the comment is a crutch):
 
