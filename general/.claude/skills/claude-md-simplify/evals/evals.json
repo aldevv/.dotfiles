@@ -1,21 +1,21 @@
 {
-  "skill_name": "simplify-claude-md",
+  "skill_name": "claude-md-simplify",
   "evals": [
     {
       "id": "a-mixed",
       "name": "mixed-file-extraction",
       "prompt": "My CLAUDE.local.md is getting really long. Can you simplify it? The file is at ./CLAUDE.local.md in the current directory (a git repo). Note: since this is a test run, if the skill requires user approval at any step, document your proposed plan in a file called PLAN.md in the working directory and then proceed with your best-judgment plan — do not wait for user confirmation.",
       "fixture": "fixtures/case-a-mixed/CLAUDE.local.md",
-      "expected_behavior": "Extract Snowflake CLI section (config, connections, usage, auth flow, Okta FastPass, troubleshooting) into .claude/files/snow.md with a 'Load this when:' trigger line. Keep short behavioral rules inline. Update 'save in my claude' rule to reference .claude/files/*.md. Add TOC at top. Append .claude/files/ to .git/info/exclude (not .gitignore).",
+      "expected_behavior": "Extract Snowflake CLI section (config, connections, usage, auth flow, Okta FastPass, troubleshooting) into .claude/lazy/snow.md with a 'Load this when:' trigger line. Keep short behavioral rules inline. Update 'save in my claude' rule to reference .claude/lazy/*.md. Add TOC at top. Append .claude/lazy/ to .git/info/exclude (not .gitignore).",
       "assertions": [
         {"text": "Main CLAUDE.local.md has a 'Detail files' or similar lazy-load index at the top", "category": "structure"},
         {"text": "Main CLAUDE.local.md has a Table of Contents at the top", "category": "structure"},
-        {"text": ".claude/files/snow.md (or similarly named) exists", "category": "extraction"},
+        {"text": ".claude/lazy/snow.md (or similarly named) exists", "category": "extraction"},
         {"text": "The extracted file has a '**Load this when:**' line in the first 5 lines", "category": "extraction"},
         {"text": "The Snowflake CLI Setup section is no longer in CLAUDE.local.md (was moved out)", "category": "extraction"},
         {"text": "The short behavioral rules (push prohibition, Jira writes, pull-main-first) are still in CLAUDE.local.md", "category": "selectivity"},
-        {"text": "The 'save in my claude' rule in the main file now mentions .claude/files/*.md as a save target", "category": "save-rule"},
-        {"text": ".claude/files/ is listed in .git/info/exclude", "category": "gitignore"},
+        {"text": "The 'save in my claude' rule in the main file now mentions .claude/lazy/*.md as a save target", "category": "save-rule"},
+        {"text": ".claude/lazy/ is listed in .git/info/exclude", "category": "gitignore"},
         {"text": ".gitignore was NOT modified by the skill (file unchanged or absent)", "category": "gitignore"},
         {"text": "Main CLAUDE.local.md line count is lower than the original (~155 lines)", "category": "simplification"}
       ]
@@ -25,9 +25,9 @@
       "name": "no-op-on-lean-file",
       "prompt": "Can you simplify my CLAUDE.md? It's at ./CLAUDE.md in the current directory (a git repo). Note: if the skill needs user approval, document your plan in PLAN.md and proceed without waiting.",
       "fixture": "fixtures/case-b-lean/CLAUDE.md",
-      "expected_behavior": "Recognize that the file is already short and rule-dense with nothing to extract. Say so and stop. Do not create .claude/files/. Do not invent work.",
+      "expected_behavior": "Recognize that the file is already short and rule-dense with nothing to extract. Say so and stop. Do not create .claude/lazy/. Do not invent work.",
       "assertions": [
-        {"text": "No .claude/files/ directory was created (or it's empty)", "category": "no-op"},
+        {"text": "No .claude/lazy/ directory was created (or it's empty)", "category": "no-op"},
         {"text": "The skill explicitly reports that the file is already lean / no extraction needed (check PLAN.md, REPORT.md, or agent output)", "category": "no-op"},
         {"text": "CLAUDE.md was not substantially rewritten (line count within ±30% of original)", "category": "no-op"},
         {"text": ".gitignore was NOT modified", "category": "gitignore"}
@@ -38,13 +38,13 @@
       "name": "auto-select-local-over-shared",
       "prompt": "My claude file is getting long, can you clean it up? Working in the current directory (a git repo with both CLAUDE.md and CLAUDE.local.md present). Note: if the skill needs user approval, document your plan in PLAN.md and proceed without waiting.",
       "fixture_dir": "fixtures/case-c-both/",
-      "expected_behavior": "Auto-select CLAUDE.local.md (not CLAUDE.md) without asking, because both files exist. Extract the Snowflake CLI block to .claude/files/snow.md. Leave CLAUDE.md untouched.",
+      "expected_behavior": "Auto-select CLAUDE.local.md (not CLAUDE.md) without asking, because both files exist. Extract the Snowflake CLI block to .claude/lazy/snow.md. Leave CLAUDE.md untouched.",
       "assertions": [
         {"text": "CLAUDE.local.md was modified", "category": "selection"},
         {"text": "CLAUDE.md was NOT modified (content identical to original)", "category": "selection"},
         {"text": "The skill did not ask the user which file to operate on (check PLAN.md / transcript)", "category": "selection"},
-        {"text": ".claude/files/ directory exists with at least one file extracted from the Snowflake CLI section", "category": "extraction"},
-        {"text": ".claude/files/ is listed in .git/info/exclude", "category": "gitignore"}
+        {"text": ".claude/lazy/ directory exists with at least one file extracted from the Snowflake CLI section", "category": "extraction"},
+        {"text": ".claude/lazy/ is listed in .git/info/exclude", "category": "gitignore"}
       ]
     }
   ]

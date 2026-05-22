@@ -1,6 +1,6 @@
-# Comment examples
+# Comments
 
-**Load this when:** writing or reviewing a code comment. Concrete examples that pair with the rules in `## CRITICAL: Comments` of the parent `CLAUDE.md`.
+**Load this when:** writing or reviewing any code comment, considering whether to add one, or planning code you suspect will need a comment to be readable. Concrete forbidden / justified pairs that pair with the rules in `## CRITICAL: Comments` of the parent `CLAUDE.md`.
 
 The parent CLAUDE.md states the rules. This file shows what each rule looks like in practice. When in doubt about whether a comment is justified, scan the matching section below.
 
@@ -83,6 +83,17 @@ test('user has correct name', () => {
 
 Delete every comment in the body. Tests get at most a one-line header (see "Justified" #4).
 
+### 7. Stale cross-cutting note that no longer matches the code
+
+```go
+// Authentication is handled by the gateway middleware, not the handler.
+func (h *Handler) Authenticate(w http.ResponseWriter, r *http.Request) {
+    // empty: gateway middleware fills the auth context upstream
+}
+```
+
+Delete. Two failures at once: it's a cross-cutting "the work lives elsewhere" pointer (rule #3), AND the moment someone moves auth back into the handler (or replaces the gateway) the note silently lies. Cross-cutting notes age badly because nobody updates them when refactoring the thing they describe.
+
 ## Justified comments
 
 ### 1. Hidden invariant the reader can't infer
@@ -153,6 +164,25 @@ index.hydrate(doc_id, body)
 ```
 
 A future maintainer reading this without the comment would "clean it up" into a single call and re-introduce all three incidents. The comment earns every line, because it documents a constraint that lives across three different services and one cron job. Length follows necessity, not aesthetics.
+
+### 6. Vendor API quirk that a reader could not infer
+
+```go
+// GET /items rejects query-string filters (returns 400 INVALID_FILTER); use /search.
+pathSearch = "/v1/search"
+```
+
+Switching back to the rejected form would silently break in production. The vendor error code is the identifier a future reader would search the docs for.
+
+### 7. Correctness invariant disguised as a cosmetic field
+
+```go
+// Requesting `owner` is load-bearing: without it the API returns rows the caller
+// can't read, widening the result set past the access-control boundary.
+fields := []string{"id", "name", "owner"}
+```
+
+`owner` looks like a harmless extra field a future "cleanup" might trim. The comment warns that removing it widens the result set past the access-control boundary, which is a correctness regression and not a test failure.
 
 ## When a refactor beats a comment
 

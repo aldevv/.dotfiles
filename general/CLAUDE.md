@@ -4,13 +4,14 @@
 
 A `CLAUDE.md` (or `SKILL.md`) may include a "Lazy load" section near the top listing files that should be read on demand, only when a specific trigger fires, rather than eagerly on every session. Each entry pairs a path with a `**Read when:**` clause naming its trigger. Pull a file in only when its trigger matches the current context.
 
-By convention (universal, not specific to this file), lazy-loaded detail files always live in a sibling `.claude/files/` directory: next to the parent `CLAUDE.md`, at the project root for repo-level files, or under `~/.claude/files/` for the global user-level file. For this CLAUDE.md that resolves to `~/.claude/files/` (dotfiles source: `~/.dotfiles/general/.claude/files/`):
+By convention (universal, not specific to this file), lazy-loaded detail files always live in a sibling `.claude/lazy/` directory: next to the parent `CLAUDE.md`, at the project root for repo-level files, or under `~/.claude/lazy/` for the global user-level file. For this CLAUDE.md that resolves to `~/.claude/lazy/` (dotfiles source: `~/.dotfiles/general/.claude/lazy/`):
 
-- [`~/.claude/files/skills.md`](.claude/files/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
-- [`~/.claude/files/hook-conventions.md`](.claude/files/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
-- [`~/.claude/files/hook-debugging.md`](.claude/files/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
-- [`~/.claude/files/code_quality_examples.md`](.claude/files/code_quality_examples.md). **Read when:** writing or reviewing code and deciding whether to factor logic into its own function/class. Catalog of code-quality preferences captured from feedback.
-- [`~/.claude/files/comment_examples.md`](.claude/files/comment_examples.md). **Read when:** writing or reviewing a code comment, or unsure whether one is justified. Concrete pairs of forbidden vs. justified examples for the rules in `## CRITICAL: Comments`.
+- [`~/.claude/lazy/skills.md`](.claude/lazy/skills.md). **Read when:** creating, editing, or auditing a skill. Covers location, layout, portability/composability requirements, frontmatter checklist.
+- [`~/.claude/lazy/hook-conventions.md`](.claude/lazy/hook-conventions.md). **Read when:** creating or reorganizing a Claude Code hook. Covers naming, folder layout, README structure, when a helper becomes a skill.
+- [`~/.claude/lazy/hook-debugging.md`](.claude/lazy/hook-debugging.md). **Read when:** a hook isn't behaving (silent exits, matcher confusion, `set -e` aborts, manual test recipe, output JSON shape).
+- [`~/.claude/lazy/code/quality.md`](.claude/lazy/code/quality.md). **Read when:** writing, reviewing, modifying, refactoring, or deleting any code. Line-level decisions: naming, function extraction, hardcoded strings, magic separators.
+- [`~/.claude/lazy/code/design.md`](.claude/lazy/code/design.md). **Read when:** planning a code implementation, designing architecture, choosing file or module layout, deciding where logic should live, or modifying / reading / updating / deleting code that crosses multiple files. Separation of responsibilities and the works-then-readable-then-optimized priority.
+- [`~/.claude/lazy/code/comments.md`](.claude/lazy/code/comments.md). **Read when:** writing or reviewing any code comment, considering whether to add one, or planning code you suspect will need a comment. Forbidden / justified pairs anchored to `## CRITICAL: Comments`.
 
 ## Table of Contents
 - [Lazy load](#lazy-load)
@@ -69,6 +70,8 @@ While active, keep iterating inside the same response until exactly one of:
 **Readability is priority #1.** Apply clean-code practices only when they make the code easier to read, not as ends in themselves.
 - **Long or hard-to-grasp `if` conditions get extracted to a named predicate function.** `if isEligibleForRefund(order) { ... }` reads better than five chained boolean clauses. Same rule for switch/case guards, `while`/`for` loop conditions, and nested ternaries: name the predicate.
 - **Prefer many small named functions over one long function with inline comments.** A well-named function call is self-documenting; a comment above an inline block isn't.
+- **No hardcoded strings for values defined elsewhere.** If a constant, config field, env var, or enum already names a value, reference it instead of retyping the literal. `conf.GetString("base-url")` becomes `conf.BaseURL`. Magic separators (`"@"`, `":"`, `"/"`) referenced more than once become a named `const` next to their point of use.
+- **Keep responsibilities separate.** If a function does two things ("fetch + decide"), split it. A resource/feature file shouldn't define its own client function; a config file shouldn't carry business logic; a UI component shouldn't talk directly to the database. Push API loops into the client layer, push small helpers into a sibling `helpers.go` (or topical file), and keep the lead file thin.
 - **Don't refactor for purity alone.** DRY, SRP, Hexagonal, dependency injection are fine when they make a specific reader's life easier here. If a refactor adds indirection a future reader has to chase without paying for itself in clarity, skip it. Three similar lines is better than a premature abstraction.
 - **When in conflict, readability wins.** If a "clean" pattern obscures what the code does, the pattern is wrong for this spot.
 
@@ -89,6 +92,10 @@ When the user says "save the changes in my dotfiles" (or any equivalent), they m
 
 **Forbidden: emojis.** Do not use emojis anywhere (chat, commits, PRs, READMEs, comments, docs, file contents). Applies even if the surrounding text or an existing file already uses them. Only exception: the user explicitly asks for an emoji in this turn.
 
+**Default to brief, casual, plain.** Short phrase beats a paragraph when both carry the same meaning. Simple words over fancy ones. Match the register of a teammate sending a Slack message, not a press release. If a sentence can be cut to a clause without losing information, cut it.
+
+**README.md is for humans.** It's the project intro for a new reader (engineer, recruiter, drive-by browser), not Claude-facing memory, runbook, or agent-routing material. Lead with what the project is and how to start using it; keep the tone casual and short.
+
 ## CRITICAL: Comments
 **Adding any comment is a rule violation by default.** Before writing any comment, state in chat first: `comment justified: <complex flow / hidden invariant / non-obvious WHY / workaround>`. If you can't articulate that justification in chat first, you have not earned the comment.
 
@@ -100,7 +107,7 @@ Forbidden:
 
 Exception: tests. A one-line function-header comment on a test that names a non-obvious scenario is OK (`// Workday quirk: ref ID without name, require both`). Per-line narration inside the test body is not. Default is still zero, only add when the test name alone wouldn't tell a future reader what's being checked.
 
-When a comment IS justified: as short as possible, as long as it needs to be. Understanding is the priority, brevity is second. If the complexity can be untangled by a small refactor that makes the code self-explanatory, prefer the refactor.
+When a comment IS justified: as short as possible, as long as it needs to be. Understanding is the priority, brevity is second. Example, justified: `// REST-1107 requires dotted projection on this endpoint.` (vendor quirk a reader couldn't infer). Example, not justified: `// fetch the user` (the next line says so). If the complexity can be untangled by a small refactor that makes the code self-explanatory, prefer the refactor.
 
 When touching existing code: if a comment restates the line that follows it, delete the comment.
 

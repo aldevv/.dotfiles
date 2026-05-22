@@ -1,6 +1,6 @@
-# Code quality examples
+# Code quality
 
-**Load this when:** writing or reviewing code, especially when deciding whether to factor a piece of logic into its own function/class. These are real examples of feedback I gave on my own code; treat each as a precedent for the next time the same shape comes up.
+**Load this when:** writing, reviewing, modifying, refactoring, or deleting any code. Line-level decisions: naming, function extraction, hardcoded strings, magic separators. Precedents are captured from real feedback; treat each as a precedent for the next time the same shape comes up.
 
 ## Don't extract a one-line SQL fragment into a named helper
 
@@ -93,3 +93,43 @@ The first reads as a list of nouns; the second reads as a list of yes/no questio
 - Functions returning `Optional[str]` or other non-bool unions; pick a name that reflects the value (`classify_timestamp` returns `'ntz'`/`'tz'`/`None`).
 
 **Python style note:** the convention is `is_something` / `has_something` (snake_case), not `isSomething` (camelCase). Match the language.
+
+## Don't retype config field names as string literals
+
+If the config struct exposes a typed field, use it. The string-key form duplicates the canonical declaration and silently survives renames.
+
+**Don't:**
+
+```go
+if v := conf.GetString("base-url"); v != "" { ... }
+```
+
+**Do:**
+
+```go
+if conf.BaseURL != "" { ... }
+```
+
+Same rule for raw `os.Getenv("FOO")` reads when the config layer already wraps them.
+
+## Extract repeated magic separators to named constants
+
+A single literal at its point of use is fine. A literal that joins two other values inside an expression is a smell.
+
+**Don't:**
+
+```go
+params := url.Values{"username": []string{userID + "@" + companyID}}
+```
+
+**Do:**
+
+```go
+const (
+    usernameKey       = "username"
+    usernameSeparator = "@"
+)
+params := url.Values{usernameKey: []string{userID + usernameSeparator + companyID}}
+```
+
+The constants document the API contract at the usage site instead of leaving the reader to grep for `"@"`.

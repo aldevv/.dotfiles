@@ -1,13 +1,13 @@
 ---
-name: simplify-claude-md
-description: "Trim and reorganize a CLAUDE.md or CLAUDE.local.md so the upfront read stays lean and on-budget. Use this whenever the user says their CLAUDE file is too long, hard to navigate, or mixes always-relevant rules with one-off reference material — also when they ask to 'simplify', 'trim', 'reorganize', 'split up', 'extract from', or 'clean up' a CLAUDE.md / CLAUDE.local.md / ~/.claude/CLAUDE.md. The skill extracts sections that should only load on a specific trigger (hook reference → loads when a hook fires; Snowflake CLI setup → loads when the user runs `snow`) into `.claude/files/<topic>.md` with a `**Load this when:** <trigger>` line, collapses verbose-but-eager sections into tighter rules, migrates referenced sibling files (always `CLAUDE-*.md`, optionally other reference docs) into `.claude/files/`, and adds a 'Detail files (load on demand)' index + Table of Contents at the top. Critical behavioral rules stay inline. Strict about triggers: if you can't name a specific trigger that should cause Claude to read a section, it stays inline."
+name: claude-md-simplify
+description: "Trim and reorganize a CLAUDE.md or CLAUDE.local.md so the upfront read stays lean and on-budget. Use this whenever the user says their CLAUDE file is too long, hard to navigate, or mixes always-relevant rules with one-off reference material — also when they ask to 'simplify', 'trim', 'reorganize', 'split up', 'extract from', or 'clean up' a CLAUDE.md / CLAUDE.local.md / ~/.claude/CLAUDE.md. The skill extracts sections that should only load on a specific trigger (hook reference → loads when a hook fires; Snowflake CLI setup → loads when the user runs `snow`) into `.claude/lazy/<topic>.md` with a `**Load this when:** <trigger>` line, collapses verbose-but-eager sections into tighter rules, migrates referenced sibling files (always `CLAUDE-*.md`, optionally other reference docs) into `.claude/lazy/`, and adds a 'Detail files (load on demand)' index + Table of Contents at the top. Critical behavioral rules stay inline. Strict about triggers: if you can't name a specific trigger that should cause Claude to read a section, it stays inline."
 ---
 
 Reorganize a CLAUDE.md / CLAUDE.local.md so:
 1. **Only eager content** — short rules, directives, safety gates — stays inline.
-2. **Lazy reference content** (setup guides, troubleshooting, multi-step flows, long tables) moves to `.claude/files/<topic>.md`, linked from a top-of-file "Detail files" index.
+2. **Lazy reference content** (setup guides, troubleshooting, multi-step flows, long tables) moves to `.claude/lazy/<topic>.md`, linked from a top-of-file "Detail files" index.
 3. **Verbose sections that should stay** get simplified — if a bullet has more words than the rule it encodes, shorten it.
-4. **Referenced sibling files** (always `CLAUDE-*.md`, optionally other reference docs) get relocated under `.claude/files/` so all lazy-load content lives in one place.
+4. **Referenced sibling files** (always `CLAUDE-*.md`, optionally other reference docs) get relocated under `.claude/lazy/` so all lazy-load content lives in one place.
 5. A **Table of Contents** at the top lists the remaining sections with one-line descriptions and anchor links.
 
 The goal: when Claude loads the file at the start of a conversation, it spends tokens only on content that matters for every interaction. Everything else is available on demand.
@@ -37,7 +37,7 @@ Scan each `##` heading. Tag it **eager** or **lazy**. The classification is stri
 
 If you can't state a concrete trigger, **do not extract** — the content is either eager, or it's ambient knowledge that should live in the main file.
 
-| | Eager (stays in main file) | Lazy (extract to `.claude/files/`) |
+| | Eager (stays in main file) | Lazy (extract to `.claude/lazy/`) |
 |---|---|---|
 | Answers | "What must I always do / never do?" | "What do I do *when <specific trigger>*?" |
 | Trigger | Applies to every turn, always | Fires only when a specific keyword, tool, error, or workflow is involved |
@@ -51,22 +51,22 @@ Group related lazy sections under one file **only when they share the same trigg
 
 ### Step 2b — Identify referenced sibling files to migrate
 
-The main file usually references sibling docs (a "References to Specialized Guides" index, inline `See CLAUDE-foo.md` mentions, etc.). These are already lazy-load reference content — they belong under `.claude/files/` for consistency. Walk every reference and decide whether it migrates.
+The main file usually references sibling docs (a "References to Specialized Guides" index, inline `See CLAUDE-foo.md` mentions, etc.). These are already lazy-load reference content — they belong under `.claude/lazy/` for consistency. Walk every reference and decide whether it migrates.
 
-**Always migrate:** every `CLAUDE-*.md` sibling file referenced from the main file. The `CLAUDE-` prefix was a discovery convention for lazy-load docs *before* the `.claude/files/` directory existed; now the directory is the convention. Strip the `CLAUDE-` prefix and the `.md` extension to derive the topic name (e.g. `CLAUDE-testing.md` → `.claude/files/testing.md`, `CLAUDE-golang-connectors.md` → `.claude/files/golang-connectors.md`).
+**Always migrate:** every `CLAUDE-*.md` sibling file referenced from the main file. The `CLAUDE-` prefix was a discovery convention for lazy-load docs *before* the `.claude/lazy/` directory existed; now the directory is the convention. Strip the `CLAUDE-` prefix and the `.md` extension to derive the topic name (e.g. `CLAUDE-testing.md` → `.claude/lazy/testing.md`, `CLAUDE-golang-connectors.md` → `.claude/lazy/golang-connectors.md`).
 
 **Migrate when triggerable:** other referenced reference docs (no `CLAUDE-` prefix — e.g. `cel-expressions.md`, `http-examples.md`, `*-reference.md`) migrate **only if** you can name a concrete trigger and they're clearly reference-style content (long, niche, not loaded on every turn). Apply the same trigger discipline as Step 2 section extraction. If you can't state the trigger, leave them where they are.
 
 **Never migrate:**
 - The main `CLAUDE.md` / `CLAUDE.local.md` itself
-- Files already inside `.claude/files/`
+- Files already inside `.claude/lazy/`
 - Files outside the working directory tree (e.g. absolute paths under `~/.claude/` or another project)
 - Files in a separate repository or git submodule
 - Files referenced only as code examples or external URLs (not actual sibling docs Claude is meant to read)
 
 **For each migration candidate, gather:**
 - Source path (resolve relative paths against the main file's directory)
-- Target path: `<root>/.claude/files/<stripped-topic>.md`
+- Target path: `<root>/.claude/lazy/<stripped-topic>.md`
 - Trigger — derive it in this priority order: (1) the one-line description in the main file's index ("References to Specialized Guides" or equivalent); (2) the file's own first paragraph; (3) ask the user. The trigger has to be specific enough that the same `**Load this when:**` discipline from Step 2 applies — "working with X" is too broad; reject and tighten.
 - Whether the stripped name collides with a planned section extraction (Step 2). If yes, dedup or merge under shared headings.
 
@@ -78,7 +78,7 @@ These candidates flow into the plan in Step 3 as a separate "Files to move" list
 
 Output (no edits yet):
 - **Extractions**: list each section to move, target file name, one-line rationale
-- **Files to move**: list each `CLAUDE-*.md` (or other reference doc) being relocated to `.claude/files/`, with `old → new` path and the trigger that will be added. Note any collisions with extractions.
+- **Files to move**: list each `CLAUDE-*.md` (or other reference doc) being relocated to `.claude/lazy/`, with `old → new` path and the trigger that will be added. Note any collisions with extractions.
 - **Simplifications**: list each verbose section to collapse, with a preview of the one-liner
 - **Staying put**: name the eager sections (short list, just titles)
 - **TOC preview**: list of headings that will end up in the Table of Contents
@@ -114,9 +114,9 @@ AFTER (2 bullets, ~45 words):
 ## Step 5 — Extract lazy sections
 
 For each approved extraction:
-1. Determine `.claude/files/` location:
-   - If the target CLAUDE.md is inside a git repo → `<repo-root>/.claude/files/<topic>.md`
-   - Otherwise → `<dir-of-CLAUDE.md>/.claude/files/<topic>.md`
+1. Determine `.claude/lazy/` location:
+   - If the target CLAUDE.md is inside a git repo → `<repo-root>/.claude/lazy/<topic>.md`
+   - Otherwise → `<dir-of-CLAUDE.md>/.claude/lazy/<topic>.md`
 2. **If the target file already exists** (re-running the skill, or a prior extraction put something there): read it, show the user the existing content, and ask whether to (a) merge new sections into it under a new heading, (b) replace it, or (c) pick a different filename. Do not overwrite silently.
 3. Create (or update) the file. **The first two lines after the `# <Title>` must be a trigger block** so Claude knows when to load it:
    ```markdown
@@ -140,7 +140,7 @@ For each approved extraction:
 
 For each approved file migration:
 
-1. **Determine the new path.** Strip the `CLAUDE-` prefix and `.md` extension and lowercase the result. Final path: `<root>/.claude/files/<topic>.md` (same root-resolution rule as Step 5).
+1. **Determine the new path.** Strip the `CLAUDE-` prefix and `.md` extension and lowercase the result. Final path: `<root>/.claude/lazy/<topic>.md` (same root-resolution rule as Step 5).
 2. **Handle collisions.** If the target file already exists (a Step 5 extraction landed there, or a prior run did): either merge the migrated content under a new `## <Original Heading>` subsection separated by `---`, or pick a different filename. Confirm the choice was approved in Step 3 — don't overwrite silently.
 3. **Read the source file.** Preserve its content verbatim. The migrated file MUST start with the trigger block, exactly like Step 5 extractions:
    ```markdown
@@ -164,7 +164,7 @@ If a migration's stripped name conflicts with a Step 5 extraction the user wante
 Two passes:
 
 1. **Delete extracted sections** (from Step 5) — drop them entirely; the Detail-files index at the top covers discoverability. Do not leave stub sections pointing at the extracted file.
-2. **Rewrite references to migrated sibling files** (from Step 6). For every mention of a moved `CLAUDE-*.md` (or other migrated doc), update the path to the new `.claude/files/<topic>.md` location. Cover all forms:
+2. **Rewrite references to migrated sibling files** (from Step 6). For every mention of a moved `CLAUDE-*.md` (or other migrated doc), update the path to the new `.claude/lazy/<topic>.md` location. Cover all forms:
    - The "References to Specialized Guides" index entries (often need full reformat — they become Detail-files entries in Step 8)
    - Inline mentions in eager sections (`See CLAUDE-testing.md`, `read $HOME/work/CLAUDE-foo.md before X`, etc.)
    - Anchor fragments (`#some-section`) — verify they still resolve in the migrated file
@@ -176,14 +176,14 @@ After this step, no remaining mention of a migrated source path should appear an
 
 ## Step 8 — Add / update the Table of Contents
 
-Place the TOC immediately after the `# <Title>` line, before any existing content. List **every** file under `.claude/files/` — both Step 5 extractions and Step 6 migrations — in one combined index. From the reader's perspective they're identical: lazy-load reference docs gated by a trigger. Format:
+Place the TOC immediately after the `# <Title>` line, before any existing content. List **every** file under `.claude/lazy/` — both Step 5 extractions and Step 6 migrations — in one combined index. From the reader's perspective they're identical: lazy-load reference docs gated by a trigger. Format:
 
 ```markdown
 ## Detail files (load on demand)
-Extracted reference content lives in `.claude/files/`. Each entry names the trigger that should cause you to read it — do not load these proactively.
+Extracted reference content lives in `.claude/lazy/`. Each entry names the trigger that should cause you to read it — do not load these proactively.
 
-- [<topic>](.claude/files/<topic>.md) — **read when:** <specific trigger, e.g. "a hook fires or blocks, or when running a Quavo replication skill">
-- [<topic2>](.claude/files/<topic2>.md) — **read when:** <specific trigger>
+- [<topic>](.claude/lazy/<topic>.md) — **read when:** <specific trigger, e.g. "a hook fires or blocks, or when running a Quavo replication skill">
+- [<topic2>](.claude/lazy/<topic2>.md) — **read when:** <specific trigger>
 
 ## Table of contents
 - [Section Heading 1](#section-heading-1) — one-line description
@@ -202,35 +202,35 @@ Rules:
 
 ## Step 9 — Update any "save in my claude" (or equivalent) guidance
 
-If the main file has a rule that tells Claude where to save user-added content (common names: "Save in my claude", "Save in my CLAUDE.md", "When saving preferences"), update it to include the newly-created `.claude/files/*.md` files as valid save targets. After extraction, the rule needs to say: pick the best location — either the main file (for cross-cutting rules that apply every turn) or one of the `.claude/files/*.md` files (for content matching that file's `**Load this when:**` trigger).
+If the main file has a rule that tells Claude where to save user-added content (common names: "Save in my claude", "Save in my CLAUDE.md", "When saving preferences"), update it to include the newly-created `.claude/lazy/*.md` files as valid save targets. After extraction, the rule needs to say: pick the best location — either the main file (for cross-cutting rules that apply every turn) or one of the `.claude/lazy/*.md` files (for content matching that file's `**Load this when:**` trigger).
 
 **Template to merge in**:
-> When the user says "save in my claude" (or equivalent), pick the best location: the main `<CLAUDE*.md>` file for cross-cutting rules/directives, OR one of the `.claude/files/*.md` files when the content matches that file's `**Load this when:**` trigger (e.g. hook behavior → `.claude/files/hooks.md`; Snowflake CLI details → `.claude/files/snow.md`). Trigger specificity wins: if the saved content would only be read when a specific thing happens, put it in the matching `.claude/files/*.md`.
+> When the user says "save in my claude" (or equivalent), pick the best location: the main `<CLAUDE*.md>` file for cross-cutting rules/directives, OR one of the `.claude/lazy/*.md` files when the content matches that file's `**Load this when:**` trigger (e.g. hook behavior → `.claude/lazy/hooks.md`; Snowflake CLI details → `.claude/lazy/snow.md`). Trigger specificity wins: if the saved content would only be read when a specific thing happens, put it in the matching `.claude/lazy/*.md`.
 
 Rules:
 - **Don't invent this rule** if the file doesn't already have one — this skill doesn't add new behavioral directives on its own. Just update what's there.
-- **If the file's existing rule lists specific CLAUDE*.md candidates** (e.g. "check `$HOME/work/` for CLAUDE-*.md files") and any of those candidates were migrated in Step 6, rewrite the wording so it points at the migrated locations instead — `CLAUDE-testing.md` no longer exists, but `.claude/files/testing.md` does. Keep candidates that *weren't* migrated as-is.
-- Add `.claude/files/*.md` as a save target alongside whatever surviving candidates the user's discovery logic still names.
+- **If the file's existing rule lists specific CLAUDE*.md candidates** (e.g. "check `$HOME/work/` for CLAUDE-*.md files") and any of those candidates were migrated in Step 6, rewrite the wording so it points at the migrated locations instead — `CLAUDE-testing.md` no longer exists, but `.claude/lazy/testing.md` does. Keep candidates that *weren't* migrated as-is.
+- Add `.claude/lazy/*.md` as a save target alongside whatever surviving candidates the user's discovery logic still names.
 - **Mention trigger specificity** as the tie-breaker — it's the whole point of the split.
 
 ---
 
-## Step 10 — Locally ignore `.claude/files/`
+## Step 10 — Locally ignore `.claude/lazy/`
 
-If the CLAUDE.md being processed is inside a git repo, always locally ignore `.claude/files/` — regardless of whether the source file itself is tracked or gitignored. Extracted detail files are personal, lazy-loaded reference material and should not be surfaced as untracked noise.
+If the CLAUDE.md being processed is inside a git repo, always locally ignore `.claude/lazy/` — regardless of whether the source file itself is tracked or gitignored. Extracted detail files are personal, lazy-loaded reference material and should not be surfaced as untracked noise.
 
-1. Check whether `.claude/files/` is already ignored: `git check-ignore -v .claude/files/<any-file-just-created>.md`.
-2. If not ignored, append `.claude/files/` to `.git/info/exclude`. **Never modify `.gitignore`** — that file is committed and shared with the team, so adding a personal ignore rule there would leak into the repo.
+1. Check whether `.claude/lazy/` is already ignored: `git check-ignore -v .claude/lazy/<any-file-just-created>.md`.
+2. If not ignored, append `.claude/lazy/` to `.git/info/exclude`. **Never modify `.gitignore`** — that file is committed and shared with the team, so adding a personal ignore rule there would leak into the repo.
 3. **If any migrated `CLAUDE-*.md` was tracked in git**, the move shows up as a delete + add. Surface this in the Step 11 report so the user can decide whether to commit the move (and whether to remove the now-stale `CLAUDE-*.md` paths from any committed `.gitignore`/docs). The skill itself never stages or commits.
 4. Skip the ignore step entirely if the CLAUDE.md target is not inside a git repo.
-5. Run `git status` at the end to confirm new `.claude/files/` entries don't show up as untracked.
+5. Run `git status` at the end to confirm new `.claude/lazy/` entries don't show up as untracked.
 
 ---
 
 ## Step 11 — Report
 
 Summarize:
-- Files created under `.claude/files/` (split: extracted from sections vs migrated from sibling files)
+- Files created under `.claude/lazy/` (split: extracted from sections vs migrated from sibling files)
 - Sections extracted (count)
 - Sibling files migrated (count, with old → new paths)
 - Sections simplified (count, with line-delta)
