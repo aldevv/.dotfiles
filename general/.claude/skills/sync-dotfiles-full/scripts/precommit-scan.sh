@@ -17,6 +17,12 @@
 # `claude-version` into a `f -> f` symlink, the secret scan let it through,
 # and every machine that pulled it broke .xprofile via PATH ELOOP.
 #
+# password-store entries (.gpg files in a pass tree) are encrypted ciphertext.
+# They skip the filename heuristic only when --prefix=personal (the private
+# submodule); anywhere else they're blocked to prevent leakage into a public
+# repo. Content check still runs (catches stray key blocks); raw keyrings
+# (secring/pubring/private-keys-v1.d) are always blocked.
+#
 # Flags:
 #   --loop-only      Skip secret checks (used post-merge, where we only care
 #                    about loops introduced upstream).
@@ -40,6 +46,21 @@ done
 
 status=0
 
+is_password_store_entry() {
+  local f="$1"
+  case "$f" in *.gpg) ;; *) return 1 ;; esac
+  case "$f" in
+    */.password-store/*|*/password-store/*|*/.pass/*) return 0 ;;
+  esac
+  local dir
+  dir=$(dirname -- "$f")
+  while [ "$dir" != "/" ] && [ "$dir" != "." ] && [ -n "$dir" ]; do
+    [ -e "$dir/.gpg-id" ] && return 0
+    dir=$(dirname -- "$dir")
+  done
+  return 1
+}
+
 scan_one() {
   local f="$1" display
   [ -z "$f" ] && return 0
@@ -53,14 +74,26 @@ scan_one() {
 
   [ "$loop_only" = "1" ] && return 0
 
-  if echo "$f" | grep -qiE '\.(env|pem|key|p12|pfx|ppk)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519'; then
+  if echo "$f" | grep -qiE '(^|/)(secring|pubring)\.(gpg|kbx)$|(^|/)private-keys-v1\.d/'; then
+    echo "BLOCKED: GPG keyring file: $display"
+    status=7
+    return 0
+  fi
+
+  if is_password_store_entry "$f"; then
+    if [ "$prefix" != "personal/" ]; then
+      echo "BLOCKED: password-store entry outside personal/ submodule: $display"
+      status=7
+      return 0
+    fi
+  elif echo "$f" | grep -qiE '\.(env|pem|key|p12|pfx|ppk|gpg)$|^\.env(\.|$)|secret|password|credential|private_key|id_rsa|id_dsa|id_ed25519'; then
     echo "BLOCKED: suspicious filename: $display"
     status=7
     return 0
   fi
 
   if [ -r "$f" ] && grep -qiE \
-       'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' \
+       'BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY|BEGIN PGP (PRIVATE|PUBLIC) KEY BLOCK|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9]|password\s*=\s*\S+|api[_-]?key\s*[=:]\s*[A-Za-z0-9/+]{16,}|secret\s*[=:]\s*[A-Za-z0-9/+]{16,}' \
        "$f" 2>/dev/null; then
     echo "BLOCKED: secret content in $display"
     status=7

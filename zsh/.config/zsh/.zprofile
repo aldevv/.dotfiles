@@ -46,12 +46,20 @@ export SECRETS_EXTENSION=".scr"
 export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NIXPKGS_ALLOW_UNFREE=1
 
-CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com:$REPOS/gitlab.com:$PROJECTS"
-for _d in "$REPOS"/*/ "$REPOS/github.com"/*/ "$REPOS/gitlab.com"/*/; do
-  [ -d "$_d" ] && CDPATH="$CDPATH:${_d%/}"
-done
-unset _d
-export CDPATH
+# Also sourced by bash via gdm3/Xsession -> ~/.xprofile, so keep this POSIX.
+# zsh-only glob qualifiers (e.g. *(N/)) syntax-error bash; un-matched globs abort
+# zsh under NOMATCH and stay literal under bash. Toggle nullglob per shell so an
+# empty parent (e.g. gitlab.com/) just yields nothing in either.
+build_cdpath() {
+  [ -n "$ZSH_VERSION" ] && setopt local_options null_glob
+  [ -n "$BASH_VERSION" ] && shopt -s nullglob
+  CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com:$REPOS/gitlab.com:$PROJECTS"
+  for d in "$REPOS"/*/ "$REPOS"/github.com/*/ "$REPOS"/gitlab.com/*/; do
+    [ -d "$d" ] && CDPATH="$CDPATH:${d%/}"
+  done
+  export CDPATH
+}
+build_cdpath
 
 export SCRIPTS="$HOME/.local/share/scripts"
 export SHARED="$SCRIPTS/shared"
