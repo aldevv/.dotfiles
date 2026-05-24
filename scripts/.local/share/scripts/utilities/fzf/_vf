@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# show only text files
+search_dir="${1:-.}"
 
-FZF_DEFAULT_COMMAND="fd --follow --hidden -I -t f"
-cmd="fzf --bind 'tab:reload(fd -uuu --follow --hidden)' --preview 'if file {} | grep -i -q 'directory'; then ls --color {}; else if file {} | grep -i -q 'text'; then bat --color always {}; else echo \"{} is a binary file\"; fi; fi'"
+FZF_DEFAULT_COMMAND="fd --follow --hidden -t f . $search_dir"
+cmd="fzf --bind 'tab:reload(fd -uuu --follow --hidden . $search_dir)' --preview 'if file {} | grep -i -q 'directory'; then ls --color {}; else if file {} | grep -i -q 'text'; then bat --color always {}; else echo \"{} is a binary file\"; fi; fi'"
 name="$(eval $cmd)"
 if [[ -z $name ]]; then 
   return
@@ -16,19 +16,3 @@ fi
 
 [ -n "$name" ] &&
 nvim "$name"
-
-# if [[ -z $1 ]]; then
-# 	name=$(fzf -d / --with-nth -5,-4,-3,-2,-1 --preview-window=60%:wrap)
-# 	[ -n "$name" ] && exec nvim "$name"
-#     exit
-# fi
-#
-# if [[ -d $1 ]]; then
-#     FZF_DEFAULT_COMMAND="fd --type f  --search-path $1 --follow --hidden -x grep -Il . {}"
-#
-#     name=$(fd . "$1" | fzf -d / --with-nth -5,-4,-3,-2,-1 --preview-window=60%:wrap)
-#     [ -n "$name" ] && exec nvim "$name"
-# else
-#     name=$(fzf --query "$1")
-#     [ -n "$name" ] && exec nvim "$name"
-# fi

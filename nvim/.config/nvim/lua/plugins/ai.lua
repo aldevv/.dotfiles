@@ -73,6 +73,17 @@ return {
     }
   },
   {
+    dir = "~/projects/message-agent.nvim",
+    name = "message-agent.nvim",
+    event = "VeryLazy",
+    config = function()
+      require("message-agent").setup({
+        default_target = "float",
+        picker = "auto",
+      })
+    end,
+  },
+  {
     "ravitemer/mcphub.nvim",
     enabled = false,
     dependencies = {

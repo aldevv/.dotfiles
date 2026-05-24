@@ -47,8 +47,8 @@ export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NIXPKGS_ALLOW_UNFREE=1
 
 CDPATH="$PROGRAMS:$WORK:$REPOS:$REPOS/github.com:$REPOS/gitlab.com:$PROJECTS"
-for _d in $REPOS/*(N/) $REPOS/github.com/*(N/) $REPOS/gitlab.com/*(N/); do
-  CDPATH="$CDPATH:$_d"
+for _d in "$REPOS"/*/ "$REPOS/github.com"/*/ "$REPOS/gitlab.com"/*/; do
+  [ -d "$_d" ] && CDPATH="$CDPATH:${_d%/}"
 done
 unset _d
 export CDPATH

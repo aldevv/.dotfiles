@@ -73,13 +73,19 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 
   Covers forbidden/justified examples, docstring rules, and header-comment guidance.
 
+- [`~/.claude/lazy/code/debugging.md`](.claude/lazy/code/debugging.md). **Read when** any of:
+  - user says "debug", "can't see what's happening", "print the AST/IR/tree", "dump", or "how do I see what X contains"
+  - adding observability, tracing, or dump helpers to any pipeline, compiler, transpiler, or interpreter
+  - creating a file named `debug.go`, `dump.go`, `_string.go`, or similar
+  - a debugging session is stuck because the internal representation is opaque
+
+  Covers the principle that cheap String()/Dump helpers and a gated logger are load-bearing infrastructure, with a concrete compiler example, a checklist for what to add and where, and when to escalate to GDB/dlv when observability alone isn't enough.
+
 ## Table of Contents
 - [Lazy load](#lazy-load)
 - [Machine connection notes](#machine-connection-notes)
-- [CRITICAL: Memory Files](#critical-memory-files)
 - [CRITICAL: No premature breakpoints during autonomous drive](#critical-no-premature-breakpoints-during-autonomous-drive)
 - [CRITICAL: Editing this file](#critical-editing-this-file)
-- [CRITICAL: Readability](#critical-readability)
 - [CRITICAL: Work files boundary](#critical-work-files-boundary)
 - [CRITICAL: Saving dotfiles changes](#critical-saving-dotfiles-changes)
 - [CRITICAL: Writing style](#critical-writing-style)
@@ -97,9 +103,6 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 
 ## Machine connection notes
 Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
-
-## CRITICAL: Memory Files
-**NEVER create memory files.** Do not write to `~/.claude/projects/*/memory/` or create any `MEMORY.md` or memory files of any kind. The user does not use the memory system.
 
 ## CRITICAL: No premature breakpoints during autonomous drive
 **When autonomous-drive is active, NEVER end a turn at a "natural breakpoint".** Autonomous-drive is active when ANY of the following holds:
@@ -126,15 +129,6 @@ While active, keep iterating inside the same response until exactly one of:
 2. Strengthen the wording: vague verbs (`should`, `prefer`) become hard verbs (`NEVER`, `MUST`, `always`). Add a one-line consequence if useful (e.g. `...otherwise X breaks`).
 3. Add the concrete example the user just brought up. Concrete violations stick harder than abstract rules.
 4. Move the section higher in the file if it's buried; CRITICAL sections cluster near the top so they get the highest attention on load.
-
-## CRITICAL: Readability
-**Readability is priority #1.** Apply clean-code practices only when they make the code easier to read, not as ends in themselves.
-- **Long or hard-to-grasp `if` conditions get extracted to a named predicate function.** `if isEligibleForRefund(order) { ... }` reads better than five chained boolean clauses. Same rule for switch/case guards, `while`/`for` loop conditions, and nested ternaries: name the predicate.
-- **Prefer many small named functions over one long function with inline comments.** A well-named function call is self-documenting; a comment above an inline block isn't.
-- **No hardcoded strings for values defined elsewhere.** If a constant, config field, env var, or enum already names a value, reference it instead of retyping the literal. `conf.GetString("base-url")` becomes `conf.BaseURL`. Magic separators (`"@"`, `":"`, `"/"`) referenced more than once become a named `const` next to their point of use.
-- **Keep responsibilities separate.** If a function does two things ("fetch + decide"), split it. A resource/feature file shouldn't define its own client function; a config file shouldn't carry business logic; a UI component shouldn't talk directly to the database. Push API loops into the client layer, push small helpers into a sibling `helpers.go` (or topical file), and keep the lead file thin.
-- **Don't refactor for purity alone.** DRY, SRP, Hexagonal, dependency injection are fine when they make a specific reader's life easier here. If a refactor adds indirection a future reader has to chase without paying for itself in clarity, skip it. Three similar lines is better than a premature abstraction.
-- **When in conflict, readability wins.** If a "clean" pattern obscures what the code does, the pattern is wrong for this spot.
 
 ## CRITICAL: Work files boundary
 **Do not touch work-related files or directories unless explicitly requested.** Includes `$WORK`, `~/.config/.aliases_work`, `~/.config/.startup_work`, and any work-tagged repo. If a request is ambiguous about whether something is work-related, ask before touching it.

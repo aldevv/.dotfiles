@@ -58,6 +58,10 @@ func (c *Client) AllOrders() ([]Order, error) {
 
 `report.go` becomes `orders, err := api.AllOrders(); return summarize(orders), err`. The loop is in the layer that owns the API contract; the report file describes the report.
 
+## Keep responsibilities separate
+
+If a function does two things ("fetch + decide"), split it. A resource/feature file shouldn't define its own client function; a config file shouldn't carry business logic; a UI component shouldn't talk directly to the database. Push API loops into the client layer, push small helpers into a sibling `helpers.go` (or topical file), and keep the lead file thin.
+
 ## Feature files stay just the framework surface
 
 Small support functions (format a header, build a struct, cache an intermediate value) live in a sibling `helpers.go` (or a topical file), not in the feature file. The lead file should read as just the framework contract.
