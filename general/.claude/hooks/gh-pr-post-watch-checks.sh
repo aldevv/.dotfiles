@@ -1,34 +1,26 @@
 #!/usr/bin/env bash
 # PostToolUse hook for `gh pr create *`, `glab mr create *`, and `git push [*]`.
-# Watches CI on the open PR/MR for the current branch and, on failure:
-# notifies the user AND spawns a Claude session in a new tmux window to
-# attempt a one-shot fix.
+# Watches CI on the open PR/MR for the current branch and, on failure tied to
+# the commit that triggered this hook (HEAD at script start):
+# notifies the user AND spawns a Claude session in a new tmux window in a
+# fresh git worktree on a throwaway branch (ci-fix-<short_sha>) to attempt a
+# one-shot fix. The fixer is forbidden from pushing; the operator integrates
+# the commit back into the PR branch.
 #
-# REQUIRED settings.json wiring (PostToolUse, Bash matcher). Keep these 3
-# entries and only these 3. Do NOT add `gh pr view *`, `gh pr checks *`,
-# `gh pr edit *`, or any read-only command. That re-introduces the misfire
-# where the hook latches onto a PR you were just inspecting.
-#   - if: "Bash(gh pr create *)"     timeout: 3600  async: true
-#   - if: "Bash(git push *)"         timeout: 3600  async: true
-#   - if: "Bash(glab mr create *)"   timeout: 3600  async: true
-#
-# Platform detection:
-#   - URL pattern github.com/.../pull/<n>      -> GitHub (gh)
-#   - URL pattern .../merge_requests/<n>       -> GitLab (glab)
-# For PR-create / MR-create commands, the URL is parsed from stdout.
-# For `git push`, the URL is looked up via `gh pr list` (then `glab mr list`)
-# for the current branch in the tool's cwd; if no PR/MR exists yet, the hook
-# exits silently.
-#
-# AUTHOR GUARD. Prevents the "reviewing a friend's PR and the hook almost
-# fixed CI for them" misfire. After URL resolution, the hook verifies the
-# PR author equals the current `gh` / `glab` user; if not, it exits silently.
-# Fail-closed: if either side cannot be resolved, the hook also exits. There
-# is intentionally no env-var bypass. Spawn a fresh claude session manually
-# if you really need to auto-fix someone else's PR.
+# Wiring lives in ~/.claude/settings.json. All gating below is also enforced
+# in-script via the shared prelude so a misfire is cheap (exits in ms):
+#   - duplicate event (same stdin hash across N matchers) -> exit
+#   - tool exit_code != 0 -> exit
+#   - git push --tags / --delete / --dry-run / --mirror / --all -> exit
+#   - branch is default/protected (main/master/...) -> exit
+#   - PR/MR not in OPEN state (merged/closed) -> exit
+#   - author of PR is not the current gh/glab user -> exit
+#   - another watcher already holds the per-PR flock -> exit
+#   - failing checks are not tied to HEAD_SHA at script start -> exit
+#   - worktree creation fails -> exit (do not fall back to main checkout)
 #
 # Disable per-invocation:
-#   - PR_WATCH_AUTOFIX=0  -> still watch + notify, but do not spawn the fixer.
+#   PR_WATCH_AUTOFIX=0  -> still watch + notify, but do not spawn the fixer.
 #
 # Logs to ~/.claude/hooks/logs/pr-watch-<timestamp>.log.
 
@@ -43,6 +35,12 @@ echo "=== gh-pr-post-watch-checks.sh started at $(date -Iseconds) ==="
 echo "PWD: $(pwd)"
 
 INPUT=$(cat)
+
+# shellcheck source=lib/gh-pr-watch-prelude.sh
+. "$HOME/.claude/hooks/lib/gh-pr-watch-prelude.sh"
+
+prelude_dedup_event "pr-watch" || exit 0
+prelude_should_proceed || exit 0
 
 REPO_DIR=$(printf '%s' "$INPUT" | jq -r '.cwd // ""')
 if [ -z "$REPO_DIR" ] || [ ! -d "$REPO_DIR" ]; then
@@ -100,26 +98,6 @@ if [ -z "$URL" ]; then
 fi
 echo "URL: $URL"
 
-# Dedup: only one watcher per (URL, HEAD-SHA) pair. The PR-create hook and a
-# concurrent git-push hook would otherwise both watch the same pipeline.
-LOCK_DIR="/tmp/pr-watch-locks-$(id -u)"
-mkdir -p "$LOCK_DIR"
-HEAD_SHA=$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
-LOCK_KEY=$(printf '%s|%s' "$URL" "$HEAD_SHA" | sha256sum | cut -c1-16)
-LOCK_FILE="$LOCK_DIR/$LOCK_KEY.lock"
-echo "LOCK_FILE: $LOCK_FILE (url=$URL sha=$HEAD_SHA)"
-
-if [ -f "$LOCK_FILE" ]; then
-  OTHER_PID=$(cat "$LOCK_FILE" 2>/dev/null || echo "")
-  if [ -n "$OTHER_PID" ] && kill -0 "$OTHER_PID" 2>/dev/null; then
-    echo "another watcher (pid=$OTHER_PID) is already watching this (URL, SHA) — exiting"
-    exit 0
-  fi
-  echo "stale lock for dead pid=$OTHER_PID — taking over"
-fi
-echo "$$" > "$LOCK_FILE"
-trap 'rm -f "$LOCK_FILE"' EXIT INT TERM
-
 # Classify platform by URL pattern.
 case "$URL" in
   *github.com*/pull/*)         PLATFORM=github ;;
@@ -127,6 +105,23 @@ case "$URL" in
   *) echo "unknown platform for URL — exiting"; exit 0 ;;
 esac
 echo "PLATFORM: $PLATFORM"
+
+# For gitlab the open-state and author-guard helpers in the prelude need these.
+if [ "$PLATFORM" = "gitlab" ]; then
+  HOST=$(printf '%s' "$URL" | sed -E 's|^https?://([^/]+)/.*$|\1|')
+  PROJ_PATH=$(printf '%s' "$URL" | sed -E 's|^https?://[^/]+/(.+)/-/merge_requests/[0-9]+.*$|\1|')
+  MR_IID=$(printf '%s' "$URL" | sed -E 's|^.*/merge_requests/([0-9]+).*$|\1|')
+  PROJ_PATH_ENC=$(printf '%s' "$PROJ_PATH" | jq -sRr '@uri')
+fi
+
+# Skip merged/closed PRs/MRs early — saves the long CI poll.
+prelude_pr_is_open "$URL" || exit 0
+
+# One active watcher per (cwd, branch, PR). flock kills concurrent watchers
+# from sibling matchers and from subsequent re-pushes on the same PR.
+prelude_acquire_pr_lock "pr-watch" "$URL" || exit 0
+HEAD_SHA=$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
+echo "LOCK_FILE: $LOCK_FILE (url=$URL sha=$HEAD_SHA)"
 
 # --- Author guard ---
 # Only watch PRs/MRs the current user opened. Prevents misfires when reviewing
@@ -159,6 +154,14 @@ if [ "$PR_AUTHOR" != "$ME" ]; then
   exit 0
 fi
 
+NOTIFY_TITLE="watching CI" \
+NOTIFY_BODY="$URL
+log: $LOG" \
+NOTIFY_SOUND="Pop" \
+NOTIFY_URGENCY="low" \
+NOTIFY_BG="#f9a825" \
+  "$HOME/.claude/hooks/notify.sh" custom || true
+
 # --- Watch CI ---
 STATUS="" # "pass" | "fail" | "skip"
 FAILED=""
@@ -181,8 +184,29 @@ case "$PLATFORM" in
       echo "no failed-check rows — treating as tool error, not notifying"
       exit 0
     else
+      # Tie failures to the commit that triggered this hook. Another push may
+      # have moved the PR head while gh pr checks --watch was running; that
+      # new commit will get its own watcher.
+      NEW_HEAD=$(cd "$REPO_DIR" && gh pr view "$URL" --json headRefOid --jq '.headRefOid // ""' 2>/dev/null || echo "")
+      if [ -n "$NEW_HEAD" ] && [ "$NEW_HEAD" != "$HEAD_SHA" ]; then
+        echo "PR head moved to $NEW_HEAD (was $HEAD_SHA) — newer push has its own watcher, exiting"
+        exit 0
+      fi
+      NWO=$(printf '%s' "$URL" | sed -E 's|^https?://[^/]+/([^/]+/[^/]+)/.*$|\1|')
+      SHA_FAILED=$(gh api "repos/$NWO/commits/$HEAD_SHA/check-runs?per_page=100" \
+        --jq '.check_runs[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out") | .name' \
+        2>/dev/null | paste -sd, -)
+      if [ -z "$SHA_FAILED" ]; then
+        SHA_FAILED=$(gh api "repos/$NWO/commits/$HEAD_SHA/status" \
+          --jq '.statuses[] | select(.state == "failure" or .state == "error") | .context' \
+          2>/dev/null | paste -sd, -)
+      fi
+      if [ -z "$SHA_FAILED" ]; then
+        echo "watch reported failures but none are tied to HEAD_SHA=$HEAD_SHA — exiting"
+        exit 0
+      fi
       STATUS="fail"
-      FAILED=$(printf '%s\n' "$OUT" | awk -F'\t' '$2 == "fail" || $2 == "cancel" { print $1 }' | paste -sd, -)
+      FAILED="$SHA_FAILED"
     fi
     ;;
 
@@ -198,10 +222,16 @@ case "$PLATFORM" in
     fi
     echo "polling glab mr view $MR_NUM in $REPO_DIR"
     PIPELINE_STATUS=""
+    PIPELINE_SHA=""
     i=0
     while [ "$i" -lt 480 ]; do
       MR_JSON=$(cd "$REPO_DIR" && glab mr view "$MR_NUM" --output json 2>/dev/null || echo '{}')
       PIPELINE_STATUS=$(printf '%s' "$MR_JSON" | jq -r '.head_pipeline.status // .pipeline.status // ""')
+      PIPELINE_SHA=$(printf '%s' "$MR_JSON" | jq -r '.head_pipeline.sha // .pipeline.sha // ""')
+      if [ -n "$PIPELINE_SHA" ] && [ "$PIPELINE_SHA" != "$HEAD_SHA" ]; then
+        echo "head pipeline sha=$PIPELINE_SHA != HEAD_SHA=$HEAD_SHA — newer push has its own watcher, exiting"
+        exit 0
+      fi
       case "$PIPELINE_STATUS" in
         success)              STATUS="pass"; break ;;
         failed|canceled)      STATUS="fail"; break ;;
@@ -294,54 +324,66 @@ if [ -z "${TARGET_SESSION:-}" ]; then
 fi
 
 REPO_BASENAME=$(basename "$REPO_DIR")
-WINDOW_NAME="ci-fix:${REPO_BASENAME}"
+SHORT_SHA=$(printf '%s' "$HEAD_SHA" | cut -c1-8)
+WINDOW_NAME="AUTO-CI-FIX:${REPO_BASENAME}#${SHORT_SHA}"
 
-# Platform-specific tooling hints baked into the prompt.
+# Spawn the fixer in a fresh worktree so concurrent fixers and the operator's
+# main checkout never clobber each other. The fixer's branch is throwaway; the
+# operator integrates its commits back into the PR branch.
+if ! prelude_create_fix_worktree "$REPO_DIR" "$HEAD_SHA" "ci-fix"; then
+  echo "could not create fixer worktree — skipping fixer spawn"
+  exit 0
+fi
+
+PR_BRANCH=$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "the PR branch")
+
+# Platform-specific tooling hint baked into the prompt.
 case "$PLATFORM" in
-  github)
-    CHECKOUT_CMD="gh pr checkout ${URL}"
-    BRANCH_QUERY="gh pr view ${URL} --json headRefName --jq .headRefName"
-    LOG_CMD="gh run view <id> --log-failed | tail -200"
-    RERUN_CMD="gh run rerun <id> --failed"
-    REWATCH_CMD="gh pr checks ${URL} --watch --fail-fast --interval 15"
-    ;;
-  gitlab)
-    CHECKOUT_CMD="glab mr checkout ${URL##*/}"
-    BRANCH_QUERY="glab mr view ${URL##*/} --output json | jq -r .source_branch"
-    LOG_CMD="glab ci view <job-id>  # or 'glab ci trace <job-id>' for raw logs"
-    RERUN_CMD="glab ci retry <job-id>"
-    REWATCH_CMD="glab ci status --branch \$(git branch --show-current) --live"
-    ;;
+  github) LOG_CMD="gh run view <id> --log-failed | tail -200" ;;
+  gitlab) LOG_CMD="glab ci view <job-id>  # or 'glab ci trace <job-id>' for raw logs" ;;
 esac
 
 read -r -d '' FIXER_PROMPT <<EOF || true
-A CI failure was detected on ${URL} (platform: ${PLATFORM}). Failing checks/jobs: ${FAILED}.
+A CI failure was detected on ${URL} (platform: ${PLATFORM}) for commit ${HEAD_SHA}.
+Failing checks/jobs: ${FAILED}.
+
+You are running in a fresh git worktree at ${WT_PATH}, on a throwaway branch
+${FIX_BRANCH} that was created off ${HEAD_SHA} (the same commit the failing CI
+ran against). The operator's main checkout still has ${PR_BRANCH} checked out
+elsewhere — do NOT switch branches and do NOT touch their working tree.
 
 Your job is to attempt a single, minimal fix.
 
 Workflow:
-1. Confirm you are in the right repo: pwd should be ${REPO_DIR}. If not, cd there. Make sure HEAD is the PR/MR branch (${BRANCH_QUERY}; if not checked out, run ${CHECKOUT_CMD}).
+1. Confirm pwd is ${WT_PATH} and \`git rev-parse --abbrev-ref HEAD\` prints ${FIX_BRANCH}. If not, stop and tell the user.
 2. For each failing check/job, fetch its failed log lines: ${LOG_CMD}.
 3. Diagnose the root cause. Apply the SMALLEST possible fix. Do not refactor, do not rework architecture, do not touch unrelated files.
-4. If the failure looks like a flake (intermittent timeout, network blip, vendor-side outage, no clear code-level cause), do NOT edit code. Re-run via ${RERUN_CMD} and stop.
+4. If the failure looks like a flake (intermittent timeout, network blip, vendor-side outage, no clear code-level cause), do NOT edit code or re-run anything. Stop and tell the user it looks like a flake.
 5. Build/test locally for whatever language the repo uses (e.g. \`go build ./... && go test ./... -count=1\` for Go).
-6. Commit with a short imperative message ("fix <thing>"). Stage only the files you actually changed. Never use \`git add -A\`. Push to the PR/MR branch.
-7. Re-watch CI: ${REWATCH_CMD}. If it succeeds, summarize what changed and exit. If it fails again, STOP and tell the user — do not loop.
+6. Commit locally on ${FIX_BRANCH} with a short imperative message ("fix <thing>"). Stage only the files you actually changed. Never use \`git add -A\`.
+7. Print a short summary of what you changed and ring the tmux bell (\`printf '\\a'\`).
+8. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH}. If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On success, tell them the merge landed and remind them to push from ${REPO_DIR} themselves. On failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop — do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they say no, leave the fix branch in place.
+9. End your turn. Do NOT push. Do NOT re-run CI. Do NOT loop back waiting for further input.
 
 Hard rules:
-- Never open a new PR or MR. Never change reviewers, labels, or assignees.
-- Never rebase or force-push. Never merge.
+- Never push. Never open a new PR or MR. Never change reviewers, labels, or assignees.
+- Never switch branches, never rebase, never force-push, never amend.
+- The only merge you may perform is the single \`git merge --no-edit ${FIX_BRANCH}\` invocation in step 8, only if the user said yes.
 - Never touch vendor/ or generated files unless that IS the bug.
 - Never skip hooks (--no-verify) or bypass signing.
-- One fix attempt total. If the second watch fails, hand control back to the user.
+- One fix attempt total. After the merge prompt, end your turn.
 
 URL: ${URL}
+Operator's main checkout: ${REPO_DIR}
+PR branch (operator's checkout): ${PR_BRANCH}
+Fix branch (your worktree): ${FIX_BRANCH}
+Worktree: ${WT_PATH}
 Failing (comma-separated): ${FAILED}
 Hook log for context: ${LOG}
 EOF
 
-echo "spawning fixer in tmux session=${TARGET_SESSION} window=${WINDOW_NAME}"
-if tmux new-window -t "${TARGET_SESSION}:" -n "${WINDOW_NAME}" -c "${REPO_DIR}" "claude $(printf '%q' "$FIXER_PROMPT")"; then
+echo "spawning fixer in tmux session=${TARGET_SESSION} window=${WINDOW_NAME} cwd=${WT_PATH}"
+if tmux new-window -t "${TARGET_SESSION}:" -n "${WINDOW_NAME}" -c "${WT_PATH}" "claude $(printf '%q' "$FIXER_PROMPT")"; then
   echo "fixer launched"
 else
   echo "tmux new-window failed (rc=$?) — fixer not launched"

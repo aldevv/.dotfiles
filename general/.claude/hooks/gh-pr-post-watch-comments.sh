@@ -1,35 +1,31 @@
 #!/usr/bin/env bash
 # PostToolUse hook for `gh pr create *`, `glab mr create *`, and `git push [*]`.
 # After a push, polls the PR's automated review comments. When a review is
-# posted for the current HEAD with actionable findings (Blocking Issues > 0
-# OR Suggestions > 0), it:
+# posted that is tied to HEAD_SHA at script start (github: last_reviewed_sha
+# in the comment marker; gitlab: comment created after WATCH_START while the
+# MR head is still HEAD_SHA) AND it has actionable findings (Blocking > 0 OR
+# Suggestions > 0), it:
 #   - sends a purple notify-send so the operator sees a PR-review touch
-#   - opens a new tmux window with monitor-bell enabled
-#   - launches a Claude session whose prompt instructs it to:
-#       clear-cut -> fix + push
-#       ambiguous -> fix but do NOT push, ring the tmux bell, wait for input
+#   - opens a new tmux window in a fresh git worktree on a throwaway branch
+#     (pr-review-fix-<short_sha>) with monitor-bell enabled
+#   - launches a Claude session whose prompt instructs it to fix locally on
+#     the throwaway branch and STOP (never push without operator confirmation).
 #
-# REQUIRED settings.json wiring (PostToolUse, Bash matcher). Keep these 3
-# entries and only these 3. Do NOT add `gh pr view *`, `gh pr checks *`,
-# `gh pr edit *`, or any read-only command. That re-introduces the misfire
-# where the hook latches onto a PR you were just inspecting.
-#   - if: "Bash(gh pr create *)"     timeout: 3600  async: true
-#   - if: "Bash(git push *)"         timeout: 3600  async: true
-#   - if: "Bash(glab mr create *)"   timeout: 3600  async: true
-#
-# Runs in parallel with gh-pr-post-watch-checks.sh; uses a distinct lock key.
-# Both GitHub PRs and GitLab MRs are supported; reviews are matched by the
-# `last_reviewed_sha` HTML-comment marker in the body, not by author.
-#
-# AUTHOR GUARD. Prevents the "reviewing a friend's PR and the hook almost
-# fixed CI for them" misfire. After URL resolution, the hook verifies the
-# PR author equals the current `gh` / `glab` user; if not, it exits silently.
-# Fail-closed: if either side cannot be resolved, the hook also exits. There
-# is intentionally no env-var bypass. Spawn a fresh claude session manually
-# if you really need to auto-fix someone else's PR.
+# Wiring lives in ~/.claude/settings.json. All gating is also enforced
+# in-script via the shared prelude so a misfire is cheap (exits in ms):
+#   - duplicate event (same stdin hash across N matchers) -> exit
+#   - tool exit_code != 0 -> exit
+#   - git push --tags / --delete / --dry-run / --mirror / --all -> exit
+#   - branch is default/protected (main/master/...) -> exit
+#   - PR/MR not in OPEN state (merged/closed) -> exit
+#   - author of PR is not the current gh/glab user -> exit
+#   - another watcher already holds the per-PR flock -> exit
+#   - fixer window for this PR already exists in tmux -> exit (recursion guard)
+#   - PR head moves off HEAD_SHA before the spawn -> exit
+#   - worktree creation fails -> exit (do not fall back to main checkout)
 #
 # Disable per-invocation:
-#   - PR_COMMENT_WATCH_AUTOFIX=0  -> still poll + notify, do not spawn fixer.
+#   PR_COMMENT_WATCH_AUTOFIX=0  -> still poll + notify, do not spawn fixer.
 #
 # Logs to ~/.claude/hooks/logs/pr-comments-<timestamp>.log.
 
@@ -44,6 +40,12 @@ echo "=== gh-pr-post-watch-comments.sh started at $(date -Iseconds) ==="
 echo "PWD: $(pwd)"
 
 INPUT=$(cat)
+
+# shellcheck source=lib/gh-pr-watch-prelude.sh
+. "$HOME/.claude/hooks/lib/gh-pr-watch-prelude.sh"
+
+prelude_dedup_event "pr-comments" || exit 0
+prelude_should_proceed || exit 0
 
 REPO_DIR=$(printf '%s' "$INPUT" | jq -r '.cwd // ""')
 if [ -z "$REPO_DIR" ] || [ ! -d "$REPO_DIR" ]; then
@@ -112,6 +114,28 @@ case "$PLATFORM" in
     ;;
 esac
 
+# Skip merged/closed PRs/MRs early — saves the 20-minute polling loop.
+prelude_pr_is_open "$URL" || exit 0
+
+# Recursion guard: if a fixer window for this PR head sha already exists in tmux, skip.
+# Promoted from the bottom of the script to here so we bail before the poll.
+REPO_BASENAME=$(basename "$REPO_DIR")
+HEAD_SHA=$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || echo "")
+if [ -z "$HEAD_SHA" ]; then
+  echo "could not resolve HEAD sha — exiting"
+  exit 0
+fi
+SHORT_SHA=$(printf '%s' "$HEAD_SHA" | cut -c1-8)
+WINDOW_NAME="AUTO-COMMENT-FIX:${REPO_BASENAME}#${SHORT_SHA}"
+if command -v tmux >/dev/null 2>&1 && tmux list-windows -a -F '#W' 2>/dev/null | grep -Fxq "$WINDOW_NAME"; then
+  echo "fixer window '$WINDOW_NAME' already exists in tmux — exiting (recursion guard)"
+  exit 0
+fi
+
+# One active watcher per (cwd, branch, PR).
+prelude_acquire_pr_lock "pr-comments" "$URL" || exit 0
+echo "LOCK_FILE: $LOCK_FILE"
+
 # --- Author guard ---
 # Only watch PRs/MRs the current user opened. Prevents misfires when reviewing
 # someone else's PR locally (e.g. `gh pr checkout` + `git push` suggestion).
@@ -138,28 +162,15 @@ if [ "$PR_AUTHOR" != "$ME" ]; then
   exit 0
 fi
 
-HEAD_SHA=$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || echo "")
-if [ -z "$HEAD_SHA" ]; then
-  echo "could not resolve HEAD sha — exiting"
-  exit 0
-fi
 echo "HEAD_SHA: $HEAD_SHA"
 
-LOCK_DIR="/tmp/pr-comments-locks-$(id -u)"
-mkdir -p "$LOCK_DIR"
-LOCK_KEY=$(printf '%s|%s' "$URL" "$HEAD_SHA" | sha256sum | cut -c1-16)
-LOCK_FILE="$LOCK_DIR/$LOCK_KEY.lock"
-echo "LOCK_FILE: $LOCK_FILE"
-
-if [ -f "$LOCK_FILE" ]; then
-  OTHER_PID=$(cat "$LOCK_FILE" 2>/dev/null || echo "")
-  if [ -n "$OTHER_PID" ] && kill -0 "$OTHER_PID" 2>/dev/null; then
-    echo "another comment-watcher (pid=$OTHER_PID) already watching — exiting"
-    exit 0
-  fi
-fi
-echo "$$" > "$LOCK_FILE"
-trap 'rm -f "$LOCK_FILE"' EXIT INT TERM
+NOTIFY_TITLE="watching comments" \
+NOTIFY_BODY="$URL
+log: $LOG" \
+NOTIFY_SOUND="Pop" \
+NOTIFY_URGENCY="low" \
+NOTIFY_BG="#f9a825" \
+  "$HOME/.claude/hooks/notify.sh" custom || true
 
 # --- Poll for a review note of this commit ---
 # Markers differ across platforms:
@@ -310,22 +321,48 @@ if [ -z "${TARGET_SESSION:-}" ]; then
   exit 0
 fi
 
-REPO_BASENAME=$(basename "$REPO_DIR")
-WINDOW_NAME="pr-review:${REPO_BASENAME}"
+# REPO_BASENAME/PR_NUM/WINDOW_NAME computed near the top for the early
+# recursion guard; re-check here in case another fixer window appeared
+# during the polling loop.
+if tmux list-windows -a -F '#W' 2>/dev/null | grep -Fxq "$WINDOW_NAME"; then
+  echo "fixer window '$WINDOW_NAME' appeared during poll — exiting (recursion guard)"
+  exit 0
+fi
+
+# Final head-still-matches guard: between the comment match and the spawn, a
+# new push could have moved the PR head. Don't apply old feedback to a new
+# commit; let the newer push's watcher take over.
+case "$PLATFORM" in
+  github)
+    LATE_HEAD=$(cd "$REPO_DIR" && gh pr view "$URL" --json headRefOid --jq '.headRefOid // ""' 2>/dev/null || echo "")
+    ;;
+  gitlab)
+    LATE_HEAD=$(cd "$REPO_DIR" && glab api --hostname "$HOST" "projects/${PROJ_PATH_ENC}/merge_requests/${MR_IID}" 2>/dev/null \
+                 | jq -r '.sha // ""' 2>/dev/null || echo "")
+    ;;
+esac
+if [ -n "$LATE_HEAD" ] && [ "$LATE_HEAD" != "$HEAD_SHA" ]; then
+  echo "PR head moved to $LATE_HEAD (was $HEAD_SHA) before spawn — newer push will handle, exiting"
+  exit 0
+fi
+
+# Spawn the fixer in a fresh worktree so concurrent fixers and the operator's
+# main checkout never clobber each other. The fixer's branch is throwaway; the
+# operator integrates its commits back into the PR branch.
+if ! prelude_create_fix_worktree "$REPO_DIR" "$HEAD_SHA" "pr-review-fix"; then
+  echo "could not create fixer worktree — skipping fixer spawn"
+  exit 0
+fi
+
+PR_BRANCH=$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "the PR branch")
 
 REVIEW_FILE="$LOG_DIR/pr-comments-review-$(date +%Y%m%d-%H%M%S)-$$.md"
 printf '%s\n' "$REVIEW_BODY" > "$REVIEW_FILE"
 echo "review body saved to $REVIEW_FILE"
 
 case "$PLATFORM" in
-  github)
-    PR_VERB="PR"
-    BRANCH_HINT="gh pr view ${URL} --json headRefName --jq .headRefName; gh pr checkout ${URL} if needed"
-    ;;
-  gitlab)
-    PR_VERB="MR"
-    BRANCH_HINT="glab mr view ${MR_IID} --output json | jq -r .source_branch; glab mr checkout ${MR_IID} if needed"
-    ;;
+  github) PR_VERB="PR" ;;
+  gitlab) PR_VERB="MR" ;;
 esac
 
 read -r -d '' FIXER_PROMPT <<EOF || true
@@ -334,29 +371,42 @@ Blocking: ${BLOCKING}. Suggestions: ${SUGGESTIONS}.
 
 The full review body is saved to: ${REVIEW_FILE}
 
+You are running in a fresh git worktree at ${WT_PATH}, on a throwaway branch
+${FIX_BRANCH} that was created off ${HEAD_SHA} (the exact commit the bot
+reviewed). The operator's main checkout still has ${PR_BRANCH} checked out
+elsewhere — do NOT switch branches and do NOT touch their working tree.
+
 Your job:
-1. Confirm you are in ${REPO_DIR} on the ${PR_VERB} branch (${BRANCH_HINT}).
+1. Confirm pwd is ${WT_PATH} and \`git rev-parse --abbrev-ref HEAD\` prints ${FIX_BRANCH}. If not, stop and tell the user.
 2. Read ${REVIEW_FILE} and the cited code locations.
 3. For EACH finding (blocking AND suggestion), classify it as either:
      (a) CLEAR — the fix is obvious, low-risk, and doesn't require a judgment call.
      (b) AMBIGUOUS — multiple reasonable fixes, design tradeoff, or insufficient context.
 4. Apply ALL applicable fixes locally. Build/test (e.g. \`go build ./... && go test ./... -count=1\` for Go).
-5. Decide based on the mix of findings:
-   - If EVERY actionable item was CLEAR: commit (separate small commits per finding is fine, or one if cohesive), push to the ${PR_VERB} branch, and exit. Do not ask the user.
-   - If ANY actionable item was AMBIGUOUS: commit locally if you wrote code, but DO NOT push. Print a short summary of: what you changed, why each ambiguous item is ambiguous, and what you need from the user. Then ring the tmux bell by printing the BEL character (\`printf '\\a'\`). Wait for the user.
+5. Commit locally on ${FIX_BRANCH}. Separate small commits per finding is fine, or one cohesive commit. Stage only the files you actually changed. Never \`git add -A\`.
+6. Print a short summary of: what you changed, which findings were CLEAR vs. AMBIGUOUS, why each AMBIGUOUS item is ambiguous, and (for any phantoms) where you found the bot was wrong. Ring the tmux bell (\`printf '\\a'\`).
+7. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH}. If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On success, tell them the merge landed and remind them to push from ${REPO_DIR} themselves. On failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop — do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they say no, leave the fix branch in place.
+8. End your turn. Do NOT push. Do NOT loop back waiting for further input.
 
 Hard rules:
+- NEVER push. The operator pushes; you don't.
 - Treat every finding as a real claim. Verify it against the code before fixing; if you find the bot is wrong, say so explicitly in the summary instead of "fixing" a phantom.
-- One pass only. If the bot's next review still complains, do not loop; hand back to the user.
-- Never force-push, never rebase, never amend, never \`git add -A\`.
+- One pass only. After the merge prompt, end your turn.
+- Never switch branches, never force-push, never rebase, never amend, never \`git add -A\`.
+- The only merge you may perform is the single \`git merge --no-edit ${FIX_BRANCH}\` invocation in step 7, only if the user said yes.
 - Never skip hooks (--no-verify) or bypass signing.
 - Never touch vendor/ or generated files unless that IS the fix.
 
-Output: under 200 words at the end, summarize what you changed and whether you pushed.
+Operator's main checkout: ${REPO_DIR}
+PR branch (operator's checkout): ${PR_BRANCH}
+Fix branch (your worktree): ${FIX_BRANCH}
+Worktree: ${WT_PATH}
+
+Output: under 200 words at the end, summarize what you changed and whether the merge into ${PR_BRANCH} ran. Confirm you did NOT push.
 EOF
 
-echo "spawning fixer in tmux session=${TARGET_SESSION} window=${WINDOW_NAME}"
-if tmux new-window -t "${TARGET_SESSION}:" -n "${WINDOW_NAME}" -c "${REPO_DIR}" "claude $(printf '%q' "$FIXER_PROMPT")"; then
+echo "spawning fixer in tmux session=${TARGET_SESSION} window=${WINDOW_NAME} cwd=${WT_PATH}"
+if tmux new-window -t "${TARGET_SESSION}:" -n "${WINDOW_NAME}" -c "${WT_PATH}" "claude $(printf '%q' "$FIXER_PROMPT")"; then
   tmux set-window-option -t "${TARGET_SESSION}:${WINDOW_NAME}" monitor-bell on 2>/dev/null || true
   echo "fixer launched, monitor-bell enabled"
 else

@@ -36,20 +36,14 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 
   Covers location, layout, portability/composability requirements, frontmatter checklist.
 
-- [`~/.claude/lazy/hook-conventions.md`](.claude/lazy/hook-conventions.md). **Read when** any of:
-  - creating or reorganizing a Claude Code hook
-  - editing hook entries in `settings.json`
-  - editing any script under `~/.claude/hooks/` (or a project-local `.claude/hooks/`)
+- [`~/.claude/lazy/hooks.md`](.claude/lazy/hooks.md). **Read when** any of:
+  - editing hook entries in any `settings.json` / `settings.local.json` / plugin `hooks/hooks.json`
+  - editing the `hooks:` block in a skill or agent frontmatter
+  - writing or editing any script under `~/.claude/hooks/` (or a project-local `.claude/hooks/`)
+  - the user mentions a Claude Code hook event by name (`PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`, `SessionStart`, `Notification`, etc.)
+  - diagnosing a Claude Code hook that fires when it shouldn't, misses when it should, exits silently, hangs, or has a `set -e` script aborting unexplained
 
-  Covers naming, folder layout, README structure, when a helper becomes a skill.
-
-- [`~/.claude/lazy/hook-debugging.md`](.claude/lazy/hook-debugging.md). **Read when** any of:
-  - a hook fires but does nothing visible
-  - a hook exits silently or hangs
-  - a hook's matcher doesn't fire when it should
-  - a `set -e` script aborts unexplained
-
-  Covers manual test recipes, output JSON shape, common matcher pitfalls.
+  Covers `matcher` vs `if:` filtering, the fail-open behaviour on complex Bash commands, silent-exit traps, decision-control output shape per event, exit-code-vs-JSON rules, async hooks, the `bypassPermissions` "ask" trap, manual test recipe, recursion guard, and the in-script positive-gate pattern.
 
 - [`~/.claude/lazy/code/quality.md`](.claude/lazy/code/quality.md). **Read when** any of:
   - writing new code (naming, extraction, choice of literal vs constant)
@@ -146,6 +140,8 @@ When the user says "save the changes in my dotfiles" (or any equivalent), they m
 **Forbidden punctuation: em-dash (`—`) and double-hyphen (`--`).** Do not use either in any user-facing text, commit messages, PR descriptions, READMEs, comments, docs, or chat replies. They make writing sound robotic. Rewrite with a comma, period, parenthesis, or colon instead. CLI flags like `--flag` are fine; the ban is on em-dashes and double-hyphens used as prose punctuation.
 
 **Forbidden: emojis.** Do not use emojis anywhere (chat, commits, PRs, READMEs, comments, docs, file contents). Applies even if the surrounding text or an existing file already uses them. Only exception: the user explicitly asks for an emoji in this turn.
+
+**Forbidden AI-slop vocabulary.** Do not use `no-op`, `noop`, `delve`, `delves into`, `leverage`, `leverages`, `seamless`, `seamlessly`, `robust`, `robustly`, `streamline`, `streamlined`, `unlock`, `unlocks`, `harness` (as a verb), `tapestry`, `intricate`, `realm`, `landscape`, `journey` (as metaphor), or `dive into`. They are filler that signals AI prose. Pick the concrete verb instead: `no-op` becomes `does nothing` / `skip`; `leverage` becomes `use`; `seamless` becomes `works without setup` or just delete it; `robust` becomes `handles X` (name the case); `streamline` becomes `simplify` or name the step removed. Applies everywhere prose lands: chat, commits, PRs, READMEs, comments, docs.
 
 **Default to brief, casual, plain.** Short phrase beats a paragraph when both carry the same meaning. Simple words over fancy ones. Match the register of a teammate sending a Slack message, not a press release. If a sentence can be cut to a clause without losing information, cut it.
 
