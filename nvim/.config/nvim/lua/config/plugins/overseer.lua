@@ -5,9 +5,6 @@ overseer.setup({
   templates = { "builtin", "user.run_script" },
   component_aliases = {
     default = {
-      -- https://github.com/stevearc/overseer.nvim/blob/master/doc/components.md
-      { "display_duration",   detail_level = 2 },
-      "on_output_summarize",
       "on_exit_set_status",
       "on_complete_notify",
       -- "on_complete_dispose",
