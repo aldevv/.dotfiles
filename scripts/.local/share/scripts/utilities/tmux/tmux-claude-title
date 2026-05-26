@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # tmux-claude-title <raw-pane-title>
-# Print a 1-2 word kebab-case summary of a claude pane title for tmux's
-# automatic-rename-format. Cache-first to keep the bar snappy: cache hit prints
-# the cached value instantly. On cache miss, print the first-word fallback NOW
-# and spawn `claude -p` in the background to compute the real summary; once it
-# lands, write the cache and `tmux refresh-client -S` so the bar picks it up.
+# Print a 1-to-5 word kebab-case summary of a claude pane title for tmux's
+# automatic-rename-format. Fewer words is better; 5 is the hard cap.
+# Cache-first to keep the bar snappy: cache hit prints the cached value
+# instantly. On cache miss, print the first-word fallback NOW and spawn
+# `claude -p` in the background to compute the real summary; once it lands,
+# write the cache and `tmux refresh-client -S` so the bar picks it up.
 #
 # Cache key = sha1(cleaned-title), so the same title is never re-asked.
 # Per-key mkdir lock prevents concurrent claude -p jobs for the same title.
@@ -12,6 +13,8 @@
 # which aren't installed by default on macOS).
 
 set -u
+
+max_words=5
 
 raw="${1-}"
 [ -z "$raw" ] && exit 0
@@ -50,14 +53,14 @@ fi
     mkdir "$lockdir" 2>/dev/null || exit 0
     trap 'rmdir "$lockdir" 2>/dev/null' EXIT
 
-    prompt="Summarize this work title in 1 or 2 lowercase words. If 2 words, join with '-' (no spaces). Prefer 1 word when sufficient. Output ONLY the summary token, no quotes, no period, no explanation. Title: $cleaned"
+    prompt="Summarize this work session in 1 to ${max_words} lowercase words that describe what the session is about. Fewer words is better: use 1 if it captures it, only reach ${max_words} when nothing shorter works. Join words with '-' (no spaces). Output ONLY the summary token, no quotes, no period, no explanation. Title: $cleaned"
     out=$("${timeout_cmd[@]}" claude -p "$prompt" 2>/dev/null \
         | head -n1 \
         | tr -d '\r\n' \
         | tr 'A-Z' 'a-z' \
         | sed -E 's/[^a-z0-9-]//g; s/^-+//; s/-+$//')
 
-    if printf %s "$out" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)?$'; then
+    if printf %s "$out" | grep -qE "^[a-z0-9]+(-[a-z0-9]+){0,$((max_words - 1))}\$"; then
         printf %s "$out" > "$cache_file"
         tmux refresh-client -S 2>/dev/null || true
     fi
