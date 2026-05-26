@@ -7,7 +7,9 @@
 # lands, write the cache and `tmux refresh-client -S` so the bar picks it up.
 #
 # Cache key = sha1(cleaned-title), so the same title is never re-asked.
-# Per-key flock prevents concurrent claude -p jobs for the same title.
+# Per-key mkdir lock prevents concurrent claude -p jobs for the same title.
+# mkdir is atomic and portable across linux/macOS (unlike flock and timeout,
+# which aren't installed by default on macOS).
 
 set -u
 
@@ -35,13 +37,21 @@ printf %s "$first_word"
 
 command -v claude >/dev/null 2>&1 || exit 0
 
+if command -v timeout >/dev/null 2>&1; then
+    timeout_cmd=(timeout 30)
+elif command -v gtimeout >/dev/null 2>&1; then
+    timeout_cmd=(gtimeout 30)
+else
+    timeout_cmd=()
+fi
+
 (
-    lock="$cache_dir/$key.lock"
-    exec 9>"$lock"
-    flock -n 9 || exit 0
+    lockdir="$cache_dir/$key.lockdir"
+    mkdir "$lockdir" 2>/dev/null || exit 0
+    trap 'rmdir "$lockdir" 2>/dev/null' EXIT
 
     prompt="Summarize this work title in 1 or 2 lowercase words. If 2 words, join with '-' (no spaces). Prefer 1 word when sufficient. Output ONLY the summary token, no quotes, no period, no explanation. Title: $cleaned"
-    out=$(timeout 30 claude -p "$prompt" 2>/dev/null \
+    out=$("${timeout_cmd[@]}" claude -p "$prompt" 2>/dev/null \
         | head -n1 \
         | tr -d '\r\n' \
         | tr 'A-Z' 'a-z' \
