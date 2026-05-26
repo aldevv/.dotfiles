@@ -17,6 +17,10 @@
   "env": {
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"
   },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -52,6 +56,39 @@
             "timeout": 3600,
             "statusMessage": "Watching PR/MR review comments in background",
             "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/kanon/.claude/hooks/notify.sh question"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/kanon/.claude/hooks/notify.sh permission"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/kanon/.claude/hooks/tmux-mark-done.sh"
+          },
+          {
+            "type": "command",
+            "command": "/home/kanon/.claude/hooks/notify.sh stop"
           }
         ]
       }
