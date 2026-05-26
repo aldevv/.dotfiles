@@ -24,12 +24,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/hunk-pre-pr.sh",
+            "command": "$HOME/.claude/hooks/hunk-pre-pr.sh",
             "if": "Bash(gh pr create *)"
           },
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/hunk-pre-pr.sh",
+            "command": "$HOME/.claude/hooks/hunk-pre-pr.sh",
             "if": "Bash(glab mr create *)"
           }
         ]
@@ -41,14 +41,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/gh-pr-post-watch-checks.sh",
+            "command": "$HOME/.claude/hooks/gh-pr-post-watch-checks.sh",
             "timeout": 3600,
             "statusMessage": "Watching PR/MR checks in background",
             "async": true
           },
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/gh-pr-post-watch-comments.sh",
+            "command": "$HOME/.claude/hooks/gh-pr-post-watch-comments.sh",
             "timeout": 3600,
             "statusMessage": "Watching PR/MR review comments in background",
             "async": true

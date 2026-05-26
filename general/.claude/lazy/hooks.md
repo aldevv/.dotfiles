@@ -6,12 +6,12 @@ Canonical docs: https://code.claude.com/docs/hooks. The spec evolves; cross-refe
 
 User-level hooks split across two files. Pick by what you want shared between machines.
 
-- `~/.claude/settings.json` is a real file on disk, **machine-local**, never travels. Put entries here when they reference machine-specific paths, plugin internals, or work-specific tooling you do NOT want reproduced on other machines. Examples in this setup: airc plugin `guard.py`/`inject.py`, `context-mode-cache-heal.mjs`, `notify.sh` wiring, the statusline command, the enabled-plugins list, the three baton-work PreToolUse reminders (`CLAUDE-gh.md`, `validate-connector-changes`, `baton-admin-review-connector`), the `gh-pr-post-assign.sh` PostToolUse (hardcoded reviewer list).
-- `~/.claude/settings.local.json` is **symlinked into dotfiles** (`~/.dotfiles/general/.claude/settings.local.json`), so anything here travels and gets reproduced on every machine. Put entries here when you want the workflow on every box you log into. Examples in this setup: the generic PR/MR watch flow (`hunk-pre-pr.sh`, `gh-pr-post-watch-checks.sh`, `gh-pr-post-watch-comments.sh`).
+- `$HOME/.claude/settings.json` is a real file on disk, **machine-local**, never travels. Put entries here when they reference machine-specific paths, plugin internals, or work-specific tooling you do NOT want reproduced on other machines. Examples in this setup: airc plugin `guard.py`/`inject.py`, `context-mode-cache-heal.mjs`, `notify.sh` wiring, the statusline command, the enabled-plugins list, the three baton-work PreToolUse reminders (`CLAUDE-gh.md`, `validate-connector-changes`, `baton-admin-review-connector`), the `gh-pr-post-assign.sh` PostToolUse (hardcoded reviewer list).
+- `$HOME/.claude/settings.local.json` is **symlinked into dotfiles** (`$HOME/.dotfiles/general/.claude/settings.local.json`), so anything here travels and gets reproduced on every machine. Put entries here when you want the workflow on every box you log into. Examples in this setup: the generic PR/MR watch flow (`hunk-pre-pr.sh`, `gh-pr-post-watch-checks.sh`, `gh-pr-post-watch-comments.sh`). Use `$HOME/...` (not `/home/<user>/...` or `/Users/<user>/...`) for command paths so the entry works on every machine.
 
 Claude Code merges hooks across both files at the user level, so runtime behavior is identical regardless of which file an entry lives in. Splitting is purely an authoring choice about portability.
 
-Note: the official docs only describe `settings.local.json` at the project level. The user-level form is undocumented but evidently honored (the existing `permissions`, `env`, `autoMemoryEnabled` keys at `~/.claude/settings.local.json` are being applied, and the moved PR-watch hooks fire from there).
+Note: the official docs only describe `settings.local.json` at the project level. The user-level form is undocumented but evidently honored (the existing `permissions`, `env`, `autoMemoryEnabled` keys at `$HOME/.claude/settings.local.json` are being applied, and the moved PR-watch hooks fire from there).
 
 ## The two filters
 
@@ -34,7 +34,7 @@ Real misfires hit in our sessions:
 - `gh api ... 2>&1 | python3 -c "..." | sed -n '140,200p'` triggered `Bash(git push *)` and `Bash(gh pr create *)` handlers.
 - `for f in $(ls -t ~/.claude/hooks/logs/*.log | head -30); do ... done` did the same.
 
-**Fix pattern.** When a handler is doing something expensive (long polls, fixer spawns, paid API calls, spawning tmux windows), add a positive in-script gate at the top of the script that greps the raw `tool_input.command` for the expected pattern. Bail in milliseconds if it doesn't match. Example from `~/.claude/hooks/lib/gh-pr-watch-prelude.sh`:
+**Fix pattern.** When a handler is doing something expensive (long polls, fixer spawns, paid API calls, spawning tmux windows), add a positive in-script gate at the top of the script that greps the raw `tool_input.command` for the expected pattern. Bail in milliseconds if it doesn't match. Example from `$HOME/.claude/hooks/lib/gh-pr-watch-prelude.sh`:
 
 ```bash
 tool_cmd=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""')
@@ -238,7 +238,7 @@ export MY_HOOK_ACTIVE=1
 
 ## Things to verify before assuming the hook is broken
 
-- **Which settings file wires it?** Check in order: project `.claude/settings.local.json` -> project `.claude/settings.json` -> user `~/.claude/settings.json`. An old entry in a higher-priority file can shadow your fix.
+- **Which settings file wires it?** Check in order: project `.claude/settings.local.json` -> project `.claude/settings.json` -> user `$HOME/.claude/settings.json`. An old entry in a higher-priority file can shadow your fix.
 - **Does the matcher cover your command?** Print `tool_input.command` from stdin to confirm the parser sees what you expect.
 - **Is `TMUX` (or any other env var you guard on) set?** Hook subprocess env is a curated subset of your shell environment, not the full set.
 - **Did the script silently abort?** See the silent-exits section above; symptoms are identical to "hook not invoked".
