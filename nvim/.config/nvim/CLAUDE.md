@@ -107,6 +107,32 @@ Autocmds with non-obvious side effects:
 3. Lazy auto-imports the new spec on next start. `:Lazy sync` to install.
 4. Keymaps for the plugin go in `lua/keybindings/<area>.lua` (or a new file required from `keybindings/init.lua`), not inline in the spec.
 
+### Local-path plugins (testing / dev)
+
+When a spec points at a local path (e.g. `dir = "/abs/path"`, `dev = true` with a custom `path`, or anything that loads from disk instead of GitHub), the path may not exist on every machine (this config is synced across multiple computers). **Gate the spec on `vim.uv.fs_stat(path)` (or `vim.loop.fs_stat`) and return an empty table when the path is missing** so lazy.nvim silently skips it on machines that don't have the checkout. Do not add a local-path plugin unconditionally; an absent path makes lazy.nvim error on startup.
+
+Pattern:
+
+```lua
+local path = vim.fn.expand("~/repos/foo/bar")
+if not vim.uv.fs_stat(path) then return {} end
+return {
+  { "owner/bar", dir = path },
+}
+```
+
+If the spec lives in a file shared with other plugins, gate just that entry with `enabled = function() return vim.uv.fs_stat(...) ~= nil end` (lazy.nvim skips disabled plugins without touching `dir`):
+
+```lua
+{
+  dir = "~/projects/foo.nvim",
+  enabled = function()
+    return vim.uv.fs_stat(vim.fn.expand("~/projects/foo.nvim")) ~= nil
+  end,
+  ...
+}
+```
+
 ## Lock file
 
 `lazy-lock.json` pins plugin commits and is committed to the repo — sync across machines depends on it. `:Lazy update` rewrites it; `:Lazy restore` re-applies it. Treat changes to it as deliberate.

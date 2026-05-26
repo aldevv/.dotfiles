@@ -75,6 +75,9 @@ return {
   {
     dir = "~/projects/message-agent.nvim",
     name = "message-agent.nvim",
+    enabled = function()
+      return vim.uv.fs_stat(vim.fn.expand("~/projects/message-agent.nvim")) ~= nil
+    end,
     event = "VeryLazy",
     config = function()
       require("message-agent").setup({
