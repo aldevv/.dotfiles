@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
-# PreToolUse hook for Bash(gh pr create:*) and Bash(glab mr create:*).
+# PreToolUse hook for Bash `gh pr create` and `glab mr create` invocations.
 #
-# Two-phase flow that drives review work through the *parent* Claude session
-# (no `claude -p` subagent), so review uses the same context, prompt cache,
-# and conversation. Exactly ONE user-visible prompt per PR/MR creation: the
-# Phase-2 Allow/Deny UI prompt. No multiple confirmations.
+# Drives review work through the *parent* Claude session (no `claude -p`
+# subagent), so review uses the same context, prompt cache, and conversation.
+# The flow is 2-phase in default-ish modes and 3-phase in bypassPermissions,
+# because `permissionDecision: "ask"` is silently auto-allowed in bypass.
 #
 #   Phase 1 (no sentinel): open Hunk in a new tmux window, drop a [pending]
-#     placeholder, pre-compute the diff, set the sentinel, return
+#     placeholder, pre-compute the diff, write sentinel=1, return
 #     permissionDecision: "deny" with the review brief in additionalContext.
-#     The parent session is told to clear the placeholder, apply comments
-#     only if the diff has complex flows or difficult paths, then retry.
 #
-#   Phase 2 (sentinel fresh): clear sentinel + diff file, return
-#     permissionDecision: "ask" so the user gets a single Allow/Deny UI
-#     prompt. Allow → PR/MR is created; Deny → stops here, no PR/MR.
+#   Phase 2 (sentinel=1):
+#     - default-ish modes: clear sentinel + diff file, return
+#       permissionDecision: "ask" so the user gets an Allow/Deny UI prompt.
+#     - bypassPermissions: advance sentinel to 2, return "deny" with a reason
+#       that instructs the parent to call AskUserQuestion (since "ask" would
+#       silently auto-allow in this mode).
+#
+#   Phase 3 (sentinel=2, only reached from bypassPermissions): clear sentinel
+#     + diff file, return permissionDecision: "allow". The user already
+#     confirmed via the Phase-2 AskUserQuestion.
 set -euo pipefail
 
 [[ -n "${TMUX:-}" ]] || exit 0
@@ -53,16 +58,23 @@ while IFS= read -r seg; do
 done < <(printf '%s\n' "$tool_command" | sed -E 's/[[:space:]]+(\&\&|\|\|)[[:space:]]+/\n/g; s/[[:space:]]*;[[:space:]]+/\n/g')
 [[ -n "$tool_label" ]] || exit 0
 
-# Best-effort: if the command starts with `cd <path> &&` (or similar), cd
-# there so the rest of the hook (git rev-parse, diff, etc.) runs in the
-# target repo. Claude Code spawns the hook in its own cwd (the project
-# root), not the about-to-run command's effective cwd.
-if [[ "$tool_command" =~ ^[[:space:]]*cd[[:space:]]+([^[:space:]\;\&\|]+) ]]; then
-  cd_target="${BASH_REMATCH[1]}"
-  cd_target="${cd_target#\"}"; cd_target="${cd_target%\"}"
-  cd_target="${cd_target#\'}"; cd_target="${cd_target%\'}"
-  [[ -d "$cd_target" ]] && cd "$cd_target" 2>/dev/null || true
-fi
+# Best-effort: cd to the last `cd <path>` in the chained command so the rest
+# of the hook (git rev-parse, diff) runs in the target repo. Claude Code
+# spawns the hook in the session cwd, not the about-to-run command's
+# effective cwd. Handles `cd` at any segment position and expands `~` /
+# `$HOME` without eval.
+cd_target=$(printf '%s\n' "$tool_command" \
+  | grep -oE '(^|[[:space:]]|;|&&|\|\|)cd[[:space:]]+[^[:space:]&;|]+' \
+  | tail -n1 | sed -E 's/^.*cd[[:space:]]+//')
+cd_target="${cd_target#\"}"; cd_target="${cd_target%\"}"
+cd_target="${cd_target#\'}"; cd_target="${cd_target%\'}"
+case "$cd_target" in
+  '~')       cd_target="$HOME" ;;
+  '~/'*)     cd_target="$HOME/${cd_target#'~/'}" ;;
+  '$HOME')   cd_target="$HOME" ;;
+  '$HOME/'*) cd_target="$HOME/${cd_target#\$HOME/}" ;;
+esac
+[[ -n "$cd_target" && -d "$cd_target" ]] && cd "$cd_target" 2>/dev/null || true
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 [[ -n "$repo_root" ]] || exit 0
@@ -75,10 +87,11 @@ range="origin/${base_branch}...HEAD"
 [[ -n "$(cd "$repo_root" && git diff --stat "$range" 2>/dev/null)" ]] || exit 0
 
 repo_name="$(basename "$repo_root")"
-branch_name="$(cd "$repo_root" && git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+branch_name="$(cd "$repo_root" && git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 [[ -n "$repo_name" && -n "$branch_name" ]] || exit 0
 window_name="hunk-${repo_name}:${branch_name}"
-session_name="$(tmux display-message -p '#{session_name}')"
+session_name="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
+[[ -n "$session_name" ]] || exit 0
 
 state_root="${XDG_RUNTIME_DIR:-/tmp}/hunk-state"
 mkdir -p "$state_root"
@@ -87,21 +100,53 @@ sentinel="$state_root/$state_key.sentinel"
 diff_file="$state_root/$state_key.diff"
 sentinel_ttl=600
 
-# Phase 2: review applied — surface ONE Allow/Deny prompt and we're done.
+current_phase=""
 if [[ -f "$sentinel" ]]; then
   age=$(( $(date +%s) - $(stat -c %Y "$sentinel" 2>/dev/null || echo 0) ))
   if (( age < sentinel_ttl )); then
+    current_phase="$(cat "$sentinel" 2>/dev/null || true)"
+  else
     rm -f "$sentinel" "$diff_file"
-    jq -nc --arg artifact "$artifact_label" '
+  fi
+fi
+
+# Phase 3 (bypassPermissions only): user already confirmed via
+# AskUserQuestion in Phase 2; allow the tool call through.
+if [[ "$current_phase" == "2" ]]; then
+  rm -f "$sentinel" "$diff_file"
+  jq -nc --arg artifact "$artifact_label" '
+    {hookSpecificOutput:{
+      hookEventName:"PreToolUse",
+      permissionDecision:"allow",
+      permissionDecisionReason:("User confirmed " + $artifact + " creation via AskUserQuestion.")
+    }}
+  '
+  exit 0
+fi
+
+# Phase 2: review applied. Branch on permission_mode.
+if [[ "$current_phase" == "1" ]]; then
+  if [[ "$permission_mode" == "bypassPermissions" ]]; then
+    printf '2' > "$sentinel"
+    reason="bypassPermissions mode auto-allows \"ask\", so this hook can't show an Allow/Deny UI prompt directly. Call AskUserQuestion with question=\"Create the $artifact_label?\" and options=[\"Yes, create it\", \"No, abort\"]. On \"Yes\", re-run \`$tool_label\` with the same arguments; on \"No\", stop."
+    jq -nc --arg r "$reason" '
       {hookSpecificOutput:{
         hookEventName:"PreToolUse",
-        permissionDecision:"ask",
-        permissionDecisionReason:("Review applied — inspect the hunk window and approve to create the " + $artifact + ".")
+        permissionDecision:"deny",
+        permissionDecisionReason:$r
       }}
     '
     exit 0
   fi
   rm -f "$sentinel" "$diff_file"
+  jq -nc --arg artifact "$artifact_label" '
+    {hookSpecificOutput:{
+      hookEventName:"PreToolUse",
+      permissionDecision:"ask",
+      permissionDecisionReason:("Review applied. Inspect the hunk window and approve to create the " + $artifact + ".")
+    }}
+  '
+  exit 0
 fi
 
 # Phase 1: open hunk if not already open, compute diff, deny + brief.
@@ -133,7 +178,7 @@ fi
 git -C "$repo_root" diff --no-color "$range" > "$diff_file" 2>/dev/null || true
 [[ -s "$diff_file" ]] || { rm -f "$diff_file"; exit 0; }
 
-touch "$sentinel"
+printf '1' > "$sentinel"
 
 # The parent Claude session takes ~20-60s to read the diff, compose review
 # comments, and apply them. During that window the Hunk TUI looks empty and

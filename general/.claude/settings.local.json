@@ -28,13 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/hunk-pre-pr.sh",
-            "if": "Bash(gh pr create *)"
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/hunk-pre-pr.sh",
-            "if": "Bash(glab mr create *)"
+            "command": "$HOME/.claude/hooks/hunk-pre-pr.sh"
           }
         ]
       }
