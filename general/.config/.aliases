@@ -9,7 +9,7 @@ alias tmux="tmux -f ~/.config/tmux/tmux.conf"
 alias v="nvim"
 alias vf="source _vf"
 alias vfl="source _vf .claude/lazy"
-alias vF="source _vF"
+alias vF="source _vFa"
 
 grun() {
   local cmd_args=()
