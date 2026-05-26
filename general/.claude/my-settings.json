@@ -51,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/notify.sh question"
+            "command": "$HOME/.claude/hooks/notify.sh question"
           }
         ]
       }
@@ -61,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/notify.sh permission"
+            "command": "$HOME/.claude/hooks/notify.sh permission"
           }
         ]
       }

@@ -19,4 +19,3 @@ CLAUDE-machines.md
 general/CLAUDE-machines.md
 **/.ssh/config
 nvim/.config/nvim/KeymapTracker/.id
-!general/.claude/settings.local.json

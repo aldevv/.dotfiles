@@ -4,14 +4,11 @@ Canonical docs: https://code.claude.com/docs/hooks. The spec evolves; cross-refe
 
 ## Where to put hook entries (this setup)
 
-User-level hooks split across two files. Pick by what you want shared between machines.
+Everything Claude reads at the user level lives in `$HOME/.claude/settings.json`. That file is a real file on disk, never tracked in dotfiles, and free to hold machine-specific paths, plugin internals, work-only tooling, and auto-written fields (`feedbackSurveyState`). Examples on the work box: airc plugin `guard.py`/`inject.py`, the three baton-work PreToolUse reminders (`CLAUDE-gh.md`, `validate-connector-changes`, `baton-admin-review-connector`), the `gh-pr-post-assign.sh` PostToolUse (hardcoded reviewer list).
 
-- `$HOME/.claude/settings.json` is a real file on disk, **machine-local**, never travels. Put entries here when they reference machine-specific paths, plugin internals, or work-specific tooling you do NOT want reproduced on other machines. Examples in this setup: airc plugin `guard.py`/`inject.py`, `context-mode-cache-heal.mjs`, `notify.sh` wiring, the statusline command, the enabled-plugins list, the three baton-work PreToolUse reminders (`CLAUDE-gh.md`, `validate-connector-changes`, `baton-admin-review-connector`), the `gh-pr-post-assign.sh` PostToolUse (hardcoded reviewer list).
-- `$HOME/.claude/settings.local.json` is **symlinked into dotfiles** (`$HOME/.dotfiles/general/.claude/settings.local.json`), so anything here travels and gets reproduced on every machine. Put entries here when you want the workflow on every box you log into. Examples in this setup: the generic PR/MR watch flow (`hunk-pre-pr.sh`, `pr-watch.sh`). Use `$HOME/...` (not `/home/<user>/...` or `/Users/<user>/...`) for command paths so the entry works on every machine.
+Cross-machine entries (PR/MR watch flow `pr-watch.sh`, `hunk-pre-pr.sh`, `notify.sh`, statusline, generic permissions, `autoMemoryEnabled`, etc.) live in `$HOME/.dotfiles/general/.claude/my-settings.json` and are merged into `$HOME/.claude/settings.json` by `$HOME/.claude/sync-settings.sh`. `sync-dotfiles` runs that script automatically when `my-settings.json` changes in a pull. Use `$HOME/...` (not `/home/<user>/...` or `/Users/<user>/...`) for command paths in `my-settings.json` so entries port to every machine.
 
-Claude Code merges hooks across both files at the user level, so runtime behavior is identical regardless of which file an entry lives in. Splitting is purely an authoring choice about portability.
-
-Note: the official docs only describe `settings.local.json` at the project level. The user-level form is undocumented but evidently honored (the existing `permissions`, `env`, `autoMemoryEnabled` keys at `$HOME/.claude/settings.local.json` are being applied, and the moved PR-watch hooks fire from there).
+The merge is additive: anything `settings.json` already has stays unless `my-settings.json` overrides the exact same scalar key. Arrays concatenate (with identical-JSON dedup), so adding a new generic hook to `my-settings.json` doesn't displace existing work hooks. `settings.local.json` is not part of this flow — at the user level it isn't read reliably.
 
 ## The two filters
 
