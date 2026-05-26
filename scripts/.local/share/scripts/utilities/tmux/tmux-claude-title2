@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# tmux-claude-title2 <pane-pid>
+# Print a 1-2 word kebab-case summary of the claude session running in the
+# given tmux pane, by reading the session JSONL directly. Use this when
+# Claude Code's pane_title is the static literal "Claude Code" (current
+# behavior on macOS) so summarizing pane_title produces "claude-code"
+# instead of a real summary.
+#
+# Resolution:
+#   pane_pid -> claude descendant PID -> PWD env -> ~/.claude/projects/<mangled-pwd>/<most-recent>.jsonl
+#   -> first user message -> sha1 cache -> claude -p summary
+
+set -u
+
+pane_pid="${1-}"
+[ -z "$pane_pid" ] && exit 0
+
+# Walk descendants of pane_pid via plain ps (pgrep -P is unreliable on macOS).
+# Returns one PID per line.
+descendants() {
+    local root="$1"
+    local snapshot
+    snapshot=$(ps -axo pid=,ppid= 2>/dev/null) || return
+    local stack=("$root")
+    while [ ${#stack[@]} -gt 0 ]; do
+        local pid="${stack[0]}"
+        stack=("${stack[@]:1}")
+        echo "$pid"
+        local kids
+        kids=$(printf '%s\n' "$snapshot" | awk -v p="$pid" '$2==p {print $1}')
+        for k in $kids; do stack+=("$k"); done
+    done
+}
+
+claude_pid=""
+for pid in $(descendants "$pane_pid"); do
+    [ "$pid" = "$pane_pid" ] && continue
+    comm=$(ps -o comm= -p "$pid" 2>/dev/null) || continue
+    base="${comm##*/}"
+    case "$base" in
+        claude|[0-9]*.[0-9]*.[0-9]*) claude_pid="$pid"; break ;;
+    esac
+done
+
+[ -z "$claude_pid" ] && exit 0
+
+# Pull PWD from the claude process env. ps eww outputs args + env on one line.
+env_blob=$(ps eww -p "$claude_pid" -o command= 2>/dev/null) || exit 0
+pwd_val=$(printf '%s\n' "$env_blob" | tr ' ' '\n' | awk -F= '$1=="PWD"{print substr($0,5); exit}')
+[ -z "$pwd_val" ] && exit 0
+
+mangled=$(printf '%s' "$pwd_val" | tr / -)
+proj_dir="$HOME/.claude/projects/${mangled}"
+[ -d "$proj_dir" ] || exit 0
+
+# Pick the most recently modified .jsonl in the project dir.
+jsonl=$(ls -t "$proj_dir"/*.jsonl 2>/dev/null | head -1)
+[ -z "$jsonl" ] || [ ! -f "$jsonl" ] && exit 0
+
+# Extract the first user message text. JSONL entries with type=user carry
+# message.content as either a string or a list of content blocks.
+first_user=$(grep -m1 '"type":"user"' "$jsonl" 2>/dev/null | python3 -c '
+import json, sys
+try:
+    d = json.loads(sys.stdin.read())
+    msg = d.get("message", {})
+    content = msg.get("content", "")
+    if isinstance(content, list):
+        for c in content:
+            if isinstance(c, dict) and c.get("type") == "text":
+                content = c.get("text", "")
+                break
+        else:
+            content = ""
+    if isinstance(content, str):
+        sys.stdout.write(content)
+except Exception:
+    pass
+' 2>/dev/null)
+
+[ -z "$first_user" ] && exit 0
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tmux-claude-title2"
+mkdir -p "$cache_dir"
+
+key=$(printf '%s' "$first_user" | shasum -a 1 2>/dev/null | cut -c1-16)
+[ -z "$key" ] && exit 0
+cache_file="$cache_dir/$key"
+
+if [ -s "$cache_file" ]; then
+    cat "$cache_file"
+    exit 0
+fi
+
+# Synchronous fallback while the background summary lands: take the first
+# meaningful word(s) of the user's first message.
+fallback=$(printf '%s' "$first_user" \
+    | head -c 80 \
+    | tr 'A-Z' 'a-z' \
+    | tr -c 'a-z0-9 ' ' ' \
+    | awk '{w1=$1; w2=$2; if (length(w1)>=3 && length(w2)>=3) print w1"-"w2; else print w1}' \
+    | sed -E 's/[^a-z0-9-]//g; s/^-+//; s/-+$//')
+[ -z "$fallback" ] && fallback="claude"
+printf '%s' "$fallback"
+
+command -v claude >/dev/null 2>&1 || exit 0
+
+if command -v timeout >/dev/null 2>&1; then
+    timeout_cmd=(timeout 30)
+elif command -v gtimeout >/dev/null 2>&1; then
+    timeout_cmd=(gtimeout 30)
+else
+    timeout_cmd=()
+fi
+
+(
+    lockdir="$cache_dir/$key.lockdir"
+    mkdir "$lockdir" 2>/dev/null || exit 0
+    trap 'rmdir "$lockdir" 2>/dev/null' EXIT
+
+    prompt="Summarize this user request in 1 or 2 lowercase words. If 2 words, join with '-' (no spaces). Prefer 1 word when sufficient. Output ONLY the summary token, no quotes, no period, no explanation. Request: $first_user"
+    out=$("${timeout_cmd[@]}" claude -p "$prompt" 2>/dev/null \
+        | head -n1 \
+        | tr -d '\r\n' \
+        | tr 'A-Z' 'a-z' \
+        | sed -E 's/[^a-z0-9-]//g; s/^-+//; s/-+$//')
+
+    if printf '%s' "$out" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)?$'; then
+        printf '%s' "$out" > "$cache_file"
+        tmux refresh-client -S 2>/dev/null || true
+    fi
+) </dev/null >/dev/null 2>&1 &
+
+disown 2>/dev/null || true
+exit 0

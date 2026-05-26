@@ -78,11 +78,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/tmux-mark-done.sh"
+            "command": "$HOME/.claude/hooks/tmux-mark-done.sh"
           },
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/notify.sh stop"
+            "command": "$HOME/.claude/hooks/notify.sh stop"
           }
         ]
       }
