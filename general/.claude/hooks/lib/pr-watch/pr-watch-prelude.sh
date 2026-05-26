@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared prelude for gh-pr-post-watch-{checks,comments}.sh.
+# Shared prelude for pr-watch.sh and the lib/pr-watch/* watchers.
 # Source this file; do not exec it.
 # Callers must have $INPUT (raw JSON stdin) set before calling these helpers.
 #
@@ -196,6 +196,7 @@ prelude_dedup_event() {
 
 # Acquire a flock on (cwd, branch, PR-number). One active watcher per PR.
 # Caller passes the URL; lock is held for the lifetime of the script via fd 9.
+# Requires `flock` on $PATH (linux: built-in; macOS: `brew install flock`).
 prelude_acquire_pr_lock() {
   local prefix=$1 url=$2
   local repo_dir branch pr_num key dir
