@@ -174,22 +174,6 @@ if [ "$pre_merge" != "$post_merge" ]; then
   fi
 fi
 
-# 2c. If `general/.claude/my-settings.json` changed in this merge, sync its
-# new values into `~/.claude/settings.json`. `my-settings.json` is the
-# canonical "travels via dotfiles" copy of the user-level settings; the
-# sync script spawns a one-shot `claude -p` session that merges new values
-# in without removing anything the local `settings.json` already has
-# (work hooks, auto-written fields, etc.). Failures are logged but never
-# abort the sync.
-if [ "$pre_merge" != "$post_merge" ] \
-   && git diff "$pre_merge" "$post_merge" --name-only | grep -qx 'general/.claude/my-settings.json'; then
-  if [ -x "$HOME/.claude/sync-settings.sh" ]; then
-    "$HOME/.claude/sync-settings.sh" || echo "sync-settings exited $?" >&2
-  else
-    echo "sync-settings: $HOME/.claude/sync-settings.sh missing or not executable" >&2
-  fi
-fi
-
 # 3. If the merge added new files, bail out so Step 4 can restow before we push.
 if [ "$pre_merge" != "$post_merge" ] \
    && [ -n "$(git diff "$pre_merge" "$post_merge" --name-only --diff-filter=A)" ]; then

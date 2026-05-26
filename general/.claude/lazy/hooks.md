@@ -6,9 +6,9 @@ Canonical docs: https://code.claude.com/docs/hooks. The spec evolves; cross-refe
 
 Everything Claude reads at the user level lives in `$HOME/.claude/settings.json`. That file is a real file on disk, never tracked in dotfiles, and free to hold machine-specific paths, plugin internals, work-only tooling, and auto-written fields (`feedbackSurveyState`). Examples on the work box: airc plugin `guard.py`/`inject.py`, the three baton-work PreToolUse reminders (`CLAUDE-gh.md`, `validate-connector-changes`, `baton-admin-review-connector`), the `gh-pr-post-assign.sh` PostToolUse (hardcoded reviewer list).
 
-Cross-machine entries (PR/MR watch flow `pr-watch.sh`, `hunk-pre-pr.sh`, `notify.sh`, statusline, generic permissions, `autoMemoryEnabled`, etc.) live in `$HOME/.dotfiles/general/.claude/my-settings.json` and are merged into `$HOME/.claude/settings.json` by `$HOME/.claude/sync-settings.sh`. `sync-dotfiles` runs that script automatically when `my-settings.json` changes in a pull. Use `$HOME/...` (not `/home/<user>/...` or `/Users/<user>/...`) for command paths in `my-settings.json` so entries port to every machine.
+Cross-machine entries (PR/MR watch flow `pr-watch.sh`, `hunk-pre-pr.sh`, `notify.sh`, statusline, generic permissions, `autoMemoryEnabled`, etc.) live in `$HOME/.dotfiles/general/.claude/my-settings.json`. That file is the canonical "travels via dotfiles" copy; getting its values into `$HOME/.claude/settings.json` on each machine is a manual step (merge by hand, or with whatever tool you prefer). Use `$HOME/...` (not `/home/<user>/...` or `/Users/<user>/...`) for command paths in `my-settings.json` so entries port to every machine.
 
-The merge is additive: anything `settings.json` already has stays unless `my-settings.json` overrides the exact same scalar key. Arrays concatenate (with identical-JSON dedup), so adding a new generic hook to `my-settings.json` doesn't displace existing work hooks. `settings.local.json` is not part of this flow — at the user level it isn't read reliably.
+`settings.local.json` is not part of this flow — at the user level it isn't read reliably.
 
 ## The two filters
 
