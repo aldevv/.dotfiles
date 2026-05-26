@@ -322,7 +322,7 @@ The previously-applied my-settings content is cached at `~/.cache/sync-dotfiles/
 "$HOME/.claude/skills/sync-dotfiles/scripts/apply-my-settings.sh"
 ```
 
-Exit codes: `0` updated (or no-op merge), `1` error (invalid JSON / missing jq / corrupted cache), `2` skipped because my-settings.json was unchanged since last apply. Treat any of them as non-fatal — Step 6 reports the outcome.
+Exit codes: `0` success (updated, no-op merge, or skipped because my-settings.json was unchanged since last apply), `1` error (invalid JSON / missing jq / corrupted cache). The stdout line distinguishes "updated" / "no diff after merge" / "unchanged since last apply, skipping" for Step 6's report.
 
 **Manual force-reapply:** if you need to re-merge from scratch (e.g. after blowing away settings.json and wanting the overlay back), delete `~/.cache/sync-dotfiles/my-settings-applied.json` first. Without a cache, strip is a no-op and the script falls back to additive merge.
 
