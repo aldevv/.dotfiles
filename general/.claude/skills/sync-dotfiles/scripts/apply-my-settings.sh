@@ -115,7 +115,8 @@ fi
 if cmp -s "$tmp" "$DST"; then
   echo "apply-my-settings: no diff after merge"
 else
-  chmod --reference="$DST" "$tmp"
+  mode=$(stat -c '%a' "$DST" 2>/dev/null || stat -f '%Lp' "$DST")
+  chmod "$mode" "$tmp"
   mv -f "$tmp" "$DST"
   echo "apply-my-settings: settings.json updated"
 fi
