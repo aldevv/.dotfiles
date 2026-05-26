@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Named _vFa (not _vF) because case-insensitive filesystems (macOS APFS,
+# default Windows) collapse _vF and _vf into the same path; only one survives
+# on disk. Linux/ext4 is case-sensitive and would tolerate _vF, but the
+# dotfiles repo travels to macOS so we pick a name that doesn't collide.
+
+search_dir="${1:-.}"
+
+FZF_DEFAULT_COMMAND="fd --follow --hidden -t d . $search_dir"
+cmd="fzf --bind 'tab:reload(fd -uuu --follow --hidden . $search_dir)' --preview 'if file {} | grep -i -q 'directory'; then ls --color {}; else echo \"{} is a binary file\"; fi'"
+name="$(eval $cmd)"
+if [[ -z $name ]]; then
+  return
+fi
+
+[ -n "$name" ] &&
+nvim "$name"
