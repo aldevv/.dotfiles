@@ -1,0 +1,60 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(systemctl:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(sudo systemctl stop:*)",
+      "Bash(sudo systemctl disable:*)",
+      "Bash(sudo rm:*)",
+      "Bash(sudo systemctl:*)",
+      "Bash(ln:*)",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "autoMemoryEnabled": false,
+  "env": {
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/kanon/.claude/hooks/hunk-pre-pr.sh",
+            "if": "Bash(gh pr create *)"
+          },
+          {
+            "type": "command",
+            "command": "/home/kanon/.claude/hooks/hunk-pre-pr.sh",
+            "if": "Bash(glab mr create *)"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/kanon/.claude/hooks/gh-pr-post-watch-checks.sh",
+            "timeout": 3600,
+            "statusMessage": "Watching PR/MR checks in background",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/home/kanon/.claude/hooks/gh-pr-post-watch-comments.sh",
+            "timeout": 3600,
+            "statusMessage": "Watching PR/MR review comments in background",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

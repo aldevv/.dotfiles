@@ -47,10 +47,7 @@ INPUT=$(cat)
 prelude_dedup_event "pr-comments" || exit 0
 prelude_should_proceed || exit 0
 
-REPO_DIR=$(printf '%s' "$INPUT" | jq -r '.cwd // ""')
-if [ -z "$REPO_DIR" ] || [ ! -d "$REPO_DIR" ]; then
-  REPO_DIR=$(pwd)
-fi
+prelude_resolve_repo_dir
 echo "REPO_DIR: $REPO_DIR"
 
 STDOUT_TEXT=$(printf '%s' "$INPUT" | jq -r '.tool_response.stdout // ""')
@@ -113,6 +110,9 @@ case "$PLATFORM" in
     echo "host=$HOST proj=$PROJ_PATH iid=$MR_IID"
     ;;
 esac
+
+# Verify the push actually targeted this PR (repo and branch).
+prelude_verify_push "$URL" "$PLATFORM" "$REPO_DIR" || exit 0
 
 # Skip merged/closed PRs/MRs early — saves the 20-minute polling loop.
 prelude_pr_is_open "$URL" || exit 0

@@ -42,10 +42,7 @@ INPUT=$(cat)
 prelude_dedup_event "pr-watch" || exit 0
 prelude_should_proceed || exit 0
 
-REPO_DIR=$(printf '%s' "$INPUT" | jq -r '.cwd // ""')
-if [ -z "$REPO_DIR" ] || [ ! -d "$REPO_DIR" ]; then
-  REPO_DIR=$(pwd)
-fi
+prelude_resolve_repo_dir
 echo "REPO_DIR: $REPO_DIR"
 
 TOOL_CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""')
@@ -113,6 +110,9 @@ if [ "$PLATFORM" = "gitlab" ]; then
   MR_IID=$(printf '%s' "$URL" | sed -E 's|^.*/merge_requests/([0-9]+).*$|\1|')
   PROJ_PATH_ENC=$(printf '%s' "$PROJ_PATH" | jq -sRr '@uri')
 fi
+
+# Verify the push actually targeted this PR (repo and branch).
+prelude_verify_push "$URL" "$PLATFORM" "$REPO_DIR" || exit 0
 
 # Skip merged/closed PRs/MRs early — saves the long CI poll.
 prelude_pr_is_open "$URL" || exit 0

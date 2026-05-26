@@ -2,6 +2,17 @@
 
 Canonical docs: https://code.claude.com/docs/hooks. The spec evolves; cross-reference there for matcher formats, the full event list, and JSON schema details. This file captures the load-bearing semantics, the debugging recipes, and the correct/incorrect patterns learned from real sessions.
 
+## Where to put hook entries (this setup)
+
+User-level hooks split across two files. Pick by what you want shared between machines.
+
+- `~/.claude/settings.json` is a real file on disk, **machine-local**, never travels. Put entries here when they reference machine-specific paths, plugin internals, or work-specific tooling you do NOT want reproduced on other machines. Examples in this setup: airc plugin `guard.py`/`inject.py`, `context-mode-cache-heal.mjs`, `notify.sh` wiring, the statusline command, the enabled-plugins list, the three baton-work PreToolUse reminders (`CLAUDE-gh.md`, `validate-connector-changes`, `baton-admin-review-connector`), the `gh-pr-post-assign.sh` PostToolUse (hardcoded reviewer list).
+- `~/.claude/settings.local.json` is **symlinked into dotfiles** (`~/.dotfiles/general/.claude/settings.local.json`), so anything here travels and gets reproduced on every machine. Put entries here when you want the workflow on every box you log into. Examples in this setup: the generic PR/MR watch flow (`hunk-pre-pr.sh`, `gh-pr-post-watch-checks.sh`, `gh-pr-post-watch-comments.sh`).
+
+Claude Code merges hooks across both files at the user level, so runtime behavior is identical regardless of which file an entry lives in. Splitting is purely an authoring choice about portability.
+
+Note: the official docs only describe `settings.local.json` at the project level. The user-level form is undocumented but evidently honored (the existing `permissions`, `env`, `autoMemoryEnabled` keys at `~/.claude/settings.local.json` are being applied, and the moved PR-watch hooks fire from there).
+
 ## The two filters
 
 Each hook handler goes through two filters before its command runs:
@@ -182,8 +193,9 @@ export MY_HOOK_ACTIVE=1
 - DO: keep the `if:` clause AND add a positive in-script grep at the top of the script (see "Fix pattern" above). Bails in milliseconds when the parser fail-opened.
 
 **Catching all variants of a command**
-- DON'T: one matcher `Bash(git push *)`. Misses the bare `git push`.
-- DO: three sibling matchers `Bash(git push)`, `Bash(git push *)`, `Bash(git push:*)`. Covers bare, args, colon form.
+- DON'T: one matcher `Bash(git push *)`. Misses the bare `git push`. Also fail-opens on complex commands, so even the matchers you do define stop being reliable.
+- DO (better): drop the `if:` clause entirely, write one entry per command with no per-tool filter, and put a positive command-type grep at the top of the script (see "Fix pattern" under the fail-open section). One entry covers bare / args / colon-form / complex-command cases uniformly, and the script bails in milliseconds when the gate fails.
+- DO (only when the script has no in-script gate): three sibling matchers `Bash(git push)`, `Bash(git push *)`, `Bash(git push:*)`. Verbose but works for cheap hooks where you don't want the script to spawn at all on non-matches.
 
 **Multiple `if:` clauses, one tool call**
 - DON'T: let N siblings fire N concurrent watcher instances on the same push.
@@ -204,6 +216,25 @@ export MY_HOOK_ACTIVE=1
 **Signaling "block" via the wrong exit code**
 - DON'T: `exit 1` from a script that meant to block. Non-blocking error, the tool runs anyway.
 - DO: `exit 2` for blocking + stderr message. Or `exit 0` with JSON `decision: "block"`.
+
+**Resolving the actual repo dir from a hook**
+- DON'T: trust `INPUT.cwd` blindly. It's Claude's session cwd, not the post-`cd` target. A `cd ~/.dotfiles && git push` from a session rooted in `baton-sage-intacct` shows `cwd=baton-sage-intacct`, so a watcher will look up "the PR for branch `impl`" in the wrong repo and misfire.
+- DO: parse the last `cd <path>` from `tool_input.command`, expand `~` / `$HOME` without `eval`, fall back to `INPUT.cwd` only if no `cd` was found.
+  ```bash
+  cd_path=$(printf '%s\n' "$tool_cmd" \
+    | grep -oE '(^|[[:space:]]|;|&&|\|\|)cd[[:space:]]+[^[:space:]&;|]+' \
+    | tail -n1 | sed -E 's/^.*cd[[:space:]]+//')
+  case "$cd_path" in
+    '~') cd_path="$HOME" ;;
+    '~/'*) cd_path="$HOME/${cd_path#'~/'}" ;;   # single-quote the pattern to block tilde expansion
+    '$HOME') cd_path="$HOME" ;;
+    '$HOME/'*) cd_path="$HOME/${cd_path#\$HOME/}" ;;
+  esac
+  ```
+
+**No-op push triggering a CI watcher**
+- DON'T: assume every `git push` that the tool returns rc=0 from actually moved the remote. `Everything up-to-date` is rc=0 but the PR head didn't change.
+- DO: grep `tool_response.stdout`+`stderr` for `everything up-to-date` and bail. The PR's existing CI shouldn't be re-watched on a no-op push.
 
 ## Things to verify before assuming the hook is broken
 

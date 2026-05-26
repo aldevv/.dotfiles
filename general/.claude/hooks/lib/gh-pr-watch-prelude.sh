@@ -21,7 +21,7 @@
 # never watch (tag pushes, deletes, dry-runs, mirror/all, ci-skip), or if
 # the current branch is the repo's default branch.
 prelude_should_proceed() {
-  local exit_code tool_cmd repo_dir branch default_branch
+  local exit_code tool_cmd branch default_branch push_output
 
   exit_code=$(printf '%s' "$INPUT" | jq -r '.tool_response.exit_code // 0')
   case "$exit_code" in
@@ -49,13 +49,18 @@ prelude_should_proceed() {
       echo "git push refspec deletion (:branch) — exiting"
       return 1
     fi
+    push_output=$(printf '%s' "$INPUT" | jq -r '(.tool_response.stdout // "") + "\n" + (.tool_response.stderr // "")')
+    if printf '%s' "$push_output" | grep -qiE 'everything[[:space:]]+up.?to.?date'; then
+      echo "git push was a no-op (Everything up-to-date) — exiting"
+      return 1
+    fi
   fi
 
-  repo_dir=$(printf '%s' "$INPUT" | jq -r '.cwd // ""')
-  [ -d "$repo_dir" ] || repo_dir=$(pwd)
-  if git -C "$repo_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    branch=$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-    default_branch=$(git -C "$repo_dir" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||' || echo "")
+  prelude_resolve_repo_dir
+
+  if git -C "$REPO_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    branch=$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    default_branch=$(git -C "$REPO_DIR" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||' || echo "")
     if [ -n "$branch" ]; then
       case "$branch" in
         HEAD)
@@ -66,6 +71,107 @@ prelude_should_proceed() {
     fi
   fi
 
+  return 0
+}
+
+# Resolve the actual repo dir the command is operating in.
+# INPUT.cwd is Claude's session cwd at fire time, which does NOT follow `cd`
+# inside the bash subshell. If the user ran `cd ~/.dotfiles && git push` while
+# Claude's session was rooted in a different repo, INPUT.cwd points to the
+# wrong tree and the watcher misfires on that tree's open PR. Honor the last
+# `cd <path>` in the command when present; fall back to INPUT.cwd otherwise.
+# Sets the global REPO_DIR.
+prelude_resolve_repo_dir() {
+  local cwd_field tool_cmd cd_path
+  cwd_field=$(printf '%s' "$INPUT" | jq -r '.cwd // ""')
+  tool_cmd=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""')
+
+  cd_path=$(printf '%s\n' "$tool_cmd" \
+    | grep -oE '(^|[[:space:]]|;|&&|\|\|)cd[[:space:]]+[^[:space:]&;|]+' \
+    | tail -n1 \
+    | sed -E 's/^.*cd[[:space:]]+//')
+
+  if [ -n "$cd_path" ]; then
+    case "$cd_path" in
+      '~') cd_path="$HOME" ;;
+      '~/'*) cd_path="$HOME/${cd_path#'~/'}" ;;
+      '$HOME') cd_path="$HOME" ;;
+      '$HOME/'*) cd_path="$HOME/${cd_path#\$HOME/}" ;;
+    esac
+    if [ -d "$cd_path" ]; then
+      REPO_DIR="$cd_path"
+      return 0
+    fi
+  fi
+
+  if [ -n "$cwd_field" ] && [ -d "$cwd_field" ]; then
+    REPO_DIR="$cwd_field"
+    return 0
+  fi
+  REPO_DIR=$(pwd)
+  return 0
+}
+
+# Verify a git push event actually targeted the resolved PR. Parses the push
+# output (the `To <remote>` line and the `<src> -> <dst>` ref-update lines) and
+# checks BOTH: the pushed-to owner/repo matches the PR's owner/repo, and the
+# PR's head branch is among the branches just pushed. Without this, the watcher
+# misfires on pushes to a different repo or to a different branch in the same
+# repo when another branch happens to have an open PR.
+#
+# Args: $1 = URL (resolved PR URL), $2 = PLATFORM (github|gitlab), $3 = REPO_DIR.
+# No-op for non-git-push triggers (gh pr create / glab mr create resolve the URL
+# from stdout directly, so the push-target check doesn't apply).
+# Returns 1 if the push went elsewhere.
+prelude_verify_push() {
+  local url=$1 platform=$2 repo_dir=$3
+  local tool_cmd push_output push_remote_raw push_repo pushed_branches
+  local pr_repo pr_head mr_num
+
+  tool_cmd=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""')
+  if ! printf '%s' "$tool_cmd" | grep -qE '(^|[[:space:]])git[[:space:]]+push([[:space:]]|$)'; then
+    return 0
+  fi
+
+  push_output=$(printf '%s' "$INPUT" | jq -r '(.tool_response.stdout // "") + "\n" + (.tool_response.stderr // "")')
+  push_remote_raw=$(printf '%s' "$push_output" | grep -E '^To ' | head -n1 | sed -E 's/^To +//')
+  push_repo=$(printf '%s' "$push_remote_raw" \
+    | sed -E 's|^git@||; s|^https?://||; s|^ssh://([^/]+@)?||' \
+    | sed -E 's|^([^/:]+):|\1/|' \
+    | sed -E 's|\.git$||' \
+    | sed -E 's|^[^/]+/||')
+
+  pushed_branches=$(printf '%s' "$push_output" | awk '{
+    for (i=1; i<=NF; i++) if ($i == "->") print $(i+1)
+  }')
+
+  case "$platform" in
+    github)
+      pr_repo=$(printf '%s' "$url" | sed -E 's|^https?://github\.com/([^/]+/[^/]+)/.*|\1|')
+      if command -v gh >/dev/null 2>&1; then
+        pr_head=$(gh pr view "$url" --json headRefName --jq '.headRefName // ""' 2>/dev/null || true)
+      fi
+      ;;
+    gitlab)
+      pr_repo=$(printf '%s' "$url" | sed -E 's|^https?://[^/]+/(.+)/-/merge_requests/[0-9]+.*|\1|')
+      mr_num=$(printf '%s' "$url" | grep -Eo '[0-9]+$')
+      if command -v glab >/dev/null 2>&1 && [ -n "$mr_num" ]; then
+        pr_head=$(cd "$repo_dir" && glab mr view "$mr_num" --output json 2>/dev/null | jq -r '.source_branch // ""' || true)
+      fi
+      ;;
+  esac
+
+  if [ -n "$push_repo" ] && [ -n "$pr_repo" ] && [ "$push_repo" != "$pr_repo" ]; then
+    echo "push target '$push_repo' does not match PR repo '$pr_repo' — exiting"
+    return 1
+  fi
+
+  if [ -n "$pushed_branches" ] && [ -n "$pr_head" ]; then
+    if ! printf '%s\n' "$pushed_branches" | grep -Fxq "$pr_head"; then
+      echo "PR head branch '$pr_head' was not in pushed branches ($pushed_branches) — exiting"
+      return 1
+    fi
+  fi
   return 0
 }
 
