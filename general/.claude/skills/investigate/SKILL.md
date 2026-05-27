@@ -79,16 +79,25 @@ Return:
 
 After all agents return, produce a single user-facing report.
 
-**Structure:**
-1. **Result** — one sentence: "Found" / "Not found" / "Conflicting evidence"
-2. **Answer** — the actual finding. Keep it short:
+**The very first line of the report MUST be a verdict line — bold, unambiguous, one sentence.**
+This is the most important part. The user should not have to read past the first line to know
+whether the thing they asked about exists or not.
+
+Verdict line formats (pick one):
+- `**Found:** <one-sentence summary of what was found>`
+- `**Not found:** <one-sentence explanation of why — e.g. "Sage does not have per-object permission identifiers; all user objects share a single 'Users' permission.">`
+- `**Conflicting evidence:** <one sentence naming the conflict>`
+
+After the verdict line, add the rest of the report:
+
+1. **Answer** — the actual finding. Keep it short:
    - Simple factual answer (a field name, a boolean, a URL): one line.
    - Moderately complex (several related facts): a short bulleted list, no more than 5 bullets.
    - Complex (multiple layers, caveats, version differences): a short prose paragraph plus
      a caveats sub-section. Still aim for under 150 words total.
-3. **Sources** — bulleted list; every claim must trace to at least one URL. No source = omit
+2. **Sources** — bulleted list; every claim must trace to at least one URL. No source = omit
    the claim.
-4. **Caveats** (only if present) — things that might invalidate the answer in specific
+3. **Caveats** (only if present) — things that might invalidate the answer in specific
    contexts (version, region, plan tier, etc.).
 
 **Confidence label rules:**

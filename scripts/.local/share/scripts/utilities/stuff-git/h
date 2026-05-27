@@ -2,7 +2,7 @@
 # h: thin wrapper around `hunk` plus one shortcut for URLs.
 #
 # Usage:
-#   h                                                  exec hunk (its own no-arg behavior)
+#   h                                                  git fetch + hunk diff origin/<main-or-master>
 #   h <hunk-subcommand> [args...]                      exec hunk "$@"
 #   h https://github.com/owner/repo                    clone via _clone, hunk diff origin/<main>
 #   h https://github.com/owner/repo/pull/123           clone, fetch pull/123/head, hunk diff origin/<base>...origin/pr/123
@@ -21,7 +21,7 @@ usage() {
   cat <<'EOF'
 Usage: h [<github-or-gitlab-url> | <hunk-subcommand> [args...]]
 
-  no arg                                    exec hunk
+  no arg                                    git fetch + hunk diff origin/<main-or-master>
   github/gitlab repo URL                    clone, hunk diff origin/<main>
   github PR URL / gitlab MR URL             clone, fetch head, diff base..head
   anything else                             exec hunk with all args
@@ -35,13 +35,34 @@ case "${1:-}" in
   -h|--help) usage; exit 0 ;;
 esac
 
+detect_base() {
+  local b
+  b=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+  b="${b#origin/}"
+  if [[ -z "$b" ]]; then
+    for cand in main master; do
+      git rev-parse --verify --quiet "origin/$cand" >/dev/null 2>&1 \
+        && { b="$cand"; break; }
+    done
+  fi
+  echo "${b:-main}"
+}
+
 arg="${1:-}"
 
-# Pass-through path: no arg, or arg doesn't look like an http(s) URL.
+# No arg: fetch and diff against origin/<main-or-master>.
+if [[ $# -eq 0 ]]; then
+  git rev-parse --git-dir >/dev/null 2>&1 \
+    || { echo "h: not in a git repo" >&2; exit 2; }
+  git fetch --quiet origin 2>/dev/null || true
+  base=$(detect_base)
+  git rev-parse --verify --quiet "origin/$base" >/dev/null 2>&1 \
+    || { echo "h: origin/$base does not exist" >&2; exit 2; }
+  exec hunk diff "origin/$base"
+fi
+
+# Pass-through path: arg doesn't look like an http(s) URL.
 if [[ ! "$arg" =~ ^https?:// ]]; then
-  if [[ $# -eq 0 ]]; then
-    exec hunk
-  fi
   exec hunk "$@"
 fi
 
@@ -158,19 +179,6 @@ fi
 if (( ! just_cloned )); then
   git fetch --quiet origin 2>/dev/null || true
 fi
-
-detect_base() {
-  local b
-  b=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
-  b="${b#origin/}"
-  if [[ -z "$b" ]]; then
-    for cand in main master; do
-      git rev-parse --verify --quiet "origin/$cand" >/dev/null 2>&1 \
-        && { b="$cand"; break; }
-    done
-  fi
-  echo "${b:-main}"
-}
 
 if [[ -z "$pr_num" ]]; then
   base=$(detect_base)

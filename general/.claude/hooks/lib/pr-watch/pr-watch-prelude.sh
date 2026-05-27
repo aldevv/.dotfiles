@@ -161,7 +161,9 @@ prelude_verify_push() {
       ;;
   esac
 
-  if [ -n "$push_repo" ] && [ -n "$pr_repo" ] && [ "$push_repo" != "$pr_repo" ]; then
+  if [ -n "$push_repo" ] && [ -n "$pr_repo" ] \
+      && [ "$(printf '%s' "$push_repo" | tr '[:upper:]' '[:lower:]')" \
+           != "$(printf '%s' "$pr_repo"   | tr '[:upper:]' '[:lower:]')" ]; then
     echo "push target '$push_repo' does not match PR repo '$pr_repo' — exiting"
     return 1
   fi

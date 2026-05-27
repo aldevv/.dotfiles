@@ -105,6 +105,38 @@ watch_comments() {
     return 0
   fi
 
+  # If the bot left inline review comments and every one of them is outdated, treat the review as stale and skip spawn.
+  local inline_total=0 non_outdated=0
+  case "$PLATFORM" in
+    github)
+      local pr_number repo_path inline_json
+      pr_number=$(printf '%s' "$URL" | grep -Eo '[0-9]+$')
+      repo_path=$(printf '%s' "$URL" | sed -E 's|^https?://github\.com/([^/]+/[^/]+)/.*|\1|')
+      if [ -n "$pr_number" ] && [ -n "$repo_path" ] && command -v gh >/dev/null 2>&1; then
+        inline_json=$(gh api "repos/${repo_path}/pulls/${pr_number}/comments?per_page=100" --paginate 2>/dev/null \
+                        | jq -s 'add // []' 2>/dev/null || echo '[]')
+        inline_total=$(printf '%s' "$inline_json" | jq -r '[.[] | select(.user.login | startswith("github-actions"))] | length' 2>/dev/null || echo 0)
+        non_outdated=$(printf '%s' "$inline_json" | jq -r '[.[] | select(.user.login | startswith("github-actions")) | select(.position != null)] | length' 2>/dev/null || echo 0)
+      fi
+      ;;
+    gitlab)
+      local discussions_json
+      if command -v glab >/dev/null 2>&1; then
+        discussions_json=$(glab api --hostname "$HOST" "projects/${PROJ_PATH_ENC}/merge_requests/${MR_IID}/discussions?per_page=100" --paginate 2>/dev/null \
+                            | jq -s 'add // []' 2>/dev/null || echo '[]')
+        inline_total=$(printf '%s' "$discussions_json" | jq --arg bot "$gitlab_bot" '[.[] | .notes[]? | select(.author.username == $bot and .type == "DiffNote")] | length' 2>/dev/null || echo 0)
+        non_outdated=$(printf '%s' "$discussions_json" | jq --arg bot "$gitlab_bot" --arg head "$HEAD_SHA" '[.[] | .notes[]? | select(.author.username == $bot and .type == "DiffNote" and ((.position.head_sha // "") == $head))] | length' 2>/dev/null || echo 0)
+      fi
+      ;;
+  esac
+  inline_total=${inline_total:-0}
+  non_outdated=${non_outdated:-0}
+  echo "[comments] inline bot comments: total=$inline_total non_outdated=$non_outdated"
+  if [ "$inline_total" -gt 0 ] && [ "$non_outdated" -eq 0 ]; then
+    echo "[comments] all inline bot comments are outdated -- skip spawn"
+    return 0
+  fi
+
   # --- Notify (purple) ---
   local title
   if [ "$blocking" -gt 0 ]; then
