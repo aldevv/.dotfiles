@@ -7,8 +7,10 @@
 # instead of a real summary.
 #
 # Resolution:
-#   pane_pid -> claude descendant PID -> PWD env -> ~/.claude/projects/<mangled-pwd>/<most-recent>.jsonl
-#   -> first user message -> sha1 cache -> claude -p summary
+#   pane_pid -> claude descendant PID -> PWD env -> ~/.claude/projects/<mangled-pwd>/
+#   -> jsonl whose first user-message timestamp is closest to (and not before)
+#      the claude process start time -> first user message -> sha1 cache
+#   -> claude -p summary
 
 set -u
 
@@ -53,13 +55,20 @@ mangled=$(printf '%s' "$pwd_val" | tr / -)
 proj_dir="$HOME/.claude/projects/${mangled}"
 [ -d "$proj_dir" ] || exit 0
 
-# Pick the most recently modified .jsonl in the project dir.
-jsonl=$(ls -t "$proj_dir"/*.jsonl 2>/dev/null | head -1)
-[ -z "$jsonl" ] || [ ! -f "$jsonl" ] && exit 0
+# Map this pane's claude_pid to its own jsonl. Plain `ls -t` picks the same
+# jsonl for every pane sharing a cwd, so all windows end up with the title of
+# whichever session was last active. Match by the earliest user-message
+# timestamp at-or-after the claude process start time: for fresh sessions
+# that's the session's first message, for resumed (`claude -c`) sessions it's
+# the first new message after resume. Either way the smallest delta wins.
+proc_start_epoch=$(ps -o lstart= -p "$claude_pid" 2>/dev/null \
+    | awk '{$1=$1; print}' \
+    | xargs -I{} date -j -f "%a %b %e %T %Y" "{}" "+%s" 2>/dev/null)
 
-# Extract the first user message text. JSONL entries with type=user carry
-# message.content as either a string or a list of content blocks.
-first_user=$(grep -m1 '"type":"user"' "$jsonl" 2>/dev/null | python3 -c '
+if [ -z "$proc_start_epoch" ]; then
+    jsonl=$(ls -t "$proj_dir"/*.jsonl 2>/dev/null | head -1)
+    [ -z "$jsonl" ] || [ ! -f "$jsonl" ] && exit 0
+    first_user=$(grep -m1 '"type":"user"' "$jsonl" 2>/dev/null | python3 -c '
 import json, sys
 try:
     d = json.loads(sys.stdin.read())
@@ -77,6 +86,43 @@ try:
 except Exception:
     pass
 ' 2>/dev/null)
+else
+    first_user=$(python3 - "$proj_dir" "$proc_start_epoch" <<'PY' 2>/dev/null
+import json, os, sys
+from datetime import datetime, timezone
+proj_dir, proc_start = sys.argv[1], int(sys.argv[2])
+def parse_ts(s):
+    try: return datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp()
+    except Exception: return None
+def text_of(msg):
+    c = msg.get("content", "") if isinstance(msg, dict) else ""
+    if isinstance(c, list):
+        for b in c:
+            if isinstance(b, dict) and b.get("type") == "text":
+                return b.get("text", "")
+        return ""
+    return c if isinstance(c, str) else ""
+best = (10**9, "")
+for name in os.listdir(proj_dir):
+    if not name.endswith(".jsonl"): continue
+    path = os.path.join(proj_dir, name)
+    try:
+        with open(path) as f:
+            for line in f:
+                try: d = json.loads(line)
+                except Exception: continue
+                if d.get("type") != "user": continue
+                ts = parse_ts(d.get("timestamp", ""))
+                if ts is None or ts < proc_start - 5: continue
+                delta = abs(int(ts) - proc_start)
+                if delta < best[0]:
+                    best = (delta, text_of(d.get("message", {})))
+                break
+    except Exception: continue
+sys.stdout.write(best[1] or "")
+PY
+)
+fi
 
 [ -z "$first_user" ] && exit 0
 
@@ -93,12 +139,22 @@ if [ -s "$cache_file" ]; then
 fi
 
 # Synchronous fallback while the background summary lands: take the first
-# meaningful word(s) of the user's first message.
+# meaningful word(s) of the user's first message, up to 3.
 fallback=$(printf '%s' "$first_user" \
-    | head -c 80 \
+    | head -c 120 \
     | tr 'A-Z' 'a-z' \
     | tr -c 'a-z0-9 ' ' ' \
-    | awk '{w1=$1; w2=$2; if (length(w1)>=3 && length(w2)>=3) print w1"-"w2; else print w1}' \
+    | awk '{
+        n=0; out="";
+        for (i=1; i<=NF && n<3; i++) {
+            if (length($i) >= 3) {
+                out = (out=="" ? $i : out"-"$i);
+                n++;
+            }
+        }
+        if (out=="" && NF>0) out=$1;
+        print out;
+      }' \
     | sed -E 's/[^a-z0-9-]//g; s/^-+//; s/-+$//')
 [ -z "$fallback" ] && fallback="claude"
 printf '%s' "$fallback"
@@ -118,14 +174,14 @@ fi
     mkdir "$lockdir" 2>/dev/null || exit 0
     trap 'rmdir "$lockdir" 2>/dev/null' EXIT
 
-    prompt="Summarize this user request in 1 or 2 lowercase words. If 2 words, join with '-' (no spaces). Prefer 1 word when sufficient. Output ONLY the summary token, no quotes, no period, no explanation. Request: $first_user"
+    prompt="Summarize this user request in 1 to 5 lowercase words, joined with '-' (no spaces). Use as few words as possible while still describing the task. Output ONLY the summary token, no quotes, no period, no explanation. Request: $first_user"
     out=$("${timeout_cmd[@]}" claude -p "$prompt" 2>/dev/null \
         | head -n1 \
         | tr -d '\r\n' \
         | tr 'A-Z' 'a-z' \
         | sed -E 's/[^a-z0-9-]//g; s/^-+//; s/-+$//')
 
-    if printf '%s' "$out" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)?$'; then
+    if printf '%s' "$out" | grep -qE '^[a-z0-9]+(-[a-z0-9]+){0,4}$'; then
         printf '%s' "$out" > "$cache_file"
         tmux refresh-client -S 2>/dev/null || true
     fi
