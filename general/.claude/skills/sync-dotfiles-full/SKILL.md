@@ -233,7 +233,7 @@ Cache: `~/.cache/sync-dotfiles/my-settings-applied.json` records what was last a
 "$HOME/.claude/skills/sync-dotfiles/scripts/apply-my-settings.sh"
 ```
 
-Exit codes: `0` updated (or no-op merge), `1` error, `2` skipped because my-settings.json is unchanged since last apply. Treat any of them as non-fatal — Step 8 reports the outcome.
+Exit codes: `0` success (updated, no-op merge, or skipped because my-settings.json is unchanged since last apply), `1` error. The stdout line distinguishes "updated" / "no diff after merge" / "unchanged since last apply, skipping" for Step 8's report.
 
 ---
 

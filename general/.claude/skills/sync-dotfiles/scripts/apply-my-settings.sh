@@ -21,9 +21,9 @@
 # with no work.
 #
 # Exits:
-#   0  success (settings.json updated or already current)
+#   0  success (settings.json updated, already current, or skipped because
+#               my-settings.json was unchanged since last apply)
 #   1  error (missing tool / unreadable input / invalid JSON)
-#   2  skipped (my-settings.json unchanged since last apply)
 
 set -euo pipefail
 
@@ -37,7 +37,7 @@ command -v jq >/dev/null || { echo "apply-my-settings: jq is required"; exit 1; 
 
 if [ -f "$PREV" ] && cmp -s "$SRC" "$PREV"; then
   echo "apply-my-settings: my-settings.json unchanged since last apply, skipping"
-  exit 2
+  exit 0
 fi
 
 mkdir -p "$CACHE_DIR"
