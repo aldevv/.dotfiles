@@ -22,7 +22,7 @@ watch_comments() {
   local gitlab_bot="${GITLAB_REVIEW_BOT:-sa-mr-bot-mr-bot}"
   local watch_start_epoch attempts i pr_head body review_body=""
   local blocking=0 suggestions=0 findings verdict comments_json
-  local late_head review_file pr_verb prompt window_name
+  local late_head review_file pr_verb prompt prompt_head prompt_tail apply_policy window_name
 
   watch_start_epoch=$(date +%s)
   attempts=40   # ~20 minutes at 30s
@@ -203,24 +203,39 @@ log: $LOG" \
     gitlab) pr_verb="MR" ;;
   esac
 
-  read -r -d '' prompt <<EOF || true
+  if [ "$blocking" -gt 0 ]; then
+    apply_policy="There are ${blocking} blocking finding(s). Apply ALL findings (blocking and suggestion) without asking the user. Fix everything in one pass."
+  else
+    apply_policy="There are no blocking findings, only ${suggestions} suggestion(s)/nit(s). For EACH finding, use AskUserQuestion BEFORE making any change to ask whether to apply it. Group closely related findings into one question if it helps; otherwise ask per finding. Only apply findings the user approves."
+  fi
+
+  read -r -d '' prompt_head <<EOF || true
 A reviewer bot left feedback on ${URL} for commit ${HEAD_SHA}.
 Blocking: ${blocking}. Suggestions: ${suggestions}.
 
-The full review body is saved to: ${review_file}
+Review body (also saved to ${review_file}):
+
+---
+EOF
+
+  read -r -d '' prompt_tail <<EOF || true
+---
 
 You are running in a fresh git worktree at ${WT_PATH}, on a throwaway branch
 ${FIX_BRANCH} that was created off ${HEAD_SHA} (the exact commit the bot
 reviewed). The operator's main checkout still has ${PR_BRANCH} checked out
 elsewhere -- do NOT switch branches and do NOT touch their working tree.
 
+Apply policy:
+${apply_policy}
+
 Your job:
 1. Confirm pwd is ${WT_PATH} and \`git rev-parse --abbrev-ref HEAD\` prints ${FIX_BRANCH}. If not, stop and tell the user.
-2. Read ${review_file} and the cited code locations.
+2. Read the review body above and the cited code locations.
 3. For EACH finding (blocking AND suggestion), classify it as either:
      (a) CLEAR -- the fix is obvious, low-risk, and doesn't require a judgment call.
      (b) AMBIGUOUS -- multiple reasonable fixes, design tradeoff, or insufficient context.
-4. Apply ALL applicable fixes locally. Build/test (e.g. \`go build ./... && go test ./... -count=1\` for Go).
+4. Follow the Apply policy above. Build/test (e.g. \`go build ./... && go test ./... -count=1\` for Go).
 5. Commit locally on ${FIX_BRANCH}. Separate small commits per finding is fine, or one cohesive commit. Stage only the files you actually changed. Never \`git add -A\`.
 6. Print a short summary of: what you changed, which findings were CLEAR vs. AMBIGUOUS, why each AMBIGUOUS item is ambiguous, and (for any phantoms) where you found the bot was wrong. Ring the tmux bell (\`printf '\\a'\`).
 7. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH}. If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On success, tell them the merge landed and remind them to push from ${REPO_DIR} themselves. On failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they say no, leave the fix branch in place.
@@ -242,6 +257,10 @@ Worktree: ${WT_PATH}
 
 Output: under 200 words at the end, summarize what you changed and whether the merge into ${PR_BRANCH} ran. Confirm you did NOT push.
 EOF
+
+  prompt="${prompt_head}
+${review_body}
+${prompt_tail}"
 
   echo "[comments] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"
   if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude $(printf '%q' "$prompt")"; then
