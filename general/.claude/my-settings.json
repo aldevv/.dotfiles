@@ -39,16 +39,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/gh-pr-post-watch-checks.sh",
+            "command": "$HOME/.claude/hooks/pr-watch.sh",
             "timeout": 3600,
-            "statusMessage": "Watching PR/MR checks in background",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/gh-pr-post-watch-comments.sh",
-            "timeout": 3600,
-            "statusMessage": "Watching PR/MR review comments in background",
+            "statusMessage": "Watching PR/MR checks + review comments in background",
             "async": true
           }
         ]
@@ -58,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/notify.sh question"
+            "command": "$HOME/.claude/hooks/notify.sh question"
           }
         ]
       }
@@ -68,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/kanon/.claude/hooks/notify.sh permission"
+            "command": "$HOME/.claude/hooks/notify.sh permission"
           }
         ]
       }

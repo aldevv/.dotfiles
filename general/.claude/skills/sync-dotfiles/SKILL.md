@@ -1,6 +1,6 @@
 ---
 name: sync-dotfiles
-description: "Fast dotfiles sync — pulls/pushes the parent repo only and skips submodules entirely (they're almost never updated, so syncing them every run is wasted time). At least once every 30 days, or when any submodule is uninitialized (`-` prefix), this skill delegates to `sync-dotfiles-full` so submodules stay current. Resolves merge conflicts (keep both non-conflicting changes; keep newest/incoming for logic conflicts), restows packages with newly-added files, and pushes a machine-tagged commit. Metadata (id and os) is in ~/.machine_metadata; full-sync state is tracked in ~/.cache/sync-dotfiles/last-full-sync."
+description: "Fast dotfiles sync — pulls/pushes the parent repo only and skips submodules entirely (they're almost never updated, so syncing them every run is wasted time). At least once every 30 days, or when any submodule is uninitialized (`-` prefix), this skill delegates to `sync-dotfiles-full` so submodules stay current. Resolves merge conflicts (keep both non-conflicting changes; keep newest/incoming for logic conflicts), restows packages with newly-added files, and pushes a machine-tagged commit. After the git sync, applies `~/.claude/my-settings.json` as a managed overlay onto `~/.claude/settings.json` (Step 5b): added/changed entries flow in, removed entries are stripped from settings (only when the live value still matches what was previously applied, so manual edits in settings.json are preserved). Metadata (id and os) is in ~/.machine_metadata; full-sync state is tracked in ~/.cache/sync-dotfiles/last-full-sync; the my-settings overlay state is at ~/.cache/sync-dotfiles/my-settings-applied.json."
 ---
 
 > **Thinking budget: none on the happy path — just execute.** The happy path is two deterministic tool-call rounds. Don't reason about strategy, don't evaluate alternatives, don't re-derive the flow — run the steps verbatim.
@@ -18,7 +18,7 @@ Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve
 
 A fifth check **stops** the skill (no delegation) and asks the user for manual cleanup: **stow-link mismatch**. If a submodule's stow target (`$HOME/<path-with-leading-package-stripped>`) is a real directory with its own `.git` instead of a stow symlink to the submodule, the user has a standalone clone shadowing where the symlink should be. Their edits go into the standalone, never into the submodule; no amount of syncing fixes the divergence. The full skill doesn't fix this either, so STOP and report rather than delegating.
 
-**Fast-path shape**: in the common case (no merge conflicts, no newly-added files), this skill runs **two tool-call rounds total** — Step 1 (3 parallel reads, including a prefetch) and Step 2 (one bundled script that merges, amends, and pushes). Steps 3–5 only fire on the rare conflict / restow branches.
+**Fast-path shape**: in the common case (no merge conflicts, no newly-added files), this skill runs **three tool-call rounds total** — Step 1 (3 parallel reads, including a prefetch), Step 2 (one bundled script that merges, amends, and pushes), and Step 5b (apply the my-settings.json overlay). Steps 3–5 only fire on the rare conflict / restow branches. Step 5b is a separate round rather than inlined into Step 2 so it runs identically on the common and rare paths and so its exit codes don't tangle with Step 2's routing codes (7/8/9).
 
 > **Important — env vars don't persist across Bash tool invocations.** Each Bash call is a fresh shell, so `export` from one call is **lost** in subsequent ones. Any later command that uses `${id}` or `${os}` must re-source the metadata inline by prefixing with:
 > ```bash
@@ -125,10 +125,10 @@ If `$id` or `$os` is empty after Call 1 (e.g. unwritable HOME), stop and report 
 
 One bash invocation that does **everything** for the happy path: secret scan, commit local changes, merge the already-fetched remote, amend to the final sync message, push. Two early exits flag the rare branches:
 
-- **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve). Step 3 then checks whether the merge ALSO added new files: if yes → Step 4 → Step 5 → Step 6; if no → Step 5 → Step 6.
-- **`exit 9`** = clean merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize), then Step 6 (report).
-- **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and run Step 6 (report) so the user sees what blocked.
-- **`exit 0`** = success, sync is done. **Always** continue to Step 6 (report) — this includes the "Already up to date / nothing to push" no-op case. The report is the user-visible signal that the skill actually ran; skipping it on a no-op leaves the user guessing whether anything happened.
+- **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve). Step 3 then checks whether the merge ALSO added new files: if yes → Step 4 → Step 5 → Step 5b → Step 6; if no → Step 5 → Step 5b → Step 6.
+- **`exit 9`** = clean merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize), then Step 5b (apply my-settings overlay), then Step 6 (report).
+- **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and run Step 6 (report) directly so the user sees what blocked. **Skip Step 5b** — when the git sync didn't complete, propagating my-settings.json into settings.json could spread whatever made the scan fail.
+- **`exit 0`** = git sync succeeded. Continue to **Step 5b** (apply my-settings overlay), then Step 6 (report). This includes the "Already up to date / nothing to push" no-op case; Step 5b still runs because my-settings.json may have been edited locally even when the remote was a no-op, and the overlay must reflect that.
 
 ```bash
 set -e -o pipefail
@@ -304,6 +304,30 @@ This skill does **not** update `~/.cache/sync-dotfiles/last-full-sync` — only 
 
 ---
 
+## Step 5b — Apply the my-settings.json overlay
+
+Runs after every successful git sync (Step 2 exit 0, or after Step 5 finalize succeeds). Skipped only on Step 2 exit 7 (pre-commit blocked).
+
+`~/.claude/my-settings.json` is a symlink into the dotfiles repo and travels between machines. `~/.claude/settings.json` is the live, unsymlinked file Claude Code actually reads (Claude itself writes a few fields into it, e.g. `feedbackSurveyState.lastShownTime`). This step deep-merges the dotfiles-tracked overlay into the live settings:
+
+- New entries in my-settings → added to settings.
+- Removed entries → stripped from settings, but only when the value in settings still matches what was previously applied. Manual edits to settings are preserved.
+- Scalar updates in my-settings → overwrite settings (my-settings wins).
+- Arrays → union (settings entries first, then my-settings entries not already present).
+- Settings keys my-settings doesn't claim → preserved untouched.
+
+The previously-applied my-settings content is cached at `~/.cache/sync-dotfiles/my-settings-applied.json` so the script can compute the strip set and short-circuit when my-settings is byte-identical to the cache.
+
+```bash
+"$HOME/.claude/skills/sync-dotfiles/scripts/apply-my-settings.sh"
+```
+
+Exit codes: `0` success (updated, no-op merge, or skipped because my-settings.json was unchanged since last apply), `1` error (invalid JSON / missing jq / corrupted cache). The stdout line distinguishes "updated" / "no diff after merge" / "unchanged since last apply, skipping" for Step 6's report.
+
+**Manual force-reapply:** if you need to re-merge from scratch (e.g. after blowing away settings.json and wanting the overlay back), delete `~/.cache/sync-dotfiles/my-settings-applied.json` first. Without a cache, strip is a no-op and the script falls back to additive merge.
+
+---
+
 ## Pre-commit scan (reference)
 
 Implemented in `scripts/precommit-scan.sh`. Step 2 pipes the union of `git diff --name-only HEAD` (modified-tracked) and `git ls-files --others --exclude-standard` (untracked, gitignore-respecting) into it. The post-merge guard (Step 2b) pipes `git diff $pre $post --diff-filter=AM` with `--loop-only`. Untracked files are scanned the same way as modified ones — the secret/loop checks are the gate that keeps `git add -A` safe to use blindly.
@@ -334,3 +358,4 @@ Exits 0 if every input file passes; exits 7 (after scanning all of them) if any 
 - Conflicts resolved (count and files), if any
 - Packages restowed, if any
 - Final pushed commit (or "nothing to push")
+- my-settings.json overlay (Step 5b): updated / no diff / skipped because unchanged / skipped because git sync failed / error

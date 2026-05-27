@@ -1,6 +1,6 @@
 ---
 name: sync-dotfiles-full
-description: "Full dotfiles sync including all submodules. Pulls remote changes for the parent repo and every submodule, resolves conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), restows packages with new files, then pushes a machine-tagged commit. Records the run timestamp in ~/.cache/sync-dotfiles/last-full-sync so the fast `sync-dotfiles` skill can tell when a monthly full sync is due. Trigger when the user runs /sync-dotfiles-full, asks for a full sync, or has not run a full sync in 30+ days. Metadata (id and os) is stored in ~/.machine_metadata — auto-created from hostname + /etc/os-release if missing."
+description: "Full dotfiles sync including all submodules. Pulls remote changes for the parent repo and every submodule, resolves conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), restows packages with new files, then pushes a machine-tagged commit. After the git sync, applies `~/.claude/my-settings.json` as a managed overlay onto `~/.claude/settings.json` (Step 7b) using the same script as the fast skill — added/changed entries flow in, removed entries are stripped when the live value still matches what was previously applied. Records the run timestamp in ~/.cache/sync-dotfiles/last-full-sync so the fast `sync-dotfiles` skill can tell when a monthly full sync is due. Trigger when the user runs /sync-dotfiles-full, asks for a full sync, or has not run a full sync in 30+ days. Metadata (id and os) is stored in ~/.machine_metadata — auto-created from hostname + /etc/os-release if missing."
 ---
 
 Full sync of `~/.dotfiles` and **all** its submodules: pull remote changes, resolve conflicts, restow packages with new files, push a machine-tagged commit, then record the timestamp so the fast `sync-dotfiles` skill knows when the next full sync is due.
@@ -215,6 +215,28 @@ If a hard failure occurred earlier (e.g. pre-commit scan blocked, unresolved con
 
 ---
 
+## Step 7b — Apply the my-settings.json overlay
+
+Same step as the fast skill's Step 5b. Runs after the git sync is fully complete. Skip if Step 3's pre-commit scan blocked the parent commit (incomplete sync).
+
+`~/.claude/my-settings.json` is a symlink into the dotfiles repo and travels between machines. `~/.claude/settings.json` is the live, unsymlinked file Claude Code reads and writes. This step deep-merges the dotfiles-tracked overlay into the live file:
+
+- New entries in my-settings → added to settings.
+- Removed entries → stripped from settings, only when the value still matches what was previously applied (manual edits preserved).
+- Scalar updates → overwrite settings (my-settings wins).
+- Arrays → union.
+- Settings keys my-settings doesn't claim → preserved.
+
+Cache: `~/.cache/sync-dotfiles/my-settings-applied.json` records what was last applied so removals can be detected.
+
+```bash
+"$HOME/.claude/skills/sync-dotfiles/scripts/apply-my-settings.sh"
+```
+
+Exit codes: `0` success (updated, no-op merge, or skipped because my-settings.json is unchanged since last apply), `1` error. The stdout line distinguishes "updated" / "no diff after merge" / "unchanged since last apply, skipping" for Step 8's report.
+
+---
+
 ## Pre-commit scan (reference)
 
 Implemented in `scripts/precommit-scan.sh`. Step 3 templates pipe the union of `git diff --name-only HEAD` (modified-tracked) and `git ls-files --others --exclude-standard` (untracked, gitignore-respecting) into it; per-submodule calls pass `--prefix=<path>` so parallel output identifies which repo flagged. The wider net plus the scan is what makes `git add -A` safe: untracked configs / scripts the user dropped under `~/.dotfiles` travel between machines automatically, while gitignored files and anything matching the secret/loop checks are filtered out.
@@ -242,3 +264,4 @@ Exits 0 if every input file passes; exits 7 (after scanning all of them) if any 
 - Packages restowed
 - Final pushed commit (or "nothing to push")
 - Full-sync timestamp recorded (or skipped due to failure)
+- my-settings.json overlay (Step 7b): updated / no diff / skipped because unchanged / skipped because git sync failed / error

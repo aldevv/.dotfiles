@@ -4,14 +4,11 @@ Canonical docs: https://code.claude.com/docs/hooks. The spec evolves; cross-refe
 
 ## Where to put hook entries (this setup)
 
-User-level hooks split across two files. Pick by what you want shared between machines.
+Everything Claude reads at the user level lives in `$HOME/.claude/settings.json`. That file is a real file on disk, never tracked in dotfiles, and free to hold machine-specific paths, plugin internals, work-only tooling, and auto-written fields (`feedbackSurveyState`). Examples on the work box: airc plugin `guard.py`/`inject.py`, the three baton-work PreToolUse reminders (`CLAUDE-gh.md`, `validate-connector-changes`, `baton-admin-review-connector`), the `gh-pr-post-assign.sh` PostToolUse (hardcoded reviewer list).
 
-- `$HOME/.claude/settings.json` is a real file on disk, **machine-local**, never travels. Put entries here when they reference machine-specific paths, plugin internals, or work-specific tooling you do NOT want reproduced on other machines. Examples in this setup: airc plugin `guard.py`/`inject.py`, `context-mode-cache-heal.mjs`, `notify.sh` wiring, the statusline command, the enabled-plugins list, the three baton-work PreToolUse reminders (`CLAUDE-gh.md`, `validate-connector-changes`, `baton-admin-review-connector`), the `gh-pr-post-assign.sh` PostToolUse (hardcoded reviewer list).
-- `$HOME/.claude/settings.local.json` is **symlinked into dotfiles** (`$HOME/.dotfiles/general/.claude/settings.local.json`), so anything here travels and gets reproduced on every machine. Put entries here when you want the workflow on every box you log into. Examples in this setup: the generic PR/MR watch flow (`hunk-pre-pr.sh`, `gh-pr-post-watch-checks.sh`, `gh-pr-post-watch-comments.sh`). Use `$HOME/...` (not `/home/<user>/...` or `/Users/<user>/...`) for command paths so the entry works on every machine.
+Cross-machine entries (PR/MR watch flow `pr-watch.sh`, `hunk-pre-pr.sh`, `notify.sh`, statusline, generic permissions, `autoMemoryEnabled`, etc.) live in `$HOME/.dotfiles/general/.claude/my-settings.json`. That file is the canonical "travels via dotfiles" copy; getting its values into `$HOME/.claude/settings.json` on each machine is a manual step (merge by hand, or with whatever tool you prefer). Use `$HOME/...` (not `/home/<user>/...` or `/Users/<user>/...`) for command paths in `my-settings.json` so entries port to every machine.
 
-Claude Code merges hooks across both files at the user level, so runtime behavior is identical regardless of which file an entry lives in. Splitting is purely an authoring choice about portability.
-
-Note: the official docs only describe `settings.local.json` at the project level. The user-level form is undocumented but evidently honored (the existing `permissions`, `env`, `autoMemoryEnabled` keys at `$HOME/.claude/settings.local.json` are being applied, and the moved PR-watch hooks fire from there).
+`settings.local.json` is not part of this flow — at the user level it isn't read reliably.
 
 ## The two filters
 
@@ -185,6 +182,32 @@ If your hook can spawn children that re-trigger it (e.g. a `claude -p` subagent 
 [[ "${MY_HOOK_ACTIVE:-}" == "1" ]] && exit 0
 export MY_HOOK_ACTIVE=1
 ```
+
+## Single-instance locking: use `flock`
+
+For long-running hooks where you want one active instance per `(some key)` (per-repo, per-PR, per-branch, per-resource, per-user), use `flock` on a file descriptor redirected to a lockfile. macOS doesn't ship it: `brew install flock`. Linux always has it.
+
+```bash
+KEY=$(printf '%s' "$some_key" | sha256sum | cut -c1-16)
+LOCK_FILE="/tmp/myhook-locks-$(id -u)/$KEY.lock"
+mkdir -p "$(dirname "$LOCK_FILE")"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "another instance holds the lock — exiting"
+  exit 0
+fi
+echo "$$" >&9
+# lock auto-releases when fd 9 closes (i.e. when the script exits, even on SIGKILL)
+```
+
+Why `flock` and not atomic `mkdir`:
+- **Auto-release on hard exit.** `flock` releases the lock when the holding fd closes, which the kernel does on every exit path (clean exit, error, `SIGKILL`, panic). `mkdir` locks need an `EXIT` trap to clean up; `EXIT` doesn't fire on `SIGKILL`, so a force-killed instance leaves a stale lock that blocks future runs until you manually `rm` it (or you bolt on a stale-pid check, more code).
+- **No stale-lock detective work.** With `flock`, "holder gone" and "lock free" are the same state, no PID file to track ownership.
+- **Atomicity is at fd level, not directory level.** Multiple processes opening the same lockfile see the same flock state via the kernel; with `mkdir`-locks you're racing on filesystem semantics that vary across NFS / overlayfs.
+
+When to use which:
+- **`flock`** when the lock holds for the whole script lifetime and you can't guarantee a clean shutdown (anything long-running: poll loops, watchers, build pipelines, retry loops).
+- **Atomic `mkdir`** (e.g. `prelude_dedup_event`) when the lock is short-lived and just needs an N-way coordinator within a single short critical section, and the holder isn't going to crash mid-flight.
 
 ## Correct vs incorrect patterns (lessons from real sessions)
 

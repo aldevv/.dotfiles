@@ -58,6 +58,21 @@ func (c *Client) AllOrders() ([]Order, error) {
 
 `report.go` becomes `orders, err := api.AllOrders(); return summarize(orders), err`. The loop is in the layer that owns the API contract; the report file describes the report.
 
+## URL/endpoint constants live in their own file
+
+Put all URL and endpoint constants in a dedicated `urls.go` (or `endpoints.go`) file in the package that owns the HTTP calls. Each constant gets a one-line comment above it with the link to the vendor docs for that endpoint — this is a justified comment exception (the link is the non-obvious WHY, not a restatement of the code):
+
+```go
+// https://developer.example.com/api/users
+const usersEndpoint = "https://api.example.com/v1/users"
+```
+
+This file is the first place to look when auditing what a client calls or finding the spec for a given call.
+
+## No re-export aliases
+
+Don't define `type Foo = subpkg.Foo` in a wrapper package just so callers avoid importing the sub-package. Have callers import the sub-package directly — unless the alias significantly improves readability or structure.
+
 ## Keep responsibilities separate
 
 If a function does two things ("fetch + decide"), split it. A resource/feature file shouldn't define its own client function; a config file shouldn't carry business logic; a UI component shouldn't talk directly to the database. Push API loops into the client layer, push small helpers into a sibling `helpers.go` (or topical file), and keep the lead file thin.
