@@ -252,6 +252,7 @@ bindkey -s 'T' '$UTILITIES/tmux/ant todo^M' # notes
 bindkey -s 'I' '$UTILITIES/tmux/ant ideas^M' # notes
 bindkey -s 'g' '$UTILITIES/tmux/nf ~/repos 3^M' # projects and work
 # bindkey -s 'p' 'vf ^M'
+bindkey -s '^a' 'cdfzf ^M'
 bindkey -s '^p' 'vf ^M'
 bindkey -s '^g' 'vfg ^M'
 bindkey -s 'D' 'vf $HOME/.config ^M'

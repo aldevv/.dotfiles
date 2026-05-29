@@ -273,7 +273,7 @@ ${review_body}
 ${prompt_tail}"
 
   echo "[comments] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"
-  if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude $(printf '%q' "$prompt")"; then
+  if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude --dangerously-skip-permissions $(printf '%q' "$prompt")"; then
     tmux set-window-option -t "${TARGET_SESSION}:${window_name}" monitor-bell on 2>/dev/null || true
     echo "[comments] fixer launched, monitor-bell enabled"
   else

@@ -75,6 +75,12 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 
   Covers the principle that cheap String()/Dump helpers and a gated logger are load-bearing infrastructure, with a concrete compiler example, a checklist for what to add and where, and when to escalate to GDB/dlv when observability alone isn't enough.
 
+- [`~/.claude/rules/git.md`](.claude/rules/git.md). **Read when** any of:
+  - about to write "ready for PR", "ready for MR", "ready to ship", "ready to merge", "you can open the PR/MR", "good to go", "no blockers", or any equivalent readiness phrase
+  - before running `gh pr create` / `glab mr create` / `git push` on a branch that's about to be reviewed
+
+  Covers the PR/MR-readiness honesty rule: static checks aren't testing; if you can't run it end-to-end, say so explicitly.
+
 ## Table of Contents
 - [Lazy load](#lazy-load)
 - [Machine connection notes](#machine-connection-notes)

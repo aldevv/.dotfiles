@@ -180,7 +180,7 @@ Hook log for context: ${LOG}
 EOF
 
   echo "[ci] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"
-  if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude $(printf '%q' "$prompt")"; then
+  if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude --dangerously-skip-permissions $(printf '%q' "$prompt")"; then
     echo "[ci] fixer launched"
   else
     echo "[ci] tmux new-window failed (rc=$?)"
