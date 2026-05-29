@@ -151,7 +151,10 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = patterns,
   callback = function(args)
     if vim.b[args.buf].bigfile then return end
-    vim.lsp.buf.format()
+    vim.wait(3000, function()
+      return #vim.lsp.get_clients({ bufnr = args.buf, method = "textDocument/formatting" }) > 0
+    end, 50)
+    vim.lsp.buf.format({ timeout_ms = 3000 })
   end,
 })
 

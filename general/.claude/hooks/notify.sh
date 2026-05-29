@@ -26,6 +26,7 @@ tmux_info=""
 if [[ -n "${TMUX:-}" && -n "${TMUX_PANE:-}" ]] && command -v tmux >/dev/null 2>&1; then
   session="$(tmux display-message -p -t "$TMUX_PANE" '#S' 2>/dev/null || true)"
   window="$(tmux display-message -p -t "$TMUX_PANE" '#W' 2>/dev/null || true)"
+  window="${window##*:}"
   [[ -n "$session" && -n "$window" ]] && tmux_info="${session} -> ${window}"
 fi
 

@@ -54,6 +54,12 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 
   Contents: `quality.md` (readability-first priority, naming incl. boolean `is_`/`has_`/`should_` prefixes, guard clauses, function extraction, named predicates, hardcoded strings, magic separators); `design.md` (separation of responsibilities, file/module layout, the works→readable→optimized priority); `comments.md` (forbidden/justified comment pairs, docstring + header-comment rules); `debugging.md` (cheap `String()`/`Dump` helpers and a gated logger as load-bearing infra, a worked example and what-to-add checklist, when to escalate to GDB/dlv).
 
+- [`~/.claude/rules/git.md`](.claude/rules/git.md). **Read when** any of:
+  - about to write "ready for PR", "ready for MR", "ready to ship", "ready to merge", "you can open the PR/MR", "good to go", "no blockers", or any equivalent readiness phrase
+  - before running `gh pr create` / `glab mr create` / `git push` on a branch that's about to be reviewed
+
+  Covers the PR/MR-readiness honesty rule: static checks aren't testing; if you can't run it end-to-end, say so explicitly.
+
 ## Table of Contents
 - [Lazy load](#lazy-load)
 - [Machine connection notes](#machine-connection-notes)

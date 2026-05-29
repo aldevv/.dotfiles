@@ -10,6 +10,7 @@ alias v="nvim"
 alias vf="source _vf"
 alias vfl="source _vf .claude/lazy"
 alias vF="source _vFa"
+alias cdfzf="source cdfzf"
 
 grun() {
   local cmd_args=()

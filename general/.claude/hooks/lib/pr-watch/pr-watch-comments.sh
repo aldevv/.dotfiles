@@ -22,7 +22,7 @@ watch_comments() {
   local gitlab_bot="${GITLAB_REVIEW_BOT:-sa-mr-bot-mr-bot}"
   local watch_start_epoch attempts i pr_head body review_body=""
   local blocking=0 suggestions=0 findings verdict comments_json
-  local late_head review_file pr_verb prompt window_name
+  local late_head review_file pr_verb prompt prompt_head prompt_tail apply_policy window_name comment_hash
 
   watch_start_epoch=$(date +%s)
   attempts=40   # ~20 minutes at 30s
@@ -168,9 +168,11 @@ log: $LOG" \
     return 0
   fi
 
-  window_name="AUTO-COMMENT-FIX:${REPO_BASENAME}#${SHORT_SHA}"
+  comment_hash=$(printf '%s' "$review_body" | sha256sum 2>/dev/null | cut -c1-8)
+  comment_hash=${comment_hash:-nohash}
+  window_name="AUTO-COMMENT-FIX:${REPO_BASENAME}#${SHORT_SHA}-${comment_hash}"
   if tmux list-windows -a -F '#W' 2>/dev/null | grep -Fxq "$window_name"; then
-    echo "[comments] window '$window_name' already exists -- skip spawn"
+    echo "[comments] window '$window_name' already exists (same comment hash) -- skip spawn"
     return 0
   fi
 
@@ -203,32 +205,55 @@ log: $LOG" \
     gitlab) pr_verb="MR" ;;
   esac
 
-  read -r -d '' prompt <<EOF || true
+  if [ "$blocking" -gt 0 ]; then
+    apply_policy="There are ${blocking} blocking finding(s). Apply ALL findings (blocking and suggestion) without asking the user. Fix everything in one pass."
+  else
+    apply_policy="There are no blocking findings, only ${suggestions} suggestion(s)/nit(s). For EACH finding, use AskUserQuestion BEFORE making any change to ask whether to apply it. Group closely related findings into one question if it helps; otherwise ask per finding. Only apply findings the user approves."
+  fi
+
+  read -r -d '' prompt_head <<EOF || true
 A reviewer bot left feedback on ${URL} for commit ${HEAD_SHA}.
 Blocking: ${blocking}. Suggestions: ${suggestions}.
 
-The full review body is saved to: ${review_file}
+Review body (also saved to ${review_file}):
+
+---
+EOF
+
+  read -r -d '' prompt_tail <<EOF || true
+---
 
 You are running in a fresh git worktree at ${WT_PATH}, on a throwaway branch
 ${FIX_BRANCH} that was created off ${HEAD_SHA} (the exact commit the bot
 reviewed). The operator's main checkout still has ${PR_BRANCH} checked out
 elsewhere -- do NOT switch branches and do NOT touch their working tree.
 
+Apply policy:
+${apply_policy}
+
 Your job:
 1. Confirm pwd is ${WT_PATH} and \`git rev-parse --abbrev-ref HEAD\` prints ${FIX_BRANCH}. If not, stop and tell the user.
-2. Read ${review_file} and the cited code locations.
-3. For EACH finding (blocking AND suggestion), classify it as either:
+2. Read the review body above and the cited code locations.
+3. VERIFY EVERY FINDING BEFORE TOUCHING CODE. Do NOT assume the bot is correct. For each finding, first decide the scope, then dispatch the matching investigation. Run these investigations in parallel across findings (one tool message with multiple calls) whenever they're independent.
+     - OUTSIDE the source code (vendor API behavior, SDK/library docs, external service contract, protocol semantics, "feature X isn't supported", error-code meanings, scope/permission requirements, anything that requires looking up documentation we don't own): invoke the \`/investigate\` skill to research the claim online. Group related claims that share the same docs target into one investigation; otherwise one investigation per claim.
+     - INSIDE the source code (logic bug, dead code, wrong call, missing check, naming, control flow, mishandled error, anything answerable by reading this repo): spawn parallel \`Explore\` agents to independently verify the claim against the actual code. Size the fan-out by complexity:
+         * 3 agents  for SIMPLE findings (single function, narrow scope, one file, obvious to confirm or refute)
+         * 6 agents  for MEDIUM findings (multi-file change, cross-cutting concern, requires tracing a handful of callers)
+         * 12 agents for VERY COMPLEX findings (architectural claim, deep call graph, subtle invariant, contested behavior, anything where you'd want a quorum before believing the bot)
+       Each Explore agent reports independently. A finding survives only if the investigation confirms it; if the evidence contradicts the bot, mark the finding as a phantom and disqualify it.
+4. For the SURVIVING findings only, classify each as either:
      (a) CLEAR -- the fix is obvious, low-risk, and doesn't require a judgment call.
      (b) AMBIGUOUS -- multiple reasonable fixes, design tradeoff, or insufficient context.
-4. Apply ALL applicable fixes locally. Build/test (e.g. \`go build ./... && go test ./... -count=1\` for Go).
-5. Commit locally on ${FIX_BRANCH}. Separate small commits per finding is fine, or one cohesive commit. Stage only the files you actually changed. Never \`git add -A\`.
-6. Print a short summary of: what you changed, which findings were CLEAR vs. AMBIGUOUS, why each AMBIGUOUS item is ambiguous, and (for any phantoms) where you found the bot was wrong. Ring the tmux bell (\`printf '\\a'\`).
-7. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH}. If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On success, tell them the merge landed and remind them to push from ${REPO_DIR} themselves. On failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they say no, leave the fix branch in place.
-8. End your turn. Do NOT push. Do NOT loop back waiting for further input.
+5. Follow the Apply policy above on the surviving findings. Build/test (e.g. \`go build ./... && go test ./... -count=1\` for Go).
+6. Commit locally on ${FIX_BRANCH}. Separate small commits per finding is fine, or one cohesive commit. Stage only the files you actually changed. Never \`git add -A\`.
+7. Print a short summary of: which findings you investigated and how (which used /investigate, which used 3/6/12 Explore agents and why), which findings were DISQUALIFIED as phantoms (with the evidence that refuted them), which SURVIVING findings were CLEAR vs. AMBIGUOUS, why each AMBIGUOUS item is ambiguous, and what you actually changed. Ring the tmux bell (\`printf '\\a'\`).
+8. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH}. If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On success, tell them the merge landed and remind them to push from ${REPO_DIR} themselves. On failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they say no, leave the fix branch in place.
+9. End your turn. Do NOT push. Do NOT loop back waiting for further input.
 
 Hard rules:
 - NEVER push. The operator pushes; you don't.
-- Treat every finding as a real claim. Verify it against the code before fixing; if you find the bot is wrong, say so explicitly in the summary instead of "fixing" a phantom.
+- NEVER fix a finding you haven't investigated. The investigation in step 3 is mandatory, not optional, even for findings that "look obvious". Skipping it is the failure mode this prompt exists to prevent.
+- Treat every finding as a claim, not a fact. If the investigation refutes it, say so explicitly in the summary instead of "fixing" a phantom.
 - One pass only. After the merge prompt, end your turn.
 - Never switch branches, never force-push, never rebase, never amend, never \`git add -A\`.
 - The only merge you may perform is the single \`git merge --no-edit ${FIX_BRANCH}\` invocation in step 7, only if the user said yes.
@@ -243,8 +268,12 @@ Worktree: ${WT_PATH}
 Output: under 200 words at the end, summarize what you changed and whether the merge into ${PR_BRANCH} ran. Confirm you did NOT push.
 EOF
 
+  prompt="${prompt_head}
+${review_body}
+${prompt_tail}"
+
   echo "[comments] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"
-  if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude $(printf '%q' "$prompt")"; then
+  if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude --dangerously-skip-permissions $(printf '%q' "$prompt")"; then
     tmux set-window-option -t "${TARGET_SESSION}:${window_name}" monitor-bell on 2>/dev/null || true
     echo "[comments] fixer launched, monitor-bell enabled"
   else
