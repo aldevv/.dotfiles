@@ -56,3 +56,14 @@ func Fetch(cfg FetchConfig) (*Response, error)          // all required
 func NewServer(addr string, opts ...Option) *Server     // selective overrides
 func WithPort(p int) Option { return func(o *ServerOptions) { o.Port = p } }
 ```
+
+## Prefer plain words in names
+
+- Use simple, common words in identifiers; avoid jargon or fancy vocabulary a reader might not know. If a name needs a dictionary, it's the wrong word.
+- Examples: `provenance` → `source`, `instantiate` → `create`, `obfuscate` → `hide`, `ephemeral` → `temporary`.
+
+## Shell scripts
+
+- Format shell scripts (`.sh` / `.bash`) with `shfmt`; treat it as the canonical formatter. Run it before considering a script done.
+- Document every function argument: positional params (`$1`, `$2`) carry no meaning on their own. Name them with `local`s at the top (`local key=$1 value=$2`), or add a one-line `# $1=…, $2=…` comment above the function.
+- Comment for readability (shell is dense, so this overrides the usual minimal-comment default): put a one-line comment above each multi-line block saying what it does, and above any `sed` / `grep` / `find` / `awk` line that interpolates variables.
