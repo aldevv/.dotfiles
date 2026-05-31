@@ -45,35 +45,14 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
 
   Covers `matcher` vs `if:` filtering, the fail-open behaviour on complex Bash commands, silent-exit traps, decision-control output shape per event, exit-code-vs-JSON rules, async hooks, the `bypassPermissions` "ask" trap, manual test recipe, recursion guard, and the in-script positive-gate pattern.
 
-- [`~/.claude/lazy/code/quality.md`](.claude/lazy/code/quality.md). **Read when** any of:
-  - writing new code (naming, extraction, choice of literal vs constant)
-  - modifying or refactoring existing code
-  - reviewing or auditing code for quality issues
+- [`~/.claude/lazy/code/` (whole folder)](.claude/lazy/code/). **Read when** any of:
+  - BEFORE the first `Write` or `Edit` of any source/code file in a turn — any language or config-with-logic (`.go`, `.py`, `.ts`, `.tsx`, `.mjs`, `.js`, `.jsx`, `.lua`, `.sh`, `.bash`, `.rb`, `.rs`, `.c`, `.cpp`, `.h`, `.java`, `.tf`, `.sql`, CI/workflow scripts, Dockerfile, Makefile, etc.). Err broader: if a human writes and reviews it as code, it fires. Catches brand-new files, single standalone scripts, and one-line changes.
+  - planning code structure even before any Write: where logic should live, file/module layout, splitting a file, moving functions/types between files, adding a package or module
+  - writing, editing, or removing any code comment (`//`, `#`, `/*`, docstrings), or judging whether one is justified
+  - user phrases: "refactor", "clean up the code", "review this code", "extract", "rename", "simplify", "code best practices", "code quality"
+  - debugging signals: user says "debug" / "can't see what's happening" / "dump" / "print/inspect what X contains"; adding observability, tracing, or dump helpers to any code; creating a file named `debug.go`, `dump.go`, `_string.go`; or a debugging session is stuck on an opaque internal representation
 
-  Covers naming, function extraction, hardcoded strings, magic separators.
-
-- [`~/.claude/lazy/code/design.md`](.claude/lazy/code/design.md). **Read when** any of:
-  - creating a new source file (`Write` of a path that doesn't exist)
-  - splitting one file into multiple
-  - moving functions or types between files
-  - adding a new package or module
-  - the user asks where logic should live or how to structure something
-
-  Covers separation of responsibilities and the works-then-readable-then-optimized priority.
-
-- [`~/.claude/lazy/code/comments.md`](.claude/lazy/code/comments.md). **Read when** any of:
-  - writing, editing, or removing any code comment (`//`, `#`, `/*`, docstrings)
-  - reviewing existing comments to trim
-
-  Covers forbidden/justified examples, docstring rules, and header-comment guidance.
-
-- [`~/.claude/lazy/code/debugging.md`](.claude/lazy/code/debugging.md). **Read when** any of:
-  - user says "debug", "can't see what's happening", "print the AST/IR/tree", "dump", or "how do I see what X contains"
-  - adding observability, tracing, or dump helpers to any pipeline, compiler, transpiler, or interpreter
-  - creating a file named `debug.go`, `dump.go`, `_string.go`, or similar
-  - a debugging session is stuck because the internal representation is opaque
-
-  Covers the principle that cheap String()/Dump helpers and a gated logger are load-bearing infrastructure, with a concrete compiler example, a checklist for what to add and where, and when to escalate to GDB/dlv when observability alone isn't enough.
+  Contents: `quality.md` (readability-first priority, naming incl. boolean `is_`/`has_`/`should_` prefixes, guard clauses, function extraction, named predicates, hardcoded strings, magic separators); `design.md` (separation of responsibilities, file/module layout, the works→readable→optimized priority); `comments.md` (forbidden/justified comment pairs, docstring + header-comment rules); `debugging.md` (cheap `String()`/`Dump` helpers and a gated logger as load-bearing infra, a worked example and what-to-add checklist, when to escalate to GDB/dlv).
 
 - [`~/.claude/rules/git.md`](.claude/rules/git.md). **Read when** any of:
   - about to write "ready for PR/MR", "ready to ship/merge", "good to go", "no blockers", or any equivalent readiness phrase

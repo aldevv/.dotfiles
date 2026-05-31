@@ -103,7 +103,7 @@ func refToUser(ref Ref) (*User, error) {
 }
 ```
 
-Delete. The function name plus its three-line body says everything. Same for any single-purpose conversion function (`formatHeader`, `parseFoo`, `toPrincipal`). Default for small helpers: zero comments.
+Delete. The function name plus its three-line body says everything. Same for any single-purpose conversion function (`formatHeader`, `parseFoo`, `toPrincipal`). Default for small helpers: zero comments. (Exception: if the name isn't clear at a glance and a clearer name would hurt call sites, a one-line comment is justified, see Justified #9.)
 
 ### 9. File-level header comment that inventories what the file contains
 
@@ -260,6 +260,24 @@ def is_eligible_for_access(user):
 
 This is the highest-leverage move: if a comment is needed to explain a complex boolean, switch/case guard, or loop condition, the predicate wants a name, not a comment.
 
+### 9. Small-helper name that isn't clear at a glance
+
+A function or identifier must be clear at a glance. When its purpose isn't obvious from the name alone, fix it one of two ways, in this order:
+
+- **Prefer a clearer name.** `emit` → `set_output`, `proc` → `parse_published_version`.
+- **Add a one-line comment only when a better short name would hurt the call sites** — e.g. a terse, established idiom read inline many times. The classic case is `die` in `... || die "msg"`: renaming to `print_error_and_exit` clutters every call site, so keep the name and document it once.
+
+This is the deliberate exception to Forbidden #8: a glance-unclear small-helper name justifies a one-line comment.
+
+```sh
+# print message to stderr and exit non-zero
+die() { echo "$1" >&2; exit 1; }
+```
+
 ## Length guidance
 
 When a comment IS justified: as short as it can be while staying understandable; as long as it needs to be. Understanding is the priority, brevity is second. Three-clause sentences with semicolons are usually a smell; split them.
+
+## Shell scripts are an exception
+
+Shell is dense and hard to read, so it gets more comments than the minimal default above. In `.sh` / `.bash`: put a one-line comment above each multi-line block saying what it does, above any `sed` / `grep` / `find` / `awk` line that interpolates variables, and document each function's positional args. See the `## Shell scripts` section in `quality.md`.
