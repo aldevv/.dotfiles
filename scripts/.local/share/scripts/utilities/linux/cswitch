@@ -734,7 +734,7 @@ main() {
             show_usage
             ;;
         "")
-            show_usage
+            cmd_list
             ;;
         *)
             echo "Error: Unknown command '$1'"

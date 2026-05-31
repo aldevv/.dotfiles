@@ -14,17 +14,67 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
-def _call_claude(prompt: str, model: str | None, timeout: int = 300) -> str:
-    cmd = ["claude", "-p", "--output-format", "text"]
-    if model:
-        cmd.extend(["--model", model])
+def _call_lm(prompt: str, model: str | None, timeout: int = 300) -> str:
+    """Call the local LM CLI. Preference order:
+    1. TRIGGER_IMPROVER_CLI env var (copilot or claude)
+    2. 'copilot' if available
+    3. 'claude' if available
+
+    Special-case copilot: it expects -p/--prompt <text> as an argument (not stdin)
+    and doesn't accept a --model flag in the same way. For copilot, pass the
+    prompt on the command line and omit model/output flags. For other CLIs,
+    pass the prompt on stdin and include --output-format text and --model when
+    provided.
+    """
+    import shutil
+
+    preferred = os.getenv("TRIGGER_IMPROVER_CLI", "").strip().lower()
+    candidates: list[str] = []
+    if preferred:
+        candidates.append(preferred)
+    if shutil.which("copilot"):
+        candidates.append("copilot")
+    if shutil.which("claude"):
+        candidates.append("claude")
+    # de-dup while preserving order
+    seen = set()
+    candidates = [c for c in candidates if c and not (c in seen or seen.add(c))]
+
+    if not candidates:
+        raise RuntimeError(
+            "No LM CLI found: neither 'copilot' nor 'claude' is available. "
+            "Set TRIGGER_IMPROVER_CLI or install one of these CLIs."
+        )
+
     env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
-    result = subprocess.run(
-        cmd, input=prompt, capture_output=True, text=True, env=env, timeout=timeout
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"claude -p exited {result.returncode}\nstderr: {result.stderr}")
-    return result.stdout
+    last_err: Exception | None = None
+    for cli in candidates:
+        # Build CLI-specific command
+        if cli == "copilot":
+            # copilot expects the prompt as an argument
+            cmd = [cli, "-p", prompt]
+            run_kwargs = {"capture_output": True, "text": True, "env": env, "timeout": timeout}
+            # run without stdin
+            try:
+                result = subprocess.run(cmd, **run_kwargs)
+            except Exception as e:
+                last_err = e
+                continue
+        else:
+            cmd = [cli, "-p", "--output-format", "text"]
+            if model:
+                cmd.extend(["--model", model])
+            try:
+                result = subprocess.run(cmd, input=prompt, capture_output=True, text=True, env=env, timeout=timeout)
+            except Exception as e:
+                last_err = e
+                continue
+
+        if result.returncode == 0:
+            return result.stdout
+        last_err = RuntimeError(f"{cli} -p exited {result.returncode}\nstderr: {result.stderr}")
+        # try next candidate
+    raise RuntimeError(f"No LM CLI succeeded. Last error: {last_err}")
 
 
 _RUBRIC = """\
@@ -217,7 +267,7 @@ def improve_trigger(
         f"Nothing before or after."
     )
 
-    text = _call_claude(prompt, model)
+    text = _call_lm(prompt, model)
     match = re.search(r"<new_block>(.*?)</new_block>", text, re.DOTALL)
     new_block = match.group(1).strip("\n") + "\n" if match else text.strip("\n") + "\n"
     return new_block

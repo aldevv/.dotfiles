@@ -37,5 +37,5 @@
 
 ## Skill frontmatter checklist
 - `name`: matches the folder name
-- `description`: the trigger prompt. Spell out the concrete signals that should cause Claude to invoke this skill; if a sibling skill shares triggers, say which one wins and why. `skill-creator` is the referee for this.
+- `description`: the trigger prompt (max 1024 characters). Keep it concise and to the point — as small and easy-to-understand as possible for compatibility. Spell out the concrete signals that should cause Claude to invoke this skill; if a sibling skill shares triggers, say which one wins and why. `skill-creator` is the referee for this.
 - `argument-hint`: required when the skill takes positional args; document each argument's valid values (enums, env names, etc.)
