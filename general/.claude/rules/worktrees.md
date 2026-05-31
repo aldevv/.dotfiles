@@ -1,0 +1,7 @@
+# Worktrees rules
+
+## Worktrees
+Worktrees live at `~/worktrees/<repo>/<branch>` for personal repos and `~/worktrees/work/<repo>/<branch>` for repos whose main checkout is under `$WORK` (managed by the `wt` helper at `$UTILITIES/stuff-git/wt`). The `~/worktrees/work/` parent carries `CLAUDE.md` and `.claude/lazy` symlinks pointing at `$WORK/CLAUDE.md` and `$WORK/.claude/lazy`, so every work worktree inherits work-scope memory via the ancestor-CLAUDE walk without per-worktree setup. Two rules when working in one:
+
+- **Mirror the main checkout's `.envrc`.** Worktrees inherit `.git` but NOT working-tree files like `.envrc`, so dev-env hooks defined there don't follow you in. When work starts in a worktree, copy `.envrc` from the main checkout (and run `direnv allow` once). If the main repo has no `.envrc`, do nothing; there's nothing to mirror.
+- **Promote repeated dev-binary build sequences to `.envrc`.** If the same multi-step build (e.g. `bun run build:bin && install -m 0755 dist/<repo> ~/.local/bin/<repo>-dev`) gets run more than a couple of times and the project has no Makefile target / `bin/` script for it, define it as an alias or shell function in `.envrc` (e.g. `<repo>-dev() { ... }`). Add it to **both** the main checkout's `.envrc` and every active worktree's copy so the command is available everywhere on `cd`. Don't pollute the project's source: `.envrc` stays gitignored and per-checkout.

@@ -1,8 +1,16 @@
 # Comments
 
-**Load this when:** writing or reviewing any code comment, considering whether to add one, or planning code you suspect will need a comment to be readable. Concrete forbidden / justified pairs that pair with the rules in `## CRITICAL: Comments` of the parent `CLAUDE.md`.
+**Load this when:** writing or reviewing any code comment, considering whether to add one, or planning code you suspect will need a comment to be readable.
 
-The parent CLAUDE.md states the rules. This file shows what each rule looks like in practice. When in doubt about whether a comment is justified, scan the matching section below.
+## Rule
+
+Adding any comment is a rule violation by default. Before writing any comment, state in chat first: `comment justified: <complex flow / hidden invariant / non-obvious WHY / workaround>`. No comment goes into a tool call without that chat utterance preceding it. If you can't articulate the justification in advance, don't write the comment. The check is pre-write, not post-write.
+
+When touching existing code: if a comment restates the line that follows it, delete the comment.
+
+Exception: tests. A one-line function-header comment naming a non-obvious scenario is OK. Per-line narration inside the test body is not.
+
+The "Forbidden patterns" and "Justified comments" sections below show what these rules look like in practice.
 
 ## Forbidden patterns
 

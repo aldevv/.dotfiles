@@ -2,39 +2,11 @@
 
 ## Lazy load
 
-A `CLAUDE.md` (or `SKILL.md`) may include a "Lazy load" section near the top listing files that should be read on demand, only when a specific trigger fires, rather than eagerly on every session. Each entry pairs a path with a `**Read when:**` clause naming its trigger. Pull a file in only when its trigger matches the current context.
-
-### Good vs bad triggers
-
-Every `**Read when:**` clause must be broad enough to catch every situation it should fire on AND concrete enough that the match is unambiguous. Err broader: a wasted load is fine, a silently-missed load is not.
-
-**Completeness beats brevity.** A good trigger carries all the information Claude needs to recognize the load moment, even if that takes multiple lines or a bulleted list. Don't truncate a trigger to fit a one-liner if the result loses signals. A complex file with many entry points gets a complex trigger; that's fine.
-
-**Good triggers tie to observable signals:**
-- file paths or extensions about to be edited (`editing any .go file`, `editing pkg/config/config.go`)
-- commands about to run (`running ANY gh subcommand`, `running pass otp`)
-- syntactic content in the tool call (`Write/Edit with //, #, /* in new content`)
-- specific tool calls (`before any gh pr create`)
-- explicit user phrases (`given a Linear ticket URL/ID`)
-
-**Bad triggers rely on introspection or abstract categories:**
-- `implementing a feature` (no signal, too abstract)
-- `working with PRs` (vague self-categorization)
-- `about to add a comment` (introspective, fires too late: Claude has already composed the comment in the Edit payload before the trigger registers)
-- `considering whether X applies` (only loads after the work is done)
-- `when in doubt, read this` (no concrete moment to anchor to)
-
-**Fix recipe when a trigger is ignored:** replace the introspective phrasing with the file/tool/syntax signal that was actually observable at the moment the trigger should have fired.
-
-### Files
-
-By convention (universal, not specific to this file), lazy-loaded detail files always live in a sibling `.claude/lazy/` directory: next to the parent `CLAUDE.md`, at the project root for repo-level files, or under `~/.claude/lazy/` for the global user-level file. For this CLAUDE.md that resolves to `~/.claude/lazy/` (dotfiles source: `~/.dotfiles/general/.claude/lazy/`):
+Files in the list below are read on demand when their `**Read when:**` clause matches the current context. A wasted load is fine; a silently-missed load is not, so err broader on a match. Lazy files live in a sibling `.claude/lazy/` directory (here: `~/.claude/lazy/`, dotfiles source `~/.dotfiles/general/.claude/lazy/`). Authoring guidance for triggers lives in [`~/.claude/lazy/trigger-authoring.md`](.claude/lazy/trigger-authoring.md), loaded when editing a Lazy load section.
 
 - [`~/.claude/lazy/skills.md`](.claude/lazy/skills.md). **Read when** any of:
   - creating, editing, or auditing a skill
   - editing any `SKILL.md` file or anything under a `.claude/skills/` directory
-
-  Covers location, layout, portability/composability requirements, frontmatter checklist.
 
 - [`~/.claude/lazy/hooks.md`](.claude/lazy/hooks.md). **Read when** any of:
   - editing hook entries in any `settings.json` / `settings.local.json` / plugin `hooks/hooks.json`
@@ -43,165 +15,49 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
   - the user mentions a Claude Code hook event by name (`PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`, `SessionStart`, `Notification`, etc.)
   - diagnosing a Claude Code hook that fires when it shouldn't, misses when it should, exits silently, hangs, or has a `set -e` script aborting unexplained
 
-  Covers `matcher` vs `if:` filtering, the fail-open behaviour on complex Bash commands, silent-exit traps, decision-control output shape per event, exit-code-vs-JSON rules, async hooks, the `bypassPermissions` "ask" trap, manual test recipe, recursion guard, and the in-script positive-gate pattern.
+The `~/.claude/lazy/code/` folder is split into four files; load each only when its own trigger fires. Do NOT load the whole folder by default. `quality.md` fires on every code-writing turn; `comments.md` fires on every turn that adds/edits/removes a comment; `design.md` and `debugging.md` are conditional and usually skipped.
 
-- [`~/.claude/lazy/code/` (whole folder)](.claude/lazy/code/). **Read when** any of:
-  - BEFORE the first `Write` or `Edit` of any source/code file in a turn — any language or config-with-logic (`.go`, `.py`, `.ts`, `.tsx`, `.mjs`, `.js`, `.jsx`, `.lua`, `.sh`, `.bash`, `.rb`, `.rs`, `.c`, `.cpp`, `.h`, `.java`, `.tf`, `.sql`, CI/workflow scripts, Dockerfile, Makefile, etc.). Err broader: if a human writes and reviews it as code, it fires. Catches brand-new files, single standalone scripts, and one-line changes.
-  - planning code structure even before any Write: where logic should live, file/module layout, splitting a file, moving functions/types between files, adding a package or module
-  - writing, editing, or removing any code comment (`//`, `#`, `/*`, docstrings), or judging whether one is justified
-  - user phrases: "refactor", "clean up the code", "review this code", "extract", "rename", "simplify", "code best practices", "code quality"
-  - debugging signals: user says "debug" / "can't see what's happening" / "dump" / "print/inspect what X contains"; adding observability, tracing, or dump helpers to any code; creating a file named `debug.go`, `dump.go`, `_string.go`; or a debugging session is stuck on an opaque internal representation
+- [`~/.claude/lazy/code/quality.md`](.claude/lazy/code/quality.md). **Read when** any of:
+  - BEFORE the first `Write` or `Edit` of any source/code file in a turn, any language (`.go`, `.py`, `.ts`, `.tsx`, `.mjs`, `.js`, `.jsx`, `.lua`, `.sh`, `.bash`, `.rb`, `.rs`, `.c`, `.cpp`, `.h`, `.java`, `.tf`, `.sql`, `.envrc`, extensionless scripts with a shebang under `bin/` or `~/.local/bin/`, CI/workflow scripts, Dockerfile, Makefile, etc.). Rule of thumb: if a code formatter (`gofmt`, `prettier`, `black`, `shfmt`, `rustfmt`, etc.) would touch it, it fires. Err broader: catches brand-new files, single standalone scripts, and one-line changes. **A new utility, helper, wrapper, or CLI shim counts as code.** Going from zero LOC to one LOC fires the same as editing existing code. Do not skip on the rationalization that "it's a small script", "it's just a wrapper", "I'm just sketching", or "this is throwaway".
+  - user phrases that ask for code to exist where none did before: "create a wrapper", "wrap X", "make a wrapper around Y", "write a script that", "create a utility for", "make a CLI for", "I want a command that", "add a helper that", "save this as a script", "turn this into a tool". These fire on intent alone, before any file path is chosen.
+  - user phrases for code change to existing files, scoped to a code object: "refactor <code/function/module>", "clean up this code", "review this code", "extract <function/variable/type>", "rename <function/variable/symbol/file>", "simplify <function/loop/condition>", "code best practices", "code quality". A bare `rename`/`extract`/`simplify` without a code object (e.g. "rename a column", "extract a name from this email", "simplify my morning routine") does NOT fire.
 
-  Contents: `quality.md` (readability-first priority, naming incl. boolean `is_`/`has_`/`should_` prefixes, guard clauses, function extraction, named predicates, hardcoded strings, magic separators); `design.md` (separation of responsibilities, file/module layout, the works→readable→optimized priority); `comments.md` (forbidden/justified comment pairs, docstring + header-comment rules); `debugging.md` (cheap `String()`/`Dump` helpers and a gated logger as load-bearing infra, a worked example and what-to-add checklist, when to escalate to GDB/dlv).
+- [`~/.claude/lazy/code/comments.md`](.claude/lazy/code/comments.md). **Read when** any of:
+  - BEFORE composing any `Write` or `Edit` whose `new_string` is going to contain `//`, `#`, `/*`, `"""`, `'''`, or a docstring opener inside a code file. Fire on intent to add a comment, not on review of one already in the Edit payload. Removing or editing an existing comment fires the same way.
+  - reviewing a diff specifically for comment quality (this is a rarer path; trigger 1 already covers Write/Edit moments).
 
-- [`~/.claude/rules/git.md`](.claude/rules/git.md). **Read when** any of:
-  - about to write "ready for PR/MR", "ready to ship/merge", "good to go", "no blockers", or any equivalent readiness phrase
-  - before running `gh pr create` / `glab mr create` / `git push` on a branch about to be reviewed
-  - user says "remove from git" / "untrack" / "stop tracking" / equivalent
-  - before running `git rm` / `git rm -r` / `git rm --cached` in any form
+- [`~/.claude/lazy/code/design.md`](.claude/lazy/code/design.md). **Read when** any of:
+  - planning code structure across more than one file: where logic should live, file/module layout, splitting an existing file, moving functions/types between files, adding a new package or module
+  - touching code that already spans multiple files in coordinated ways (cross-file refactor, layer reshuffle)
+  - `Read` returned a code file ≥300 LOC AND the next `Write`/`Edit` adds a new top-level responsibility (a new function/type/section unrelated to the existing ones in the file)
+  - editing two or more files in the same turn where one calls into the other (client/service/repository layout), or the user said "split this file", "where should X live", "which layer owns Y", "add a new package for Z"
 
-  Covers PR/MR-readiness honesty and the "remove from git = `git rm --cached`" rule.
+  **Skip ONLY if ALL hold:** (a) the whole program is in a single file, (b) the file is under 200 LOC including blanks, (c) there is exactly one top-level entry point and no internal layering (no client/service/repo split, no per-concern helpers grouped into sections). If any of (a)/(b)/(c) is uncertain, do NOT skip; load it. Typical skip targets: wrapper CLIs, one-shot utilities, glue scripts, ad-hoc shell tools.
 
-## Table of Contents
-- [Lazy load](#lazy-load)
-- [Machine connection notes](#machine-connection-notes)
-- [CRITICAL: No premature breakpoints during autonomous drive](#critical-no-premature-breakpoints-during-autonomous-drive)
-- [CRITICAL: Editing this file](#critical-editing-this-file)
-- [CRITICAL: Work files boundary](#critical-work-files-boundary)
-- [CRITICAL: Saving dotfiles changes](#critical-saving-dotfiles-changes)
-- [CRITICAL: Writing style](#critical-writing-style)
-- [CRITICAL: Comments](#critical-comments)
-- [CRITICAL: Playwright Browser Issues](#critical-playwright-browser-issues)
-- [Code organization](#code-organization)
-- [Worktrees](#worktrees)
-- [Development Environment](#development-environment)
-- [Key Configurations](#key-configurations)
-- [Automation & Tools](#automation--tools)
-- [Build Environment](#build-environment)
-- [Commands to Remember](#commands-to-remember)
-- [Work Environment](#work-environment)
-- [Commits & PRs](#commits--prs)
+- [`~/.claude/lazy/code/debugging.md`](.claude/lazy/code/debugging.md). **Read when** any of:
+  - user says "debug" / "can't see what's happening" / "dump" / "print/inspect what X contains" / "why is X wrong" / "trace what happens when" / "I can't tell what this struct/value contains"
+  - about to add a `log.`/`fmt.Print`/`println!`/`print(`/`console.log`/`eprintln!`/`puts`/`p `/`pp` call to source that isn't a test fixture, AND the call is ad-hoc debug-only (not first-class production logging or structured prod tracing)
+  - adding a `String()` / `__repr__` / `Display` helper or a `Dump*` / `_string.go` file, OR creating a file literally named `debug.go` / `dump.go` / `_string.go`
+  - about to invoke `dlv` / `gdb` / `pdb` / `lldb` from Bash
+  - writing a reproducer or regression test for a bug the user has identified
+  - user has sent 2+ consecutive turns about the same bug without resolution
+
+  **Skip ONLY when:** no bug is being investigated AND no debug-only logging/tracing/dump code is being added AND no `String()`/`__repr__`/`Display` helper is being touched AND the user did not use a debug-intent phrase from the list above. If any fire-clause matches, the fire wins; do not skip. Concrete skip targets: fixing a typo, renaming a variable, adding a new endpoint, building a CLI wrapper.
 
 ## Machine connection notes
 Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
 
-## CRITICAL: No premature breakpoints during autonomous drive
-**When autonomous-drive is active, NEVER end a turn at a "natural breakpoint".** Autonomous-drive is active when ANY of the following holds:
-- Campaign file has `autonomous: true` frontmatter and `status: active`
-- User said any of: "continue", "keep going", "don't stop", "drive until done", "make sessions longer", "I don't want to manually touch this", "until you are done"
-- `/loop`, `/daemon`, or `/citadel:do continue` is the invocation that started the work
-
-While active, keep iterating inside the same response until exactly one of:
-- Context budget tightens to within ~15% of the cap
-- A documented circuit breaker fires (3+ consecutive failures on the same approach, fundamental architectural conflict, gate stays red across two fix cycles)
-- The user interrupts the turn
-
-**Forbidden during autonomous-drive:** turn-ending summaries ("Session N closed", "Wave concluded"), asking "want me to keep going?", listing future strategies in the response body, declaring a stopping point because the next batch of work would need a strategy change. If a strategy change is needed, MAKE the strategy change and execute it. The next bounded piece of work always exists; find it and emit the next tool call.
-
-**Why:** the user has repeatedly said sessions stop too early. The session right before this rule landed stopped after 5 commits, wrote a summary, asked the user to pick a next strategy. The user replied "makes these sessions longer, I don't want to manually touch this chat ever". This rule exists to prevent that pattern.
-
-**How to apply:** after every commit during autonomous-drive, the very next text should announce the next bounded action, not summarize the previous one. Tool calls follow immediately. Status updates (one sentence each) are fine; sectioned summaries are not.
-
 ## CRITICAL: Editing this file
-**Before adding any rule, command, or note to this file, grep the whole file for the topic first.** Past sessions have introduced duplicates because they added a new entry without checking what was already documented. If a section already covers it, edit that section in place. Never create a parallel copy in a different section. When a rule must be visible from multiple contexts, link with `See ## Section Name` rather than copying the content. After editing, scan the ToC and section headings for topic overlap.
+**Before adding any rule, command, or note to this file, grep the whole file for the topic first.** Past sessions have introduced duplicates by adding a new entry without checking what was already documented. If a section already covers it, edit that section in place. Never create a parallel copy. When a rule must be visible from multiple contexts, link with `See ## Section Name` rather than copying.
 
-**When the user asks to add a rule that's already documented, treat it as a signal the existing rule didn't stick in a past session and needs more weight.** Don't just point at the existing entry. Promote the rule by applying one or more of the following:
-1. Rename the section to `## CRITICAL: ...` if it isn't already.
-2. Strengthen the wording: vague verbs (`should`, `prefer`) become hard verbs (`NEVER`, `MUST`, `always`). Add a one-line consequence if useful (e.g. `...otherwise X breaks`).
-3. Add the concrete example the user just brought up. Concrete violations stick harder than abstract rules.
-4. Move the section higher in the file if it's buried; CRITICAL sections cluster near the top so they get the highest attention on load.
+**When the user asks to add a rule that's already documented, promote the existing rule** instead of re-adding it: mark it `## CRITICAL:` if it isn't, swap soft verbs (`should`, `prefer`) for hard ones (`NEVER`, `MUST`), append the concrete example the user just brought up, and move the section higher if buried.
 
-## CRITICAL: Work files boundary
-**Do not touch work-related files or directories unless explicitly requested.** Includes `$WORK`, `~/.config/.aliases_work`, `~/.config/.startup_work`, and any work-tagged repo. If a request is ambiguous about whether something is work-related, ask before touching it.
+## Paths and shortcuts
 
-## CRITICAL: Saving dotfiles changes
-When the user says "save the changes in my dotfiles" (or any equivalent), they mean these folders:
-- `~/.dotfiles/` (dotfiles)
-- `~/notes/` (personal notes)
-- `~/wiki/` (personal wiki)
-- `~/.local/share/ansible/` (ansible configs)
+Env vars: `$PROJECTS`, `$CODE`, `$SCRIPTS`, `$AUTOMATION`, `$UTILITIES`, `$BUILDS`, `$SUCKLESS`, `$WORK`. Repos under `~/repos`, dotfiles under `~/.dotfiles` (stow-managed), QMK firmware under `~/qmk_firmware`.
 
-**Prefer the `sync-dotfiles` skill** for the dotfiles repo specifically; it's faster (skips submodules) and delegates to `sync-dotfiles-full` on the monthly threshold or when a submodule is uninitialized. Fall back to `personal-push-all` only when the user explicitly asks for the broader notes/wiki/ansible sweep in addition to dotfiles.
+Configs (alias in parens): nvim `~/.config/nvim/init.lua` (`.v`), zsh `~/.config/zsh/.zshrc` (`.z`), tmux `~/.config/tmux/tmux.conf` (`.t`), aliases `~/.config/.aliases` (`.a`), work aliases `~/.config/.aliases_work` (`.aw`), work startup `~/.config/.startup_work` (`.sw`), ansible `~/.local/share/ansible/local.yml` (`.an`).
 
-## CRITICAL: Writing style
-**Forbidden punctuation: em-dash (`—`) and double-hyphen (`--`).** Do not use either in any user-facing text, commit messages, PR descriptions, READMEs, comments, docs, or chat replies. They make writing sound robotic. Rewrite with a comma, period, parenthesis, or colon instead. CLI flags like `--flag` are fine; the ban is on em-dashes and double-hyphens used as prose punctuation.
+Ansible uses role-based structure (core/auth roles, `tasks/` by category).
 
-**Forbidden: emojis.** Do not use emojis anywhere (chat, commits, PRs, READMEs, comments, docs, file contents). Applies even if the surrounding text or an existing file already uses them. Only exception: the user explicitly asks for an emoji in this turn.
-
-**Forbidden AI-slop vocabulary.** Do not use `no-op`, `noop`, `delve`, `delves into`, `leverage`, `leverages`, `seamless`, `seamlessly`, `robust`, `robustly`, `streamline`, `streamlined`, `unlock`, `unlocks`, `harness` (as a verb), `tapestry`, `intricate`, `realm`, `landscape`, `journey` (as metaphor), or `dive into`. They are filler that signals AI prose. Pick the concrete verb instead: `no-op` becomes `does nothing` / `skip`; `leverage` becomes `use`; `seamless` becomes `works without setup` or just delete it; `robust` becomes `handles X` (name the case); `streamline` becomes `simplify` or name the step removed. Applies everywhere prose lands: chat, commits, PRs, READMEs, comments, docs.
-
-**Default to brief, casual, plain.** Short phrase beats a paragraph when both carry the same meaning. Simple words over fancy ones. Match the register of a teammate sending a Slack message, not a press release. If a sentence can be cut to a clause without losing information, cut it.
-
-**README.md is for humans.** It's the project intro for a new reader (engineer, recruiter, drive-by browser), not Claude-facing memory, runbook, or agent-routing material. Lead with what the project is and how to start using it; keep the tone casual and short.
-
-## CRITICAL: Comments
-**Adding any comment is a rule violation by default.** Before writing any comment, state in chat first: `comment justified: <complex flow / hidden invariant / non-obvious WHY / workaround>`. **No comment goes into a tool call without that chat utterance preceding it.** If you can't articulate the justification in advance, don't write the comment. The check is pre-write, not post-write. There is no cleanup pass to fall back on.
-
-Forbidden:
-- Narrative comments that restate the next line.
-- Function-purpose summaries on functions whose name and signature already convey it. Default for small helpers and single-purpose conversion functions: zero comments.
-- File-level header comments that merely inventory what the file contains (filename plus declared types already say it). A short header IS justified when the file handles a complex flow and the header genuinely orients the reader.
-- Type/struct comments that restate the type name as a sentence.
-- "Used by X" / "For the Y flow" / cross-cutting consistency notes. Those belong in the PR description, not the code.
-- Multi-line docstrings, unless the flow is truly hairy (subtle invariants, surprising ordering, platform workaround).
-
-See [`~/.claude/lazy/code/comments.md`](.claude/lazy/code/comments.md) for worked forbidden/justified pairs.
-
-Exception: tests. A one-line function-header comment on a test that names a non-obvious scenario is OK (`// Workday quirk: ref ID without name, require both`). Per-line narration inside the test body is not. Default is still zero, only add when the test name alone wouldn't tell a future reader what's being checked.
-
-When a comment IS justified: as short as possible, as long as it needs to be. Understanding is the priority, brevity is second. Example, justified: `// REST-1107 requires dotted projection on this endpoint.` (vendor quirk a reader couldn't infer). Example, not justified: `// fetch the user` (the next line says so). If the complexity can be untangled by a small refactor that makes the code self-explanatory, prefer the refactor.
-
-When touching existing code: if a comment restates the line that follows it, delete the comment.
-
-## CRITICAL: Playwright Browser Issues
-**NEVER ask the user to do anything with the browser.** Use the Playwright MCP plugin tools directly; they handle browser launch automatically.
-- **NEVER delete** `~/.cache/ms-playwright/mcp-chrome-*`. Contains Okta session data.
-- If browser is frozen or errors out: call `browser_close`, then retry. Chrome relaunches automatically.
-
-## Code organization
-**Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.). One folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" or "keep it small" notes in older project READMEs or `CLAUDE.local.md` files: surface the conflict, update the project doc, then split.
-
-## Worktrees
-Worktrees live at `~/worktrees/<repo>/<branch>` for personal repos and `~/worktrees/work/<repo>/<branch>` for repos whose main checkout is under `$WORK` (managed by the `wt` helper at `$UTILITIES/stuff-git/wt`). The `~/worktrees/work/` parent carries `CLAUDE.md` and `.claude/lazy` symlinks pointing at `$WORK/CLAUDE.md` and `$WORK/.claude/lazy`, so every work worktree inherits work-scope memory via the ancestor-CLAUDE walk without per-worktree setup. Two rules when working in one:
-
-- **Mirror the main checkout's `.envrc`.** Worktrees inherit `.git` but NOT working-tree files like `.envrc`, so dev-env hooks defined there don't follow you in. When work starts in a worktree, copy `.envrc` from the main checkout (and run `direnv allow` once). If the main repo has no `.envrc`, do nothing; there's nothing to mirror.
-- **Promote repeated dev-binary build sequences to `.envrc`.** If the same multi-step build (e.g. `bun run build:bin && install -m 0755 dist/<repo> ~/.local/bin/<repo>-dev`) gets run more than a couple of times and the project has no Makefile target / `bin/` script for it, define it as an alias or shell function in `.envrc` (e.g. `<repo>-dev() { ... }`). Add it to **both** the main checkout's `.envrc` and every active worktree's copy so the command is available everywhere on `cd`. Don't pollute the project's source: `.envrc` stays gitignored and per-checkout.
-
-## Development Environment
-- **Repos**: `~/repos` - Git repositories
-- **Projects**: `$PROJECTS` - Active project work
-- **Code**: `$CODE` - Code directory
-- **Dotfiles**: `~/.dotfiles` - Configuration management
-
-## Key Configurations
-- **Neovim**: `~/.config/nvim/init.lua` (main config at `.v`)
-- **Zsh**: `~/.config/zsh/.zshrc` (`.z`)
-- **Tmux**: `~/.config/tmux/tmux.conf` (`.t`)
-- **Aliases**: `~/.config/.aliases` (`.a`)
-
-## Automation & Tools
-- **Ansible**: `~/.local/share/ansible/local.yml` (`.an`)
-  - Uses role-based structure with core/auth roles
-  - Tasks organized in `tasks/` directory by category (system/, install/, build/)
-  - Variables for environment paths (WORK, PROJECTS, CODE, etc.)
-- **Scripts**: `$SCRIPTS` - Custom scripts directory
-- **Automation**: `$AUTOMATION` - Automation scripts
-- **Utilities**: `$UTILITIES` - Utility programs
-
-## Build Environment
-- **Builds**: `$BUILDS` - Build outputs
-- **Suckless**: `$SUCKLESS` - Suckless tools (dwm, st)
-- **QMK**: `~/qmk_firmware` - Keyboard firmware
-
-## Commands to Remember
-- **Auto-suspend**: Managed via systemd service `xautolock@kanon.service`
-- **Stow**: Use `cd ~/.dotfiles && stow <folder>` to manage symlinks
-- **Shortcuts**: File shortcuts in `~/.config/shortcuts/sf`, dir shortcuts in `sd`
-
-## Work Environment
-- **Work Directory**: `$WORK` - Work-related projects
-- **Work Aliases**: `~/.config/.aliases_work` (`.aw`)
-- **Work Startup**: `~/.config/.startup_work` (`.sw`)
-
-## Commits & PRs
-- **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions
+Shortcuts: files in `~/.config/shortcuts/sf`, dirs in `sd`. Auto-suspend via `xautolock@kanon.service`.
