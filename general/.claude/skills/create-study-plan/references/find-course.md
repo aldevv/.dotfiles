@@ -8,7 +8,7 @@ Use this template when invoking the `investigate` skill in step 6 of the flow. T
 - `{CERT_CODE}` - e.g. "COF-C03"
 - `{CERT_PAGE_URL}` - official vendor page for the cert
 - `{STUDY_GUIDE_PATH}` - absolute path to the downloaded study guide (for grounding context)
-- `{DOMAIN_TABLE}` - markdown table of domains and weightings (copy the table from the WebSearch results in step 4 / the in-progress README dossier). Format:
+- `{DOMAIN_TABLE}` - markdown table of domains and weightings (extracted from the study guide downloaded in step 5; see the "Extract domain table" sub-step in the SKILL.md flow). Format:
 
       | # | Domain | Weight |
       | --- | --- | --- |

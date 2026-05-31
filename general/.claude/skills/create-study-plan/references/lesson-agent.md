@@ -9,7 +9,7 @@ Use this template when spawning a `general-purpose` subagent in phase 9d. ONE ag
 - `{OUT_DIR}` - absolute path to the study folder
 - `{STUDY_GUIDE_PATH}` - absolute path to the study guide
 - `{PLAN_PATH}` - `{OUT_DIR}/.planning/{DOMAIN_SLUG}.md`
-- `{STUDY_PLAN_PATH}` - `{OUT_DIR}/study-plan.md`
+- `{STUDY_PLAN_PATH}` - absolute path to the walkthrough that step 8 actually wrote (either `{OUT_DIR}/study-plan.md` or `{OUT_DIR}/<cert-slug>-study-plan.md` if the overwrite-protection branch fired)
 - `{REWORK_NOTES}` - reviewer findings to address, or the literal string `N/A` on first run. Used only when re-spawning after phase 9e found `MAJOR_REWORK`.
 
 ## Prompt body

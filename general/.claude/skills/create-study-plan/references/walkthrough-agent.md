@@ -11,6 +11,7 @@ Use this template when spawning a `general-purpose` subagent in step 8 to write 
 - `{CURRICULUM_PATH}` - absolute path to `curriculum.md`, or the literal string `N/A` if no course is in play
 - `{README_PATH}` - absolute path to the README dossier written in step 7
 - `{TEMPLATE_PATH}` - absolute path to the walkthrough template, normally `~/.claude/skills/create-study-plan/references/templates/walkthrough.md`
+- `{TARGET_PATH}` - absolute path to write to. The orchestrator already resolved this via `scripts/safe-write-path.sh`; it's either `{OUT_DIR}/study-plan.md` or `{OUT_DIR}/<cert-slug>-study-plan.md`. The agent writes to it as-is and does NOT re-check overwrite protection.
 
 ## Prompt body
 
@@ -23,14 +24,14 @@ Context:
 - Course curriculum (cross-reference for lecture pointers): {CURRICULUM_PATH}
 - README dossier (cert overview, domain table, official links - already written): {README_PATH}
 - Walkthrough template + rules: {TEMPLATE_PATH}
-- Output file to write: {OUT_DIR}/study-plan.md
+- Output file to write: {TARGET_PATH} (already resolved by the orchestrator; do not change it)
 
 Task:
 1. Read {TEMPLATE_PATH} for the skeleton, per-block rules, tone calibration, and cross-referencing rules.
 2. Read {README_PATH} for the cert name, exam version, and the domain table (in weight-descending order).
 3. Read {STUDY_GUIDE_PATH}. For a PDF >10 pages, walk it with the Read tool's `pages:` parameter; otherwise read whole. Extract every objective and sub-topic the vendor lists, verbatim where possible.
 4. If {CURRICULUM_PATH} is not "N/A", read it. You'll cite section + video numbers per topic.
-5. Write {OUT_DIR}/study-plan.md per the template. Order domains weight-descending (match the README's domain table order).
+5. Write {TARGET_PATH} per the template. Order domains weight-descending (match the README's domain table order).
 6. Confirm the file path and line count in your reply. Don't paste the full file contents back.
 
 Hard rules:
@@ -39,7 +40,7 @@ Hard rules:
 - Code blocks for SQL/CLI/syntax worth memorizing only. Skip code blocks for conceptual topics.
 - If `curriculum.md` does not exist (cert-only mode), omit the `Course:` line entirely on every topic. Don't write "Not in course curriculum." for every topic in cert-only mode - that's noise.
 - No em-dashes, double-hyphens as prose punctuation, emoji, motivational text, or "good luck!" sign-offs.
-- Overwrite protection: if {OUT_DIR}/study-plan.md already exists, check whether it's an earlier dossier from this skill (starts with `# {CERT_NAME} study plan`). If yes, overwrite. If anything else, write to `{OUT_DIR}/<cert-slug>-study-plan.md` instead (e.g. `snowpro-core-c03-study-plan.md`). Do NOT ask the user mid-flow; pick the alt filename and report it in the reply.
+- The orchestrator already resolved {TARGET_PATH} through the overwrite-protection helper. Write to {TARGET_PATH} unconditionally; do not re-check whether the path exists or pick an alternative name yourself.
 
 Output:
 - One line confirming the file path you wrote to.

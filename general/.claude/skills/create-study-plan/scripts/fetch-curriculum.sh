@@ -15,7 +15,7 @@ fi
 
 url="$1"
 out_dir="${2:-$PWD}"
-script_dir="$(dirname "$(readlink -f "$0")")"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
 
 case "$url" in
     *udemy.com/course/*)

@@ -1,7 +1,7 @@
 ---
 name: create-study-plan
-description: Build complete study materials for a certification, exam, or course. Inputs can be (a) a course URL (Udemy supported today; other platforms via the dispatcher contract in `references/scrapers/README.md`), (b) a certification / exam name or code, or (c) both. Downloads the official vendor study guide, then (cert-only mode) uses the `investigate` skill to recommend the best-aligned course by combining study-guide coverage with community sentiment (with each signal labeled). Writes a `README.md` cert dossier (exam shape table, domains-and-weightings table, official links, recommended course block) and a `study-plan.md` informal walkthrough cross-referenced with course lectures, then runs a per-domain subagent pipeline to produce `.planning/<domain>.md` plans and `lessons/<domain>/subject_<N>_<slug>.md` deep lessons (one writer agent per domain, ~4-8 agents total). A single review agent checks all plans before lesson-writing; lesson review is opt-in after lessons are written. Higher-weight domains get more subjects and deeper coverage. If a course URL is given, dumps the full course syllabus to `curriculum.md` via the platform scraper dispatcher. If only a URL is given, infers the target certification from the curriculum; if inference is ambiguous, asks the user. Triggers on "/create-study-plan", "create a study plan for <X>", "get the official study guide for <cert>", "fetch the exam guide for <cert>", "build study materials for <course URL>", "find the official syllabus for the <cert> exam", or a course URL paired with study/exam/cert intent. Do NOT trigger for a bare URL with no study/cert intent, or for non-certification general-knowledge queries.
-argument-hint: <course-url-and/or-cert-name> [output-dir]
+description: Build complete study materials for a certification, exam, or course. Inputs can be (a) a course URL (Udemy supported today; other platforms via the dispatcher contract in `references/scrapers/README.md`), (b) a certification / exam name or code, or (c) both. Downloads the official vendor study guide, then (cert-only mode) uses the `investigate` skill to recommend the best-aligned course by combining study-guide coverage with community sentiment (with each signal labeled). Writes a `README.md` cert dossier (exam shape table, domains-and-weightings table, official links, recommended course block) and a `study-plan.md` informal walkthrough cross-referenced with course lectures, then runs a per-domain subagent pipeline to produce `.planning/<domain>.md` plans and `lessons/<domain>/subject_<N>_<slug>.md` deep lessons (one writer agent per domain, ~4-8 agents total). A single review agent checks all plans before lesson-writing; lesson review is opt-in after lessons are written. Higher-weight domains get more subjects and deeper coverage. If a course URL is given, dumps the full course syllabus to `curriculum.md` via the platform scraper dispatcher. If only a URL is given, infers the target certification from the curriculum; if inference is ambiguous, asks the user. Triggers on "/create-study-plan", "create a study plan for <X>", "get the official study guide for <cert>", "fetch the exam guide for <cert>", "build study materials for <course URL>", "find the official syllabus for the <cert> exam", "study for the <cert> exam", "prep for the <cert> exam", "exam prep for <X>", "I want to study for <cert>", or a course URL paired with study/exam/cert intent. Do NOT trigger for a bare URL with no study/cert intent, or for non-certification general-knowledge queries ("teach me Snowflake", "I want to learn Kubernetes"). Sibling disambiguation: the `investigate` skill auto-invokes on "research X", "look up the docs on X", "find info on X"; when X is a certification or exam name AND the user wants to *prepare* (study materials, exam prep, syllabus, official guide), this skill wins because it produces the full study pack rather than research notes. If the intent is pure research ("what does the SnowPro Core exam cover?", "is there documentation on AZ-104?"), defer to `investigate`. This skill invokes `investigate` internally at step 6 for course-finding only.
+argument-hint: [<course-url>] [<cert-name-or-code>] [output-dir]
 ---
 
 # create-study-plan
@@ -14,6 +14,42 @@ Build everything needed to study for a cert from zero. Five artifacts:
 4. **`study-plan.md` walkthrough** (always, when a cert is identified). Objective-by-objective notes in informal style: "what it is + need to know + course reference."
 5. **Per-domain lesson packs** (always, when a cert is identified). `.planning/<domain>.md` plans + `lessons/<domain>/subject_<N>_<slug>.md` deep lessons, produced by per-domain writer subagents (one agent per domain). A single review agent checks all plans before lessons get written; lesson review is opt-in. Higher-weight domains get more subjects and deeper coverage.
 
+## Table of contents
+
+- [Files](#files)
+- [Prerequisites](#prerequisites)
+- [Inputs](#inputs)
+- [When NOT to use](#when-not-to-use)
+- [Flow](#flow)
+- [Attribution](#attribution)
+
+## Files
+
+Paths below assume the canonical install at `~/.claude/skills/create-study-plan/`. If the skill lives somewhere else, resolve paths relative to that root.
+
+- `SKILL.md` (this file) - the workflow.
+- `scripts/download.sh` - curl wrapper used in step 5.
+- `scripts/fetch-curriculum.sh` - platform dispatcher used in step 2. Routes by URL hostname into `scripts/scrapers/`.
+- `scripts/scrapers/<platform>.sh` - per-platform curriculum scrapers (Udemy today).
+- `scripts/safe-write-path.sh` - resolves the overwrite-protection rule for README / study-plan artifacts; used by steps 7 and 8.
+- `references/scrapers/README.md` - dispatcher contract; how to add a new platform.
+- `references/vendor-patterns.md` - priors for finding official study-guide URLs; read at step 4.
+- `references/find-course.md` - prompt template passed to the `investigate` skill in step 6.
+- `references/walkthrough-agent.md` - prompt template for the step 8 walkthrough subagent.
+- `references/plan-agent.md` - prompt template for phase 9b plan agents (also defines the plan-file schema).
+- `references/plan-review.md` - prompt template for the phase 9c reviewer.
+- `references/lesson-agent.md` - prompt template for phase 9d lesson agents.
+- `references/lesson-review.md` - prompt template for the phase 9e reviewers.
+- `references/templates/readme.md` - skeleton for the README dossier (read at step 7).
+- `references/templates/walkthrough.md` - skeleton for `study-plan.md` (read by the walkthrough subagent at step 8).
+
+## Prerequisites
+
+- `curl`, `file`, `python3` with the `requests` library (Udemy scraper).
+- Playwright MCP plugin (for step 4 fallbacks).
+- WebSearch + WebFetch tools (host-provided).
+- The skill calls scripts via `~/.claude/skills/create-study-plan/scripts/...`; if the skill is installed elsewhere, substitute the install root.
+
 ## Inputs
 
 The user can pass any combination of:
@@ -24,6 +60,14 @@ The user can pass any combination of:
 
 - If the user gives only a URL, infer the cert from the curriculum once it's fetched. If inference is ambiguous (course doesn't clearly map to one cert, or maps to a non-cert topic), ask before guessing.
 - If the user gives only a cert name, run step 6 (find recommended course via the `investigate` skill) after the study guide is downloaded.
+
+## When NOT to use
+
+- The user wants only flashcards, practice questions, or a mock exam. This skill doesn't generate those.
+- The user wants a pacing calendar or week-by-week schedule. Not produced here.
+- A bare course URL with no exam / cert / study intent. Fall through to a non-cert tool.
+- A non-certification general-knowledge query ("teach me Snowflake"). Use a generic research or tutorial flow.
+- The course isn't cert-aligned (general intro, language tutorial). Stop after `curriculum.md` and tell the user.
 
 ## Flow
 
@@ -37,7 +81,7 @@ The user can pass any combination of:
 
    The script is a dispatcher that routes to a platform-specific scraper in `scripts/scrapers/` (Udemy is the only one wired up today). Produces `curriculum.md` (and `curriculum.txt` when the scraper writes one).
 
-   If the dispatcher exits with code 69 (unsupported platform), it prints a hint pointing at `references/scrapers/README.md`. Integration is mechanical given the contract there (write `scripts/scrapers/<platform>.sh`, write `references/scrapers/<platform>.md`, add a `case` branch in the dispatcher). Default behavior: ask the user "platform X isn't wired up yet, want me to add a scraper for it now?" If yes, follow the README's recipe inline, then retry step 2. Cert-only mode is a fallback, not the first answer.
+   If the dispatcher exits with code 69 (unsupported platform), it prints a hint pointing at `references/scrapers/README.md`. Default behavior: ask the user "platform X isn't wired up yet, want me to add a scraper for it now?" If yes, read `references/scrapers/README.md` first, follow the full "Adding a new platform" recipe there, then retry step 2. Cert-only mode is a fallback, not the first answer.
 
 3. **Determine the certification.**
    - If the user passed a cert name/code, use that verbatim.
@@ -46,7 +90,7 @@ The user can pass any combination of:
    - If the course isn't cert-aligned (e.g. "Python for Beginners"), say so and stop after step 2.
 
 4. **Find the official study guide URL.** WebSearch + WebFetch:
-   - Search for the canonical vendor exam page (see vendor patterns below).
+   - Search for the canonical vendor exam page. Use `references/vendor-patterns.md` as priors for where official guides live on each vendor's domain.
    - The URL MUST be on the vendor's official domain. Reject third-party study guides (vmexam, certsafari, scribd, etc.) for the canonical download. They're fine as cross-references in chat, never as the saved artifact.
    - Prefer PDF over HTML. If the official asset is HTML only, save the rendered page.
 
@@ -59,6 +103,8 @@ The user can pass any combination of:
 
    After Playwright extracts the real URL, hand it to `scripts/download.sh` (curl is faster than Playwright's downloader and keeps the artifact path predictable).
 
+   **Fail fast if no official guide can be found.** If WebSearch, WebFetch, AND Playwright all fail to surface a downloadable URL on the vendor's official domain (after a reasonable number of attempts, not infinite retry), STOP. Do not continue to step 5+ with a guess or a third-party source. Tell the user exactly what was tried (search queries, URLs visited, why each path failed) and exit the flow. The official study guide is the truth source for the rest of the pipeline; without it, the produced artifacts would be unreliable.
+
 5. **Download the guide:**
 
    ```bash
@@ -66,11 +112,13 @@ The user can pass any combination of:
    ```
 
    - Filename: preserve the upstream basename when it's meaningful (e.g. `SnowProCoreStudyGuideC03.pdf`). Otherwise use `<cert-slug>-study-guide.<ext>`.
-   - The script enforces non-empty output and prints the detected file type.
+   - The script enforces non-empty output and prints `wrote <path> (<mime>, <bytes> bytes)` to stderr; nothing goes to stdout.
+
+   **Then extract the domain table.** Open the downloaded guide (PDF: use Read with `pages:` for >10 pages) and pull the vendor's official "EXAM DOMAIN AND WEIGHTINGS" section. Capture each row as `(vendor number, domain name, weight %)`. This table is the source of truth for the README dossier (step 7), the `investigate` prompt (step 6), and the per-domain pipeline (step 9). Hold it in working memory through the rest of the flow; do not re-derive it from web search results.
 
 6. **Find a recommended course (when no course URL was supplied).** Skip this step if the user already passed a URL. Otherwise, this is where the skill picks a course to study alongside the official guide.
 
-   Invoke the `investigate` skill (parallel web research) with the prompt template at `~/.claude/skills/create-study-plan/references/find-course.md`, filled in with the cert name + code, the official domain/weighting table, the downloaded study-guide path, and the official cert page URL. Investigate returns up to 3 candidate courses ranked by alignment with the study guide plus community sentiment, with each signal labeled.
+   Invoke the `investigate` skill via the `Skill` tool (`skill: investigate`, args: the filled-in prompt body) using the template at `~/.claude/skills/create-study-plan/references/find-course.md`. Fill in the cert name + code, the domain/weighting table extracted in step 5, the downloaded study-guide path, and the official cert page URL. Investigate returns up to 3 candidate courses ranked by alignment with the study guide plus community sentiment, with each signal labeled.
 
    Platform-neutral: any platform is fair game (Udemy, Coursera, Pluralsight, YouTube, edX, vendor-native academies, etc.). The investigate skill should rank by quality and alignment, not by "is this Udemy?". If the chosen candidate is on a platform the scraper dispatcher doesn't know about, apply the same "add a scraper inline" flow from step 2 - integration is mechanical given the contract in `references/scrapers/README.md`.
 
@@ -85,21 +133,34 @@ The user can pass any combination of:
 
    Step 7 always runs. Never skip it, even when there's a filename collision; pick an alt name instead.
 
-   Before writing, check whether `<out-dir>/README.md` already exists:
-   - **Absent:** write `README.md`.
-   - **Present and clearly an earlier dossier from this skill** (the H1 matches the cert name and the second-line H2 is `## Files in this folder`): overwrite.
-   - **Present and anything else** (user-authored or unrecognized): write to `<cert-slug>-README.md` (e.g. `snowpro-core-c03-README.md`) without prompting. Surface the alt filename in step 10's report so the user knows what happened. Do NOT ask mid-flow ("should I clobber?") and do NOT skip; alt filename always wins over the prompt.
+   Resolve the target path via the helper (handles the overwrite-protection rule uniformly with step 8). The third arg is an extended-regex pattern matched against the first line (H1) of an existing file:
+
+   ```bash
+   target=$(~/.claude/skills/create-study-plan/scripts/safe-write-path.sh \
+     "<out-dir>/README.md" "<cert-slug>" '^# <Cert Name> \(<exam-code>\)$')
+   ```
+
+   The helper returns `<out-dir>/README.md` when the path is free or its H1 matches a prior dossier from this skill, and `<out-dir>/<cert-slug>-README.md` otherwise (no prompt). If the alt filename fired, record it in step 10's report.
+
+   Then fill the template and write to `$target`. The "Recommended course" block (template lines 29-39) must be populated from step 6's investigate findings (selected course, why, coverage, community signal + source URLs, caveats). Skip the block only if step 6 was skipped (URL supplied by the user) or the user opted out of the course recommendation.
 
 8. **Write `study-plan.md` walkthrough** via a subagent. This is the main learning artifact and the bar is highest here, so it gets its own focused agent rather than running in the orchestrator's context.
 
-   Spawn one `general-purpose` agent using `references/walkthrough-agent.md`. Fill in the variables (cert name + code, paths to the study guide, `curriculum.md` or `N/A`, README dossier, walkthrough template). The agent reads the template at `references/templates/walkthrough.md`, reads the guide and curriculum, and writes `<out-dir>/study-plan.md`. Overwrite-protection works the same way as step 7 (alt filename `<cert-slug>-study-plan.md` if a non-skill file is in the way); the agent handles this itself per its prompt.
+   Resolve the target path the same way as step 7. The walkthrough template starts with `# <Cert Name> study plan`, so use that as the H1 pattern:
+
+   ```bash
+   target=$(~/.claude/skills/create-study-plan/scripts/safe-write-path.sh \
+     "<out-dir>/study-plan.md" "<cert-slug>" '^# <Cert Name> study plan$')
+   ```
+
+   Spawn one `general-purpose` agent using `references/walkthrough-agent.md`. Fill in the variables (cert name + code, paths to the study guide, `curriculum.md` or `N/A`, README dossier, walkthrough template, **and the resolved target path** from the helper). The agent reads the template at `references/templates/walkthrough.md`, reads the guide and curriculum, and writes the file at the path you pass in. Don't ask the agent to re-check overwrite protection; the helper already decided.
 
    Step 8 always runs once a cert is identified.
 
 9. **Per-domain lesson packs (subagent pipeline).** This is the deep, expensive phase. Five sub-phases (9a setup, 9b plan, 9c plan review, 9d lesson, 9e lesson review). 9b and 9d run domain-parallel; 9c is one agent over all plans; 9e is opt-in. 9a-9d always run once a cert is identified; warn the user once at the start ("spawning ~N+2 agents across the lesson pipeline, takes a few minutes") and proceed without further prompting. 9e prompts before running.
 
    **9a. Setup**
-   - Read the domains table from `README.md` to get the domain list and weights. Also read the study guide PDF to get each domain's **vendor number** (the `1.0`, `2.0`, etc. labels printed under "EXAM DOMAIN AND WEIGHTINGS").
+   - Read the domains table from the README dossier written in step 7. Use the path step 7 actually wrote to (either `<out-dir>/README.md` or the alt `<out-dir>/<cert-slug>-README.md` if the overwrite-protection branch fired). Also read the study guide PDF to get each domain's **vendor number** (the `1.0`, `2.0`, etc. labels printed under "EXAM DOMAIN AND WEIGHTINGS").
    - Sluggify each domain name using the **vendor's domain number**, not the README's weight-sorted display order. So Snowflake's "2.0 Account Management and Data Governance" stays `2-account-management-and-data-governance` even when the README sorts it third by weight. Anchoring slugs to vendor numbering keeps directory names aligned with the study-guide pages.
    - Lowercase the domain name, replace any non-`[a-z0-9]` run with `-`, prefix with the vendor's domain number. Strip the `.0` suffix (`1.0` -> `1`).
    - `mkdir -p <out-dir>/.planning <out-dir>/lessons/<each-domain-slug>`.
@@ -111,7 +172,7 @@ The user can pass any combination of:
 
    **9c. Plan review (single agent)** - one `Explore` agent reviews **all plans at once**.
    - Spawn a single `Explore` (read-only) agent using `references/plan-review.md`. The agent reads every plan in `.planning/`, the study guide, and `curriculum.md`, then returns a per-domain verdict.
-   - The reviewer's report has one section per domain (PASS / NEEDS_FIXES / MAJOR_REWORK). For each `NEEDS_FIXES` domain, patch the plan inline by editing it. For each `MAJOR_REWORK` domain, re-spawn the plan-creation agent for that domain with the reviewer's findings appended. Re-review only if a major rework happened (capped at one extra cycle).
+   - The reviewer's report has one section per domain (PASS / NEEDS_FIXES / MAJOR_REWORK). Before patching any `NEEDS_FIXES` plan inline, read `references/plan-agent.md` so the plan-file schema (subject blocks, `Slug:` line, `Course:` line, depth labels) is in the orchestrator's context. Then patch the plan by editing the file directly. For each `MAJOR_REWORK` domain, re-spawn the plan-creation agent for that domain with the reviewer's findings appended. Re-review only if a major rework happened (capped at one extra cycle).
 
    **9d. Lesson phase (parallel)** - one `general-purpose` agent per domain. The agent writes every lesson file for its domain in one shot, so the agent count matches the domain count (typically 4-8), not the subject count (typically 30-50).
    - For each domain, read the finalized plan at `.planning/<domain-slug>.md` and pass its full content to the agent via the template at `references/lesson-agent.md`.
@@ -124,7 +185,7 @@ The user can pass any combination of:
    - For each domain whose verdict is `NEEDS_FIXES`, patch the affected lesson files inline (Claude edits, not a subagent). For `MAJOR_REWORK`, re-spawn the domain's lesson agent with the reviewer's findings appended to the prompt; the re-spawn rewrites only the broken subjects, leaving the passing ones untouched. Capped at one extra cycle.
    - If the user says no: skip 9e entirely, and note in step 10's report that lesson review was declined.
 
-   **Failure handling:** if any subagent returns an error or empty output, retry that single agent once with the same prompt. If it fails again, log the gap in the final report (don't block other domains).
+   **Failure handling:** if any subagent returns an error or empty output, retry that single agent once with the same prompt. If it fails again, record the gap in step 10's report with: the domain name, the phase that failed (9b plan / 9d lesson / 9e review), the error message returned, and which artifacts are missing as a result (e.g. "`.planning/3-account-management.md` not written; lesson phase for this domain skipped"). Don't block other domains.
 
 10. **Report to the user:**
     - Path to study guide and detected MIME type.
@@ -135,37 +196,8 @@ The user can pass any combination of:
     - The inferred (or supplied) cert name.
     - Any open review items, retry failures, or skipped phases.
 
-## Templates (load on demand)
-
-- `references/templates/readme.md` - skeleton + rules for the README dossier. Read at step 7.
-- `references/templates/walkthrough.md` - skeleton + rules for `study-plan.md`. Read by the walkthrough subagent at step 8 (you don't need to load it directly in the orchestrator).
-
-## Vendor patterns (known officials)
-
-Use these as priors when searching. They aren't exhaustive; always verify the page is current and on the vendor's domain.
-
-| Vendor | Where the official guide lives |
-| --- | --- |
-| Snowflake (SnowPro) | Two URLs to know. The modern cert page `learn.snowflake.com/en/certifications/<cert-slug>/` shows a "Download Now" button gated by a JS handler (no `.pdf` href in static DOM, so WebFetch sees nothing). The legacy thank-you page `info.snowflake.com/SnowPro-Study-Guide-Form_Updated-Thank-You-Page.html?pdf_name=<NameOfPDF>` still resolves the AEM CDN PDF in the DOM as of 2026: Playwright-navigate, `browser_evaluate` to scan the HTML for `publish-p*.adobeaemcloud.com/.../<NameOfPDF>.pdf`, then hand to `download.sh`. Try the legacy URL first - it's cheaper than wrestling the modern page's JS button. WebSearch will probably surface the modern URL first; don't take that as authoritative for the download. |
-| AWS | `aws.amazon.com/certification/certified-<slug>/` links an "Exam Guide" PDF. |
-| Google Cloud | `cloud.google.com/certification/guides/<slug>` (HTML exam guide; no PDF). |
-| Microsoft (Azure / M365) | `learn.microsoft.com/en-us/credentials/certifications/exams/<exam-id>/` plus the Skills Outline PDF linked from that page. |
-| CompTIA | `comptia.org/certifications/<cert>` -> "Exam Objectives" PDF. |
-| CNCF (CKA / CKAD / CKS) | `github.com/cncf/curriculum` (PDFs in repo). |
-| HashiCorp | `developer.hashicorp.com/certifications/<product>` -> "Exam objectives" page. |
-| Cisco | `learningnetwork.cisco.com/s/<cert>-exam-topics` -> blueprint PDF. |
-
-If the cert isn't in the table, fall back to: `WebSearch "<cert name> official exam guide site:<vendor-domain>"` and verify the result is on a vendor-owned domain before downloading.
-
-## What this skill does NOT do (yet)
-
-- No schedule, no per-week pacing across the lesson packs.
-- No spaced-repetition flashcards or progress tracking.
-- No practice questions / mock exams generated from the lessons.
-- Only Udemy is wired up in the scraper dispatcher today. The architecture is platform-agnostic - `scripts/scrapers/` + `references/scrapers/README.md` define the contract for adding more. Cert-only mode works regardless of platform.
-
-Extensions land in this same skill, so additions go here (new platform scrapers under `scripts/scrapers/`, new reference files in `references/`, new helper scripts beside the existing ones) rather than a fork.
-
 ## Attribution
 
 Upstream Udemy scraper: <https://github.com/yossijaki/udemy-course-curriculum-scraper> (GPL-3.0). The skill clones and runs it; it does not vendor the code.
+
+Scope: today this skill produces the guide + dossier + walkthrough + per-domain lesson packs. It does not produce pacing calendars, flashcards, or practice exams. Extensions land in this same skill (new platform scrapers under `scripts/scrapers/`, new reference files in `references/`).
