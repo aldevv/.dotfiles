@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Download a single URL to <output-path>, follow redirects, fail on non-2xx,
-# verify the resulting file is non-empty, and print its detected type.
+# verify the resulting file is non-empty, and print its detected MIME type.
 #
 # Usage: download.sh <url> <output-path>
 
@@ -23,5 +23,8 @@ if [[ ! -s "$out" ]]; then
     exit 1
 fi
 
-file "$out"
-echo "wrote $out ($(stat -c%s "$out" 2>/dev/null || stat -f%z "$out") bytes)" >&2
+# `file` is unreliable for PDF page counts (often reports wrong number).
+# Use MIME-only output, which is accurate, and print bytes from stat.
+mime=$(file --brief --mime-type "$out" 2>/dev/null || echo "unknown")
+bytes=$(stat -c%s "$out" 2>/dev/null || stat -f%z "$out")
+echo "wrote $out ($mime, $bytes bytes)" >&2

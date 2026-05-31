@@ -76,10 +76,12 @@ By convention (universal, not specific to this file), lazy-loaded detail files a
   Covers the principle that cheap String()/Dump helpers and a gated logger are load-bearing infrastructure, with a concrete compiler example, a checklist for what to add and where, and when to escalate to GDB/dlv when observability alone isn't enough.
 
 - [`~/.claude/rules/git.md`](.claude/rules/git.md). **Read when** any of:
-  - about to write "ready for PR", "ready for MR", "ready to ship", "ready to merge", "you can open the PR/MR", "good to go", "no blockers", or any equivalent readiness phrase
-  - before running `gh pr create` / `glab mr create` / `git push` on a branch that's about to be reviewed
+  - about to write "ready for PR/MR", "ready to ship/merge", "good to go", "no blockers", or any equivalent readiness phrase
+  - before running `gh pr create` / `glab mr create` / `git push` on a branch about to be reviewed
+  - user says "remove from git" / "untrack" / "stop tracking" / equivalent
+  - before running `git rm` / `git rm -r` / `git rm --cached` in any form
 
-  Covers the PR/MR-readiness honesty rule: static checks aren't testing; if you can't run it end-to-end, say so explicitly.
+  Covers PR/MR-readiness honesty and the "remove from git = `git rm --cached`" rule.
 
 ## Table of Contents
 - [Lazy load](#lazy-load)
@@ -181,7 +183,7 @@ When touching existing code: if a comment restates the line that follows it, del
 **Prefer many small files over one monolithic file.** Group by responsibility (state, IPC, platform shims, lifecycle, install, autocmds, etc.). One folder per coarse unit, one file per concern. When a module starts mixing concerns or pushing past a few hundred lines, split it; don't wait for it to balloon. The split applies to any language: a Lua plugin gets `lua/<name>/init.lua` + sibling files, a Python tool gets `pkg/__init__.py` + submodules, a Go service gets per-concern packages. This rule overrides any "single-file plugin" or "keep it small" notes in older project READMEs or `CLAUDE.local.md` files: surface the conflict, update the project doc, then split.
 
 ## Worktrees
-Worktrees live at `~/worktrees/<repo>/<branch>` (managed by the `wt` helper at `$UTILITIES/stuff-git/wt`). Two rules when working in one:
+Worktrees live at `~/worktrees/<repo>/<branch>` for personal repos and `~/worktrees/work/<repo>/<branch>` for repos whose main checkout is under `$WORK` (managed by the `wt` helper at `$UTILITIES/stuff-git/wt`). The `~/worktrees/work/` parent carries `CLAUDE.md` and `.claude/lazy` symlinks pointing at `$WORK/CLAUDE.md` and `$WORK/.claude/lazy`, so every work worktree inherits work-scope memory via the ancestor-CLAUDE walk without per-worktree setup. Two rules when working in one:
 
 - **Mirror the main checkout's `.envrc`.** Worktrees inherit `.git` but NOT working-tree files like `.envrc`, so dev-env hooks defined there don't follow you in. When work starts in a worktree, copy `.envrc` from the main checkout (and run `direnv allow` once). If the main repo has no `.envrc`, do nothing; there's nothing to mirror.
 - **Promote repeated dev-binary build sequences to `.envrc`.** If the same multi-step build (e.g. `bun run build:bin && install -m 0755 dist/<repo> ~/.local/bin/<repo>-dev`) gets run more than a couple of times and the project has no Makefile target / `bin/` script for it, define it as an alias or shell function in `.envrc` (e.g. `<repo>-dev() { ... }`). Add it to **both** the main checkout's `.envrc` and every active worktree's copy so the command is available everywhere on `cd`. Don't pollute the project's source: `.envrc` stays gitignored and per-checkout.

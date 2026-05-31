@@ -1,6 +1,6 @@
 # Lesson reviewer prompt template
 
-Use this template when spawning an `Explore` (read-only) subagent in phase 8e. One reviewer per DOMAIN, NOT per lesson. Substitute every `{VAR}` with the real value before sending.
+Use this template when spawning an `Explore` (read-only) subagent in phase 9e. One reviewer per DOMAIN, NOT per lesson. Substitute every `{VAR}` with the real value before sending.
 
 ## Variables
 
@@ -32,7 +32,7 @@ Per-lesson criteria (apply to each lesson):
 a. Coverage: every objective the plan says this lesson covers is actually addressed in the body.
 b. Structure: has TL;DR, What it is, Hands-on (if applicable), Watch out for, Course (or none in cert-only mode). No "Sources" section.
 c. Style: informal, second person, no filler, no emoji, no motivational text, no em-dashes / double-hyphens as prose punctuation.
-d. Length: roughly matches the plan's depth label (short 80-200, medium 200-400, long 400-700 lines). Note significant outliers.
+d. Length: roughly matches the plan's depth label (short 50-120, medium 100-220, long 200-400 lines). Lessons that cover every objective with concrete bullets / tables / code can land at the lower end and still be complete; only flag a length issue if a lesson is below the lower bound AND missing content, or significantly over the upper bound (which usually means padding).
 e. Code blocks: valid syntax for the declared language, with vendor-correct commands and SQL.
 f. Course ref: matches the plan exactly (or absent if cert-only mode).
 g. No fabrications: any claim not in the study guide is backed by a cited vendor URL.
@@ -43,6 +43,8 @@ h. Tone consistency: lessons feel like they came from one author.
 i. Redundancy: no two lessons cover the same objective in significant overlap.
 j. Weight calibration: total lesson length across the domain is proportional to {WEIGHT}%. (Roughly: 30%+ domains get more total lines than 10% domains.)
 
+Lesson files follow the pattern `subject_<N>_<slug>.md` (the slug comes from the plan's `Slug:` line). Refer to lessons by their subject number plus title in the review, not by raw filename.
+
 Output (return as final message; do not edit anything):
 
     ## Review: lessons/{DOMAIN_SLUG}/
@@ -50,8 +52,8 @@ Output (return as final message; do not edit anything):
     Verdict: PASS | NEEDS_FIXES | MAJOR_REWORK
 
     ### Files reviewed
-    - subject_1: <title> (<line count>) - PASS | issues
-    - subject_2: ... 
+    - subject_1 (<filename>): <title> (<line count>) - PASS | issues
+    - subject_2 (<filename>): ...
 
     ### Per-lesson findings
     - subject_<N>: <specific issue, citing line numbers or sections when useful>

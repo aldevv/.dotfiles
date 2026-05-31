@@ -1,6 +1,6 @@
 # Plan agent prompt template
 
-Use this template when spawning a `general-purpose` subagent in phase 8b. Substitute every `{VAR}` with the real value before sending.
+Use this template when spawning a `general-purpose` subagent in phase 9b. Substitute every `{VAR}` with the real value before sending.
 
 ## Variables
 
@@ -48,6 +48,8 @@ Output format (write this file, nothing else):
 
     ## subject_1: <short descriptive title>
 
+    Slug: <slug>
+
     Scope: <1-2 sentences on what this lesson covers>
 
     Objectives covered (verbatim from the study guide):
@@ -62,9 +64,16 @@ Output format (write this file, nothing else):
 
     ## subject_2: ...
 
+Slug rules:
+- Lowercase. Replace any non-`[a-z0-9]` run with `-`. Trim leading/trailing `-`.
+- 1 to 5 words, derived from the subject title. Keep it readable: `snowpipe` not `subject-about-snowpipe`. `micro-partitions-and-clustering` not `mpcm`.
+- Unique within the domain.
+- Examples: `architecture-layers`, `editions`, `object-hierarchy`, `warehouses`, `time-travel`, `streams-and-tasks`, `rbac`, `data-masking`.
+
 Hard rules:
 - Use the EXACT objective wording from the study guide. Do not paraphrase.
 - If {CURRICULUM_PATH} is "N/A", omit the `Course:` / `Not in course curriculum.` line entirely (cert-only mode).
 - If the curriculum has no match, write `Not in course curriculum.` - do not hedge with "possibly relates to..."
+- Every subject MUST have a `Slug:` line. The downstream lesson agent uses it to name the file `subject_<N>_<slug>.md`.
 - Write the file with the Write tool. Do not output the contents in your reply; only confirm the file path and the number of subjects you planned.
 ```

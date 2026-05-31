@@ -247,11 +247,11 @@ Your job:
 5. Follow the Apply policy above on the surviving findings. Build/test (e.g. \`go build ./... && go test ./... -count=1\` for Go).
 6. Commit locally on ${FIX_BRANCH}. Separate small commits per finding is fine, or one cohesive commit. Stage only the files you actually changed. Never \`git add -A\`.
 7. Print a short summary of: which findings you investigated and how (which used /investigate, which used 3/6/12 Explore agents and why), which findings were DISQUALIFIED as phantoms (with the evidence that refuted them), which SURVIVING findings were CLEAR vs. AMBIGUOUS, why each AMBIGUOUS item is ambiguous, and what you actually changed. Ring the tmux bell (\`printf '\\a'\`).
-8. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH}. If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On success, tell them the merge landed and remind them to push from ${REPO_DIR} themselves. On failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they say no, leave the fix branch in place.
-9. End your turn. Do NOT push. Do NOT loop back waiting for further input.
+8. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH}. If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On success, tell them the merge landed and let them know they can push from ${REPO_DIR} themselves or ask you to push. On failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they say no, leave the fix branch in place.
+9. End your turn. Do not push unless the operator explicitly asks. Do NOT loop back waiting for further input.
 
 Hard rules:
-- NEVER push. The operator pushes; you don't.
+- Push only when the operator explicitly tells you to. Do not auto-push, do not push as part of a merge, do not push to wrap up. If the operator says "push", run \`git -C ${REPO_DIR} push\` (from the main checkout, on ${PR_BRANCH}).
 - NEVER fix a finding you haven't investigated. The investigation in step 3 is mandatory, not optional, even for findings that "look obvious". Skipping it is the failure mode this prompt exists to prevent.
 - Treat every finding as a claim, not a fact. If the investigation refutes it, say so explicitly in the summary instead of "fixing" a phantom.
 - One pass only. After the merge prompt, end your turn.
@@ -265,7 +265,7 @@ PR branch (operator's checkout): ${PR_BRANCH}
 Fix branch (your worktree): ${FIX_BRANCH}
 Worktree: ${WT_PATH}
 
-Output: under 200 words at the end, summarize what you changed and whether the merge into ${PR_BRANCH} ran. Confirm you did NOT push.
+Output: under 200 words at the end, summarize what you changed, whether the merge into ${PR_BRANCH} ran, and whether you pushed (only if the operator asked).
 EOF
 
   prompt="${prompt_head}

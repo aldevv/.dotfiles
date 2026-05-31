@@ -72,6 +72,7 @@ __wt_run() (
   set -eu -o pipefail
 
   WORKTREE_HOME="${WT_HOME:-$HOME/worktrees}"
+  WORK_SUBDIR="work"
 
   die() {
     printf 'wt: %s\n' "$*" >&2
@@ -92,12 +93,28 @@ __wt_run() (
     basename "$main_root"
   }
 
-  worktrees_root() {
-    printf '%s/%s' "$WORKTREE_HOME" "$(canonical_repo_name)"
-  }
-
   main_worktree_path() {
     git worktree list --porcelain | awk '/^worktree / { print $2; exit }'
+  }
+
+  # Work repos (main checkout under $WORK) get an extra `work/` segment so
+  # they cluster under one parent dir. That parent carries the work-scope
+  # CLAUDE.md and .claude/lazy symlinks, which propagate into every worktree
+  # below via Claude's ancestor-CLAUDE walk.
+  is_work_repo() {
+    [ -n "${WORK:-}" ] || return 1
+    local main_root
+    main_root="$(main_worktree_path)"
+    case "$main_root/" in "$WORK"/*) return 0 ;; esac
+    return 1
+  }
+
+  worktrees_root() {
+    local subdir=""
+    if is_work_repo; then
+      subdir="$WORK_SUBDIR/"
+    fi
+    printf '%s/%s%s' "$WORKTREE_HOME" "$subdir" "$(canonical_repo_name)"
   }
 
   # Worktrees only inherit `.git`, not working-tree files. Symlink the main
@@ -199,7 +216,11 @@ EOF
               if (wt && wt != main) printf "%s\t%s\t%s\n", repo, branch ? branch : "(no branch)", wt
             }
           '
-    done < <(find "$WORKTREE_HOME" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+    done < <({
+      find "$WORKTREE_HOME" -mindepth 1 -maxdepth 1 -type d \
+        ! -path "$WORKTREE_HOME/$WORK_SUBDIR" 2>/dev/null
+      find "$WORKTREE_HOME/$WORK_SUBDIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null
+    })
   }
 
   # fzf picker for bare `worktree` / `wt` run outside any git repo. Lists
@@ -473,11 +494,14 @@ description: Git worktree layout on this machine. Read whenever the user referen
 
 Git worktrees on this machine live at:
 
-    ${base}/<repo>/<branch>
+    ${base}/<repo>/<branch>           # personal repos
+    ${base}/work/<repo>/<branch>      # repos whose main checkout is under \$WORK
 
 Where:
 - \`<repo>\` is the basename of the main checkout's top-level directory.
 - \`<branch>\` is the worktree's branch name.
+
+Work repos route through an extra \`work/\` segment. That parent dir carries \`CLAUDE.md\` and \`.claude/lazy\` symlinks into \`\$WORK\`, so every work worktree picks up work-scope CLAUDE memory and lazy-load files via Claude's ancestor-CLAUDE walk. Detection: the main checkout's path starts with \`\$WORK/\`.
 
 The base is configurable via \`WT_HOME\` in the environment; when this skill was installed it resolved to \`${base}\`.
 
@@ -510,7 +534,7 @@ A name is skipped when the source doesn't exist in the main checkout or when the
 
 ## Resolving names
 
-When the user references "the \`X\` worktree" from inside a repo, resolve to \`${base}/<current-repo>/X\`. To get \`<current-repo>\`:
+When the user references "the \`X\` worktree" from inside a repo, resolve to \`${base}/<current-repo>/X\` (or \`${base}/work/<current-repo>/X\` if the main checkout is under \`\$WORK\`). To get \`<current-repo>\`:
 
 \`\`\`bash
 git worktree list --porcelain | awk '/^worktree / { print \$2; exit }' | xargs basename

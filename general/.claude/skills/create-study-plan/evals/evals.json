@@ -1,0 +1,26 @@
+{
+  "skill_name": "create-study-plan",
+  "evals": [
+    {
+      "id": 1,
+      "name": "cert-and-course-url",
+      "prompt": "I'm signed up to take the AWS Certified Cloud Practitioner (CLF-C02) in about six weeks. I just bought Stephane Maarek's Udemy course (https://www.udemy.com/course/aws-certified-cloud-practitioner-new/) and I want a proper study setup before I start - the official AWS exam guide PDF, a domain-by-domain walkthrough that points at the course videos, and per-domain lesson notes I can revisit. Put everything in ~/learn/aws-clf-c02/. Use /create-study-plan if that's the right move.",
+      "expected_output": "Output dir created at ~/learn/aws-clf-c02/. AWS CLF-C02 official exam guide PDF downloaded. curriculum.md from the Udemy URL. README.md dossier with exam shape + domain weightings tables. study-plan.md walkthrough cross-referencing course videos. .planning/<domain>.md per domain. lessons/<domain>/subject_<N>_<slug>.md files written. Phase 9c plan review ran; phase 9e lesson review prompted (opt-in).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "cert-only-recommend-course",
+      "prompt": "Help me get ready for the CKA. I haven't picked a course yet - find me the best-aligned one and explain why it's the best pick. I want the official exam objectives downloaded, a study walkthrough, and full lesson packs. Put it under ~/study/cka/.",
+      "expected_output": "Output dir ~/study/cka/ created. Official CKA curriculum PDF downloaded from github.com/cncf/curriculum. find-course step invoked via the `investigate` skill; returns up to 3 ranked candidates with study-guide-alignment vs community-recommendation labels. User asked to pick (top recommendation defaults). If user accepts top pick on a supported platform, curriculum.md is fetched via the scraper dispatcher. README.md dossier with Recommended course section listing the chosen course + rationale + source links. study-plan.md and per-domain lesson packs written.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "url-only-infer-cert",
+      "prompt": "Build study materials from this course: https://www.udemy.com/course/snowflake-masterclass/. Put it under ~/learn/snowflake-test-2/.",
+      "expected_output": "Output dir created. Udemy curriculum scraped to curriculum.md (27 'Unidad' sections). Cert inferred as SnowPro Core based on Snowflake-focused curriculum keywords (architecture, copy, time travel, streams, access management). If inference is ambiguous, the skill asks the user before proceeding. SnowPro Core C03 study guide PDF downloaded from info.snowflake.com legacy thank-you page. README.md, study-plan.md, .planning/, and lessons/ all written per the standard flow.",
+      "files": []
+    }
+  ]
+}
