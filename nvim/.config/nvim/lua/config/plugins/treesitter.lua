@@ -1,14 +1,11 @@
--- register zsh ft to use bash
-if vim.treesitter.language.register then
-  vim.treesitter.language.register("bash", "zsh")
-end
+vim.treesitter.language.register("bash", "zsh")
+vim.treesitter.language.register("markdown", "octo")
+
 local ensure_installed = {
   "vimdoc",
   "bash",
   "python",
-  -- "c",
   "css",
-  -- "cpp",
   "rust",
   "javascript",
   "typescript",
@@ -26,7 +23,6 @@ local ensure_installed = {
   "markdown_inline",
   "yaml",
   "http",
-  -- "nix",
   "zig",
   "jsdoc",
   "lua",
@@ -37,13 +33,7 @@ local ensure_installed = {
   "sxhkdrc",
   "svelte",
   "requirements",
-  -- "prisma",
-  -- "php",
-  -- "phpdoc",
-  -- "ocaml",
-  -- "ocaml_interface",
   "ini",
-  "http",
   "html",
   "gitignore",
   "gitcommit",
@@ -52,80 +42,32 @@ local ensure_installed = {
   "git_config",
   "csv",
   "terraform",
-  -- "c_sharp",
-  -- "angular",
 }
 if os.getenv("NVIM_MINIMAL") ~= nil then
   ensure_installed = {}
 end
 
--- see kickstart.nvim https://github.com/nvim-lua/kickstart.nvim/blob/master/init.lua
-vim.defer_fn(function()
-  require("nvim-treesitter.configs").setup({
-    -- One of "all", "maintained" (parsers with maintainers), or a list of languages
-    -- ensure_installed = "all",
+require("nvim-treesitter").install(ensure_installed)
 
-    -- textobjects sucks because 1. can't add counts to them, 2. bugs for around and inner in
-    -- visual mode, not respecting keymap set
-    -- textobjects = {
-    -- 	select = {
-    -- 		enable = true,
-    --
-    -- 		-- Automatically jump forward to textobj, similar to targets.vim
-    -- 		lookahead = true,
-    -- 		keymaps = {
-    -- 			["af"] = "@function.outer",
-    -- 			["lf"] = "@function.inner",
-    -- 			["aC"] = "@class.outer",
-    -- 			["lC"] = "@class.inner",
-    -- 			-- doesnt work well, same with parameters
-    -- 			-- ["lc"] = "@comment.inner",
-    -- 			-- ["ac"] = "@comment.outer",
-    -- 		},
-    -- 	},
-    -- },
-    ensure_installed = ensure_installed,
-    -- parser_install_dir = vim.fn.stdpath("data") .. "/treesitter_parsers",
-    -- Install languages synchronously (only applied to `ensure_installed`)
-    sync_install = true,
-    -- List of parsers to ignore installing
-    ignore_install = {},
-    highlight = {
-      -- `false` will disable the whole extension
-      enable = true,
-      custom_captures = {
-        -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
-        ["foo.bar"] = "Identifier",
-      },
+local function is_big_file(buf)
+  local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
+  return ok and stats and stats.size > 100 * 1024
+end
 
-      disable = function(_, buf)
-        local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
-        return ok and stats and stats.size > 100 * 1024
-      end,
-    },
-    indent = {
-      enable = true,
-      disable = function(_, buf)
-        local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
-        return ok and stats and stats.size > 100 * 1024
-      end,
-    },
-    incremental_selection = {
-      enable = true,
-      keymaps = {
-        -- init_selection = "<c-space>",
-        -- node_incremental = "<c-space>",
-        -- scope_incremental = "<c-s>",
-        -- node_decremental = "<c-backspace>",
-      },
-    },
-    query_linter = {
-      enable = true,
-      use_virtual_text = true,
-      lint_events = { "BufWrite", "CursorHold" },
-    },
-  })
+local ft_aliases = { zsh = "bash", octo = "markdown" }
 
-  local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-  parser_config.markdown.filetype_to_parsername = "octo"
-end, 0)
+local group = vim.api.nvim_create_augroup("user_treesitter", { clear = true })
+vim.api.nvim_create_autocmd("FileType", {
+  group = group,
+  callback = function(args)
+    local buf = args.buf
+    if is_big_file(buf) then
+      return
+    end
+    local lang = ft_aliases[args.match] or args.match
+    if not pcall(vim.treesitter.start, buf, lang) then
+      return
+    end
+    vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+  end,
+})

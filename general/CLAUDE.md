@@ -4,10 +4,9 @@
 
 Files in the list below are read on demand when their `**Read when:**` clause matches the current context. A wasted load is fine; a silently-missed load is not, so err broader on a match. Lazy files live in a sibling `.claude/lazy/` directory (here: `~/.claude/lazy/`, dotfiles source `~/.dotfiles/general/.claude/lazy/`). Authoring guidance for triggers lives in [`~/.claude/lazy/trigger-authoring.md`](.claude/lazy/trigger-authoring.md), loaded when editing a Lazy load section.
 
-A PreToolUse hook (`~/.claude/hooks/lazy-scan-reminder.sh`) fires on every `Write`/`Edit`/`NotebookEdit` and injects a reminder to:
-- Re-scan this table.
-- Re-read any listed file whose trigger fires on the current work.
-- After a compaction summary: treat every lazy file as evicted and re-read every triggered file. No "I remember it" self-check — the summary preserves the *fact* of reading, not the content.
+A PreToolUse hook (`~/.claude/hooks/lazy-scan-reminder.sh`) fires before every `Write`/`Edit`/`NotebookEdit` and injects a reminder listing the lazy files still unloaded this session. State lives at `~/.cache/claude-lazy-reminder/<session_id>/`, one marker file per loaded lazy file. The reminder skips itself once every lazy file in scope (ancestor walk of `.claude/lazy/` from cwd plus `~/.claude/lazy/`) has a marker. Markers are dropped by a PostToolUse hook on `Read` (`~/.claude/hooks/lazy-track-read.sh`) whenever Claude reads a file under any `.claude/lazy/`. A PreCompact hook (`~/.claude/hooks/lazy-scan-reset.sh`) wipes the session's marker directory, so the next edit after the compaction summary re-fires the reminder with the full unloaded set.
+
+When the reminder fires: for each listed file, check its **Read when** clause in the relevant CLAUDE.md and load it if the trigger fires on the current work. After a compaction summary, treat every lazy file as evicted and re-read every triggered file, the summary preserves the *fact* of reading, not the content.
 
 - [`~/.claude/lazy/skills.md`](.claude/lazy/skills.md). **Read when** any of:
   - creating, editing, or auditing a skill

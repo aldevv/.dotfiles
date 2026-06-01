@@ -64,9 +64,3 @@ println!("PRINT#VAR: <c-o>"vp {:?}", <c-o>"vp); // __AUTO_GENERATED_PRINTF_END__
   end,
 })
 
--- load refactoring Telescope extension
-local ok, telescope = pcall(require, "telescope")
-if not ok then
-  return
-end
-telescope.load_extension("refactoring")

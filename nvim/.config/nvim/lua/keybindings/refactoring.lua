@@ -36,7 +36,6 @@ vim.keymap.set("n", "<leader>rc", function()
     require("refactoring").debug.cleanup {}
 end, { desc = "Debug Cleanup" })
 
--- remap to open the Telescope refactoring menu in visual mode
-vim.keymap.set({ "n", "v" }, "<leader>rt", function()
-    require("telescope").extensions.refactoring.refactors()
-end, { desc = "Telescope Refactors" })
+vim.keymap.set({ "n", "x" }, "<leader>rt", function()
+    require("refactoring").select_refactor()
+end, { desc = "Select Refactor" })

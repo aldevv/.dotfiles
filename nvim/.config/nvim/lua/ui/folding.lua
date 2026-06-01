@@ -2,7 +2,7 @@
 -- FOLDING
 -- =========
 vim.o.foldmethod = "expr"
-vim.o.foldexpr = "nvim_treesitter#foldexpr()"
+vim.o.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.o.foldlevel = 20
 vim.o.foldenable = true
 

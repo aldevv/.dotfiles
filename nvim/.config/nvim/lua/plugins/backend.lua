@@ -11,7 +11,8 @@ return {
     opts = {
       lsp_inlay_hints = {
         enable = false, -- this is the only field apply to neovim > 0.10
-      }
+      },
+      textobjects = false,
     },
     -- https://github.com/ray-x/go.nvim?tab=readme-ov-file#configuration
     config = function(lp, opts)

@@ -43,7 +43,6 @@ export DOTFILES="$HOME/.dotfiles"
 export TRASH="$HOME/.local/share/Trash/files"
 export PASSWORD_STORE_DIR="$HOME/.local/share/.pass"
 export SECRETS_EXTENSION=".scr"
-export NVIM_LOG_FILE="$HOME/.config/nvim/log/log"
 export NIXPKGS_ALLOW_UNFREE=1
 
 # Also sourced by bash via gdm3/Xsession -> ~/.xprofile, so keep this POSIX.

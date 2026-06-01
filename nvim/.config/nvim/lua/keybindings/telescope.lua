@@ -150,8 +150,6 @@ M.load_mappings = function()
 
   map("n", "<leader>t,P", ':lua require("utils.lua.telescope").plugins_def()<cr>', nor_s)
 
-  map("n", "<leader>t,r", ":Telescope refactoring<cr>", nor_s)
-
   map("n", "<leader>tdc", ":Telescope dap configurations", nor_s)
   map("n", "<leader>tdC", ":Telescope dap commands", nor_s)
   map("n", "<leader>tdl", ":Telescope dap list_breakpoints", nor_s)
