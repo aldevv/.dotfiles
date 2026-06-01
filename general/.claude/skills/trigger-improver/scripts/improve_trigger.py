@@ -163,6 +163,14 @@ than N+1 bullets, or if any single bullet is more than 2x the length of the
 longest bullet in the current trigger, you are almost certainly overfitting.
 Cut.
 
+Hard cap: the entire **Read when** block (including the leading `- [link]`
+line) must be 1024 characters or fewer. The harness refuses to write a
+winner over the cap. If your rewrite breaks the cap, your only options are
+to (a) shorten existing bullets, (b) drop the weakest bullet, or (c) propose
+splitting the trigger into two entries pointing at the same target each
+with a tighter predicate. Don't append a new bullet at the cost of going
+over. Triggers are scannable bullet lines, not paragraphs.
+
 Selection tiebreaker (be aware). The harness picks the winning candidate by
 (test_passed, recall, precision, length-slack, -length). A candidate that
 ties the original on test accuracy loses unless it improves recall or

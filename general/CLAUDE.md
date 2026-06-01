@@ -4,7 +4,10 @@
 
 Files in the list below are read on demand when their `**Read when:**` clause matches the current context. A wasted load is fine; a silently-missed load is not, so err broader on a match. Lazy files live in a sibling `.claude/lazy/` directory (here: `~/.claude/lazy/`, dotfiles source `~/.dotfiles/general/.claude/lazy/`). Authoring guidance for triggers lives in [`~/.claude/lazy/trigger-authoring.md`](.claude/lazy/trigger-authoring.md), loaded when editing a Lazy load section.
 
-**Pre-edit re-scan (mandatory).** Before the FIRST `Write` or `Edit` of any source file in a turn, RE-SCAN this whole table, even if the trigger looks already-loaded. Long research/plan phases push the table out of focus, and an action-based trigger ("BEFORE the first Write/Edit") only fires if you actually consult the table at that moment. A turn that did 10 Reads + AskUserQuestion + Bash before its first Edit is the same as a turn that edits immediately — both must trigger the same loads.
+A PreToolUse hook (`~/.claude/hooks/lazy-scan-reminder.sh`) fires on every `Write`/`Edit`/`NotebookEdit` and injects a reminder to:
+- Re-scan this table.
+- Re-read any listed file whose trigger fires on the current work.
+- After a compaction summary: treat every lazy file as evicted and re-read every triggered file. No "I remember it" self-check — the summary preserves the *fact* of reading, not the content.
 
 - [`~/.claude/lazy/skills.md`](.claude/lazy/skills.md). **Read when** any of:
   - creating, editing, or auditing a skill
@@ -17,17 +20,15 @@ Files in the list below are read on demand when their `**Read when:**` clause ma
   - the user mentions a Claude Code hook event by name (`PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`, `SessionStart`, `Notification`, etc.)
   - diagnosing a Claude Code hook that fires when it shouldn't, misses when it should, exits silently, hangs, or has a `set -e` script aborting unexplained
 
-The `~/.claude/lazy/code/` folder is split into four files; load each only when its own trigger fires. Do NOT load the whole folder by default. `quality.md` fires on every code-writing turn; `comments.md` fires on every turn that adds/edits/removes a comment; `design.md` and `debugging.md` are conditional and usually skipped.
+The `~/.claude/lazy/code/` folder has three files; load each only when its own trigger fires. Do NOT load the whole folder by default. `code.md` covers refactoring, naming, function shape, comments, and shell rules in one file; `design.md` and `debugging.md` are conditional and usually skipped.
 
-- [`~/.claude/lazy/code/quality.md`](.claude/lazy/code/quality.md). **Read when** any of:
-  - BEFORE the first `Write` or `Edit` of any source/code file in a turn, any language (`.go`, `.py`, `.ts`, `.tsx`, `.mjs`, `.js`, `.jsx`, `.lua`, `.sh`, `.bash`, `.rb`, `.rs`, `.c`, `.cpp`, `.h`, `.java`, `.tf`, `.sql`, `.envrc`, extensionless scripts with a shebang under `bin/` or `~/.local/bin/`, CI/workflow scripts, Dockerfile, Makefile, etc.). Rule of thumb: if a code formatter (`gofmt`, `prettier`, `black`, `shfmt`, `rustfmt`, etc.) would touch it, it fires. Err broader: catches brand-new files, single standalone scripts, and one-line changes. **A new utility, helper, wrapper, or CLI shim counts as code.** Going from zero LOC to one LOC fires the same as editing existing code. Do not skip on the rationalization that "it's a small script", "it's just a wrapper", "I'm just sketching", or "this is throwaway".
-  - user phrases that ask for code to exist where none did before: "create a wrapper", "wrap X", "make a wrapper around Y", "write a script that", "create a utility for", "make a CLI for", "I want a command that", "add a helper that", "save this as a script", "turn this into a tool". These fire on intent alone, before any file path is chosen.
-  - user phrases that signal a feature implementation in an existing project, even before any concrete file has been named: "would it be possible to <verb>", "can we add <X>", "how would I add <X>", "let's implement <X>", "implement <X>", "add <Y> to <project/feature>", "build <X> for <project>", "I want <project> to <verb>", "make <project/feature> do <Y>", "could <project> support <X>", "support <X> in <project>", "wire up <X>". These are the multi-step coding tasks that have research/planning before the first Edit; the trigger fires NOW so the load survives the planning phase.
-  - user phrases for code change to existing files, scoped to a code object OR to a named script/binary/program/config-as-code: "refactor <code/function/module>", "clean up this code", "review this code", "extract <function/variable/type>", "rename <function/variable/symbol/file>", "simplify <function/loop/condition>", "code best practices", "code quality", "update my <name> script", "update the <name> script", "modify my <script/program>", "tweak my <script>", "change <X> in <file>", "edit my <script/config>", "fix my <script>". A bare `rename`/`extract`/`simplify` without a code object (e.g. "rename a column", "extract a name from this email", "simplify my morning routine") does NOT fire.
-
-- [`~/.claude/lazy/code/comments.md`](.claude/lazy/code/comments.md). **Read when** any of:
-  - BEFORE composing any `Write` or `Edit` whose `new_string` is going to contain `//`, `#`, `/*`, `"""`, `'''`, or a docstring opener inside a code file. Fire on intent to add a comment, not on review of one already in the Edit payload. Removing or editing an existing comment fires the same way.
-  - reviewing a diff specifically for comment quality (this is a rarer path; trigger 1 already covers Write/Edit moments).
+- [`~/.claude/lazy/code/code.md`](.claude/lazy/code/code.md). **Read when** any of:
+  - BEFORE the first `Write`/`Edit` of any source/code file (anything a formatter like `gofmt`/`prettier`/`black`/`shfmt`/`rustfmt` would touch; one-line changes and brand-new wrappers/scripts/CLIs count).
+  - BEFORE adding, editing, or removing a comment (`//`, `#`, `/*`, `"""`, `'''`, docstring) in a code file.
+  - User asks for new code: "write a script", "create a wrapper/utility/CLI/helper", "I want a command/tool".
+  - User asks for a new feature or implementation: "new feature", "add a feature", "implement X", "add X to <project>", "build X for <project>", "support X in <project>", "can we add X".
+  - User asks for a code change: "refactor/clean up/extract/rename/simplify <code object>", "update/modify/tweak/fix my <script/program/config>", "change X in <file>".
+  - Skip: bare `rename`/`extract`/`simplify` with no code object (e.g. "rename a column") does NOT fire.
 
 - [`~/.claude/lazy/code/design.md`](.claude/lazy/code/design.md). **Read when** any of:
   - planning code structure across more than one file: where logic should live, file/module layout, splitting an existing file, moving functions/types between files, adding a new package or module

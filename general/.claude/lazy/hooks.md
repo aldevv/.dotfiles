@@ -17,7 +17,9 @@ Each hook handler goes through two filters before its command runs:
 1. The block-level `matcher` field. For tool events (`PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `PermissionDenied`) this matches the **tool name only**: `Bash`, `Edit|Write`, `mcp__memory__.*`. Plain letters/digits/`|` are exact-or-pipelist; anything else is JS regex. Putting `Bash(gh pr create *)` in `matcher` does NOT filter on the command, it just fails to match anything.
 2. The per-handler `if:` field. Uses [permission rule syntax](https://code.claude.com/docs/en/permissions): `Bash(git push *)`, `Edit(*.ts)`. Filters on tool name + arguments. For Bash, matched against each subcommand after stripping leading `VAR=value` assignments, so `FOO=bar gh pr create` and `npm test && gh pr create` both match. Only evaluated on tool events; on other events a hook with `if:` set never runs.
 
-Use `if:` whenever you can; reserve script-side `tool_input.command` validation for cases `if:` can't express.
+**Preferred default: script-side gating, not `if:`.** Reasons (1) `if:` fails open on complex commands (see the section below); (2) in practice it has also silently no-op'd on simple commands in some configurations, with no error surfaced — the `additionalContext` just fires on every Bash call instead of only `gh pr create *`. A 3-line stdin-grep gate at the top of a shell script catches both failure modes for ~zero runtime cost. Reserve `if:` for cheap inline reminders where misfire is harmless context noise.
+
+See "Preferred hook shape" below for the canonical script template.
 
 ### CRITICAL: `if:` fails OPEN on complex commands
 
@@ -42,6 +44,56 @@ fi
 ```
 
 For cheap PreToolUse reminders (printing `additionalContext`) the misfire is harmless context noise and not worth gating. For PostToolUse watchers that spawn background work, take the defensive in-script gate.
+
+## Preferred hook shape
+
+For anything beyond a one-liner with no gating needs, write a script under `~/.claude/hooks/` and reference it from settings.json. Wire one entry per logical command family, gate inside the script. Template:
+
+```bash
+#!/usr/bin/env bash
+# PreToolUse hook for Bash `<command family>`. Gates on tool_input.command
+# so the rest of the script only runs on real matches; on every other
+# Bash call this silent-exits in milliseconds.
+set -euo pipefail
+
+input=$(cat)
+cmd=$(jq -r '.tool_input.command // ""' <<<"$input")
+
+case "$cmd" in
+  "gh pr create"*) ;;
+  *) exit 0 ;;
+esac
+
+# Emit additionalContext (or any other JSON response shape) via jq so
+# quoting stays safe with multi-line strings and embedded shell metachars.
+read -r -d '' MSG <<'EOF' || true
+First reminder paragraph.
+
+Second reminder paragraph.
+EOF
+
+jq -c -n --arg msg "$MSG" \
+  '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $msg}}'
+```
+
+Wired in settings.json with no `if:`, no command-form matcher tricks:
+
+```json
+{
+  "matcher": "Bash",
+  "hooks": [
+    { "type": "command", "command": "/home/kanon/.claude/hooks/<name>.sh" }
+  ]
+}
+```
+
+Why this shape over inline `if:`:
+- One script, one source of truth. The gating, the message text, and the JSON shape are all in one readable file instead of escaped inside a JSON string literal.
+- Works uniformly across bare, space-arg, colon-form, complex-command, and pipelined invocations.
+- Survives version skew. `if:` semantics have shifted across Claude Code releases; a `case "$cmd" in` gate is stable.
+- Easy to extend: add a second pattern, set up a logfile, add a `flock`, all without touching settings.json.
+
+When inline + `if:` is still fine: one-line cheap reminders where a misfire is just noise, not work. For anything that spawns a subprocess, posts to an API, opens a tmux window, or alters state — script it.
 
 ## Matcher edge cases
 
@@ -210,6 +262,15 @@ When to use which:
 - **Atomic `mkdir`** (e.g. `prelude_dedup_event`) when the lock is short-lived and just needs an N-way coordinator within a single short critical section, and the holder isn't going to crash mid-flight.
 
 ## Correct vs incorrect patterns (lessons from real sessions)
+
+**Inline command hook with `if:`-based gating**
+- DON'T: leave inline `command` entries that use `if: "Bash(...)"` to gate a non-trivial reminder. `if:` fails open on complex commands AND has been observed silently no-op'ing on plain commands, so the reminder fires on every Bash call. The escaped-JSON-inside-JSON command string also obscures what's actually being emitted.
+- DO: when auditing settings.json (or any time you spot this shape), proactively propose migrating to a script under `~/.claude/hooks/` using the template in "Preferred hook shape" above. Concrete signs to flag:
+  - `"command": "echo '{\"hookSpecificOutput\"...'"` with escaped JSON inline.
+  - `"if": "Bash(...)"` paired with that command.
+  - Multiple sibling handlers in one matcher block each doing the same gating dance.
+  - Reports from the user that the reminder is firing on unrelated bash calls (the canonical symptom).
+- The migration is mechanical: copy each handler's `additionalContext` text into the script's heredoc, gate the script on the same command pattern with `case "$cmd" in ... esac`, replace the handler entries with one `{ "type": "command", "command": "<script path>" }` entry. Drop the `if:` field entirely; the script handles it. See the repo-level example: `~/.claude/hooks/pr-work-reminders.sh` replaced three inline `gh pr create *` reminders in one shot.
 
 **Gating an expensive PostToolUse hook**
 - DON'T: trust `if: "Bash(git push *)"` alone. Fail-opens on complex commands (pipes + command substitution), so `gh api ... | python3 ... | sed ...` and `for f in $(...); do ... done` both fired the watch hook.

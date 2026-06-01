@@ -39,7 +39,7 @@ When the user says "global claude" or "my global claude", all paths shift:
 | Lazy dir | `~/.dotfiles/general/.claude/lazy/` |
 | Code-topic lazy files | `~/.dotfiles/general/.claude/lazy/code/<topic>.md` |
 
-**`code/` subdirectory rule**: any lazy file whose topic is a code practice (style, quality, comments, design, debugging, naming, testing, architecture) goes under `code/<topic>.md`, not directly under `lazy/<topic>.md`. Check the existing `code/` dir (`quality.md`, `design.md`, `comments.md`, `debugging.md`) — new code-practice files join that group.
+**`code/` subdirectory rule**: any lazy file whose topic is a code practice (style, quality, comments, design, debugging, naming, testing, architecture) goes under `code/<topic>.md`, not directly under `lazy/<topic>.md`. Check the existing `code/` dir (`code.md`, `design.md`, `debugging.md`) — new code-practice files join that group. Quality + naming + comments + shell rules already live together in `code.md`; only spin up a new file if the topic is genuinely separate (a new debugging-style narrow concern, not just a sub-section of style).
 
 **Skip Step 5c** (gitignore) for global — the dotfiles repo versions everything in `~/.dotfiles/general/`.
 

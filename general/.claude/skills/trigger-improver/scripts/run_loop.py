@@ -28,6 +28,13 @@ from scripts.utils import (
     swap_block_in_text,
 )
 
+# Hard ceiling on the size of a `**Read when**` block. Triggers should be
+# small bullet lines; the cap forces structural splits or wording cuts when a
+# winner balloons. Enforced in three places: the improvement prompt cites it,
+# the harness surfaces `length_cap_exceeded` in the output, and `--apply`
+# refuses to write a winner over the cap.
+MAX_TRIGGER_CHARS = 1024
+
 
 def spot_check_against_real(
     real_claude_md: Path,
@@ -443,6 +450,7 @@ def run_loop(
         and best_bullet_count > orig_bullet_count
     )
     bloat_warning = block_changed and length_ratio >= 1.5
+    length_cap_exceeded = best_len > MAX_TRIGGER_CHARS
 
     harness_verdict = None
     verdict_hint = None
@@ -488,6 +496,8 @@ def run_loop(
         "length_ratio": length_ratio,
         "no_op_win": no_op_win,
         "bloat_warning": bloat_warning,
+        "length_cap_exceeded": length_cap_exceeded,
+        "length_cap": MAX_TRIGGER_CHARS,
         "harness_verdict": harness_verdict,
         "verdict_hint": verdict_hint,
         "selection_log": selection_log,
@@ -569,6 +579,8 @@ def main():
             print("NO-OP WIN: best block adds bullets without improving accuracy. Consider keeping the original.", file=sys.stderr)
         if output["bloat_warning"]:
             print(f"BLOAT WARNING: winner is {output['length_ratio']:.2f}x the original length. Triggers should be minimal; even a real accuracy gain may not justify the bloat.", file=sys.stderr)
+        if output["length_cap_exceeded"]:
+            print(f"LENGTH CAP EXCEEDED: winner is {output['length_best']} chars, cap is {MAX_TRIGGER_CHARS}. --apply will be refused; cut the bullets or split into two entries before re-running.", file=sys.stderr)
         if output["harness_verdict"] == "unfixable_by_wording":
             print(f"\nVERDICT: unfixable_by_wording (original recall={output['original_pr']['recall']:.0%}).", file=sys.stderr)
             print(output["verdict_hint"], file=sys.stderr)
@@ -604,6 +616,8 @@ def main():
             print("Skipping --apply: best block adds bullets without improving accuracy.", file=sys.stderr)
         elif regressed:
             print(f"Skipping --apply: winner regresses on the held-out test set (delta_pr.accuracy={output['delta_pr']['accuracy']:+.0%}).", file=sys.stderr)
+        elif output["length_cap_exceeded"]:
+            print(f"Skipping --apply: winner is {output['length_best']} chars, exceeds {MAX_TRIGGER_CHARS}-char cap. Cut bullets or split into two entries before re-running.", file=sys.stderr)
         else:
             replace_trigger(claude_md, trigger.block_text, output["best_block"])
             if args.verbose:
