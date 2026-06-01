@@ -87,12 +87,13 @@ export UNCRUSTIFY_CONFIG="$XDG_CONFIG_HOME/uncristify/config.cfg"
 #======================================
 # WORK
 #======================================
+export GOROOT=/usr/local/go
 export GOPATH=$HOME/.local/share/go
 # export GEM_HOME=$HOME/.local/share/gem
 # export PIPENV_VENV_IN_PROJECT="enabled"
 
 
-export PATH="$CARGO_HOME/bin:$JAVA_HOME/bin:$GOPATH/bin:$PATH"
+export PATH="$GOROOT/bin:$GOPATH/bin:$CARGO_HOME/bin:$JAVA_HOME/bin:$PATH"
 export PATH="$PYENV_ROOT/bin:${PATH}"
 #=============================================================================
 
