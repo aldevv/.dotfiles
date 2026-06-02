@@ -138,7 +138,8 @@ The standalone emulator AppImages are in `~/Applications/` — EmuDeck installs 
 **PS2** (`~/Emulation/roms/ps2/`):
 - Klonoa 2: Lunatea's Veil (USA)
 - Nana (Japan)
-- Radiata Stories (UNDUB) + pnach cheat file in `~/.config/PCSX2/cheats/`
+- Radiata Stories (NTSC-U) — `.bin` format (no .cue needed for PS2)
+- Radiata Stories (UNDUB) — pnach cheat file in `~/.config/PCSX2/cheats/` (same CRC as NTSC-U)
 - Silent Hill 2 (USA)
 
 ### Extraction notes
@@ -147,6 +148,33 @@ The standalone emulator AppImages are in `~/Applications/` — EmuDeck installs 
 - 7z solid archives: do **not** use `-i!*.iso` filter on them — it causes truncated output; extract all files then delete unwanted ones
 - Monkey Magic was in `.rar` as a nested EBOOT.PBP; extracted and renamed to `.pbp` directly in `psx/`
 - Granstream Saga existed as both `.rar` (EBOOT.PBP) and `.7z` (bin/cue) — used the `.7z`
+- **Do NOT leave `.7z` archives in `psx/`** — ES-DE treats them as games and creates duplicate entries. Keep source archives in `~/Downloads/` only.
+
+### ES-DE frontend
+
+- AppImage: `~/Applications/ES-DE.AppImage`
+- Config: `~/ES-DE/` (gamelists, settings, custom_systems, themes)
+- ROM directory: `~/Emulation/roms` (set in `~/ES-DE/settings/es_settings.xml`)
+- Media directory: `~/Emulation/tools/downloaded_media`
+- PSX extension override in `~/ES-DE/custom_systems/es_systems.xml` — `.bin`/`.BIN` excluded so only `.cue`/`.pbp`/`.chd` show as games (prevents individual track files listing separately)
+- Emulator override set in `~/ES-DE/gamelists/psx/gamelist.xml`: `DuckStation (Standalone)`
+
+### Adding new ROMs + getting them into Steam
+
+1. **Extract** archive to the correct ROM dir (`psx/` or `ps2/`). Keep source `.7z` in `~/Downloads/`.
+2. **ES-DE** picks them up automatically on next launch (scans on startup).
+3. **Steam ROM Manager** — to add as individual Steam shortcuts for Game Mode:
+   - Launch: `~/Emulation/tools/Steam-ROM-Manager.AppImage`
+   - Or via EmuDeck AppImage → Steam ROM Manager
+   - Preview games, then click **Save to Steam**
+   - Steam must be restarted for new shortcuts to appear in Game Mode
+
+### Config files that had dead SD card UUID paths (now fixed)
+
+All three were pointing to `/run/media/deck/dd24d019-.../Emulation/` and have been corrected to `/home/deck/Emulation/`:
+- `~/ES-DE/settings/es_settings.xml` — `ROMDirectory` and `MediaDirectory`
+- `~/.config/steam-rom-manager/userData/userSettings.json` — `romsDirectory` and `retroarchPath`
+- `~/.config/steam-rom-manager/userData/userConfigurations.json` — 26 launcher paths
 
 ## Proton / Wine
 
