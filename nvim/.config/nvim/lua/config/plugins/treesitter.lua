@@ -47,7 +47,15 @@ if os.getenv("NVIM_MINIMAL") ~= nil then
   ensure_installed = {}
 end
 
-require("nvim-treesitter").install(ensure_installed)
+if vim.fn.executable("tree-sitter") == 1 then
+  require("nvim-treesitter").install(ensure_installed)
+else
+  vim.notify(
+    "tree-sitter CLI not found: required by nvim-treesitter (main branch) to build parsers. "
+      .. "Install it (>= 0.26.1, not via npm), then run :TSUpdate.",
+    vim.log.levels.WARN
+  )
+end
 
 local function is_big_file(buf)
   local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
