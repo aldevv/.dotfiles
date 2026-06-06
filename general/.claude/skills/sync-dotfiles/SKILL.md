@@ -261,8 +261,17 @@ cd ~/.dotfiles && git diff ORIG_HEAD --cached --name-only --diff-filter=A 2>/dev
 
 For each package directory listed, run stow then verify each new file is actually a symlink. Stow can bail with `BUG in find_stowed_path? Absolute/relative mismatch` (or "WARNING! stowing X would cause conflicts: existing target is not owned by stow") when it walks unrelated absolute symlinks in `$HOME` (e.g. `~/.local/state/nix/profiles/profile`, or other dotfiles symlinks created by hand) — when that happens it leaves new files unlinked, so we always verify and fall back to manual symlinking.
 
+**Host-specific packages (never stow off-host):** `steamdeck` is a per-host package. Its files target generic locations (`~/CLAUDE.md`) that another package (`general`) owns on every other machine, so stowing it on a non-steamdeck host clobbers the existing symlink. Only stow it when this machine's `id` is `steamdeck`; everywhere else the files still travel in the repo, they're just not linked. The guard below reads `$id` from `~/.machine_metadata`. To add another host-specific package later, add a `case` arm with its name and required id.
+
 ```bash
 pkg=<package>
+export $(grep -v '^#' ~/.machine_metadata | xargs)
+# Host-only packages: skip the restow unless the machine id matches, so a
+# host-specific package can't clobber the generic symlinks another package
+# owns on this machine.
+case "$pkg" in
+  steamdeck) [ "$id" != "steamdeck" ] && { echo "skip $pkg restow (machine id=$id, not steamdeck)"; exit 0; } ;;
+esac
 cd ~/.dotfiles && stow -R "$pkg" 2>&1 || true
 git diff ORIG_HEAD --cached --name-only --diff-filter=A | grep "^${pkg}/" | while IFS= read -r src; do
   rel=${src#${pkg}/}
