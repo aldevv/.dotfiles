@@ -734,7 +734,7 @@ show_usage() {
     echo "  --add-account                    Add current account to managed accounts"
     echo "  --remove-account <num|email>    Remove account by number or email"
     echo "  --list                           List all managed accounts"
-    echo "  --switch                         Rotate to next account in sequence"
+    echo "  -s, --switch                     Rotate to next account in sequence"
     echo "  --switch-to <num|email>          Switch to specific account number or email"
     echo "  --set-config-dir <path>          Persist the CLAUDE_CONFIG_DIR cswitch operates on"
     echo "  --reset-config-dir               Forget the saved dir (fall back to \$CLAUDE_CONFIG_DIR/default)"
@@ -772,7 +772,7 @@ main() {
         --list)
             cmd_list
             ;;
-        --switch)
+        -s | --switch)
             cmd_switch
             ;;
         --switch-to)
