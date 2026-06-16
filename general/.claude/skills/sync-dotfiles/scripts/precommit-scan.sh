@@ -4,18 +4,29 @@
 # live with their skill" rule; the duplication is a small, accepted cost.
 #
 # Pre-commit scan for the sync-dotfiles skills. Reads filenames from stdin or
-# argv and refuses to commit any file that:
-#   1. is a self-looping symlink (ELOOP), or
-#   2. has a secret-suspicious filename, or
-#   3. contains secret-suspicious content.
+# argv and:
+#   1. auto-deletes self-looping symlinks (ELOOP) in default mode, or BLOCKS
+#      them in --loop-only mode (see Loop semantics below),
+#   2. blocks files with a secret-suspicious filename,
+#   3. blocks files containing secret-suspicious content.
 #
-# Exit codes: 0 = all clean, 7 = at least one file blocked.
+# Exit codes: 0 = all clean (loops removed, nothing else flagged),
+#             7 = at least one file blocked.
 #
 # Order matters: the symlink-loop check MUST run before the content grep,
 # because a looping symlink makes `grep "$f"` fail silently with ELOOP
 # (returns "no match"). Without the guard, dotfiles commit dda112d8 turned
 # `claude-version` into a `f -> f` symlink, the secret scan let it through,
 # and every machine that pulled it broke .xprofile via PATH ELOOP.
+#
+# Loop semantics differ by mode:
+#   default     local loops are leftover artifacts (a stow misfire, an
+#               aborted edit) with nothing recoverable since they point at
+#               themselves. Remove and continue.
+#   --loop-only post-merge guard. The loop is in a commit just merged from
+#               upstream, so it lives in HEAD on this machine and would be
+#               propagated by the next push. Block; the SKILL.md path tells
+#               the user to `git reset --hard` to unwind the merge.
 #
 # password-store entries (.gpg files in a pass tree) are encrypted ciphertext.
 # They skip the filename heuristic only when --prefix=personal (the private
@@ -25,7 +36,9 @@
 #
 # Flags:
 #   --loop-only      Skip secret checks (used post-merge, where we only care
-#                    about loops introduced upstream).
+#                    about loops introduced upstream). Also flips loop
+#                    handling to BLOCK instead of auto-fix, see Loop
+#                    semantics above.
 #   --prefix=<path>  Prepend <path>/ to BLOCKED messages. Used by
 #                    sync-dotfiles-full when scanning submodules in parallel
 #                    so output identifies which repo flagged.
@@ -67,8 +80,13 @@ scan_one() {
   display="${prefix}${f}"
 
   if [ -L "$f" ] && stat -L "$f" 2>&1 | grep -qi 'too many levels'; then
-    echo "BLOCKED: looping symlink in $display -> $(readlink "$f")"
-    status=7
+    if [ "$loop_only" = "1" ]; then
+      echo "BLOCKED: looping symlink in $display -> $(readlink "$f")"
+      status=7
+    else
+      echo "auto-fix: removed looping symlink $display -> $(readlink "$f")"
+      rm -f "$f" || { echo "  (failed to remove $display; manual cleanup needed)"; status=7; }
+    fi
     return 0
   fi
 

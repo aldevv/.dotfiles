@@ -82,6 +82,18 @@ set -e
 cd ~/.dotfiles/<path>
 branch=$(git rev-parse --abbrev-ref HEAD)
 [ "$branch" = "HEAD" ] && { git checkout main 2>/dev/null || git checkout master; branch=$(git rev-parse --abbrev-ref HEAD); }
+
+# Pre-flight reachability check. If the remote can't be reached on this
+# machine (missing SSH alias, offline, auth failure), skip the wip commit
+# and the pull/push entirely. Local edits stay in the working tree until
+# the next sync on a reachable machine. Without this guard a wip commit
+# would pile up on every run while the pull keeps failing.
+if ! GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=3" \
+     git ls-remote --exit-code origin HEAD >/dev/null 2>&1; then
+  echo "<path>: skipped (remote unreachable on this machine)"
+  exit 0
+fi
+
 set -o pipefail
 local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
 if [ -n "$local_files" ]; then
