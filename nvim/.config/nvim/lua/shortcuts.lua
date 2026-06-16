@@ -162,6 +162,10 @@ vim.keymap.set("n", "<backspace>wp", "<cmd>e $WIKI/personal<cr>", {silent=true, 
 vim.keymap.set("n","<backspace><a-p>wp", ":lua require('telescope.builtin').find_files({prompt_title = '<$WIKI/personal>', cwd = '$WIKI/personal', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>wp", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $WIKI/personal>', cwd = '$WIKI/personal', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
+vim.keymap.set("n", "<backspace>wcv", "<cmd>e $WIKI/personal/cv/latex<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>wcv", ":lua require('telescope.builtin').find_files({prompt_title = '<$WIKI/personal/cv/latex>', cwd = '$WIKI/personal/cv/latex', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>wcv", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $WIKI/personal/cv/latex>', cwd = '$WIKI/personal/cv/latex', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+
 vim.keymap.set("n", "<backspace>wS", "<cmd>e $WIKI/cheatsheets<cr>", {silent=true, noremap=true})
 vim.keymap.set("n","<backspace><a-p>wS", ":lua require('telescope.builtin').find_files({prompt_title = '<$WIKI/cheatsheets>', cwd = '$WIKI/cheatsheets', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>wS", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $WIKI/cheatsheets>', cwd = '$WIKI/cheatsheets', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })

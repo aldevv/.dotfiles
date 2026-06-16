@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SRC="${HOME}/.dotfiles/general/.claude/skills"
+DST="${HOME}/.agents/skills"
+
+if [ ! -d "$SRC" ]; then
+  echo "Source directory not found: $SRC" >&2
+  exit 1
+fi
+
+mkdir -p "$DST"
+
+count=0
+for entry in "$SRC"/*; do
+  [ -e "$entry" ] || continue
+  name=$(basename "$entry")
+  dest="$DST/$name"
+  if [ -L "$dest" ] || [ -e "$dest" ]; then
+    rm -rf "$dest"
+  fi
+  ln -s "$entry" "$dest"
+  echo "Linked $dest -> $entry"
+  count=$((count+1))
+done
+
+echo "Synced $count skills from $SRC to $DST"
