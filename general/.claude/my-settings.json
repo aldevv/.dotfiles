@@ -41,7 +41,11 @@
           },
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/pr-pre-create-hook.sh"
+            "command": "$HOME/.claude/hooks/pre-pr.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/pre-mr.sh"
           }
         ]
       }

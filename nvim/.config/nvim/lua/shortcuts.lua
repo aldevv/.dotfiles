@@ -369,3 +369,5 @@ vim.keymap.set("n", "<backspace>.ant", "<cmd>e ~/.local/share/ansible/tasks <cr>
 vim.keymap.set("n", "<backspace>.anT", "<cmd>e ~/.local/share/ansible/TODO <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.y", "<cmd>e ~/.config/yazi/yazi.toml <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.cw", "<cmd>e ~/Pictures/current_wall <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<backspace>.cs", "<cmd>e ~/.claude/settings.json <cr>", {silent=true, noremap=true})
+vim.keymap.set("n", "<backspace>.c", "<cmd>e ~/CLAUDE.md <cr>", {silent=true, noremap=true})

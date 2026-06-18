@@ -28,10 +28,11 @@ watch_ci() {
       echo "[ci] gh pr checks rc=$rc"
       if [ "$rc" -eq 0 ]; then
         status="pass"
-      elif ! printf '%s\n' "$out" | awk -F'\t' '$2 == "fail" || $2 == "cancel" { found=1 } END { exit !found }'; then
-        echo "[ci] no failed-check rows -- treating as tool error"
-        return 0
       else
+        # rc != 0 means failure somewhere. Don't trust the watch output to be
+        # parseable (--watch --fail-fast can print non-tab-separated rows or
+        # ANSI-coloured output that breaks the awk filter). Go to the API as
+        # the ground truth.
         new_head=$(cd "$REPO_DIR" && gh pr view "$URL" --json headRefOid --jq '.headRefOid // ""' 2>/dev/null || echo "")
         if [ -n "$new_head" ] && [ "$new_head" != "$HEAD_SHA" ]; then
           echo "[ci] head moved $HEAD_SHA -> $new_head, skipping"
@@ -47,7 +48,7 @@ watch_ci() {
             2>/dev/null | paste -sd, -)
         fi
         if [ -z "$sha_failed" ]; then
-          echo "[ci] failures not tied to head sha -- skipping"
+          echo "[ci] gh pr checks rc=$rc but api shows no failures for $HEAD_SHA -- treating as tool error or flake"
           return 0
         fi
         status="fail"
@@ -159,13 +160,13 @@ Workflow:
 5. Build/test locally for whatever language the repo uses (e.g. \`go build ./... && go test ./... -count=1\` for Go).
 6. Commit locally on ${FIX_BRANCH} with a short imperative message ("fix <thing>"). Stage only the files you actually changed. Never use \`git add -A\`.
 7. Print a short summary of what you changed and ring the tmux bell (\`printf '\\a'\`).
-8. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH}. If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On success, tell them the merge landed and remind them to push from ${REPO_DIR} themselves. On failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they say no, leave the fix branch in place.
-9. End your turn. Do NOT push. Do NOT re-run CI. Do NOT loop back waiting for further input.
+8. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH} (and push). If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`, then on success run \`git -C ${REPO_DIR} push\`. Report both the merge and push output. On merge failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. On push failure (non-fast-forward, auth, etc.), report the exact git output and stop -- do NOT \`--force\`, do NOT retry. If they say no, leave the fix branch in place.
+9. End your turn. Do NOT re-run CI. Do NOT loop back waiting for further input.
 
 Hard rules:
-- Never push. Never open a new PR or MR. Never change reviewers, labels, or assignees.
+- Never open a new PR or MR. Never change reviewers, labels, or assignees.
 - Never switch branches, never rebase, never force-push, never amend.
-- The only merge you may perform is the single \`git merge --no-edit ${FIX_BRANCH}\` invocation in step 8, only if the user said yes.
+- The only merge you may perform is the single \`git merge --no-edit ${FIX_BRANCH}\` invocation in step 8, only if the user said yes. The only push you may perform is the single \`git push\` from ${REPO_DIR} immediately after that merge succeeds.
 - Never touch vendor/ or generated files unless that IS the bug.
 - Never skip hooks (--no-verify) or bypass signing.
 - One fix attempt total. After the merge prompt, end your turn.

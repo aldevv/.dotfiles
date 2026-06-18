@@ -15,3 +15,9 @@ If I can't run it end-to-end, say so explicitly before the user opens the PR/MR:
 ## Commits & PRs
 
 **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions.
+
+## CRITICAL: Never post PR/MR comments without per-comment approval
+
+Drafting is fine; posting (`gh pr comment`, `gh pr review`, `gh api .../comments`, `glab mr note`, etc.) requires me to approve the exact text right before the post. "yes" to a compound question ("apply fix and reply to the bot?") covers code/commit/push only, the comment is a separate gate. Bot replies count.
+
+Before drafting or posting any PR/MR comment, invoke the `add-comment` skill. The skill owns the workflow: confirm, optionally fact-check, post via gh/glab.

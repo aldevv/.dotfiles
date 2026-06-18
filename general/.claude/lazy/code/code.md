@@ -2,6 +2,14 @@
 
 Refactoring style, readability, naming, function shape, comment policy, and shell-script rules. Loaded on any code-writing turn and on any user request for a new feature or code change.
 
+## Smallest diff wins
+
+Pick the minimum change that reaches the goal. A simple change beats a complex one; one complex change beats many complex changes. Resist "while I'm here" cleanups, helper extractions, or rewrites that aren't needed for the goal. If a one-line edit reaches the goal, ship the one-line edit.
+
+## Empty files: delete, don't placeholder
+
+A file containing only the package/module declaration (or an empty body) is noise. Delete it; create the file when it's actually needed. Empty `_test.go`, `helpers.go`, `__init__.py` placeholders count.
+
 ## Refactoring
 
 Refactoring style follows Martin Fowler's book Refactoring.
@@ -14,6 +22,7 @@ Apply clean-code practices only when they make the code easier to read, not as e
 
 - **Prefer guard clauses and early returns over if-else nesting.** Check the failure/edge case first, return immediately, then write the happy path without indentation. `if err != nil { return err }` at the top beats an `else` block that pushes the main logic rightward. Apply this whenever the condition is a pre-check, validation, or error, not when both branches are equally weighted logic.
 - **Complex `if` conditions get extracted to a named predicate, when the condition is genuinely hard to read inline.** `if isEligibleForRefund(order) { ... }` beats five chained boolean clauses. Apply to switch/case guards and nested ternaries too. Short conditions used once stay inline (see "Don't extract short expressions" below).
+- **Prefer positive `if` conditions over negated ones inside a predicate function.** Once a condition is already extracted to a `should_X` / `is_Y` helper, the bodies should read forwards. `if a && b { return x }; return c` is easier to parse than `if !a { return false }; if !b { return true }; return c`. The guard-clause rule above still applies at the outer function (entry preconditions, error checks); inside a small predicate, restructure to avoid `!`. If the cleanest form genuinely requires a negation, keep it. Don't bend logic to chase the rule.
 - **Prefer many small named functions over one long function with inline comments.** A well-named function call is self-documenting; a comment above an inline block isn't.
 - **No hardcoded strings for values defined elsewhere.** If a constant, config field, env var, or enum already names a value, reference it instead of retyping the literal. `conf.GetString("base-url")` becomes `conf.BaseURL`. Same rule for raw `os.Getenv("FOO")` calls when the config layer already wraps them. Magic separators (`"@"`, `":"`, `"/"`) referenced more than once become a named `const` next to their point of use.
 - **Don't refactor for purity alone.** DRY, SRP, Hexagonal, dependency injection are fine when they make a specific reader's life easier here. If a refactor adds indirection a future reader has to chase without paying for itself in clarity, skip it. Three similar lines is better than a premature abstraction.
@@ -340,6 +349,30 @@ die() { echo "$1" >&2; exit 1; }
 ### Length guidance
 
 When a comment IS justified: as short as it can be while staying understandable; as long as it needs to be. Understanding is the priority, brevity is second. Three-clause sentences with semicolons are usually a smell; split them.
+
+**3+ lines must be extremely necessary.** Default at this length is trim. The only pattern that legitimately lives at 3+ lines is Justified #5 (multi-paragraph load-bearing explanation across a system boundary). Everything else, draft, then cut to 1-2 lines without losing the message. If you can't get under 3 lines while keeping the WHY, the comment is probably either restating WHAT (cut it) or the code should be refactored.
+
+### Vocabulary
+
+Plain words only. Forbidden AI-slop terms (`leverage`, `seamless`, `robust`, `streamline`, `hand-rolled`, etc.) are listed in `~/.dotfiles/general/.claude/rules/writing-style.md` and apply to comments too. No fancy vocabulary that needs a dictionary: if a teammate would have to look up the word, pick a simpler one.
+
+#### Example: trim AND simplify
+
+Before (3 lines, technical vocab, dashes):
+
+```go
+// Resource-server nonces are shared mutable state: a concurrent request can
+// observe a stale nonce, take a 401, and retry once via isReplayable. Don't
+// "fix" the race by serializing requests; the retry path IS the design.
+```
+
+After (1 line, plain words, no dashes):
+
+```go
+// Concurrent requests can fail with a 401. The retry handles it. Don't add a lock.
+```
+
+What changed: "nonce", "serialize", "race", "shared mutable state" all came out. The load-bearing parts (when it fails, what we do, what NOT to do) stayed.
 
 ## Shell scripts
 

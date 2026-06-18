@@ -60,3 +60,5 @@
 .anT     ~/.local/share/ansible/TODO
 .y       ~/.config/yazi/yazi.toml
 .cw     ~/Pictures/current_wall
+.cs     ~/.claude/settings.json
+.c     ~/CLAUDE.md

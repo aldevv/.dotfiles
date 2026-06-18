@@ -1,18 +1,25 @@
 ---
 name: add-comment
-description: Draft a short, casual review comment on a GitHub PR or GitLab MR — a reply or a new line comment — confirm with the user, optionally fact-check with subagents, then post it via gh or glab. Triggers on "/add-comment", "/pr-comment", "/pr-comment-answer", "/mr-comment", "answer this PR/MR comment", "reply to this review comment", "draft a reply to <reviewer>", "post a comment on PR #N", "post a comment on MR !N", "leave a comment on this line", or when the user wants to draft a review comment on a PR or MR.
+description: Draft a short, casual review comment on a GitHub PR or GitLab MR, a reply or a new line comment, confirm with the user, optionally fact-check with subagents, then post via gh or glab. Triggers on "/add-comment", "/pr-comment", "/pr-comment-answer", "/mr-comment", "answer this PR/MR comment", "answer the comment", "respond to this comment", "reply to this review comment", "draft a reply", "draft the reply", "draft a response", "draft the response", "draft a reply to <reviewer>", "draft a response to <reviewer>", "answer all of <reviewer>'s comments", "respond to all open threads", "mark all as done/fixed", "post a comment on PR #N", "post a comment on MR !N", "leave a comment on this line", or when the user wants to draft, answer, or batch-acknowledge review comments on a PR or MR. Fires even when the trigger phrase is bundled with other actions (e.g. "draft the reply to X and post it").
 ---
 
 # add-comment
 
-Draft a short, human review comment on a GitHub PR or GitLab MR, confirm with `AskUserQuestion`, optionally fact-check with subagents, then post. Two flavors:
+Draft a short, human review comment on a GitHub PR or GitLab MR, confirm with `AskUserQuestion`, optionally fact-check with subagents, then post.
 
-- **Reply** to an existing comment.
-- **New line comment** on a file/line.
+## Routing (decide before drafting)
 
-Top-level conversation comments are also supported but rare.
+Three flavors. Pick exactly one:
 
-Pick the tool from the URL: `github.com` → `gh`, `gitlab.*` → `glab`. If the user gives a PR number with `#N`, use gh. If they give an MR with `!N` or mention GitLab, use glab. Ask if unclear.
+1. **Reply to an existing comment** — the user is answering a thread (gave a comment URL, said "reply to <reviewer>", "answer this comment"). Post as a note under the existing discussion. Don't relocate the reply to a different line, even if a different line would anchor better.
+2. **New line comment** — a NEW comment AND the feedback is about a specific file/line of code. This is the default for any new comment that critiques, questions, or suggests a change to code. Anchor it on the exact line the comment is about. If you don't know the line yet, find it before posting (read the diff or the file).
+3. **Top-level MR/PR comment** — a NEW comment AND there is no specific line of code to anchor on (general questions about the MR, scope/approach feedback that spans the whole change, status updates, "ready for review" pings). Only use this when no line could carry the same comment.
+
+Hard rule: if the draft references a file, function, variable, or specific code behaviour, it MUST be a line comment, not a top-level comment. Top-level is the fallback only when the comment is genuinely MR-wide.
+
+## Tool
+
+Pick from the URL: `github.com` → `gh`, `gitlab.*` → `glab`. PR `#N` is gh; MR `!N` or any gitlab.* URL is glab. Ask if unclear.
 
 ## Voice (non-negotiable)
 
@@ -54,7 +61,13 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
 ## Workflow
 
-1. **Identify.** Reply or new line comment? Which platform? For a reply: a comment URL (GitHub: `.../pull/N#discussion_rXXXXX`, GitLab: `.../merge_requests/N#note_XXXXX`), a reviewer name, or "the comment we just looked at". For a new line comment: PR/MR + file + line. Ask if unclear.
+1. **Identify and route.** Walk the routing tree above:
+   - If the user is replying to an existing thread (gave a comment URL, said "reply to <reviewer>", "answer this comment") → **reply**. Need: comment URL or note id.
+   - Otherwise it's a NEW comment. Does the feedback target a specific file/line of code?
+     - Yes → **line comment**. If the user didn't give a line, ask. If they gave a file but not a line, read the file and pick the right line. Don't fall back to top-level just because the line is unknown.
+     - No (genuinely MR-wide) → **top-level MR/PR comment**.
+
+   Pick the platform from the URL: github.com → gh, gitlab.* → glab. Ask if unclear.
 
 2. **Read the code.** For a reply, fetch the original with `gh api repos/OWNER/REPO/pulls/comments/COMMENT_ID` (GitHub) or `glab api projects/PROJECT_ID/merge_requests/MR_IID/notes/NOTE_ID` (GitLab) and read the file. For a new line comment, just read the file at the target line. Don't draft blind.
 
@@ -77,6 +90,8 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
    - "Revise" — iterate. Common asks: "shorter", "less robot", "drop the magnitude estimate", "simpler words".
 
    The question must show the exact text that will be posted.
+
+   **MANDATORY per-batch confirmation.** Earlier confirmations in the same session do NOT carry over to a new batch. A high-level instruction like "go ahead with the replies" or "post them" without the user seeing the verbatim draft text is NOT confirmation — show the drafts and ask again. Even when a plan was approved earlier with summary descriptions (e.g. "reply with `done`"), confirm the actual text once more before posting.
 
 6. **Post.** Pick the right endpoint for the platform.
 
@@ -171,6 +186,12 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
 8. **Report the URL(s)** so the user can verify.
 
+## Batch mode
+
+When the user asks to mark a set of comments at once (e.g. "answer all of <reviewer>'s comments", "mark all as done/fixed"), confirm the full mapping ONCE via a single `AskUserQuestion` showing a comment-id → reply table with the **verbatim** body for each, then post each in a loop. Skip per-reply confirmation and fact-checking. Each successful post still records to `references/examples.md`.
+
+The batch-mode confirmation is REQUIRED, not optional. A prior plan listing reply intent in summary form (e.g. "reply 'done' to threads X/Y/Z") is not a substitute — the table must show the literal bodies that will be posted. If the user said "go ahead" or "do it" without seeing the bodies, surface the verbatim table and ask again.
+
 ## Common failure modes
 
 - **Sounding like an LLM.** Em dashes, "I'd be happy to", "Let me know if", any greeting → rewrite.
@@ -183,6 +204,8 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 - **Skipping fact-check on factual drafts.** A subtly-wrong claim is worse than a longer comment.
 - **Wrong endpoint.** GitHub replies need `in_reply_to`. GitHub new line comments need `commit_id`+`path`+`line`. GitLab new line comments need the full `position` object (base_sha+head_sha+start_sha+path+line). Mixing them returns 422.
 - **Wrong tool.** `gh` doesn't talk to GitLab and `glab` doesn't talk to GitHub. Pick from the URL.
+- **Posting code feedback as a top-level MR/PR comment.** If the comment is about a specific file, function, line, or diff hunk, it MUST be a line comment. Top-level is for MR-wide feedback only. Concrete check: if the draft says "this", "here", "line N", or names a symbol from the diff, find the line and post there.
+- **Zsh globbing the `position[...]` brackets in glab.** Quote the whole `-F "position[key]=value"` argument. Unquoted, zsh hits "no matches found" and the curl never runs.
 
 ## When NOT to use this skill
 

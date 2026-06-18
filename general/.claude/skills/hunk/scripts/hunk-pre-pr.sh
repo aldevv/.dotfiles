@@ -18,8 +18,10 @@
 #       silently auto-allow in this mode).
 #
 #   Phase 3 (sentinel=2, only reached from bypassPermissions): clear sentinel
-#     + diff file, return permissionDecision: "allow". The user already
-#     confirmed via the Phase-2 AskUserQuestion.
+#     + diff file and exit 0 with no decision. The user already confirmed via
+#     the Phase-2 AskUserQuestion. Returning no permissionDecision lets later
+#     PreToolUse hooks (e.g. pre-mr-check) still run and block on their own
+#     checks; an explicit "allow" here would prevent them from blocking.
 set -euo pipefail
 
 [[ -n "${TMUX:-}" ]] || exit 0
@@ -102,7 +104,7 @@ sentinel_ttl=600
 
 current_phase=""
 if [[ -f "$sentinel" ]]; then
-  age=$(( $(date +%s) - $(stat -c %Y "$sentinel" 2>/dev/null || echo 0) ))
+  age=$(( $(date +%s) - $(stat -f %m "$sentinel" 2>/dev/null || stat -c %Y "$sentinel" 2>/dev/null || echo 0) ))
   if (( age < sentinel_ttl )); then
     current_phase="$(cat "$sentinel" 2>/dev/null || true)"
   else
@@ -111,16 +113,10 @@ if [[ -f "$sentinel" ]]; then
 fi
 
 # Phase 3 (bypassPermissions only): user already confirmed via
-# AskUserQuestion in Phase 2; allow the tool call through.
+# AskUserQuestion in Phase 2. Exit 0 with no decision so later PreToolUse
+# hooks (pre-mr-check, etc.) still run and can block.
 if [[ "$current_phase" == "2" ]]; then
   rm -f "$sentinel" "$diff_file"
-  jq -nc --arg artifact "$artifact_label" '
-    {hookSpecificOutput:{
-      hookEventName:"PreToolUse",
-      permissionDecision:"allow",
-      permissionDecisionReason:("User confirmed " + $artifact + " creation via AskUserQuestion.")
-    }}
-  '
   exit 0
 fi
 
