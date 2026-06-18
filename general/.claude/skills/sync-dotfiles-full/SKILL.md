@@ -28,6 +28,7 @@ if [ ! -f ~/.machine_metadata ] || ! grep -q '^id=' ~/.machine_metadata || ! gre
   echo "created ~/.machine_metadata: id=$auto_id os=$auto_os"
 fi
 export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null && echo "id=$id os=$os"
+"$HOME/.claude/skills/sync-dotfiles/scripts/ensure-personal-alias.sh" 2>&1 || true
 echo "--- submodules ---"
 cd ~/.dotfiles && git submodule status
 ```
