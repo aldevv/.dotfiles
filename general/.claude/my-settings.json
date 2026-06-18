@@ -38,6 +38,10 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/hunk-pre-pr.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/pre-pr.sh"
           }
         ]
       }

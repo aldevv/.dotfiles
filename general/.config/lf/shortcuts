@@ -291,3 +291,5 @@ map <backspace2>.ant $ $EDITOR ~/.local/share/ansible/tasks
 map <backspace2>.anT $ $EDITOR ~/.local/share/ansible/TODO
 map <backspace2>.y $ $EDITOR ~/.config/yazi/yazi.toml
 map <backspace2>.cw $ $EDITOR ~/Pictures/current_wall
+map <backspace2>.cs $ $EDITOR ~/.claude/settings.json
+map <backspace2>.c $ $EDITOR ~/CLAUDE.md
