@@ -13,14 +13,28 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×9)
+- done. (×20)
 - good catch, will fix. (×1)
+- fixed. (×5)
+- done (×1)
+- fixed. same resolveUserAndRoleNames path on revoke. (×1)
+- fixed. uses escapeQueryValue now. (×1)
+- fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
+- deleted. (×2)
+- moved to helpers.go. (×1)
 
 ### Replies — pushback
 
 - i'd keep this one. nil just means the role doesn't exist (snowflake returns 200 empty), and the same missing role often shows up across lots of grant rows, so caching it saves a bunch of calls. callers already skip on nil anyway. (×1)
+- `W` is writeup user, easy to mix up with ws. logindisabled is the ws-only flag per the [docs](https://developer.intacct.com/api/company-console/users/). (×1)
+- checked. baton-http's actions.go doesn't unwrap ErrIgnoreError, so a 404 on update_user still fails. confirmed against the mock. (×1)
+- enable/disable is not in the connector because the API doesn't expose it (×1)
 
 ### New line comments — feedback
 
 - could batch this with a GetManyJSON over the distinct ids before the loop. the old code was already doing that. (×1)
 - same on the writes. one SetManyJSON after the loop, like workersToStore. (×1)
+
+### Top-level PR/MR comments
+
+- tested this locally. `role[]` isn't the cause, the empty `query=` is. `?role[]=admin` alone gives a real meta. add `&query=` and meta goes null. this pr still pulls in `zendesk.CommonOptions` which has no omitempty on Query, so `&query=` still goes out on every request and the cursor won't move at >100/role. (×1)

@@ -28,10 +28,11 @@ watch_ci() {
       echo "[ci] gh pr checks rc=$rc"
       if [ "$rc" -eq 0 ]; then
         status="pass"
-      elif ! printf '%s\n' "$out" | awk -F'\t' '$2 == "fail" || $2 == "cancel" { found=1 } END { exit !found }'; then
-        echo "[ci] no failed-check rows -- treating as tool error"
-        return 0
       else
+        # rc != 0 means failure somewhere. Don't trust the watch output to be
+        # parseable (--watch --fail-fast can print non-tab-separated rows or
+        # ANSI-coloured output that breaks the awk filter). Go to the API as
+        # the ground truth.
         new_head=$(cd "$REPO_DIR" && gh pr view "$URL" --json headRefOid --jq '.headRefOid // ""' 2>/dev/null || echo "")
         if [ -n "$new_head" ] && [ "$new_head" != "$HEAD_SHA" ]; then
           echo "[ci] head moved $HEAD_SHA -> $new_head, skipping"
@@ -47,7 +48,7 @@ watch_ci() {
             2>/dev/null | paste -sd, -)
         fi
         if [ -z "$sha_failed" ]; then
-          echo "[ci] failures not tied to head sha -- skipping"
+          echo "[ci] gh pr checks rc=$rc but api shows no failures for $HEAD_SHA -- treating as tool error or flake"
           return 0
         fi
         status="fail"

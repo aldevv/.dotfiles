@@ -1,6 +1,6 @@
 ---
 name: add-comment
-description: Draft a short, casual review comment on a GitHub PR or GitLab MR — a reply or a new line comment — confirm with the user, optionally fact-check with subagents, then post it via gh or glab. Triggers on "/add-comment", "/pr-comment", "/pr-comment-answer", "/mr-comment", "answer this PR/MR comment", "reply to this review comment", "draft a reply to <reviewer>", "post a comment on PR #N", "post a comment on MR !N", "leave a comment on this line", or when the user wants to draft a review comment on a PR or MR.
+description: Draft a short, casual review comment on a GitHub PR or GitLab MR, a reply or a new line comment, confirm with the user, optionally fact-check with subagents, then post via gh or glab. Triggers on "/add-comment", "/pr-comment", "/pr-comment-answer", "/mr-comment", "answer this PR/MR comment", "answer the comment", "respond to this comment", "reply to this review comment", "draft a reply", "draft the reply", "draft a response", "draft the response", "draft a reply to <reviewer>", "draft a response to <reviewer>", "answer all of <reviewer>'s comments", "respond to all open threads", "mark all as done/fixed", "post a comment on PR #N", "post a comment on MR !N", "leave a comment on this line", or when the user wants to draft, answer, or batch-acknowledge review comments on a PR or MR. Fires even when the trigger phrase is bundled with other actions (e.g. "draft the reply to X and post it").
 ---
 
 # add-comment
@@ -77,6 +77,8 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
    - "Revise" — iterate. Common asks: "shorter", "less robot", "drop the magnitude estimate", "simpler words".
 
    The question must show the exact text that will be posted.
+
+   **MANDATORY per-batch confirmation.** Earlier confirmations in the same session do NOT carry over to a new batch. A high-level instruction like "go ahead with the replies" or "post them" without the user seeing the verbatim draft text is NOT confirmation — show the drafts and ask again. Even when a plan was approved earlier with summary descriptions (e.g. "reply with `done`"), confirm the actual text once more before posting.
 
 6. **Post.** Pick the right endpoint for the platform.
 
@@ -170,6 +172,12 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
    Run this once per posted comment, even if a single skill invocation posted several (e.g. three replies in a loop).
 
 8. **Report the URL(s)** so the user can verify.
+
+## Batch mode
+
+When the user asks to mark a set of comments at once (e.g. "answer all of <reviewer>'s comments", "mark all as done/fixed"), confirm the full mapping ONCE via a single `AskUserQuestion` showing a comment-id → reply table with the **verbatim** body for each, then post each in a loop. Skip per-reply confirmation and fact-checking. Each successful post still records to `references/examples.md`.
+
+The batch-mode confirmation is REQUIRED, not optional. A prior plan listing reply intent in summary form (e.g. "reply 'done' to threads X/Y/Z") is not a substitute — the table must show the literal bodies that will be posted. If the user said "go ahead" or "do it" without seeing the bodies, surface the verbatim table and ask again.
 
 ## Common failure modes
 

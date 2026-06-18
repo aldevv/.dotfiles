@@ -55,8 +55,29 @@ return {
           changedelete = { text = "~" },
           untracked = { text = "┆" },
         },
+        on_attach = function(bufnr)
+          local gs = require("gitsigns")
+          local map = function(lhs, rhs)
+            vim.keymap.set("n", lhs, rhs, { buffer = bufnr, silent = true })
+          end
+          map("]c", function()
+            if vim.wo.diff then
+              vim.cmd.normal({ "]c", bang = true })
+            else
+              gs.nav_hunk("next")
+            end
+          end)
+          map("[c", function()
+            if vim.wo.diff then
+              vim.cmd.normal({ "[c", bang = true })
+            else
+              gs.nav_hunk("prev")
+            end
+          end)
+          map("]p", gs.preview_hunk)
+          map("[p", gs.preview_hunk)
+        end,
       })
-      vim.keymap.set("n", "<leader>gsp", ":Gitsigns preview_hunk<CR>", { silent = true })
     end,
   },
 }
