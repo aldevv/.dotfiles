@@ -25,7 +25,7 @@ argument-hint: "<topic to investigate>"
 
 ## Overview
 
-Fan out 3, 6, or 12 parallel research agents to answer a question, then synthesize
+Fan out 1, 3, 6, or 12 parallel research agents to answer a question, then synthesize
 their findings into a single curated answer with sources. Each agent searches either
 the public web or a connected MCP server (Atlassian, Linear, Notion, Slack, GitHub,
 Hodor-routed providers, etc.), depending on what the question is actually about.
@@ -35,15 +35,17 @@ Save findings to `.investigations/` in the current working directory.
 
 Before spawning any agents, decide how many to launch based on three signals:
 
-| Signal | 3 agents | 6 agents | 12 agents |
-|---|---|---|---|
-| **Scope** | Single field, object, or rule | One API surface (several related fields/endpoints) | Multiple APIs, versions, or vendor layers |
-| **Confidence needed** | Low-stakes clarification | Implementation decision | Critical correctness (security, data loss, billing) |
-| **Contradiction risk** | Source is likely authoritative and unambiguous | Some community vs. official doc tension possible | Known divergence between versions, SDKs, or regions |
+| Signal | 1 agent | 3 agents | 6 agents | 12 agents |
+|---|---|---|---|---|
+| **Scope** | Single public fact, quote, or well-known doc page | Single field, object, or rule | One API surface (several related fields/endpoints) | Multiple APIs, versions, or vendor layers |
+| **Confidence needed** | Sanity check, no real risk | Low-stakes clarification | Implementation decision | Critical correctness (security, data loss, billing) |
+| **Contradiction risk** | None expected, one canonical source | Source is likely authoritative and unambiguous | Some community vs. official doc tension possible | Known divergence between versions, SDKs, or regions |
 
-Default to 3. Promote to 6 if the question spans more than one object/endpoint OR if prior
-attempts returned conflicting results. Promote to 12 if correctness is critical AND sources
-are known to be inconsistent (e.g. deprecated + new API both exist for the same concept).
+Default to 3. Drop to 1 for trivially simple lookups: a single public fact, a quote from a known
+person, a public-figure's blog post or pinned tweet, a well-documented API field with no version
+ambiguity. Promote to 6 if the question spans more than one object/endpoint OR if prior attempts
+returned conflicting results. Promote to 12 if correctness is critical AND sources are known to be
+inconsistent (e.g. deprecated + new API both exist for the same concept).
 
 State the chosen count and the reason in one sentence before spawning.
 
@@ -94,6 +96,9 @@ which is an internal Epic system documented in Confluence.`
 ## Step 3 — Assign agent roles
 
 Each agent gets a distinct search angle so they don't duplicate each other.
+
+**For 1 agent (trivially simple lookup):**
+- Single agent on whichever lane fits best (web or one MCP). No role specialization. The agent runs one focused search and returns the verbatim answer with sources. Skip cross-checking; if the canonical source is silent or ambiguous, escalate to 3 agents.
 
 **For 3 agents (web-only baseline):**
 - Agent A: Official vendor developer docs (reference pages, API docs)
