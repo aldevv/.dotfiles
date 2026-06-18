@@ -18,6 +18,8 @@ Never save to `~/.claude/CLAUDE.md` (global) unless the user says "global claude
 
 "Save in my claude" without a qualifier is ambiguous. Resolve scope before choosing a target file:
 
+**Check work scope first** (see "Work claude scope" below): if the content references your employer's infrastructure, credentials, tooling, or repos (the work cloud-auth/SSO flow, the work identity provider, work MFA secrets, a work-only product or service name, the work issue tracker, or anything under `$WORK` / `~/work`), it is work-scoped no matter which directory you are in. Work wins over both project and global, so resolve it before applying the global/project leanings below.
+
 **Lean toward global** when any of these hold:
 - The project has no `.claude/lazy/` directory — if project lazy files existed they would be the obvious target; their absence means the user probably isn't thinking project-scope.
 - A matching global lazy file already exists for the topic — extending an existing file beats creating a new one.
@@ -28,6 +30,30 @@ Never save to `~/.claude/CLAUDE.md` (global) unless the user says "global claude
 - The content names project-specific symbols, paths, or conventions that only make sense here.
 
 When leaning global, run the global lazy scan (Command D in Step 2) alongside the project scan to find an existing match before deciding. If a global lazy file matches the topic, that is the target — not a new project file.
+
+### Work claude scope
+
+Work-related rules belong in the work CLAUDE tree, never in the project repo you happen to be sitting in, never global, never a machine-local notes file. Detect work scope from the **content**, not the cwd. A rule is work-scoped when it references your employer's infrastructure, credentials, systems, or repos rather than a personal project. Any one signal is enough:
+
+- Work auth or credentials: the work cloud-provider login/SSO flow, the work identity/SSO provider, work MFA or OTP secrets, work-only service accounts or roles.
+- Work paths: anything under `$WORK` / `~/work`, including `~/work/.envrc`.
+- Work systems: a product, service, repo, internal tool, issue tracker, or wiki that exists only inside your employer, not in a personal project.
+- Anything the work-boundary rule in `~/CLAUDE.md` protects.
+
+When work scope is detected, all paths shift:
+
+| What | Path |
+|------|------|
+| CLAUDE file | `$WORK/CLAUDE.md` |
+| Lazy dir | `$WORK/.claude/lazy/` |
+| Code-topic lazy files | `$WORK/.claude/lazy/code/<topic>.md` |
+| Helper scripts the rule needs | `$WORK/.claude/scripts/` |
+
+**Precedence**: work detection wins over project and global. If the content is work-scoped, save to `$WORK/CLAUDE.md` (or a `$WORK/.claude/lazy/` file) even when the user is in an unrelated repo and just says "save in my claude". Resolve the lazy-load index inside `$WORK/CLAUDE.md` exactly as you would for project or global scope.
+
+**Helper scripts**: when a work rule references a script (an auth flow, a deploy helper), the script lives under `$WORK/.claude/scripts/`, never under `~/.claude/scripts/` or the project. Point the saved rule at that path.
+
+**Skip Step 6c and Step 8** (the project `.git/info/exclude` steps): the `$WORK/.claude/` tree manages its own versioning.
 
 ### Global claude scope
 
@@ -71,7 +97,13 @@ If the user's phrasing is ambiguous (e.g. "save what we just agreed on"), re-rea
 
 ## Step 2 — Survey the project
 
-If the user said "global claude" or "my global claude", set:
+If the content is work-scoped (see "Work claude scope"), set:
+```
+root=$WORK
+lazy_dir=$WORK/.claude/lazy
+claude_file=$WORK/CLAUDE.md
+```
+Else if the user said "global claude" or "my global claude", set:
 ```
 root=~/.dotfiles/general
 lazy_dir=~/.dotfiles/general/.claude/lazy
@@ -298,6 +330,7 @@ Nothing else.
 - **New lazy files are opt-in, not default.** Default to the parent CLAUDE file unless the "When to create a new lazy file" bar is met. A single rule never justifies its own file.
 - **Never commit, stage, or push.** File edits only.
 - **Never write to `~/.claude/CLAUDE.md`** unless the user explicitly says "global".
+- **Work-scoped content goes to `$WORK`, nowhere else.** Never save a work rule (see "Work claude scope") into the project repo you happen to be in, into global, or into a machine-local notes file. Helper scripts a work rule references live in `$WORK/.claude/scripts/`, not `~/.claude/scripts/`.
 - If two lazy files partially match the topic, prefer the more specific trigger. If still tied, prefer the parent CLAUDE file over creating a third.
 - If the user includes a CRITICAL label ("this is critical", "make it a critical rule"), prefix the entry with `**CRITICAL:**` in the file.
 - If a new lazy file is created, the index registration in Step 5b is mandatory — a lazy file with no pointer from the parent is invisible to agents loading context.

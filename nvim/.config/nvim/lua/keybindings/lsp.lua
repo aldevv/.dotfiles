@@ -112,7 +112,6 @@ M.load_mappings = function() -- use these on_attach
   map("n", "<leader>oq", ":lua vim.diagnostic.setqflist{ title = 'Workspace diagnostics' }<cr>", nor)
 
   -- Disable default LSP mappings and remap for Colemak
-  pcall(vim.keymap.del, 'x', 'in')
   map('x', 'ln', function()
     vim.lsp.buf.selection_range(-vim.v.count1)
   end, desc('LSP selection range'))

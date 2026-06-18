@@ -13,8 +13,8 @@ Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve
 
 1. `~/.cache/sync-dotfiles/last-full-sync` is missing or older than 30 days (= a full sync is overdue).
 2. Any submodule has a `-` prefix (= not initialized, fast path can't safely operate without it).
-3. Any submodule has a `+` prefix (= pointer drift, the parent's recorded SHA disagrees with the submodule HEAD).
-4. Any initialized submodule has a dirty worktree (`git status --porcelain` non-empty) or unpushed commits (`@{u}..HEAD` non-empty). The fast skill never enters submodules, so these go un-synced and the user thinks "I edited the wiki, why didn't it push?" — this trigger catches that.
+3. Any submodule with a reachable remote has a `+` prefix (= pointer drift, the parent's recorded SHA disagrees with the submodule HEAD). Drifted-but-unreachable submodules are skipped: a leftover wip commit from a previous failed sync can't be pushed from this machine anyway, and the next sync on a reachable machine resolves it.
+4. Any initialized submodule whose remote is reachable on this machine has a dirty worktree (`git status --porcelain` non-empty) or unpushed commits (`@{u}..HEAD` non-empty). The fast skill never enters submodules, so these go un-synced and the user thinks "I edited the wiki, why didn't it push?" — this trigger catches that. Submodules whose remote is NOT reachable (missing SSH alias, offline, etc.) are skipped: their local edits stay local until the next sync on a machine that can push them.
 
 A fifth check **stops** the skill (no delegation) and asks the user for manual cleanup: **stow-link mismatch**. If a submodule's stow target (`$HOME/<path-with-leading-package-stripped>`) is a real directory with its own `.git` instead of a stow symlink to the submodule, the user has a standalone clone shadowing where the symlink should be. Their edits go into the standalone, never into the submodule; no amount of syncing fixes the divergence. The full skill doesn't fix this either, so STOP and report rather than delegating.
 
@@ -60,30 +60,45 @@ fi
 **Call 2 — submodule status + dirty/unpushed/mismatch scan:**
 
 ```bash
+# Self-heal the personal SSH alias before reachability checks. Idempotent;
+# exits 0 silently when Host personal already resolves. Without this, every
+# new machine where ~/.ssh/config is bare reports submodules as unreachable
+# and the skill either skips them or false-delegates to the full skill.
+"$HOME/.claude/skills/sync-dotfiles/scripts/ensure-personal-alias.sh" 2>&1 || true
+
 echo "--- submodules ---"
 sub_status=$(cd ~/.dotfiles && git submodule status)
 echo "$sub_status"
-if echo "$sub_status" | grep -q '^-'; then
-  echo "submodule uninitialized -> DELEGATE"
-fi
-if echo "$sub_status" | grep -q '^+'; then
-  echo "submodule pointer drift -> DELEGATE"
-fi
 
-# Walk each initialized submodule once and check three things:
-# 1. Dirty worktree → delegate (full skill commits + pushes inside the submodule).
-# 2. Unpushed commits → delegate (full skill pushes).
-# 3. Stow-link mismatch — the submodule's stow target ($HOME/<rest>) is a real
+# Walk each initialized submodule once and check four things:
+# 1. Reachability → if the remote can't be reached on this machine (missing
+#    SSH alias, offline, auth failure), report SKIPPED and skip the
+#    dirty/unpushed checks for this submodule. The user's local edits stay
+#    local; the next sync on a reachable machine picks them up. Without
+#    this guard, a machine that can't talk to a personal remote would loop
+#    into the full skill on every sync and still fail there.
+# 2. Dirty worktree → delegate (full skill commits + pushes inside the submodule).
+# 3. Unpushed commits → delegate (full skill pushes).
+# 4. Stow-link mismatch — the submodule's stow target ($HOME/<rest>) is a real
 #    directory with its own .git instead of a stow symlink. The user's edits go
 #    into that standalone clone, the submodule never sees them, sync passes blindly.
 #    Cannot delegate: the full skill doesn't reconcile two diverged clones either.
-#    STOP and report so the user can converge them manually.
+#    STOP and report so the user can converge them manually. Stow check runs
+#    regardless of reachability since the divergence is a local-config issue.
 sub_report=$(cd ~/.dotfiles && git submodule foreach --quiet '
-  if [ -n "$(git status --porcelain)" ]; then
-    echo "$displaypath: dirty worktree"
+  reachable=1
+  if ! GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=3" \
+       git ls-remote --exit-code origin HEAD >/dev/null 2>&1; then
+    reachable=0
+    echo "$displaypath: SKIPPED (remote unreachable on this machine)"
   fi
-  if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
-    echo "$displaypath: unpushed commits"
+  if [ "$reachable" = "1" ]; then
+    if [ -n "$(git status --porcelain)" ]; then
+      echo "$displaypath: dirty worktree"
+    fi
+    if [ -n "$(git log @{u}..HEAD --oneline 2>/dev/null)" ]; then
+      echo "$displaypath: unpushed commits"
+    fi
   fi
   # Stow target = $HOME/<displaypath with leading package dir stripped>.
   # e.g. wiki/.local/share/wiki -> $HOME/.local/share/wiki
@@ -95,13 +110,45 @@ sub_report=$(cd ~/.dotfiles && git submodule foreach --quiet '
     fi
   fi
 ' 2>/dev/null)
+
+# Build the unreachable-path set so the '+' drift check below can ignore
+# submodules that can't be pushed from this machine anyway.
+unreachable_paths=$(echo "$sub_report" | sed -n 's/: SKIPPED.*$//p')
+
 if [ -n "$sub_report" ]; then
   echo "$sub_report"
-  if echo "$sub_report" | grep -q 'STOW_MISMATCH'; then
-    echo "stow-link mismatch -> STOP (manual cleanup required: merge the standalone clone into the submodule, delete the real dir, then re-stow the package)"
+fi
+
+# Uninitialized → DELEGATE. Only the full skill can clone, regardless of
+# whether THIS machine can reach the remote (the user might have aliases set
+# up that the foreach probe can't see in our subshell environment).
+if echo "$sub_status" | grep -q '^-'; then
+  echo "submodule uninitialized -> DELEGATE"
+fi
+
+# Pointer drift → DELEGATE only when the drifted submodule is reachable.
+# A drifted but unreachable submodule is leftover from a previous failed
+# sync (e.g. a wip commit made when the remote was down); the new pointer
+# can't be pushed from here, and the next sync on a reachable machine will
+# resolve it.
+drifted=$(echo "$sub_status" | awk '/^\+/ {print $2}')
+if [ -n "$drifted" ]; then
+  if [ -n "$unreachable_paths" ]; then
+    drifted_reachable=$(echo "$drifted" | grep -vxF -f <(echo "$unreachable_paths") || true)
   else
-    echo "submodule has unsynced work -> DELEGATE"
+    drifted_reachable="$drifted"
   fi
+  if [ -n "$drifted_reachable" ]; then
+    echo "submodule pointer drift -> DELEGATE"
+    echo "$drifted_reachable"
+  fi
+fi
+
+# STOW_MISMATCH wins over DELEGATE — manual cleanup is the only fix.
+if echo "$sub_report" | grep -q 'STOW_MISMATCH'; then
+  echo "stow-link mismatch -> STOP (manual cleanup required: merge the standalone clone into the submodule, delete the real dir, then re-stow the package)"
+elif echo "$sub_report" | grep -qE '(dirty worktree|unpushed commits)'; then
+  echo "submodule has unsynced work -> DELEGATE"
 fi
 ```
 
@@ -261,8 +308,17 @@ cd ~/.dotfiles && git diff ORIG_HEAD --cached --name-only --diff-filter=A 2>/dev
 
 For each package directory listed, run stow then verify each new file is actually a symlink. Stow can bail with `BUG in find_stowed_path? Absolute/relative mismatch` (or "WARNING! stowing X would cause conflicts: existing target is not owned by stow") when it walks unrelated absolute symlinks in `$HOME` (e.g. `~/.local/state/nix/profiles/profile`, or other dotfiles symlinks created by hand) — when that happens it leaves new files unlinked, so we always verify and fall back to manual symlinking.
 
+**Host-specific packages (never stow off-host):** `steamdeck` is a per-host package. Its files target generic locations (`~/CLAUDE.md`) that another package (`general`) owns on every other machine, so stowing it on a non-steamdeck host clobbers the existing symlink. Only stow it when this machine's `id` is `steamdeck`; everywhere else the files still travel in the repo, they're just not linked. The guard below reads `$id` from `~/.machine_metadata`. To add another host-specific package later, add a `case` arm with its name and required id.
+
 ```bash
 pkg=<package>
+export $(grep -v '^#' ~/.machine_metadata | xargs)
+# Host-only packages: skip the restow unless the machine id matches, so a
+# host-specific package can't clobber the generic symlinks another package
+# owns on this machine.
+case "$pkg" in
+  steamdeck) [ "$id" != "steamdeck" ] && { echo "skip $pkg restow (machine id=$id, not steamdeck)"; exit 0; } ;;
+esac
 cd ~/.dotfiles && stow -R "$pkg" 2>&1 || true
 git diff ORIG_HEAD --cached --name-only --diff-filter=A | grep "^${pkg}/" | while IFS= read -r src; do
   rel=${src#${pkg}/}

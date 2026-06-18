@@ -34,6 +34,11 @@ map("n", "e", "k", nor)
 map({ "n", "o" }, "j", "e", nor)
 
 if not os.getenv("USE_QWERTY") then
+  -- nvim's default xmaps for in/an (vim.lsp.buf.selection_range) cause a
+  -- timeoutlen delay on the i and a prefixes in visual mode.
+  pcall(vim.keymap.del, "x", "in")
+  pcall(vim.keymap.del, "x", "an")
+
   map("n", "n", "j", nor)
   map("n", "e", "k", nor)
   map({ "n", "o" }, "j", "e", nor)

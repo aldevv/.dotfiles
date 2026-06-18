@@ -28,6 +28,7 @@ if [ ! -f ~/.machine_metadata ] || ! grep -q '^id=' ~/.machine_metadata || ! gre
   echo "created ~/.machine_metadata: id=$auto_id os=$auto_os"
 fi
 export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null && echo "id=$id os=$os"
+"$HOME/.claude/skills/sync-dotfiles/scripts/ensure-personal-alias.sh" 2>&1 || true
 echo "--- submodules ---"
 cd ~/.dotfiles && git submodule status
 ```
@@ -82,6 +83,18 @@ set -e
 cd ~/.dotfiles/<path>
 branch=$(git rev-parse --abbrev-ref HEAD)
 [ "$branch" = "HEAD" ] && { git checkout main 2>/dev/null || git checkout master; branch=$(git rev-parse --abbrev-ref HEAD); }
+
+# Pre-flight reachability check. If the remote can't be reached on this
+# machine (missing SSH alias, offline, auth failure), skip the wip commit
+# and the pull/push entirely. Local edits stay in the working tree until
+# the next sync on a reachable machine. Without this guard a wip commit
+# would pile up on every run while the pull keeps failing.
+if ! GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=3" \
+     git ls-remote --exit-code origin HEAD >/dev/null 2>&1; then
+  echo "<path>: skipped (remote unreachable on this machine)"
+  exit 0
+fi
+
 set -o pipefail
 local_files=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
 if [ -n "$local_files" ]; then
@@ -159,8 +172,17 @@ cd ~/.dotfiles && git diff ORIG_HEAD HEAD --name-only --diff-filter=A 2>/dev/nul
 
 For each package directory listed, run stow then verify each new file is actually a symlink. Stow can bail with `BUG in find_stowed_path? Absolute/relative mismatch` when it walks an unrelated symlink in `$HOME` (e.g. `~/.local/state/nix/profiles/profile`) — when that happens it leaves new files unlinked, so we always verify and fall back to manual symlinking. This is idempotent and cheap.
 
+**Host-specific packages (never stow off-host):** `steamdeck` is a per-host package. Its files target generic locations (`~/CLAUDE.md`) that another package (`general`) owns on every other machine, so stowing it on a non-steamdeck host clobbers the existing symlink. Only stow it when this machine's `id` is `steamdeck`; everywhere else the files still travel in the repo, they're just not linked. The guard below reads `$id` from `~/.machine_metadata`. To add another host-specific package later, add a `case` arm with its name and required id.
+
 ```bash
 pkg=<package>
+export $(grep -v '^#' ~/.machine_metadata | xargs)
+# Host-only packages: skip the restow unless the machine id matches, so a
+# host-specific package can't clobber the generic symlinks another package
+# owns on this machine.
+case "$pkg" in
+  steamdeck) [ "$id" != "steamdeck" ] && { echo "skip $pkg restow (machine id=$id, not steamdeck)"; exit 0; } ;;
+esac
 cd ~/.dotfiles && stow -R "$pkg" 2>&1 || true
 # Verify + fix each newly-added file from the pull. Ignore the stow exit
 # code: success is "every new file is a symlink to the dotfiles source".

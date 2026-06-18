@@ -121,6 +121,9 @@ map Ywi $ cp -rv $f /home/kanon/.local/share/wiki
 map <backspace2>wp cd /home/kanon/.local/share/wiki/personal
 map mwp $ mv -v $f /home/kanon/.local/share/wiki/personal
 map Ywp $ cp -rv $f /home/kanon/.local/share/wiki/personal
+map <backspace2>wcv cd /home/kanon/.local/share/wiki/personal/cv/latex
+map mwcv $ mv -v $f /home/kanon/.local/share/wiki/personal/cv/latex
+map Ywcv $ cp -rv $f /home/kanon/.local/share/wiki/personal/cv/latex
 map <backspace2>wS cd /home/kanon/.local/share/wiki/cheatsheets
 map mwS $ mv -v $f /home/kanon/.local/share/wiki/cheatsheets
 map YwS $ cp -rv $f /home/kanon/.local/share/wiki/cheatsheets
