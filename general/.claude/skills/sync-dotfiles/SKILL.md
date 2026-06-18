@@ -60,6 +60,12 @@ fi
 **Call 2 — submodule status + dirty/unpushed/mismatch scan:**
 
 ```bash
+# Self-heal the personal SSH alias before reachability checks. Idempotent;
+# exits 0 silently when Host personal already resolves. Without this, every
+# new machine where ~/.ssh/config is bare reports submodules as unreachable
+# and the skill either skips them or false-delegates to the full skill.
+"$HOME/.claude/skills/sync-dotfiles/scripts/ensure-personal-alias.sh" 2>&1 || true
+
 echo "--- submodules ---"
 sub_status=$(cd ~/.dotfiles && git submodule status)
 echo "$sub_status"
