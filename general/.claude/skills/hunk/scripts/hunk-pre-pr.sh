@@ -232,7 +232,16 @@ STEP 2 — DECIDE:
 
     printf '%s' '{"comments":[{"filePath":"path/to/file","hunkNumber":1,"summary":"one-line headline","rationale":"shape of the flow / why-it-matters"}]}' | hunk session comment apply --repo $repo_root --stdin
 
-STEP 3 — Re-run \`$tool_label\` with the same arguments. The hook will then surface a single Allow/Deny UI prompt for the $artifact_label. Do NOT ask the user via AskUserQuestion or chat first — the hook prompt IS the user confirmation. One prompt, one decision.
+STEP 3 — STOP and let the user review Hunk.
+
+Tell the user in chat:
+- What you applied (or that you chose to skip — one short sentence on why).
+- That the Hunk TUI window "$window_name" is open and ready for their review.
+- That you'll re-run \`$tool_label\` ONLY after they confirm they're done looking at Hunk.
+
+Wait for an affirmative reply from the user (e.g. "go", "lgtm", "create the $artifact_label") before re-running \`$tool_label\`. Do NOT re-run immediately — the user needs wall-clock time to actually look at the Hunk window in tmux, and the gap between your "applied" report and a re-run is what prevents them from reviewing.
+
+When the user confirms, re-run \`$tool_label\` with the same arguments. The hook will then surface a single Allow/Deny UI prompt for the $artifact_label as the final confirmation gate.
 
 Do not modify files, push commits, or run tests. The hook will clean up the diff file.
 EOF
