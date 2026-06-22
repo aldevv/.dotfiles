@@ -126,7 +126,7 @@ prelude_resolve_repo_dir() {
 prelude_verify_push() {
   local url=$1 platform=$2 repo_dir=$3
   local tool_cmd push_output push_remote_raw push_repo pushed_branches
-  local pr_repo pr_head mr_num
+  local pr_repo pr_head_repo pr_head mr_num pr_view src_project_id
 
   tool_cmd=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // ""')
   if ! printf '%s' "$tool_cmd" | grep -qE '(^|[[:space:]])git[[:space:]]+push([[:space:]]|$)'; then
@@ -149,23 +149,52 @@ prelude_verify_push() {
     github)
       pr_repo=$(printf '%s' "$url" | sed -E 's|^https?://github\.com/([^/]+/[^/]+)/.*|\1|')
       if command -v gh >/dev/null 2>&1; then
-        pr_head=$(gh pr view "$url" --json headRefName --jq '.headRefName // ""' 2>/dev/null || true)
+        # Fetch head ref + head-repo owner/name in one call so fork-based PRs
+        # (push target is the fork, base repo is upstream) still validate.
+        pr_view=$(gh pr view "$url" --json headRefName,headRepository,headRepositoryOwner 2>/dev/null || true)
+        pr_head=$(printf '%s' "$pr_view" | jq -r '.headRefName // ""' 2>/dev/null || true)
+        pr_head_repo=$(printf '%s' "$pr_view" \
+          | jq -r 'if (.headRepositoryOwner.login // "") != "" and (.headRepository.name // "") != ""
+                   then "\(.headRepositoryOwner.login)/\(.headRepository.name)"
+                   else "" end' 2>/dev/null || true)
       fi
       ;;
     gitlab)
       pr_repo=$(printf '%s' "$url" | sed -E 's|^https?://[^/]+/(.+)/-/merge_requests/[0-9]+.*|\1|')
       mr_num=$(printf '%s' "$url" | grep -Eo '[0-9]+$')
       if command -v glab >/dev/null 2>&1 && [ -n "$mr_num" ]; then
-        pr_head=$(cd "$repo_dir" && glab mr view "$mr_num" --output json 2>/dev/null | jq -r '.source_branch // ""' || true)
+        pr_view=$(cd "$repo_dir" && glab mr view "$mr_num" --output json 2>/dev/null || true)
+        pr_head=$(printf '%s' "$pr_view" | jq -r '.source_branch // ""' 2>/dev/null || true)
+        # If the MR is from a fork, source_project_id differs from the target
+        # project; resolve it to a path so push-repo matching still works.
+        src_project_id=$(printf '%s' "$pr_view" | jq -r '.source_project_id // empty' 2>/dev/null || true)
+        if [ -n "$src_project_id" ] && [ -n "${HOST:-}" ]; then
+          pr_head_repo=$(glab api --hostname "$HOST" "projects/$src_project_id" 2>/dev/null \
+                          | jq -r '.path_with_namespace // ""' 2>/dev/null || true)
+        fi
       fi
       ;;
   esac
 
-  if [ -n "$push_repo" ] && [ -n "$pr_repo" ] \
-      && [ "$(printf '%s' "$push_repo" | tr '[:upper:]' '[:lower:]')" \
-           != "$(printf '%s' "$pr_repo"   | tr '[:upper:]' '[:lower:]')" ]; then
-    echo "push target '$push_repo' does not match PR repo '$pr_repo' — exiting"
+  # Lowercase the comparison so case-insensitive hosts (GitHub) don't trip on
+  # capitalization drift in user/org names.
+  local push_repo_lc pr_repo_lc pr_head_repo_lc
+  push_repo_lc=$(printf '%s' "$push_repo" | tr '[:upper:]' '[:lower:]')
+  pr_repo_lc=$(printf '%s' "$pr_repo" | tr '[:upper:]' '[:lower:]')
+  pr_head_repo_lc=$(printf '%s' "$pr_head_repo" | tr '[:upper:]' '[:lower:]')
+
+  if [ -n "$push_repo_lc" ] && [ -n "$pr_repo_lc" ] \
+      && [ "$push_repo_lc" != "$pr_repo_lc" ] \
+      && [ "$push_repo_lc" != "$pr_head_repo_lc" ]; then
+    if [ -n "$pr_head_repo_lc" ]; then
+      echo "push target '$push_repo' matches neither PR base '$pr_repo' nor PR head '$pr_head_repo' — exiting"
+    else
+      echo "push target '$push_repo' does not match PR repo '$pr_repo' — exiting"
+    fi
     return 1
+  fi
+  if [ -n "$pr_head_repo_lc" ] && [ "$push_repo_lc" = "$pr_head_repo_lc" ]; then
+    echo "push target '$push_repo' matches PR head repo (fork workflow); continuing"
   fi
 
   if [ -n "$pushed_branches" ] && [ -n "$pr_head" ]; then
