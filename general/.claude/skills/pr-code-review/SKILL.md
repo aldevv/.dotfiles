@@ -1,6 +1,6 @@
 ---
 name: pr-code-review
-description: Multi-angle review of one OR more GitHub PRs. Spawns a configurable number of parallel diff-anchored subagents per PR (default 6 standing angles + 1 conditional external-API verifier; user can override). Loads applicable CLAUDE.md / CLAUDE.local.md / lazy rules from cwd, walking up to home, before fanning out, and passes the loaded rules to every subagent. After the review agents return, spawns a second parallel verification pass that has DIFFERENT subagents fact-check every factual claim against the actual code, dependencies, or external docs. Each consolidated finding ships with a confidence percentage (0-100%) and a ✓ marker if a separate verifier confirmed it. Opens Hunk with ALL findings attached first, then asks the operator a yes/no whether to reduce to the most important + highest-confidence findings (the skill picks an integer between 1 and 5 based on confidence and importance), then walks each surviving finding with the user for Yes-post / Edit / Skip. Trigger on "/pr-code-review <pr-or-list>", "code review this PR with N subagents", "review these PRs with subagents", "do a multi-angle review of PR #N", or any explicit request to deeply review one or more PRs. Use `pr-code-review` for explicit PRs with operator-in-the-loop comment posting. Sibling skills (project-scoped batch drivers like `pr-code-review-all`) call this skill under the hood.
+description: Multi-angle review of one OR more GitHub PRs. The coordinator adaptively picks an agent count between 1 and 12 plus an effort tier (low / medium / high) per PR based on the PR's scope, importance, and complexity — a one-file typo gets 1 agent at low effort; a security-sensitive multi-file refactor gets 10-12 at high effort. The user can still override with `count=<N>` or a leading integer. Loads applicable CLAUDE.md / CLAUDE.local.md / lazy rules from cwd, walking up to home, before fanning out, and passes the loaded rules to every subagent. After the review agents return, spawns a second parallel verification pass that has DIFFERENT subagents fact-check every factual claim. BLOCKER and MAJOR findings MUST be verified by public-doc fetch, local reproduction on the checked-out PR branch, or runtime-path trace through code; the "very obvious from the diff" escape hatch requires the verifier to state explicitly that no extra verification was needed. Each consolidated finding ships with a confidence percentage (0-100%), a ✓ marker, and the verification mode used. Opens Hunk with ALL findings attached first, then asks the operator a yes/no whether to reduce to the most important + highest-confidence findings (the skill picks an integer between 1 and 5 based on confidence and importance), then walks each surviving finding with the user for Yes-post / Edit / Skip. Trigger on "/pr-code-review <pr-or-list>", "code review this PR with N subagents", "review these PRs with subagents", "do a multi-angle review of PR #N", or any explicit request to deeply review one or more PRs. Use `pr-code-review` for explicit PRs with operator-in-the-loop comment posting. Sibling skills (project-scoped batch drivers like `pr-code-review-all`) call this skill under the hood.
 argument-hint: <pr-or-list> [count=<N>] (e.g. https://github.com/owner/repo/pull/80, "owner/repo#80 owner/other-repo#42 count=9", or "9 <url1> <url2>")
 ---
 
@@ -29,7 +29,7 @@ One or more PR references, in any of these shapes per PR:
 Multiple PRs are space-separated in the arg string. Order does not matter; agents fan out across all PRs in parallel.
 
 Optional flags inside the arg string:
-- A bare leading integer (`9 <urls...>`) OR `count=<N>` → number of subagents per PR. Default `6` standing angles + `1` conditional external-API verifier. Valid range `3..12`. Clamp silently outside that range.
+- A bare leading integer (`9 <urls...>`) OR `count=<N>` → number of subagents per PR. When set, this OVERRIDES the adaptive sizing in Step 2 (clamped to `1..12`). When unset, Step 2 picks a count adaptively in `1..12` based on the PR's scope, importance, and complexity.
 - `target_session=<tmux-session>` — when set, the inner `hunk` call opens its TUI as a new window inside that session. Forwarded by sibling batch drivers.
 - `force_new_window=true` — when set without `target_session`, the inner `hunk` call opens a new window in the current session regardless of pane count.
 
@@ -174,13 +174,61 @@ If the project has well-known noise paths the diff should exclude (generated fil
 
 Note the `head` SHA. Every inline comment must be posted with `commit_id` equal to the PR head (FULL SHA, not abbreviated; `gh` rejects abbreviated commit IDs with `commit_id is not part of the pull request`).
 
-## Step 2. Decide the agent count
+## Step 2. Decide the agent count and effort per agent
 
-- If the user explicitly passed `count=<N>` or a leading integer in the arg string, use that (clamped to `3..12`).
-- Otherwise default to `6` standing angles + `1` conditional external-API verifier (= 7 effective max).
-- The same count applies uniformly to every PR in the batch. Don't pick different counts per PR unless the user asks.
+**The coordinator (you) picks both COUNT (1-12) and EFFORT (low/medium/high) per PR based on actual scope, importance, and complexity.** PRs in the same batch CAN get different counts and effort tiers — size each one independently. State the chosen count, the chosen effort, and a one-sentence rationale in chat before fanning out ("PR #123: 4 agents, medium effort — touches user provisioning across 3 files, no new external API.").
 
-When the user requests N > 7 (default angles + 1 conditional), extend with extra angles in this order (skip the next once N is reached):
+**User override wins unconditionally.** If `count=<N>` or a leading integer was in the args, use that count (clamped to `1..12`) for every PR in the batch; you still pick the effort tier per PR.
+
+### Sizing matrix
+
+| Indicators                                                                                                              | Count | Effort  |
+| ---                                                                                                                     | ----- | ------- |
+| Doc-only / typo / single-literal change; no behavior change; <20 LOC; one file                                          | 1     | low     |
+| Single bug fix, one concern, ≤50 LOC, ≤2 files                                                                          | 2     | low     |
+| Small feature or refactor, ≤200 LOC, ≤4 files, no new external API                                                      | 3-4   | medium  |
+| Medium feature, multiple files, one new resource / endpoint, or non-trivial control flow                                | 5-6   | medium  |
+| Large feature, new external API surface, new auth/scope/permission, schema change, public-ID stability impact           | 7-9   | high    |
+| Security-sensitive (auth, secrets, multi-tenant data path), data-loss risky, breaking change, large refactor (>500 LOC) | 10-12 | high    |
+
+Tie-breakers — bump count UP one tier when any of:
+- The PR touches the auth or session-establishment path.
+- The PR changes a public ID format, schema field, or capability flag.
+- The PR adds a new external API call (the API-surface verifier alone isn't enough; widen the lens).
+- The PR description references a customer incident or production regression.
+
+Bump DOWN one tier when:
+- The PR is generated by a known auto-bot (dependabot, an auto-bump workflow) AND only touches lockfiles / versions / vendor.
+- The PR is an explicit revert of a recent merge (you only need to confirm the revert is clean).
+
+### What "effort" controls
+
+The effort tier modifies each subagent's prompt and tool budget. Pass `effort: <low|medium|high>` into every subagent prompt so the agent knows the budget.
+
+- **low** — anchor-and-skim. Read the diff. Read the function the `+` lines live in. No external doc fetches. No vendored-code trace. Word cap 250. Aim for under 60 seconds wall-clock.
+- **medium** — anchor + trace. Read the diff. Read every caller and callee of changed functions one level out. Fetch one or two external docs ONLY when the agent's lens requires it (e.g. API surface). Word cap 500. Aim for 1-3 minutes wall-clock.
+- **high** — anchor + trace + verify. Read the diff. Trace the runtime path through changed code into vendored / SDK code. Fetch all relevant vendor doc pages for every new endpoint. Read related test files to understand the spec the PR claims to meet. Word cap 700. Aim for 3-6 minutes wall-clock.
+
+### Angle selection at low counts
+
+When count drops below the standing six, keep this irreducible floor (in order of importance, drop from the bottom):
+
+1. **Code correctness** (always)
+2. **API surface** (when external API is touched, otherwise drop)
+3. **Error handling**
+4. **Pagination & control flow**
+5. **Data model & contracts**
+6. **Tests & regression risk**
+
+Concrete picks:
+- count=1 → angle 1 only
+- count=2 → angle 1 + angle 2 if API surface touched, else angle 1 + 3
+- count=3 → 1, then 2 if API surface else 3, plus 4 if list/iterator code touched else 5
+- count=4-6 → fill from the list top-down, skipping irrelevant lenses (e.g. skip pagination on a PR that touches no list code)
+
+### Extended angles at high counts
+
+When count is 7-12, keep all six standing angles, add the API verifier (Agent 7) if external API is touched, then extend with these in the order documented (skip the next once N is reached):
 
 8. **Memory & performance under load** — page-size caps, per-resource sort cost, peak heap on large datasets.
 9. **Concurrency & thread-safety** — concurrent calls, mutable cache state, goroutine/thread spawn paths.
@@ -188,9 +236,7 @@ When the user requests N > 7 (default angles + 1 conditional), extend with extra
 11. **Security & CI** — secret exposure, CI gate regressions, workflow secret references, dependency injection of trust.
 12. **Data integrity & index/key correctness** — map-key collision risk, cross-type ID conflation, validation-invariant dependence.
 
-(The eight angles above are NOT mutually exclusive with the standing six; pick the next-most-relevant one if the PR touches the area.)
-
-When N < 6, drop the standing angles from the bottom up (tests/regression first, then data model, then pagination), keeping correctness + API surface + error handling as the irreducible floor.
+(These five are NOT mutually exclusive with the standing six; pick the next-most-relevant one if the PR touches the area.)
 
 ## Step 3. Spawn N parallel review agents (per PR, all PRs in one message)
 
@@ -327,6 +373,30 @@ For a single-verifier finding (MINOR or MAJOR<80%), the rules from the previous 
 - `✓3` — three verifiers, all three agreed.
 - `✓2/3` — three verifiers, two agreed (one NUANCED dissent retained in body).
 
+### Verification mode requirements (BLOCKER / MAJOR)
+
+Every BLOCKER and every MAJOR verifier MUST report which **mode** it used to verify. The mode is part of the verifier's response and feeds into the final finding marker.
+
+The four modes:
+
+- **docs** — fetched the relevant vendor / framework / spec doc URL via WebFetch (or `mcp__context7__query-docs` for library docs) and cited the section that proves or refutes the claim. Required for any claim about vendor API behavior, OpenAPI / Postman shapes, scopes, or third-party library semantics.
+- **repro** — reproduced the issue locally on the checked-out PR branch at `$REPO_DIR` (already on `pr-<N>` from Step 0b). The verifier runs the relevant build/test/command and reports the actual outcome. For Go: `go build ./...`, `go vet ./...`, targeted `go test ./pkg/...`, or running the connector against a mock. For JS/TS: `npm test`, `tsc --noEmit`, or running the script. For shell: actually invoking it. Required for any behavioral claim that is testable in <2 minutes on the operator's machine; optional for slower paths.
+- **trace** — traced the actual runtime path through source code. Cite the file:line chain (e.g. `pkg/foo/bar.go:42 → vendor/x/y.go:117 → vendor/x/z.go:80`). Required for any claim about framework / SDK / vendored-dependency behavior.
+- **obvious** — the finding is self-evident from the diff alone: type mismatch you can see in the `+` line, missing nil check on a return value the very next line dereferences, off-by-one in a literal range, etc. Using `obvious` is allowed but the verifier MUST include a one-sentence justification ("obvious: `+ if user.Name {` dereferences a nil-able pointer field with no guard on the line above"). Without that justification the finding is downgraded to MINOR. Vague justifications ("it's clear from context") do NOT qualify; the sentence must point at the specific construct that makes verification unnecessary.
+
+Per-severity mode requirements:
+
+| Severity                                                            | Allowed modes                       | Notes                                                                                                  |
+| ------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| BLOCKER, claim about vendor API behavior                            | docs (REQUIRED) + one of trace/repro for additional confirmation | Two distinct verifiers, each using its own mode.                                                       |
+| BLOCKER, claim about framework / SDK / vendored-dep behavior        | trace (REQUIRED) + optionally repro | Reading the actual vendored source is non-negotiable.                                                  |
+| BLOCKER, behavioral claim runnable in <2 min                        | repro (REQUIRED) + optionally trace | If the claim is "this build fails" or "this panics", actually run it.                                  |
+| BLOCKER, claim self-evident from diff                               | obvious (with justification)        | Verifier must say WHY no extra verification was needed. Skipping the justification downgrades the row. |
+| MAJOR                                                               | any one of docs / repro / trace / obvious | Pick the cheapest mode that proves the claim. `obvious` still requires the one-sentence justification. |
+| MINOR                                                               | any mode, or no verification beyond reading the diff (existing rules) | No mode-justification requirement for MINORs.                                                          |
+
+The verifier prompt now ends with a structured-output requirement (see below). The mode is part of every BLOCKER/MAJOR verifier response so the operator can see — per finding — what kind of evidence was gathered.
+
 Each verifier prompt:
 
 > You are independently fact-checking ONE claim from a multi-angle PR review. You did not produce this claim. Your only job is to confirm or refute it.
@@ -337,21 +407,27 @@ Each verifier prompt:
 > **Claimed consequence:** <agent's stated consequence>
 > **Verifiable by:** <agent's `verifiable_by` field>
 > **Initial agent confidence:** <agent_confidence_pct>%
+> **Severity:** <BLOCKER|MAJOR|MINOR>
 >
-> Verify by reading source code, vendored / dependency code, or fetching external docs (WebFetch). Trace the actual runtime path or read the actual spec. Do NOT take the claim at face value.
+> Verify by reading source code, vendored / dependency code, fetching external docs (WebFetch / context7), or reproducing locally on the checked-out PR branch at `$REPO_DIR`. Trace the actual runtime path or read the actual spec. Do NOT take the claim at face value.
 >
-> If the claim references framework / SDK behavior (e.g. "the framework retries on error X"), READ the relevant source under `$REPO_DIR/vendor/` (Go), `node_modules/` (JS), site-packages / venv (Python), or wherever the project vendors dependencies. Cite the file:line that proves or disproves it.
+> **For BLOCKER and MAJOR claims, pick a verification MODE from {docs, repro, trace, obvious} and report it explicitly in your response.** Constraints:
+> - vendor API behavior claim → `docs` is REQUIRED.
+> - framework / SDK / vendored-dep behavior claim → `trace` is REQUIRED.
+> - behavioral claim runnable in <2 min on the checked-out branch → `repro` is REQUIRED (run it; don't speculate).
+> - any other claim → pick the cheapest mode that actually proves the point.
+> - `obvious` is allowed when the claim is self-evident from the `+` line itself; you MUST include a one-sentence justification naming the specific construct that makes verification unnecessary. Without that sentence the verdict is downgraded.
 >
-> If the claim references vendor API behavior, fetch the relevant doc page with WebFetch and quote the relevant section.
+> For MINOR, you may skip the mode and just verify by reading.
 >
 > If the claim references a CLAUDE.md / project-rule, check the loaded CONTEXT_PACK; do not invent the rule.
 >
 > Return one of:
-> - **VERIFIED** + revised confidence (0-100%) + 1-2 sentences citing the evidence
-> - **FALSE** + 1-2 sentences explaining why the claim does not hold (with citation)
-> - **NUANCED** + revised confidence + 1-2 sentences explaining the gap (e.g. "claim is true only when X; PR is in the X=false case")
+> - **VERIFIED** + revised confidence (0-100%) + 1-2 sentences citing the evidence + `mode: <docs|repro|trace|obvious>` + `evidence: <doc URL | file:line chain | command + outcome | one-sentence justification>`
+> - **FALSE** + 1-2 sentences explaining why the claim does not hold (with citation) + `mode: <…>` + `evidence: <…>`
+> - **NUANCED** + revised confidence + 1-2 sentences explaining the gap (e.g. "claim is true only when X; PR is in the X=false case") + `mode: <…>` + `evidence: <…>`
 >
-> Word cap: 200 words.
+> Word cap: 250 words.
 
 The verifier output sets the FINAL confidence percentage and the ✓ marker:
 - **VERIFIED** → final confidence = verifier's revised confidence, ✓ marker present.
@@ -448,12 +524,13 @@ The operator decides what to post by scanning the full picture once: a table of 
 
 Print one Markdown table per PR to the user before opening Hunk. Columns:
 
-| # | Sev | Conf | Verified | File:Line | Headline |
-| - | --- | ---- | -------- | --------- | -------- |
-| 1 | BLOCKER | 92% | ✓3      | src/foo.go:42 | wrong type breaks downstream consumer |
-| 2 | MAJOR   | 78% | ✓2      | src/bar.go:18 | items emitted twice across pages |
-| 3 | MAJOR   | 73% | ✓2/3    | src/qux.go:55 | role mapping mismatch (1 nuance) |
-| 4 | MINOR   | 65% | ✓1      | src/baz.go:91 | repeated literal could be a const |
+| # | Sev | Conf | Verified | Mode(s) | File:Line | Headline |
+| - | --- | ---- | -------- | ------- | --------- | -------- |
+| 1 | BLOCKER | 92% | ✓3      | docs + trace + repro | src/foo.go:42 | wrong type breaks downstream consumer |
+| 2 | MAJOR   | 78% | ✓2      | docs + trace         | src/bar.go:18 | items emitted twice across pages |
+| 3 | MAJOR   | 73% | ✓2/3    | trace                | src/qux.go:55 | role mapping mismatch (1 nuance) |
+| 4 | BLOCKER | 95% | ✓3      | obvious              | src/baz.go:18 | nil deref on next line (no guard) |
+| 5 | MINOR   | 65% | ✓1      | —                    | src/baz.go:91 | repeated literal could be a const |
 
 Rules:
 - BLOCKERs first, MAJORs next, MINORs last. Within tier, sort by confidence desc.
