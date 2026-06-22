@@ -17,42 +17,28 @@ return {
     -- https://github.com/ray-x/go.nvim?tab=readme-ov-file#configuration
     config = function(lp, opts)
       require("go").setup(opts)
-      local format_sync_grp = vim.api.nvim_create_augroup("GoFormat", {})
-      vim.api.nvim_create_autocmd("BufWritePre", {
-        pattern = "*.go",
-        callback = function()
-          require('go.format').goimports()
-        end,
-        group = format_sync_grp,
-      })
+      -- Format-on-save for Go is owned by gopls via the format_on_save
+      -- autocmd in lua/config/automation/init.lua. go.format.goimports
+      -- ran simultaneously here and clobbered cursor position; removed.
     end,
-    event = { "CmdlineEnter" },
     ft = { "go", "gomod" },
     build = ':lua require("go.install").update_all_sync()', -- if you need to install/update all binaries
   },
   {
     "mrcjkb/rustaceanvim",
-    version = "^3", -- Recommended
+    version = "^5", -- v5 changed settings shape (default_settings, checkOnSave bool)
     init = function()
       vim.g.rustaceanvim = {
-        -- -- Plugin configuration
-        -- tools = {},
-        -- -- LSP configuration
         server = {
-          --   on_attach = function(client, bufnr)
-          --     -- you can also put keymaps in here
-          --   end,
-          settings = {
-            -- rust-analyzer language server configuration
+          default_settings = {
             ["rust-analyzer"] = {
-              checkOnSave = {
-                command = "clippy",
-              },
+              -- v5: checkOnSave is now a bool; per-tool config lives under `check`.
+              checkOnSave = true,
+              check = { command = "clippy" },
             },
           },
         },
-        -- DAP configuration
-        -- dap = {},
+        -- tools = {}, dap = {},
       }
 
       vim.api.nvim_create_autocmd("FileType", {

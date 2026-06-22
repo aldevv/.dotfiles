@@ -6,6 +6,14 @@ set number nu
 vim.filetype.add({
 	extension = {
 		mdx = "markdown",
+		keymap = "dts",
+		ddl = "sql",
+	},
+	filename = {
+		[".envrc"] = "bash",
+		[".projections.json"] = "json",
+		["launch.json"] = "jsonc",
+		["docker-compose.json"] = "jsonc",
 	},
 })
 
@@ -22,7 +30,8 @@ vim.opt.textwidth = 95
 
 -- save folds and cursor position
 vim.opt.viewoptions = "folds,cursor"
-vim.opt.sessionoptions = "folds,cursor"
+-- broader sessionoptions so :mksession / neovim-project actually restores layout
+vim.opt.sessionoptions = "buffers,curdir,folds,help,tabpages,winsize,winpos,terminal"
 
 -- enable trailing symbols eol symbol etc
 vim.opt.list = true
@@ -104,33 +113,51 @@ vim.o.colorcolumn = "100"
 
 vim.opt.updatetime = 250
 vim.opt.timeoutlen = 700
+-- ttimeoutlen=10 makes ESC and key chords feel snappy. default -1 follows
+-- timeoutlen=700ms which is the dominant key-feel-lag source.
+vim.opt.ttimeoutlen = 10
 vim.opt.shiftwidth = 2
 
 vim.opt.pumblend = 10
 vim.opt.statusline = "%t"
-vim.opt.spell = true
+-- spell is per-filetype below (markdown/text/gitcommit), not global, to keep
+-- the spell sign-column out of source buffers.
+vim.opt.spell = false
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("spell_per_filetype", { clear = true }),
+  pattern = { "markdown", "text", "gitcommit", "asciidoc", "rst" },
+  callback = function() vim.opt_local.spell = true end,
+})
+
+-- 0.11+: unified rounded border across hover/signature/diagnostic floats.
+if vim.fn.has("nvim-0.11") == 1 then
+  vim.o.winborder = "rounded"
+end
 
 -- general diagnostics
 vim.diagnostic.config({
   virtual_text = {
     spacing = 2,
-    severity_limit = "Warning",
+    -- severity_limit was deprecated; use `severity` instead.
+    severity = { min = vim.diagnostic.severity.WARN },
   },
   -- update_in_insert has bug with cmp, ghost_text (from cmp) overlaps virual_text (from diagnostics)
-  -- update_in_insert = true,
   update_in_insert = false,
   float = {
-    -- source = "if_many",
     source = true,
+    border = "rounded",
   },
 })
 
 vim.opt.jumpoptions = "stack"
 
-vim.g.python_host_prog = "/usr/bin/python"
-vim.g.python3_host_prog = "/usr/bin/python3"
-
+-- python host: init.lua already sets python3_host_prog from $(which python3).
+-- This block stays as a macunix-only override for the legacy python2 host;
+-- nothing on linux uses it.
 if vim.fn.has("macunix") == 1 then
   vim.g.python_host_prog = "/usr/local/bin/python"
-  vim.g.python3_host_prog = "/usr/local/bin/python3"
+  if vim.fn.executable("/usr/local/bin/python3") == 1 then
+    vim.g.python3_host_prog = "/usr/local/bin/python3"
+  end
 end

@@ -182,7 +182,9 @@ vnoremap <leader>.vg :g/\v/norm!<Left><Left><Left><Left><Left><Left>
 " save with no permission using w!!, could be cnoremap
 nnoremap <silent><leader>.ch  :w !sudo chmod +x %<cr>
 nnoremap <silent><leader>.co  :w !sudo chown $USER:$USER % 2>/dev/null<cr>
-map <silent> <F11> /\A\zs\a<cr>
+" <F11> was the regex search /\A\zs\a, but dap.lua maps it to step-into.
+" The regex search is now <leader>.F11 to free <F11> for dap.
+nnoremap <silent> <leader>.F11 /\A\zs\a<cr>
 " split movement , cant be <c-i> because that is mapped to be the opposite of <c-o>
 " noremap <tab> %
 " vnoremap <tab> %

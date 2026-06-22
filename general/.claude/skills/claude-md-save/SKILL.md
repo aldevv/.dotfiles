@@ -16,20 +16,36 @@ Never save to `~/.claude/CLAUDE.md` (global) unless the user says "global claude
 
 ### Scope disambiguation (when the user doesn't specify)
 
-"Save in my claude" without a qualifier is ambiguous. Resolve scope before choosing a target file:
+"Save in my claude" without a qualifier is ambiguous. Resolve scope before choosing a target file. The decisive question is **not** "is this principle reusable?" but **"where was the agent working when this lesson surfaced?"** A reusable principle still belongs in the project CLAUDE.md when the lesson came up while editing that project's files — that's where future agents will need it.
 
-**Check work scope first** (see "Work claude scope" below): if the content references your employer's infrastructure, credentials, tooling, or repos (the work cloud-auth/SSO flow, the work identity provider, work MFA secrets, a work-only product or service name, the work issue tracker, or anything under `$WORK` / `~/work`), it is work-scoped no matter which directory you are in. Work wins over both project and global, so resolve it before applying the global/project leanings below.
+**Check work scope first** (see "Work claude scope" below): if the content references your employer's infrastructure, credentials, tooling, or repos (the work cloud-auth/SSO flow, the work identity provider, work MFA secrets, a work-only product or service name, the work issue tracker, or anything under `$WORK` / `~/work`), it is work-scoped no matter which directory you are in. Work wins over both project and global, so resolve it before applying the project/global leanings below.
 
-**Lean toward global** when any of these hold:
-- The project has no `.claude/lazy/` directory — if project lazy files existed they would be the obvious target; their absence means the user probably isn't thinking project-scope.
-- A matching global lazy file already exists for the topic — extending an existing file beats creating a new one.
-- The content is a general/reusable pattern (not referencing project-specific names, files, or conventions).
+**Identify the working-context project, not just cwd.** The user's cwd may differ from where the edits happened (e.g. they ran `nvim` from `~/work` but the files being edited live under `~/.config/nvim/`). Build a candidate-project list:
 
-**Lean toward project** when any of these hold:
+1. From cwd, walk ancestors looking for the first `CLAUDE.md` (project root).
+2. From the last 10–20 file paths the agent has Read/Edited/Written this session, walk each path's ancestors looking for a `CLAUDE.md`.
+3. The "working-context project" is the CLAUDE.md most frequently matched by step 2 (or the cwd one if step 2 is empty). If two projects tie, pick the one whose files were edited most recently.
+
+**Lean toward project (the working-context project)** when any of these hold:
 - The user says "in this project", "for this repo", or similar.
-- The content names project-specific symbols, paths, or conventions that only make sense here.
+- The content names project-specific symbols, paths, conventions, or tools that only make sense inside that project.
+- **The rule was learned while editing files in that project — even if the principle is reusable elsewhere.** A nvim-specific lesson learned while editing `~/.config/nvim/*` belongs in `~/.config/nvim/CLAUDE.md`, not global, because that's where the next agent editing nvim config will read context from. The "reusability" of a principle is not by itself a reason to prefer global.
+- The project's CLAUDE.md has a natural section for the rule (existing or new) — concrete homes beat abstract ones.
 
-When leaning global, run the global lazy scan (Command D in Step 2) alongside the project scan to find an existing match before deciding. If a global lazy file matches the topic, that is the target — not a new project file.
+**Lean toward global** only when ALL of these hold:
+- The working-context project is **none** (no CLAUDE.md in cwd or recently-edited-file ancestors), OR the working-context project is itself the global dotfiles tree (`~/.dotfiles/general/`).
+- The content is universal, not editor/tool/language-specific (e.g. "always write a test before a fix" is universal; "check nvim runtime ftplugins before customizing" is editor-specific).
+- A matching global lazy file already exists for the topic AND no equally-specific project home exists.
+
+When leaning project, prefer the working-context project's CLAUDE.md (or its `.claude/lazy/`) over global. Run the project scan (Commands A-C in Step 2) against THAT project's path, not just cwd.
+
+**Heuristic check (worked examples):**
+- "Check nvim runtime before writing custom keybinds" while editing `~/.config/nvim/*` → `~/.config/nvim/CLAUDE.md` (nvim-specific home). NOT global, even though the principle generalizes.
+- "Always git-rebase before merging" while in any repo → global (`~/.dotfiles/general/.claude/rules/git.md` or `lazy/code/code.md`); applies everywhere.
+- "Use json.Number for all baton API IDs" → work scope (`$WORK/CLAUDE.md`).
+- "Add type hints to every function in this repo" while in `~/projects/foo/` → `~/projects/foo/CLAUDE.md`.
+
+When leaning global, run the global lazy scan (Command D in Step 2) alongside the project scan to find an existing match before deciding. If a global lazy file matches the topic, that is the target — not a new project file. **But still confirm the working-context project doesn't have a better home first.**
 
 ### Work claude scope
 
@@ -190,11 +206,12 @@ State the resolved scope (project/global and why), the chosen target, whether it
 
 Lazy files store ideas and behaviors for future agents, not session transcripts. Before writing:
 
-- **Format: bullet points by default.** Long prose is forbidden unless the concept is genuinely complex. No paragraphs when bullets work.
-- **Generic, not project-specific.** No project names, file paths, symbol names, or codebase-specific details. The entry must make sense to an agent working on a completely different repo.
-- **No full code blocks unless the pattern can't be understood without one.** When code helps, use the smallest example that makes it concrete — a few lines at most, not a full implementation.
-- **Extract the idea, not the example.** If the session produced a worked example, write the behavior/principle it illustrates. A small example (3–5 lines) can follow as illustration, never as the main content.
-- **Ask:** "Would an agent on a different project read this and know exactly what to do?" If no, strip more.
+- **Smallest entry that stays clear and cohesive.** Fewest words that fully convey the rule. After drafting, cut every sentence that doesn't add information a future agent needs to act on. One-sentence rule, one sentence; don't pad with rationale, examples, or edge cases the user didn't ask for.
+- **Bullets when they help, not by default.** Bullets fit lists of distinct items, alternatives, or steps. A single thought is a sentence, not a one-bullet list. Two short sentences usually beat two bullets. Decide per entry.
+- **Generic, not project-specific.** No project names, file paths, symbol names, or codebase details. The entry must make sense to an agent on a different repo.
+- **No code blocks unless the pattern needs one.** Smallest example that makes it concrete, a few lines at most.
+- **Extract the idea, not the example.** Write the behavior the session illustrated. A 3-5 line example may follow as illustration, never as the main content.
+- **Final pass:** "Can I cut another sentence without losing meaning?" If yes, cut it.
 
 ## Step 5 — Read the target file
 

@@ -81,7 +81,7 @@ M.toggle = function(file, config)
 
   -- create floating window with file inside
   create_window(file, config)
-  vim.api.nvim_buf_set_option(float_bufnr, "bufhidden", "delete")
+  vim.bo[float_bufnr].bufhidden = "delete"
 
   -- keymaps
   local exists = vim.fn.glob(file)

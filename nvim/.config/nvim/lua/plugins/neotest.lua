@@ -15,6 +15,12 @@ return {
             "nvim-neotest/neotest-python",
         },
         config = req "config.plugins.neotest",
-        module = "neotest",
+        -- lazy.nvim's `module` field was deprecated; loading is driven by
+        -- the require calls in the config function and any `require("neotest")`
+        -- in user keybindings.
+        cmd = { "Neotest" },
+        keys = {
+            { "St",  desc = "neotest" },
+        },
     },
 }

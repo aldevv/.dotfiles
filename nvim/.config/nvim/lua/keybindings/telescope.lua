@@ -11,17 +11,6 @@ function custom_find_files()
   -- doing this because of bug where if you open a monorepo and then go a folder up, use
   -- telescope and then go back to prev folder and do telescope, it will show contents of pwd
   -- and not current dir
-  if vim.bo.filetype == "netrw" then
-    require("telescope.builtin").find_files({
-      cwd = vim.b.netrw_curdir,
-      follow = true,
-      hidden = true,
-      no_ignore = false, -- ignore .gitignore
-      sort_last_used = true,
-    })
-    return
-  end
-
   require("telescope.builtin").find_files({
     cwd = vim.fn.expand("%:p:h"),
     follow = true,
@@ -49,11 +38,7 @@ M.load_mappings = function()
   -- })
 
   map("n", "<a-r>", function()
-    if vim.bo.filetype ~= "netrw" then
-      require("telescope.builtin").live_grep({ cwd = vim.fn.expand("%:p:h"), hidden = true, additional_args = { '--multiline' } })
-    else
-      require("telescope.builtin").live_grep({ cwd = vim.b.netrw_curdir, hidden = true, additional_args = { '--multiline' } })
-    end
+    require("telescope.builtin").live_grep({ cwd = vim.fn.expand("%:p:h"), hidden = true, additional_args = { '--multiline' } })
   end, nor_s)
 
   map("n", "<a-s-r>", function()
@@ -126,7 +111,8 @@ M.load_mappings = function()
   -- map("n", "<localleader>Vd", ':lua require("utils.lua.telescope").nvim({path = "lua/lsp/dap"})<cr>', nor_s)
 
   map("n", "<a-a>", function() require("utils.lua.telescope").alternates() end, desc("Projectionist alternates (edit)"))
-  map("n", "<a-e>", function() require("utils.lua.telescope").alternates("split") end, desc("Projectionist alternates (split)"))
+  -- <a-e> conflicts with harpoon select-4 (colemak home row); use <a-c-a> for the split flavor.
+  map("n", "<a-c-a>", function() require("utils.lua.telescope").alternates("split") end, desc("Projectionist alternates (split)"))
   map("n", "<a-A>", ':lua require("utils.lua.telescope").find_folders({git=true})<cr>', nor_s)
 
   map("n", "<a-b>", function() require("utils.lua.telescope").projectionist() end, desc("Projectionist types -> files"))

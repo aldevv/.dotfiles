@@ -32,6 +32,7 @@ return {
   {
     -- lines with mini.diff are too ugly
     "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
       vim.api.nvim_set_hl(0, "GitSignsAdd", { link = "GitSignsAdd" })
@@ -39,6 +40,12 @@ return {
       vim.api.nvim_set_hl(0, "GitSignsDelete", { link = "GitSignsDelete" })
 
       require("gitsigns").setup({
+        update_debounce = 500,
+        -- skip bigfile buffers (vim.b.bigfile is set in config/automation/init.lua)
+        attach_to_untracked = false,
+        worktrees = nil,
+        -- the heavy redraw on every keystroke is the dominant typing-cost
+        -- in long files; debounce above is the main lever.
         signs = {
           add = { text = "┃" },
           change = { text = "┃" },

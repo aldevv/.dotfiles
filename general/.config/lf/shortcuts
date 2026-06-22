@@ -1,3 +1,5 @@
+# AUTO GENERATED FILE, DO NOT MODIFY MANUALLY, UPDATE THE shortcuts script
+
 map <backspace2>H cd ~
 map mH $ mv -v $f ~
 map YH $ cp -rv $f ~

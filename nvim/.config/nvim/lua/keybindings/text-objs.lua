@@ -7,7 +7,9 @@ local nor_s = vim.tbl_extend("keep", nor, s)
 local nor_e = vim.tbl_extend("keep", nor, e)
 local nor_e_s = vim.tbl_extend("keep", nor, e, s)
 
-local map = vim.api.nvim_set_keymap
+-- nvim_set_keymap is the old vimscript-style; vim.keymap.set is the modern
+-- Lua API with desc support, callbacks, and per-buffer scoping.
+local map = function(mode, lhs, rhs, opts) vim.keymap.set(mode, lhs, rhs, opts) end
 
 -- it gets deleted for some reason
 -- map("x", "lp", "ip", nor_s)

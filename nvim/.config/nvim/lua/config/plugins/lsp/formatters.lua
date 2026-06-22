@@ -1,88 +1,64 @@
-local null_ls = require("null-ls")
-local formatting = null_ls.builtins.formatting
-local diagnostics = null_ls.builtins.diagnostics
-local completion = null_ls.builtins.completion
-local code_actions = null_ls.builtins.code_actions
+-- conform.nvim: formatter dispatcher (replaces unmaintained none-ls.nvim).
+-- nvim-lint handles diagnostics (vint, luacheck); see lint.lua sibling file.
 
--- config docs
---https://github.com/jose-elias-alvarez/null-ls.nvim/blob/1e131a0b3f52eb812c7c07f5e24aee90c0ee8967/doc/CONFIG.md
---https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/SOURCES.md
---https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
-
-local opts = {
-  debug = false,
-  temp_dir = vim.fn.stdpath("cache"),
-  log = {
-    enable = false,
-    level = "warn",
-    use_console = "async",
-  },
-  on_attach = function(nlient, bufnr) end,
-  should_attach = function(bufnr)
-    local filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
-    -- use the ruff lsp server for python
-    if filetype == "python" then
-      return false
-    end
-    return true
-  end,
-}
-
-local ensure_format_servers = {
-  "prettier",
-  "shfmt",
-  "clang_format",
-  -- "stylua", -- uncommenting is enough to enable
-}
-local ensure_diagnostic_servers = {
-  -- "shellcheck",
-  -- "flake8",
-  "vint", -- for vim
-  "luacheck",
-}
-local ensure_code_actions = {
-  -- "shellcheck",
-  "gitsigns",
-  "refactoring",
-}
-
-
-
-if os.getenv("NVIM_MINIMAL") ~= nil then
-  ensure_format_servers = {}
-  ensure_diagnostic_servers = {}
-  ensure_code_actions = {}
+local ok, conform = pcall(require, "conform")
+if not ok then
+  vim.notify("conform.nvim not loaded", vim.log.levels.WARN)
+  return
 end
 
-local ensure_installed = vim.tbl_extend("keep", ensure_format_servers, ensure_diagnostic_servers, ensure_code_actions)
-
-local conf = {
-  -- shellcheck = { diagnostics.shellcheck.with({ extra_filetypes = { "zsh", "bash" } }) },
-  -- black = { formatting.black.with({ extra_args = { "--fast" } }) },
-  shfmt = { formatting.shfmt.with({
-    extra_filetypes = { "zsh", "bash" },
-  }) },
-  sql_formatter = { formatting.sql_formatter.with({
-    extra_args = { "-l", "snowflake" },
-  }) },
-}
-
-local handlers = {
-  function(source_name, methods)
-    if conf[source_name] == nil then
-      require("mason-null-ls.automatic_setup")(source_name, methods)
-      return
-    end
-
-    for _, v in ipairs(conf[source_name]) do
-      null_ls.register(v)
-    end
-  end,
-}
-require("mason-null-ls").setup({
-  ensure_installed = ensure_installed,
-  automatic_installation = false,
-  handlers = handlers,
+conform.setup({
+  formatters_by_ft = {
+    lua = { "stylua" },
+    sh = { "shfmt" },
+    bash = { "shfmt" },
+    zsh = { "shfmt" },
+    sql = { "sql_formatter" },
+    c = { "clang-format" },
+    cpp = { "clang-format" },
+    objc = { "clang-format" },
+    objcpp = { "clang-format" },
+    javascript = { "prettier" },
+    javascriptreact = { "prettier" },
+    typescript = { "prettier" },
+    typescriptreact = { "prettier" },
+    svelte = { "prettier" },
+    vue = { "prettier" },
+    css = { "prettier" },
+    scss = { "prettier" },
+    html = { "prettier" },
+    json = { "prettier" },
+    jsonc = { "prettier" },
+    yaml = { "prettier" },
+    markdown = { "prettier" },
+    -- python is owned by ruff (LSP server); skip here
+    -- go is owned by gopls; skip here
+    -- rust is owned by rustaceanvim; skip here
+  },
+  formatters = {
+    shfmt = {
+      prepend_args = { "-i", "2", "-bn", "-ci" },
+    },
+    sql_formatter = {
+      prepend_args = { "-l", "snowflake" },
+    },
+  },
+  -- format-on-save is owned by the autocmd in lua/config/automation/init.lua
+  -- (it calls vim.lsp.buf.format which delegates to conform via
+  -- the formatexpr conform sets up). No format_after_save here.
 })
 
-null_ls.setup(opts)
+-- conform integrates with vim.lsp.buf.format by setting `formatexpr` and
+-- providing a `format()` API. The format-on-save autocmd in automation/init.lua
+-- calls vim.lsp.buf.format which falls back to conform for non-LSP filetypes.
+vim.api.nvim_create_user_command("ConformFormat", function(args)
+  local range = nil
+  if args.count ~= -1 then
+    local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+    range = {
+      start = { args.line1, 0 },
+      ["end"] = { args.line2, end_line:len() },
+    }
+  end
+  conform.format({ async = true, lsp_format = "fallback", range = range })
+end, { range = true })

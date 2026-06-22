@@ -19,6 +19,10 @@ local previewers = require("telescope.previewers")
 --   }):find()
 
 local function set_bg(path)
+  if vim.fn.executable("changeWallpaperKeepBorders") == 0 then
+    vim.notify("changeWallpaperKeepBorders: not on PATH", vim.log.levels.WARN)
+    return
+  end
   vim.fn.system("changeWallpaperKeepBorders " .. path)
 end
 
@@ -256,15 +260,14 @@ local show_from_notes = function(inputString)
 end
 
 M.sort_notes = function()
+  if vim.fn.executable("sortnotes") == 0 then
+    vim.notify("sortnotes: not on PATH", vim.log.levels.WARN)
+    return
+  end
   local curfilepath = vim.fn.expand("%:p:h")
   local startIndex = string.find(curfilepath, "notes")
   if not startIndex then
     curfilepath = os.getenv("NOTES") .. "/work/mega"
-  end
-
-  -- for netrw cases
-  if startIndex and vim.bo.filetype == "netrw" then
-    curfilepath = vim.b.netrw_curdir
   end
 
   local notes = vim.split(vim.fn.system({ "sortnotes", curfilepath }), "\n")

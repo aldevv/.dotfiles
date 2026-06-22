@@ -100,6 +100,14 @@ Autocmds with non-obvious side effects:
 - LspAttach on `*/dwm-flexipatch/config.h` immediately stops the LSP (it mis-highlights that file).
 - `.envrc` opens as `bash`; `.projections.json` as `projections.json` syntax json.
 
+## Check runtime / built-ins before customizing
+
+Before writing custom keybindings, motions, text-objects, or filetype features, grep the neovim runtime first. The shipped ftplugins often already do the work, and reimplementing them creates conflicts when defaults change.
+
+- Ftplugins live at `$(nvim --headless +'echo $VIMRUNTIME' +q 2>&1)/ftplugin/<ft>.{vim,lua}` (e.g. `/usr/share/nvim/runtime/ftplugin/markdown.lua` ships `]]` / `[[` / `gO` for headings).
+- Use `:verbose nmap <key>` in the relevant filetype buffer to see what's already bound and where.
+- Only write custom when no built-in exists or the built-in is genuinely insufficient.
+
 ## Adding a plugin
 
 1. Drop the spec in `lua/plugins/<topic>.lua` (pick the topic file matching the plugin's domain; create a new one only if none fit).

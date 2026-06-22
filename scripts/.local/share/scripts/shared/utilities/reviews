@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# reviews — fzf-pick a PR-review report written by the pr-code-review skill.
+# Path layout: $REVIEWS_DIR/<repo>/<YYYY-MM-DD>/<author>/<pr-N>-<slug>.md
+# REVIEWS_DIR defaults to $HOME/.reviews; override via env var.
+#
+# Defaults to today. --all browses every date. --date YYYY-MM-DD picks one date.
+
+set -euo pipefail
+
+REVIEWS_DIR="${REVIEWS_DIR:-${HOME}/.reviews}"
+DATE=$(date +%Y-%m-%d)
+SHOW_ALL=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -a|--all)  SHOW_ALL=1; shift ;;
+    -d|--date) DATE="$2"; shift 2 ;;
+    -h|--help)
+      cat <<EOF
+usage: reviews [-a|--all] [-d|--date YYYY-MM-DD]
+
+Default: today's reviews. --all browses every date.
+EOF
+      exit 0 ;;
+    *) echo "unknown arg: $1 (try --help)" >&2; exit 2 ;;
+  esac
+done
+
+[[ -d "$REVIEWS_DIR" ]] || { echo "no reviews dir at $REVIEWS_DIR" >&2; exit 1; }
+
+if (( SHOW_ALL )); then
+  mapfile -t files < <(find "$REVIEWS_DIR" -mindepth 4 -maxdepth 4 -type f -name '*.md' 2>/dev/null | sort -r)
+  header="all reviews"
+else
+  mapfile -t files < <(find "$REVIEWS_DIR" -mindepth 4 -maxdepth 4 -type f -path "*/$DATE/*" -name '*.md' 2>/dev/null | sort)
+  header="reviews for $DATE"
+fi
+
+if (( ${#files[@]} == 0 )); then
+  echo "no $header" >&2
+  exit 1
+fi
+
+selected=$(
+  for path in "${files[@]}"; do
+    rel=${path#"$REVIEWS_DIR/"}
+    IFS='/' read -r repo date author file <<<"$rel"
+    printf '%s\t%s · %s · %s · %s\n' "$path" "$repo" "$date" "$author" "${file%.md}"
+  done | fzf \
+    --with-nth=2.. \
+    --delimiter=$'\t' \
+    --preview='bat --color=always --style=plain {1} 2>/dev/null || cat {1}' \
+    --preview-window=right:70% \
+    --header="$header"
+)
+
+[[ -n "$selected" ]] || exit 0
+
+path=${selected%%$'\t'*}
+rel=${path#"$REVIEWS_DIR/"}
+repo=${rel%%/*}
+session="${repo}-code-reviews"
+editor=${EDITOR:-vi}
+
+if ! command -v tmux >/dev/null 2>&1; then
+  exec "$editor" "$path"
+fi
+
+if [[ -z "${TMUX:-}" ]]; then
+  if tmux has-session -t "$session" 2>/dev/null; then
+    tmux new-window -t "$session" "$editor '$path'"
+    exec tmux attach -t "$session"
+  else
+    exec tmux new-session -s "$session" "$editor '$path'"
+  fi
+else
+  if ! tmux has-session -t "$session" 2>/dev/null; then
+    tmux new-session -ds "$session" "$editor '$path'"
+  else
+    tmux new-window -t "$session" "$editor '$path'"
+  fi
+  exec tmux switch-client -t "$session"
+fi

@@ -11,6 +11,7 @@ alias vf="source _vf"
 alias vfl="source _vf .claude/lazy"
 alias vF="source _vFa"
 alias cdfzf="source cdfzf"
+alias clauded="claude --dangerously-skip-permissions"
 
 grun() {
   local cmd_args=()

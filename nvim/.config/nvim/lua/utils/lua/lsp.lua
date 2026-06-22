@@ -2,7 +2,9 @@ local M = {}
 
 M.update_diagnostics = function(opts)
     local global_too = opts.global_too
-    if not vim.lsp.buf.server_ready() then
+    -- vim.lsp.buf.server_ready() was removed in nvim 0.11.
+    -- Use the client list as the readiness signal.
+    if #vim.lsp.get_clients({ bufnr = 0 }) == 0 then
         return
     end
     if vim.fn.getloclist(vim.fn.winnr(), { title = 0 }).title == "Buffer diagnostics" then

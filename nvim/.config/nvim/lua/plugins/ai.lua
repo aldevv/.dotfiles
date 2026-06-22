@@ -33,8 +33,8 @@ return {
     "zbirenbaum/copilot.lua",
     cmd = "Copilot",
     event = "InsertEnter",
-    copilot_model = "",
     opts = {
+      copilot_model = "",
       suggestion = {
         auto_trigger = true,
         hide_during_completion = true,

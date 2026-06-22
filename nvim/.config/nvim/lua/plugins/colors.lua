@@ -1,63 +1,47 @@
 return {
-
-	{
-		"ellisonleao/gruvbox.nvim",
-		priority = 1000,
-		lazy = false,
-		config = function()
-			-- vim.g.gruvbox_material_foreground = "original" -- can be material and mix
-			vim.o.background = "dark" -- or "light" for light mode
-			-- vim.cmd([[
-			--     hi clear SpellBad
-			--     hi link SpellBad GruvboxRed
-			-- ]])
-		end,
-	},
-
 	{
 		"folke/tokyonight.nvim",
-		priority = 1000,
+		priority = 10000, -- load before any other plugin so the first render is themed
 		lazy = false,
 		branch = "main",
 		config = function()
-			-- vim.o.background == "dark"
-			-- vim.g.tokyonight_style = "storm"
-			vim.g.tokyonight_style = "night"
-			-- vim.g.tokyonight_sidebars = {"vista_kind"}
-			vim.g.tokyonight_sidebars = { "tagbar", "nvim_tree", "netrw" }
-			vim.g.tokyonight_lualine_bold = true
-			vim.g.tokyonight_transparent = true
+			require("tokyonight").setup({
+				style = "night",
+				transparent = true,
+				lualine_bold = true,
+				styles = {
+					sidebars = "transparent",
+					floats = "transparent",
+				},
+				-- Disable tokyonight's nvim-notify integration. With
+				-- transparent=true it would set every NotifyXBody.bg = NONE,
+				-- which makes the toast see-through and overrides any
+				-- per-buffer NotifyXBody highlight we set later.
+				plugins = { notify = false },
+				on_highlights = function(hl, c)
+					-- sh.vim's shStatement (`alias` kw) and shAlias (the name) both resolve to purple here.
+					hl.shAlias = { fg = c.fg }
+				end,
+			})
 			vim.cmd([[ colorscheme tokyonight ]])
 		end,
 	},
 
+	-- alternates available via :colorscheme. None of these load eagerly anymore.
+	{ "ellisonleao/gruvbox.nvim", lazy = true },
 	{
 		"catppuccin/nvim",
-		priority = 1000,
-		lazy = false,
+		lazy = true,
 		config = function()
 			require("catppuccin").setup({
-
 				flavour = "mocha",
-				background = { -- :h background
-					light = "latte",
-					dark = "mocha",
-				},
+				background = { light = "latte", dark = "mocha" },
 			})
 		end,
 	},
-
-	"crusoexia/vim-monokai",
-	{
-		"rebelot/kanagawa.nvim",
-		priority = 1000,
-		lazy = false,
-	},
-	"nyngwang/nvimgelion",
-	{
-		"hachy/eva01.vim",
-		priority = 1000,
-		branch = "main",
-	},
-	"navarasu/onedark.nvim",
+	{ "rebelot/kanagawa.nvim", lazy = true },
+	{ "crusoexia/vim-monokai", lazy = true },
+	{ "nyngwang/nvimgelion", lazy = true },
+	{ "hachy/eva01.vim", lazy = true, branch = "main" },
+	{ "navarasu/onedark.nvim", lazy = true },
 }

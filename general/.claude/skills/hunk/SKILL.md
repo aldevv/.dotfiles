@@ -16,6 +16,12 @@ Open the Hunk TUI and attach review notes for any complex flows or difficult pat
 
 **User input**: $ARGUMENTS
 
+## Canonical CLI reference (read first)
+
+The bundled `hunk-review` SKILL at `$(hunk skill path)` is the source of truth for every `hunk session ...` invocation, payload shape, flag, and error message. This skill layers a workflow on top: tmux orchestration, parallelism, pre-supplied comments, a diff-line validator, and a hook-install prompt. Do NOT restate CLI semantics here — when something is unclear about a `hunk session ...` command, go read the bundled skill.
+
+Round 1 already loads it (`cat "$(hunk skill path)"`). Treat that read as mandatory.
+
 ## Files
 
 - `scripts/hunk-pre-pr.sh` — the PreToolUse hook this skill optionally installs. Read it directly when you need to know what runs: `cat "$HOME/.claude/skills/hunk/scripts/hunk-pre-pr.sh"`.
@@ -37,6 +43,19 @@ If any of these fail, tell the user what failed and stop. Don't proceed to Round
 - `[[ -n "$TMUX" ]]` — must be inside a tmux session.
 - `command -v hunk >/dev/null` — the `hunk` CLI must be on `$PATH`.
 - `git rev-parse --show-toplevel` — must be inside a git repo (Round 1 needs this anyway).
+
+## CRITICAL: Anchor every tmux call on `$TMUX_PANE`
+
+The pane-count check and the eventual `split-window` / `new-window` MUST target Claude's pane, NOT the active client's current window. Without `-t`, tmux uses whatever the user is currently looking at, which is often a different window in the same session (Claude's task ran for a while; the user moved focus). The pane then lands in the wrong window: a split next to some unrelated work, or a new window in the wrong session if the user switched sessions.
+
+`$TMUX_PANE` is set in Claude's bash environment to the pane id (`%NN`) of the pane Claude is running in. Use it as the target on every tmux invocation:
+
+- `tmux display-message -t "$TMUX_PANE" -p '#{window_panes}'` — pane count of Claude's window
+- `tmux display-message -t "$TMUX_PANE" -p '#{session_name}'` — Claude's session name
+- `tmux split-window -t "$TMUX_PANE" ...` — split Claude's pane
+- `tmux new-window -t "<claude-session>:" ...` — new window in Claude's session (derive `<claude-session>` from `$TMUX_PANE`, never from `tmux display-message` without `-t`)
+
+This does not change focus behavior. `split-window` and `new-window` still auto-switch the focused client viewing Claude's session; clients viewing other windows or sessions are not yanked.
 
 ## Parallelism rules
 
@@ -70,7 +89,7 @@ Fire ALL of these in a single message:
 - `cat "$(hunk skill path)"` (bundled session-control reference, the source of truth for `hunk session ...` semantics)
 - `git rev-parse --show-toplevel`
 - `git symbolic-ref --short refs/remotes/origin/HEAD` (faster than `git remote show origin`; the default branch is `${out#origin/}`)
-- `tmux display-message -p '#{window_panes}'` (drives split-vs-new-window in Round 2)
+- `tmux display-message -t "$TMUX_PANE" -p '#{window_panes} #{session_name}'` (drives split-vs-new-window in Round 2; `-t "$TMUX_PANE"` anchors on Claude's pane so the user's current view never affects the decision — see "Anchor every tmux call on `$TMUX_PANE`" above. The two fields come back space-separated; capture both since Round 2 also needs `session_name`)
 - `test -f "$HOME/.cache/hunk/state.json" && cat "$HOME/.cache/hunk/state.json" || echo MISSING` (Round 4 prompt state)
 - If `$ARGUMENTS` matches `^(--pr +)?[0-9]+$` or `^pr +[0-9]+$` (a numeric PR identifier, with optional `pr` / `--pr` prefix): also fire `gh pr view <N> --json baseRefName,headRefName,headRepository`. `HEAD~N` does NOT match because it starts with `HEAD`.
 
@@ -96,9 +115,9 @@ Once `<RANGE>` is known, single message with these in parallel:
     tmux new-window -t "<name>:" -n "hunk-$(basename <REPO_ROOT>):$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" "cd <REPO_ROOT> && hunk diff <RANGE>"
     ```
     Window does NOT auto-focus because the target session is different from the current session. That's intentional for batch use; the operator will `tmux attach -t <name>` after the run.
-  - **`force_new_window=true` is set (without `target_session`)** → `tmux new-window` in the current session regardless of pane count.
-  - **1 pane and no directives** → `tmux split-window -h "cd <REPO_ROOT> && hunk diff <RANGE>"`
-  - **>1 panes and no directives** → `tmux new-window -t "$(tmux display-message -p '#{session_name}')" -n "hunk-$(basename <REPO_ROOT>):$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" "cd <REPO_ROOT> && hunk diff <RANGE>"`
+  - **`force_new_window=true` is set (without `target_session`)** → `tmux new-window -t "$(tmux display-message -t "$TMUX_PANE" -p '#{session_name}'):" ...` in Claude's session regardless of pane count.
+  - **1 pane and no directives** → `tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff <RANGE>"`. `-l 70%` sizes the new pane (hunk) to 70% of the original pane's width; the diff viewer is the focal task and benefits from horizontal real estate (split-view diff columns), so Claude shrinks to ~30% on the left rather than splitting 50/50.
+  - **>1 panes and no directives** → `tmux new-window -t "$(tmux display-message -t "$TMUX_PANE" -p '#{session_name}'):" -n "hunk-$(basename <REPO_ROOT>):$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" "cd <REPO_ROOT> && hunk diff <RANGE>"`
   - The window-name shape is `hunk-<repo>:<branch>`. The status-bar regex splits on the first non-path char, so the left ("folder" color, slightly whiter) reads `hunk-<repo>` and the right ("program" color, soft blue) reads the branch — branch becomes the most visible signal at a glance. The repo-included prefix keeps dedupe per-branch across multiple repos in the same tmux session.
   - If the user said "open in a new window" even with one pane, skip the conditional and go straight to `new-window`.
 - Active poll for session-up (replaces the old `sleep 2 && hunk session list`). MUST match on the absolute `repo:` path, not the basename, otherwise two repos with the same basename collide. MUST run inside the SAME bash command as any follow-up so the apply only fires after the session resolves:
@@ -122,7 +141,7 @@ Once `<RANGE>` is known, single message with these in parallel:
   ```
   The diff-line validator (see Round 3) runs BEFORE this chain on its own line; misaligned comments abort the batch instead of half-attaching. If you split poll and apply across two separate tool calls, you'll regress to the bug where the apply landed zero comments because the session wasn't visible yet in the second subshell.
 
-Both `split-window` and `new-window` auto-switch focus to the new pane/window.
+`split-window` and `new-window` auto-switch focus for clients viewing Claude's session. A client attached to a different session, or viewing a different window in Claude's session, is not yanked — they'll see the new pane next time they navigate to Claude's window.
 
 If the diff returns empty, tell the user and stop. The Hunk window will be empty too; either close it (`tmux kill-pane -t <pane>`) or leave it for the user.
 
@@ -186,7 +205,7 @@ done
 
 If the validator prints any `MISSING` lines, stop and surface them to the caller. Do NOT silently fall back to `hunkNumber` — that's exactly the foot-gun this validation prevents.
 
-If `comment apply` errors for any reason (path mismatch, hunk mismatch, session vanished), run `hunk session review --repo <REPO_ROOT> --json` to confirm the file/hunk structure (iterate `.review.files[].path` and `.review.files[].hunks[]`). If the session is gone, stop and tell the user; don't try to reopen Hunk on its own.
+If `comment apply` errors for any reason, fall back to `hunk session review --json` (per the bundled skill) to confirm the file/hunk structure. If the session is gone, stop and tell the user; don't try to reopen Hunk on its own.
 
 **If nothing worth commenting on** — still leave one `Feature Explanation:` orientation note at the top of the diff. This is the minimum bar so the reader doesn't have to derive the feature from the code.
 
@@ -200,22 +219,11 @@ hunk session comment list --repo <REPO_ROOT> --json | \
 
 The empty first positional is required: `hunk session comment rm` takes `[sessionId]` then `<commentId>`; `--repo` replaces session lookup but the first arg slot still needs `""`.
 
-Then apply the orientation note:
+Then apply the orientation note using the same `comment apply --stdin && navigate --next-comment` pattern from above, with a single-entry payload:
 
 - **Anchor**: pick the file that best represents the feature surface (proto/schema, public API, primary handler). Skip generated files (`*.pb.go`, `*.pb.validate.go`, `*_protoopaque.pb.go`, `*.gen.go`), vendored code (`vendor/`), test files, and trivial one-liners (e.g. version bumps). If everything in the diff is generated/vendored/trivial, fall back to the first added line in the first file. Use the first `+` line in the chosen file as `newLine`.
 - **Summary**: `"Feature Explanation: <one-line headline>"` (chat-line, no period).
 - **Rationale**: 2-3 sentences in plain words. What the feature does, what the change adds, and (if relevant) the design tradeoff. This is the only note the reader gets, so make it count. The tone rules and meta-narration bans in `references/review-guidance.md` still apply.
-
-```bash
-cat <<'JSON' | hunk session comment apply --repo <REPO_ROOT> --stdin && \
-hunk session navigate --repo <REPO_ROOT> --next-comment
-{
-  "comments": [
-    {"filePath": "<central-file>", "newLine": <N>, "summary": "Feature Explanation: ...", "rationale": "..."}
-  ]
-}
-JSON
-```
 
 Tell the user that no targeted notes were warranted and a top-of-diff `Feature Explanation:` note was left as the orientation.
 

@@ -1,11 +1,6 @@
--- put hover signature_help and cmp help transparent
-local colorscheme = "kanagawa"
--- local colorscheme = "tokyonight"
--- local colorscheme = "eva01"
-if not pcall(require, colorscheme) then
-  return
-end
-vim.cmd("colorscheme " .. colorscheme)
+-- post-colorscheme highlight overrides. The colorscheme itself is applied
+-- by lua/plugins/colors.lua (tokyonight). This file only adds transparency
+-- and a few tweaks on top.
 
 -- this is so is not overwritten by my colorscheme
 -- vim.cmd([[
@@ -34,8 +29,22 @@ vim.cmd("colorscheme " .. colorscheme)
 
 -- transparency
 vim.api.nvim_set_hl(0, "Normal", { bg = "NONE", ctermbg = "NONE" })
-vim.api.nvim_set_hl(0, "LineNr", { bold = true, fg = "darkyellow", ctermbg = "NONE" })
 vim.api.nvim_set_hl(0, "ColorColumn", { bg = "#262626", ctermbg = 235 })
+
+-- LineNr / CursorLineNr: darkyellow + bold. Re-applied on ColorScheme so
+-- tokyonight (or any swap) doesn't drop the bold attribute or fg back to
+-- its theme default.
+local function set_linenr_hl()
+  vim.api.nvim_set_hl(0, "LineNr",       { bold = true, fg = "#e0b040", bg = "NONE", ctermbg = "NONE" })
+  vim.api.nvim_set_hl(0, "CursorLineNr", { bold = true, fg = "#ffd787", bg = "NONE", ctermbg = "NONE" })
+  vim.api.nvim_set_hl(0, "LineNrAbove",  { bold = true, fg = "#e0b040", bg = "NONE", ctermbg = "NONE" })
+  vim.api.nvim_set_hl(0, "LineNrBelow",  { bold = true, fg = "#e0b040", bg = "NONE", ctermbg = "NONE" })
+end
+set_linenr_hl()
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("linenr_keep_bold", { clear = true }),
+  callback = set_linenr_hl,
+})
 
 vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
 
@@ -44,5 +53,14 @@ vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "FloatBorder", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "NONE" })
+
+-- nvim-notify body backgrounds: keep them opaque + level-colored so toasts
+-- read as red/yellow/blue against the transparent terminal. Without these,
+-- they'd inherit NormalFloat=NONE and disappear.
+vim.api.nvim_set_hl(0, "NotifyERRORBody", { bg = "#3f1d1d" })
+vim.api.nvim_set_hl(0, "NotifyWARNBody",  { bg = "#3f3a1d" })
+vim.api.nvim_set_hl(0, "NotifyINFOBody",  { bg = "#1d2a3f" })
+vim.api.nvim_set_hl(0, "NotifyDEBUGBody", { bg = "#1f1f1f" })
+vim.api.nvim_set_hl(0, "NotifyTRACEBody", { bg = "#2a1f3f" })
 
 require("ui.folding")

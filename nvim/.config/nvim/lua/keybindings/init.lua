@@ -93,13 +93,15 @@ map("n", "sfd", "<cmd>call CreateDir()<cr>", nor_s)
 -- s commands
 map("n", "sq", "<cmd>lua require('notify').dismiss()<cr>", nor_s)
 
--- netrw commands
-map("n", "ss", "<cmd>silent Ex<cr>", { remap = true })
-map("n", "sS", "<cmd>silent Ex .<cr>", s)
-map("n", "st", "<cmd>silent Texplore<cr>", s)
-map("n", "sT", "<cmd>silent Texplore .<cr>", s)
-map("n", "sv", "<cmd>silent Vexplore<cr>", s)
-map("n", "sV", "<cmd>silent Vexplore .<cr>", s)
+-- file-explorer commands (nvim-tree; netrw is disabled in init.lua)
+-- ss reveals the current buffer in the tree; sS opens at cwd.
+-- st/sT open the tree in a new tab; sv/sV are aliases for toggle/open.
+map("n", "ss", "<cmd>silent NvimTreeFindFile<cr>", s)
+map("n", "sS", "<cmd>silent NvimTreeOpen<cr>", s)
+map("n", "st", "<cmd>tabnew<cr><cmd>silent NvimTreeFindFile<cr>", s)
+map("n", "sT", "<cmd>tabnew<cr><cmd>silent NvimTreeOpen<cr>", s)
+map("n", "sv", "<cmd>silent NvimTreeToggle<cr>", s)
+map("n", "sV", "<cmd>silent NvimTreeOpen<cr>", s)
 
 map("n", "sd", "<cmd>bd<cr>", nor_s)
 map("n", "si", "<cmd>IndentBlanklineToggle<cr>", desc("Toggle indentlines"))
@@ -520,11 +522,11 @@ vim.cmd([[command! -nargs=+ Put :put=execute('<args>')]])
 
 -- [d for prev diagnostics
 -- ]d for next diagnostics
-map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<cr>", nor)
-map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
+map("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end, nor)
+map("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end, nor)
 
-map("n", "<Del>", "<cmd>lua vim.diagnostic.goto_next()<cr>", nor)
-map("n", "<S-Del>", "<cmd>lua vim.diagnostic.goto_prev()<cr>", nor)
+map("n", "<Del>", function() vim.diagnostic.jump({ count = 1, float = true }) end, nor)
+map("n", "<S-Del>", function() vim.diagnostic.jump({ count = -1, float = true }) end, nor)
 
 map("n", "<leader><leader>x", "<cmd>luafile %<cr>", nor)
 

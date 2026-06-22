@@ -6,18 +6,20 @@ local function req(module)
 end
 vim.g.mapleader = require("utils.lua.misc").replace_termcodes("<Space>")
 -- vim.g.maplocalleader = "\\" -- this is backspace bro don't ask me why
--- vim.keymap.set("n", "<BS>", ":WhichKey <localleader><cr>", { silent = true })
 
 return {
-  "tpope/vim-dispatch",
-  "tpope/vim-dotenv",
-  "tpope/vim-surround",
-  "tpope/vim-repeat",
+  -- tpope grab-bag: text-objects + dot-repeat compose with everyday edits, so
+  -- VeryLazy is fine; the rest defer to their commands.
+  { "tpope/vim-surround", event = "VeryLazy" },
+  { "tpope/vim-repeat",   event = "VeryLazy" },
+  { "tpope/vim-dotenv",   cmd = { "Dotenv" } },
+  { "tpope/vim-dispatch", cmd = { "Dispatch", "Make", "Focus", "Start" } },
   -- Workspace-specific projectionist heuristics (e.g. ~/work/.nvim.lua) set
   -- g:projectionist_heuristics via exrc; do not put project-specific config here.
-  "tpope/vim-projectionist",
-  "mbbill/undotree",
-  "bkad/CamelCaseMotion",
+  { "tpope/vim-projectionist", cmd = { "A", "AS", "AV", "AT", "Etype" }, event = "VeryLazy" },
+
+  { "mbbill/undotree", cmd = "UndotreeToggle" },
+  { "bkad/CamelCaseMotion", event = "VeryLazy" },
   "nvim-tree/nvim-web-devicons",
   {
     -- TODO: wait for merge
@@ -30,25 +32,32 @@ return {
     -- branch = "harpoon2",
     commit = "2cd4e03372f7ee5692c8caa220f479ea07970f17",
     dependencies = { "nvim-lua/plenary.nvim" },
+    event = "VeryLazy",
     config = req("config.plugins.harpoon"),
   },
   {
     "kevinhwang91/nvim-ufo",
+    event = "BufReadPost",
     config = req("config.plugins.ufo"),
     dependencies = { "kevinhwang91/promise-async", "nvim-treesitter/nvim-treesitter" },
   },
   {
     "stevearc/overseer.nvim",
+    cmd = { "OverseerOpen", "OverseerClose", "OverseerToggle", "OverseerRun", "OverseerInfo", "OverseerBuild" },
     config = req("config.plugins.overseer"),
   },
   {
     "coffebar/neovim-project",
-    config = req("config.plugins.project"),
+    cmd = { "Neovim", "NeovimProjectLoadRecent", "NeovimProjectDiscover", "NeovimProjectHistory" },
+    keys = {
+      { "<leader>tp", "<cmd>NeovimProjectHistory<cr>", desc = "neovim-project history" },
+    },
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-telescope/telescope.nvim",
       "Shatur/neovim-session-manager",
     },
+    config = req("config.plugins.project"),
   },
   {
     "szw/vim-maximizer",
@@ -66,6 +75,11 @@ return {
   -- filetype
   {
     "numToStr/Comment.nvim",
+    keys = {
+      { "gc", mode = { "n", "v" } },
+      { "gb", mode = { "n", "v" } },
+      "gcc", "gbc",
+    },
     config = req("config.plugins.comment"),
     dependencies = { "JoosepAlviste/nvim-ts-context-commentstring" }, -- better commentstring using treesitter
   },
@@ -95,25 +109,23 @@ return {
       { "nvim-lua/plenary.nvim" },
       { "nvim-treesitter/nvim-treesitter" },
     },
+    cmd = { "Refactor" },
+    keys = {
+      { "<leader>rr", mode = { "n", "v" } },
+    },
     config = req("config.plugins.refactoring"),
   },
   {
     "akinsho/toggleterm.nvim",
+    cmd = { "ToggleTerm", "ToggleTermToggleAll", "TermExec" },
+    keys = { [[<c-\>]] },
     config = function()
-      require("toggleterm").setup({
-        -- float_opts = {
-        -- 	width = function()
-        -- 		return math.floor(vim.o.columns * 0.7)
-        -- 	end,
-        -- 	height = function()
-        -- 		return math.floor(vim.o.lines * 0.7)
-        -- 	end,
-        -- },
-      })
+      require("toggleterm").setup({})
     end,
   },
   {
     "ianding1/leetcode.vim",
+    cmd = { "LeetLogin", "LeetTabs", "LeetList", "LeetTest", "LeetSubmit", "LeetReset" },
     build = "pip3 install keyring browser-cookie3 --user",
     config = function()
       -- Values: 'cpp', 'java', 'python', 'python3', 'csharp', 'javascript', 'ruby', 'swift', 'golang', 'scala', 'kotlin', 'rust'.

@@ -57,6 +57,23 @@ else
   )
 end
 
+-- Preload heavy/common parsers into memory so the FIRST buffer of each
+-- doesn't pay the parser-load cost on demand. Markdown's first open used
+-- to take ~2s because render-markdown waits for treesitter to load the
+-- parser before its first decoration pass.
+local preload = { "markdown", "markdown_inline" }
+vim.api.nvim_create_autocmd("VimEnter", {
+  group = vim.api.nvim_create_augroup("ts_preload", { clear = true }),
+  once = true,
+  callback = function()
+    vim.schedule(function()
+      for _, lang in ipairs(preload) do
+        pcall(vim.treesitter.language.add, lang)
+      end
+    end)
+  end,
+})
+
 local function is_big_file(buf)
   local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
   return ok and stats and stats.size > 100 * 1024

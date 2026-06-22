@@ -184,7 +184,23 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
    Run this once per posted comment, even if a single skill invocation posted several (e.g. three replies in a loop).
 
-8. **Report the URL(s)** so the user can verify.
+8. **Open in browser (first post of the session only).** If `$BROWSER` is set AND no comment has been opened this session yet, fire-and-forget the posted URL through `$BROWSER` so the user can eyeball formatting. Skip silently when `$BROWSER` is unset.
+
+   Session is tracked with a marker file. Use `$CLAUDE_SESSION_ID` if exposed, fall back to `$TMUX_PANE`, then `$PPID`. Once the marker exists for the session, later posts in the same session do NOT auto-open — they stay quiet so the loop doesn't spam tabs.
+
+   ```bash
+   sid="${CLAUDE_SESSION_ID:-${TMUX_PANE:-$PPID}}"
+   marker="$HOME/.cache/add-comment/sessions/${sid//[^A-Za-z0-9._-]/_}.opened"
+   if [ -n "$BROWSER" ] && [ ! -f "$marker" ]; then
+     mkdir -p "$(dirname "$marker")"
+     touch "$marker"
+     "$BROWSER" "$POSTED_URL" >/dev/null 2>&1 &
+   fi
+   ```
+
+   `$POSTED_URL` is the `html_url` printed by the `gh`/`glab` post in step 6. Don't block on browser launch — the `&` keeps it async so the skill can finish.
+
+9. **Report the URL(s)** so the user can verify.
 
 ## Batch mode
 

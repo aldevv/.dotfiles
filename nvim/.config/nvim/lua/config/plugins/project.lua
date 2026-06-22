@@ -9,7 +9,10 @@ require("neovim-project").setup({
   picker = {
     type = "telescope",
   },
-  last_session_on_startup = false,
+  -- Restore the last session on `nvim` startup (no args).
+  -- Combined with the broader `sessionoptions` in config/settings.lua,
+  -- this restores the previous window/buffer layout when re-opening a project.
+  last_session_on_startup = true,
   dashboard_mode = false,
   -- File patterns to look for when detecting root directory
   datapath = vim.fn.stdpath("data"),

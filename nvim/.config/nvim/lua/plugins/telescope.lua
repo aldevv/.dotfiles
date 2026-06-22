@@ -209,7 +209,8 @@ return {
     -- NOTE: if you have issues with fzf not being detected, run make yourself:
     -- cd $XDG_DATA_HOME/nvim/lazy/telescope-fzf-native.nvim
     -- make
-    if vim.fn.executable("fzf") and vim.loop.os_uname().sysname == "Linux" then
+    -- vim.fn.executable returns 0 or 1 (both truthy in Lua); compare to 1.
+    if vim.fn.executable("fzf") == 1 and (vim.uv or vim.loop).os_uname().sysname == "Linux" then
       require("telescope").load_extension("fzf")
     end
   end,

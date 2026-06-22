@@ -37,6 +37,8 @@ increment from there.
 - `null when not resolved` doesn't match the `pending column sync` case. the object exists and the type is populated, only the column is missing. should say null only when the object itself is missing (pending table/view replication, or not found). (×1)
 - the echo rule lives only here in the deferred branch. step 4 builds the json for resolved and resolved_fallback without restating it, and the terminal block at line 91 says "copy verbatim" but doesn't cover the preset-vs-label split. same input ends up with different data_consumption_mode shapes across runs. would help to state it once near the top and apply everywhere. (×1)
 - echo rule only lives here in the deferred branch. step 4 and the line 91 terminal block don't restate the preset-vs-label split, so other statuses come out inconsistent across runs. (×1)
+- the read error here gets swallowed and returns nil. the SetManyJSON below then writes only this page's role for the folder, overwriting prior pages' cached roles, and folder.Grants later emits an incomplete grant set silently. propagate the read error up instead. (×1)
+- this revoke returns Unimplemented but the entitlement isn't EntitlementImmutable. mark it immutable or implement revoke. same on role.go:259. (×1)
 
 ### Top-level PR/MR comments
 

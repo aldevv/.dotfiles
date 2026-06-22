@@ -6,14 +6,17 @@ end
 return {
   {
     "nvim-lualine/lualine.nvim",
+    event = "VeryLazy",
     config = req("config.plugins.lualine"),
   },
   {
     "rcarriga/nvim-notify",
+    event = "VeryLazy",
     config = req("config.plugins.notify"),
   },
   {
     "stevearc/dressing.nvim",
+    event = "VeryLazy",
     opts = {},
   },
   {
@@ -29,6 +32,8 @@ return {
   },
   {
     "folke/todo-comments.nvim",
+    event = { "BufReadPost", "BufNewFile" },
+    cmd = { "TodoTrouble", "TodoTelescope", "TodoQuickFix", "TodoLocList" },
     opts = {
       signs = false,
       keywords = {

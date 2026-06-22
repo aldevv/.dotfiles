@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# review — two modes:
+#   1. With args (or piped input): extract GitHub PR / GitLab MR URLs and spawn
+#      one `claude --dangerously-skip-permissions /pr-code-review <url>` window
+#      per URL inside a tmux session called <folder>-code-review.
+#   2. No args on a TTY: fzf-pick any open window in any *-code-review tmux
+#      session and jump to it (switch-client if inside tmux, attach if not).
+#
+# usage:
+#   review "review https://github.com/foo/bar/pull/12 and https://gitlab.com/x/y/-/merge_requests/3"
+#   echo "..." | review
+#   review              # picker over in-flight reviews
+
+set -euo pipefail
+
+if ! command -v tmux >/dev/null 2>&1; then echo "review: tmux not installed" >&2; exit 1; fi
+
+# Picker mode: no args, stdin is a TTY.
+if [ $# -eq 0 ] && [ -t 0 ]; then
+  command -v fzf >/dev/null 2>&1 || { echo "review: fzf not installed" >&2; exit 1; }
+
+  sessions=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | grep -E -- '-code-review$' || true)
+  if [ -z "$sessions" ]; then
+    echo "review: no *-code-review tmux sessions found" >&2
+    exit 1
+  fi
+
+  picked=$(
+    while IFS= read -r s; do
+      tmux list-windows -t "$s" -F '#{session_name}:#{window_index}	#{session_name} ❯ #{window_name}'
+    done <<<"$sessions" \
+      | fzf --prompt='review window > ' --no-sort --with-nth=2.. --delimiter='\t'
+  )
+  [ -z "$picked" ] && exit 0
+
+  target=$(printf '%s' "$picked" | cut -f1)
+  if [ -n "${TMUX:-}" ]; then
+    tmux switch-client -t "$target"
+  else
+    tmux attach -t "${target%:*}" \; select-window -t "$target"
+  fi
+  exit 0
+fi
+
+if ! command -v claude >/dev/null 2>&1; then echo "review: claude CLI not on PATH" >&2; exit 1; fi
+
+input=""
+if [ $# -gt 0 ]; then
+  input="$*"
+else
+  input=$(cat)
+fi
+
+if [ -z "${input//[[:space:]]/}" ]; then
+  echo "review: empty input" >&2
+  exit 1
+fi
+
+# Extract URLs that look like a GitHub PR or a GitLab MR.
+# GitHub PR : https://github.com/<owner>/<repo>/pull/<N>
+# GitLab MR : https://gitlab.<host>/<path>/-/merge_requests/<N>
+mapfile -t urls < <(
+  echo "$input" \
+    | grep -oE 'https?://(github\.com|gitlab\.[a-zA-Z0-9.-]+)/[^[:space:],]+/(pull|merge_requests)/[0-9]+' \
+    | sort -u
+)
+
+if [ "${#urls[@]}" -eq 0 ]; then
+  echo "review: no PR/MR URLs found in input" >&2
+  exit 1
+fi
+
+# Slugify the cwd's basename for the session name.
+folder=$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+[ -z "$folder" ] && folder="review"
+session="${folder}-code-review"
+
+# Window naming: <repo>-<number>. Falls back to a numeric index on collision.
+name_for() {
+  local url=$1 owner_repo num
+  case "$url" in
+    *github.com*)
+      owner_repo=$(echo "$url" | sed -E 's|https?://github\.com/([^/]+/[^/]+)/.*|\1|')
+      num=$(echo "$url"        | sed -E 's|.*/pull/([0-9]+).*|\1|')
+      ;;
+    *)
+      owner_repo=$(echo "$url" | sed -E 's|https?://[^/]+/(.+)/-/merge_requests/[0-9]+.*|\1|')
+      num=$(echo "$url"        | sed -E 's|.*/merge_requests/([0-9]+).*|\1|')
+      ;;
+  esac
+  printf '%s-%s' "$(basename "$owner_repo")" "$num"
+}
+
+placeholder_idx=
+if ! tmux has-session -t "$session" 2>/dev/null; then
+  tmux new-session -d -s "$session" -n placeholder
+  # Capture the placeholder's actual index (tmux base-index may be 0 or 1).
+  placeholder_idx=$(tmux list-windows -t "$session" -F '#{window_index}' | head -n1)
+fi
+
+posted=0
+for url in "${urls[@]}"; do
+  win_name=$(name_for "$url")
+  cmd="claude --dangerously-skip-permissions '/pr-code-review ${url}'"
+
+  if [ -n "$placeholder_idx" ] && [ $posted -eq 0 ]; then
+    tmux rename-window -t "${session}:${placeholder_idx}" "$win_name"
+    tmux send-keys     -t "${session}:${placeholder_idx}" "$cmd" C-m
+  else
+    tmux new-window -t "${session}:" -n "$win_name" "$cmd"
+  fi
+  posted=$((posted + 1))
+done
+
+echo "review: opened $posted PR/MR window(s) in tmux session '${session}'"
+
+# Switch to the session if we're already inside tmux; otherwise tell the user.
+if [ -n "${TMUX:-}" ]; then
+  tmux switch-client -t "$session"
+else
+  echo "attach with: tmux attach -t ${session}"
+fi

@@ -6,13 +6,13 @@
 #   - sourced  (`. worktree` / `wt`) cds the calling shell into it
 #
 # Subcommands:
-#   worktree new <branch> [base]   create ~/worktrees/<repo>/<branch> tracking
-#                                  <base> (defaults to a new branch off HEAD)
-#   worktree -a <branch> [base]    create (or attach) ~/worktrees/<repo>/<branch>
+#   worktree new <branch> [base]   create (or attach) ~/worktrees/<repo>/<branch>
 #                                  and cd into it when sourced. If the branch
 #                                  doesn't exist it's created off HEAD (or
 #                                  <base>); if the worktree already exists we
 #                                  just move to it.
+#   worktree -a                    same as `worktree pick-all` (cross-repo
+#                                  picker). Works from inside a repo too.
 #   worktree cd <name>             cd into an existing worktree by name (sourced),
 #                                  or print its path (executed). Errors if no
 #                                  worktree at ~/worktrees/<repo>/<name>.
@@ -135,14 +135,77 @@ __wt_run() (
     done
   }
 
+  # Recency key for a worktree dir: max(mtime, birth time) in epoch seconds.
+  # Falls back to mtime alone on filesystems that don't expose birth time
+  # (GNU stat returns 0 or "-" for %W on those).
+  # `dir` instead of `path` because zsh ties a lowercase `path` array to
+  # $PATH, so `local path=...` would clobber PATH and break command lookup.
+  __wt_recency() {
+    local dir="$1" mtime=0 ctime=0
+    if [ "$(uname)" = "Darwin" ]; then
+      mtime="$(stat -f '%m' "$dir" 2>/dev/null || echo 0)"
+      ctime="$(stat -f '%B' "$dir" 2>/dev/null || echo 0)"
+    else
+      mtime="$(stat -c '%Y' "$dir" 2>/dev/null || echo 0)"
+      ctime="$(stat -c '%W' "$dir" 2>/dev/null || echo 0)"
+    fi
+    case "$ctime" in ''|-|0) ctime=0 ;; esac
+    case "$mtime" in ''|-) mtime=0 ;; esac
+    if [ "$ctime" -gt "$mtime" ] 2>/dev/null; then
+      printf '%s\n' "$ctime"
+    else
+      printf '%s\n' "$mtime"
+    fi
+  }
+
+  # Read TSV rows whose LAST tab-separated column is a worktree dir, then
+  # emit the same rows sorted by __wt_recency descending (most recent first).
+  # `column -t ... -o '\t'` pads each non-last field to align the next column
+  # visually while keeping tab as the fzf field delimiter. Coloring runs AFTER
+  # column so ANSI escapes don't throw off width calculations.
+  __wt_sort_by_recency() {
+    local line dir ts
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      dir="${line##*$'\t'}"
+      ts="$(__wt_recency "$dir")"
+      printf '%s\t%s\n' "$ts" "$line"
+    done | sort -t$'\t' -k1,1nr | cut -f2- | column -t -s $'\t' -o $'\t' \
+      | __wt_color_col1
+  }
+
+  # Color the first tab-separated column based on a deterministic hash of its
+  # text (trimmed of column's trailing padding spaces). Same name -> same
+  # color across rows, so worktrees of the same repo cluster visually. fzf
+  # must be invoked with --ansi for the escape codes to be honored.
+  __wt_color_col1() {
+    awk -F'\t' -v OFS='\t' '
+      BEGIN {
+        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_./"
+        split("31 32 33 34 35 36 91 92 93 94 95 96", colors, " ")
+        ncolors = 12
+      }
+      {
+        trimmed = $1
+        sub(/ +$/, "", trimmed)
+        h = 0
+        for (i = 1; i <= length(trimmed); i++) {
+          h += index(charset, substr(trimmed, i, 1))
+        }
+        $1 = "\033[1;" colors[(h % ncolors) + 1] "m" $1 "\033[0m"
+        print
+      }
+    '
+  }
+
   print_help() {
     cat <<'EOF'
 worktree: git worktree helper
 
 Usage:
   worktree                       same as `worktree pick`
-  worktree new <branch> [base]   create ~/worktrees/<repo>/<branch>
-  worktree -a  <branch> [base]   create or attach, then cd when sourced
+  worktree new <branch> [base]   create or attach, then cd when sourced
+  worktree -a                    cross-repo picker (same as `pick-all`)
   worktree cd  <name>            cd into an existing worktree (sourced)
   worktree list                  list worktrees of the current repo
   worktree rm <branch>           remove one worktree
@@ -179,8 +242,10 @@ EOF
   }
 
   # TSV rows for every worktree under WORKTREE_HOME, across every managed
-  # repo. Format: <repo>\t<branch>\t<worktree-path>. The main checkout is
-  # excluded so the picker only offers actual worktrees to cd into.
+  # repo. Format: <repo>\t<branch>\t<display-path>\t<actual-path>. The actual
+  # path stays as the last field for fzf binds and __wt_sort_by_recency; the
+  # display column substitutes $HOME with ~ for a shorter visible string.
+  # The main checkout is excluded so the picker only offers actual worktrees.
   #
   # `find` instead of globs so we don't trip zsh's NOMATCH when a managed
   # <repo>/ dir is empty (this script is sourced by the `wt` zsh function).
@@ -204,23 +269,29 @@ EOF
       main_name="$(basename "$main_path")"
 
       printf '%s\n' "$porcelain" \
-        | awk -v main="$main_path" -v repo="$main_name" '
+        | awk -v main="$main_path" -v repo="$main_name" -v home="$HOME" '
+            function display(p) {
+              if (substr(p, 1, length(home) + 1) == home "/") {
+                return "~/" substr(p, length(home) + 2)
+              }
+              return p
+            }
             $1 == "worktree" { wt = $2; branch = ""; next }
             $1 == "branch"   { sub(/^refs\/heads\//, "", $2); branch = $2 }
             $1 == "detached" { branch = "(detached)" }
             /^$/ && wt {
-              if (wt != main) printf "%s\t%s\t%s\n", repo, branch ? branch : "(no branch)", wt
+              if (wt != main) printf "%s\t%s\t%s\t%s\n", repo, branch ? branch : "(no branch)", display(wt), wt
               wt = ""; branch = ""
             }
             END {
-              if (wt && wt != main) printf "%s\t%s\t%s\n", repo, branch ? branch : "(no branch)", wt
+              if (wt && wt != main) printf "%s\t%s\t%s\t%s\n", repo, branch ? branch : "(no branch)", display(wt), wt
             }
           '
     done < <({
       find "$WORKTREE_HOME" -mindepth 1 -maxdepth 1 -type d \
         ! -path "$WORKTREE_HOME/$WORK_SUBDIR" 2>/dev/null
       find "$WORKTREE_HOME/$WORK_SUBDIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null
-    })
+    }) | __wt_sort_by_recency
   }
 
   # fzf picker for bare `worktree` / `wt` run outside any git repo. Lists
@@ -238,34 +309,44 @@ EOF
 
     selection="$(
       printf '%s\n' "$rows" \
-        | fzf --delimiter=$'\t' --with-nth=1,2,3 \
+        | fzf --ansi --delimiter=$'\t' --with-nth=1,2,3 \
               --height=80% --reverse \
               --prompt='worktree> ' \
               --header='enter: cd   ctrl-x: remove worktree' \
-              --bind="ctrl-x:execute-silent(git worktree remove {3} 2>/dev/null || git worktree remove --force {3} 2>/dev/null)+reload(worktree _picker-list-all)" \
-              --preview='git -C {3} log --color=always --format="%C(auto)%h%d%C(reset)%n  %s" -25' \
-              --preview-window='right:60%:wrap'
+              --bind="ctrl-x:execute-silent(git worktree remove {4} 2>/dev/null || git worktree remove --force {4} 2>/dev/null)+reload(worktree _picker-list-all)" \
+              --preview='git -C {4} log --color=always --format="%C(auto)%h%d%C(reset)%n  %s" -25' \
+              --preview-window='right:40%:wrap'
     )" || true
 
     [ -n "$selection" ] || return 1
     printf '%s\n' "${selection##*$'\t'}"
   }
 
+  # Format: <branch>\t<display-path>\t<actual-path>. Same display/actual split
+  # as cmd_picker_list_all so fzf can show ~-shortened paths while keeping the
+  # real path in the last field for binds and __wt_sort_by_recency.
   cmd_picker_list() {
     require_git_repo
     git worktree list --porcelain \
-      | awk '
+      | awk -v home="$HOME" '
+          function display(p) {
+            if (substr(p, 1, length(home) + 1) == home "/") {
+              return "~/" substr(p, length(home) + 2)
+            }
+            return p
+          }
           $1 == "worktree" { wt = $2; branch = ""; next }
           $1 == "branch"   { sub(/^refs\/heads\//, "", $2); branch = $2 }
           $1 == "detached" { branch = "(detached)" }
           /^$/ && wt {
-            printf "%s\t%s\n", branch ? branch : "(no branch)", wt
+            printf "%s\t%s\t%s\n", branch ? branch : "(no branch)", display(wt), wt
             wt = ""; branch = ""
           }
           END {
-            if (wt) printf "%s\t%s\n", branch ? branch : "(no branch)", wt
+            if (wt) printf "%s\t%s\t%s\n", branch ? branch : "(no branch)", display(wt), wt
           }
-        '
+        ' \
+      | __wt_sort_by_recency
   }
 
   cmd_pick() {
@@ -276,7 +357,7 @@ EOF
     # ctrl-x removes the highlighted worktree (including the one the user
     # is currently standing in) and reloads the list. ctrl-c creates a
     # worktree named after whatever the user typed in the prompt
-    # (delegating to cmd_add) and prints its path so the sourced wrapper
+    # (delegating to cmd_new) and prints its path so the sourced wrapper
     # cds into it. The reload calls back into this same script (`worktree
     # _picker-list`) so the awk pipeline stays in one place.
     #
@@ -301,15 +382,15 @@ EOF
     local output
     output="$(
       cmd_picker_list \
-        | fzf --delimiter=$'\t' --with-nth=1,2 \
+        | fzf --ansi --delimiter=$'\t' --with-nth=1,2 \
               --height=80% --reverse \
               --prompt='worktree> ' \
               --header='enter: cd   ctrl-c: create+cd   ctrl-x: remove worktree' \
               --expect=ctrl-c \
               --print-query \
-              --bind="ctrl-x:execute-silent(git worktree remove {2} 2>/dev/null || git worktree remove --force {2} 2>/dev/null)+reload(cd ${main_root} && worktree _picker-list)" \
-              --preview='git -C {2} log --color=always --format="%C(auto)%h%d%C(reset)%n  %s" -25' \
-              --preview-window='right:60%:wrap'
+              --bind="ctrl-x:execute-silent(git worktree remove {3} 2>/dev/null || git worktree remove --force {3} 2>/dev/null)+reload(cd ${main_root} && worktree _picker-list)" \
+              --preview='git -C {3} log --color=always --format="%C(auto)%h%d%C(reset)%n  %s" -25' \
+              --preview-window='right:40%:wrap'
     )" || true
 
     # Use `read` in a group rather than `mapfile`: the script may be sourced
@@ -321,7 +402,7 @@ EOF
 
     if [ "$key" = "ctrl-c" ]; then
       [ -n "$query" ] || die "ctrl-c needs a typed worktree name"
-      cmd_add "$query"
+      cmd_new "$query"
       return
     fi
 
@@ -341,18 +422,18 @@ EOF
     return 1
   }
 
-  cmd_add() {
+  cmd_new() {
     require_git_repo
     local branch="${1:-}"
     local base="${2:-}"
-    [ -n "$branch" ] || die "usage: worktree -a <branch> [base]"
+    [ -n "$branch" ] || die "usage: worktree new <branch> [base]"
 
     local target
     target="$(worktrees_root)/$branch"
     mkdir -p "$(dirname "$target")"
 
-    # Redirect `git worktree add` chatter to stderr so stdout is only the
-    # target path (captured by the sourced wrapper for the cd).
+    # Redirect `git worktree add` chatter to stderr so stdout stays just
+    # the target path; the sourced wrapper captures it for `cd`.
     if [ -d "$target" ]; then
       :
     elif git show-ref --verify --quiet "refs/heads/$branch"; then
@@ -366,28 +447,6 @@ EOF
     link_main_files "$target" "$(main_worktree_path)" >&2 || true
 
     printf '%s\n' "$target"
-  }
-
-  cmd_new() {
-    require_git_repo
-    local branch="${1:-}"
-    local base="${2:-}"
-    [ -n "$branch" ] || die "usage: worktree new <branch> [base]"
-
-    local target
-    target="$(worktrees_root)/$branch"
-
-    mkdir -p "$(dirname "$target")"
-
-    if git show-ref --verify --quiet "refs/heads/$branch"; then
-      git worktree add "$target" "$branch"
-    elif [ -n "$base" ]; then
-      git worktree add -b "$branch" "$target" "$base"
-    else
-      git worktree add -b "$branch" "$target"
-    fi
-
-    link_main_files "$target" "$(main_worktree_path)"
   }
 
   cmd_cd() {
@@ -512,8 +571,8 @@ A \`worktree\` script (on \`PATH\`, also exposed as the \`wt\` shell function) m
 | Subcommand                  | Effect                                           |
 |-----------------------------|--------------------------------------------------|
 | \`worktree\` / \`worktree pick\` | fzf-pick a worktree and \`cd\` (sourced) / print |
-| \`worktree new <branch>\`     | create \`${base}/<repo>/<branch>\` off HEAD       |
-| \`worktree -a <branch>\`      | create-or-attach, then \`cd\` when sourced         |
+| \`worktree new <branch>\`     | create or attach \`${base}/<repo>/<branch>\`, \`cd\` when sourced |
+| \`worktree -a\`               | cross-repo picker (same as \`pick-all\`)          |
 | \`worktree cd <name>\`        | \`cd\` into an existing worktree by name           |
 | \`worktree list\`             | list worktrees of the current repo               |
 | \`worktree rm <branch>\`      | remove one worktree                              |
@@ -521,9 +580,9 @@ A \`worktree\` script (on \`PATH\`, also exposed as the \`wt\` shell function) m
 | \`worktree root\`             | print \`${base}/<repo>\` for the current repo     |
 | \`worktree help\`             | show full usage                                  |
 
-## Symlinks created on \`new\` / \`-a\`
+## Symlinks created on \`new\`
 
-When a worktree is created via \`worktree new\` or \`worktree -a\`, the helper symlinks the following from the main checkout into the new worktree, so per-checkout config follows you in:
+When a worktree is created via \`worktree new\`, the helper symlinks the following from the main checkout into the new worktree, so per-checkout config follows you in:
 
 - \`.envrc\` (direnv)
 - \`CLAUDE.md\`
@@ -559,7 +618,7 @@ EOF
 
   case "$sub" in
     new) cmd_new "$@" ;;
-    -a|add) cmd_add "$@" ;;
+    -a) cmd_pick_all ;;
     cd) cmd_cd "$@" ;;
     list|ls) cmd_list "$@" ;;
     rm|remove) cmd_rm "$@" ;;
@@ -578,13 +637,15 @@ EOF
 if __wt_sourced; then
   # Bare `wt` → pick + cd. Inside a repo: picks among the repo's worktrees.
   # Outside any repo: picks across every managed repo (dispatch routes
-  # `pick` → `pick-all` in that case). `wt -a <branch>` → create/attach +
-  # cd. Other subcommands just pass through (stdout flows to the terminal).
+  # `pick` → `pick-all` in that case). `wt -a` → cross-repo picker + cd
+  # (works from inside a repo too). `wt new <branch>` → create-or-attach
+  # + cd. Other subcommands just pass through (stdout flows to the
+  # terminal).
   if [ "$#" -eq 0 ]; then
     __wt_target="$(__wt_run pick)"
     [ -n "${__wt_target:-}" ] && cd "$__wt_target"
     unset __wt_target
-  elif [ "${1:-}" = "-a" ] || [ "${1:-}" = "add" ] || [ "${1:-}" = "cd" ]; then
+  elif [ "${1:-}" = "-a" ] || [ "${1:-}" = "new" ] || [ "${1:-}" = "cd" ]; then
     __wt_target="$(__wt_run "$@")"
     [ -n "${__wt_target:-}" ] && cd "$__wt_target"
     unset __wt_target

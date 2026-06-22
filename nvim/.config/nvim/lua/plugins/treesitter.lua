@@ -14,11 +14,14 @@ return {
   {
     -- failing for angular, shows function signature, on top
     "nvim-treesitter/nvim-treesitter-context",
+    event = "BufReadPost",
     config = function()
       vim.cmd("hi TreesitterContextLineNumber gui=bold guifg=orange")
-      require 'treesitter-context'.setup {
+      require("treesitter-context").setup({
         enable = true,
-      }
+        max_lines = 3,
+        trim_scope = "outer",
+      })
     end,
     dependencies = { "nvim-treesitter/nvim-treesitter" },
   },

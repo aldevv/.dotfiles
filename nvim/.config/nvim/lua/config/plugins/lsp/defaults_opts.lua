@@ -3,19 +3,22 @@ local M = {}
 local border = "rounded"
 -- local border = "solid"
 
--- LSP settings (for overriding per client)
-local handlers = {}
-local lsp_handlers = {
-  ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = border }),
-  ["textDocument/signatureHelp"] = vim.lsp.with(
+-- LSP settings (for overriding per client).
+-- `vim.lsp.with` was deprecated in nvim 0.11; wrap the handler directly instead.
+local function with_opts(handler, extra)
+  return function(err, result, ctx, config)
+    config = vim.tbl_deep_extend("force", config or {}, extra)
+    return handler(err, result, ctx, config)
+  end
+end
+
+local handlers = {
+  ["textDocument/hover"] = with_opts(vim.lsp.handlers.hover, { border = border }),
+  ["textDocument/signatureHelp"] = with_opts(
     vim.lsp.handlers.signature_help,
     { border = border, focusable = false }
   ),
-  ["textDocument/completion"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = border }),
 }
-for k, v in pairs(lsp_handlers) do
-  handlers[k] = v
-end
 
 local capabilities = require("blink.cmp").get_lsp_capabilities()
 -- local capabilities = require("cmp_nvim_lsp").default_capabilities()

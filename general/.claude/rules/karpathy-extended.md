@@ -68,32 +68,23 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 # Extended rules
 
-## Rule 5 — Use the model only for judgment calls
-Use for: classification, drafting, summarization, extraction.
-Do NOT use for: routing, retries, deterministic transforms.
-If code can answer, code answers.
+## Rule 5 - Use the model only for judgment calls
+Classification, drafting, summarization, extraction. NOT for routing, retries, deterministic transforms. If code can answer, code answers.
 
-## Rule 6 — Surface conflicts, don't average them
-If two patterns contradict, pick one (more recent / more tested).
-Explain why. Flag the other for cleanup.
+## Rule 6 - Surface conflicts, don't average them
+If two patterns contradict, pick one (more recent / more tested), explain why, flag the other for cleanup.
 
-## Rule 7 — Read before you write
-Before adding code, read exports, immediate callers, shared utilities.
-If unsure why existing code is structured a certain way, ask.
+## Rule 7 - Read before you write
+Read exports, immediate callers, shared utilities first. Ask if unsure why existing code is structured a certain way.
 
-## Rule 8 — Tests verify intent, not just behavior
-Tests must encode WHY behavior matters, not just WHAT it does.
-A test that can't fail when business logic changes is wrong.
+## Rule 8 - Tests verify intent, not just behavior
+Tests encode WHY behavior matters, not just WHAT. A test that can't fail when business logic changes is wrong.
 
-## Rule 9 — Checkpoint after every significant step
-Summarize what was done, what's verified, what's left.
-Don't continue from a state you can't describe back.
+## Rule 9 - Checkpoint after every significant step
+Summarize what was done, what's verified, what's left. Don't continue from a state you can't describe.
 
-## Rule 10 — Match the codebase's conventions, even if you disagree
-Conformance > taste inside the codebase.
-If you think a convention is harmful, surface it. Don't fork silently.
+## Rule 10 - Match the codebase's conventions
+Conformance > taste inside the codebase. Surface a harmful convention; don't fork silently.
 
-## Rule 11 — Fail loud
-"Completed" is wrong if anything was skipped silently.
-"Tests pass" is wrong if any were skipped.
-Default to surfacing uncertainty, not hiding it.
+## Rule 11 - Fail loud
+"Completed" is wrong if anything was skipped silently. "Tests pass" is wrong if any were skipped. Surface uncertainty.

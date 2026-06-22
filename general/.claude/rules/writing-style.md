@@ -1,5 +1,9 @@
 # Writing style rules
 
+## CRITICAL: Scope
+
+These rules apply to text I produce, never to text I read, quote, or review. Never flag em-dashes, emojis, or banned vocabulary in someone else's PR, in vendor docs, or in pre-existing lines of a file I'm editing. New lines I add still follow the rules; old lines from other authors are not mine to police.
+
 ## CRITICAL: Writing style
 **Forbidden punctuation: em-dash (`—`) and double-hyphen (`--`).** Do not use either in any user-facing text, commit messages, PR descriptions, READMEs, comments, docs, or chat replies. They make writing sound robotic. Rewrite with a comma, period, parenthesis, or colon instead. CLI flags like `--flag` are fine; the ban is on em-dashes and double-hyphens used as prose punctuation.
 

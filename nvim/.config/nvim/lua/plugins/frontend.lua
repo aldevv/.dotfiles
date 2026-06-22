@@ -16,12 +16,16 @@ return {
     },
     {
         "NvChad/nvim-colorizer.lua",
+        ft = { "css", "scss", "html", "lua", "vim", "javascript", "typescript", "javascriptreact", "typescriptreact", "yaml", "tmux", "conf" },
         config = function()
-            require("colorizer").setup()
+            require("colorizer").setup({
+                filetypes = { "css", "scss", "html", "lua", "vim", "javascript", "typescript", "javascriptreact", "typescriptreact", "yaml", "tmux", "conf" },
+            })
         end,
     },
     {
         "windwp/nvim-ts-autotag",
+        ft = { "html", "javascriptreact", "typescriptreact", "vue", "svelte", "xml", "jsx", "tsx" },
         config = function()
             require("nvim-ts-autotag").setup()
         end,

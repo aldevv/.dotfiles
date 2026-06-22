@@ -17,6 +17,17 @@ nvim_shortcuts="$NVIM_PATH/lua/shortcuts.lua"
 # Remove
 rm -f "$shell_shortcuts" "$ranger_shortcuts" "$nvim_shortcuts" "$lf_shortcuts"
 
+# Banner: every generated file gets a top comment so future readers (and
+# editors) know not to hand-edit. The source of truth is THIS script
+# ($AUTOMATION/shortcuts) plus the sf/sd data files in $GENERAL_PATH/shortcuts.
+script_name="$(basename "$0")"
+banner="AUTO GENERATED FILE, DO NOT MODIFY MANUALLY, UPDATE THE $script_name script"
+
+printf -- "-- %s\n\n" "$banner" >  "$nvim_shortcuts"
+printf  "# %s\n\n"    "$banner" >  "$shell_shortcuts"
+printf  "# %s\n\n"    "$banner" >  "$ranger_shortcuts"
+printf  "# %s\n\n"    "$banner" >  "$lf_shortcuts"
+
 #source them if not sourced
 (grep "\. \$ZDOTDIR/.auto_aliases"  $shellrc)>/dev/null \
     || echo '[[ -f "$ZDOTDIR/.auto_aliases" ]] && . $ZDOTDIR/.auto_aliases' >> $shellrc
