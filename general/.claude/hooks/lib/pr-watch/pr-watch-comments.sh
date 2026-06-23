@@ -195,82 +195,38 @@ log: $LOG" \
     echo "[comments] could not create fixer worktree -- skip spawn"
     return 0
   fi
+  prelude_trust_worktree "$WT_PATH"
 
   review_file="$LOG_DIR/pr-comments-review-$(date +%Y%m%d-%H%M%S)-$$.md"
   printf '%s\n' "$review_body" > "$review_file"
   echo "[comments] review body saved to $review_file"
 
-  case "$PLATFORM" in
-    github) pr_verb="PR" ;;
-    gitlab) pr_verb="MR" ;;
-  esac
-
   if [ "$blocking" -gt 0 ]; then
-    apply_policy="There are ${blocking} blocking finding(s). Apply ALL findings (blocking and suggestion) without asking the user. Fix everything in one pass."
+    apply_policy="Blocking=${blocking}. Apply ALL surviving findings (blocking and suggestion) in one pass, no per-finding confirmation."
   else
-    apply_policy="There are no blocking findings, only ${suggestions} suggestion(s)/nit(s). For EACH finding, use AskUserQuestion BEFORE making any change to ask whether to apply it. Group closely related findings into one question if it helps; otherwise ask per finding. Only apply findings the user approves."
+    apply_policy="Blocking=0, Suggestions=${suggestions}. For EACH surviving finding, use AskUserQuestion BEFORE making any change. Group closely related findings into one question; otherwise ask per finding. Only apply findings the user approves."
   fi
 
-  read -r -d '' prompt_head <<EOF || true
-A reviewer bot left feedback on ${URL} for commit ${HEAD_SHA}.
-Blocking: ${blocking}. Suggestions: ${suggestions}.
+  # The pr-comment-fix skill owns the workflow body. The hook only ships the
+  # context block + the review body as the skill's first user message.
+  read -r -d '' prompt <<EOF || true
+/pr-comment-fix
 
-Review body (also saved to ${review_file}):
-
----
-EOF
-
-  read -r -d '' prompt_tail <<EOF || true
----
-
-You are running in a fresh git worktree at ${WT_PATH}, on a throwaway branch
-${FIX_BRANCH} that was created off ${HEAD_SHA} (the exact commit the bot
-reviewed). The operator's main checkout still has ${PR_BRANCH} checked out
-elsewhere -- do NOT switch branches and do NOT touch their working tree.
-
-Apply policy:
-${apply_policy}
-
-Your job:
-1. Confirm pwd is ${WT_PATH} and \`git rev-parse --abbrev-ref HEAD\` prints ${FIX_BRANCH}. If not, stop and tell the user.
-2. Read the review body above and the cited code locations.
-3. VERIFY EVERY FINDING BEFORE TOUCHING CODE. Do NOT assume the bot is correct. For each finding, first decide the scope, then dispatch the matching investigation. Run these investigations in parallel across findings (one tool message with multiple calls) whenever they're independent.
-     - OUTSIDE the source code (vendor API behavior, SDK/library docs, external service contract, protocol semantics, "feature X isn't supported", error-code meanings, scope/permission requirements, anything that requires looking up documentation we don't own): invoke the \`/investigate\` skill to research the claim online. Group related claims that share the same docs target into one investigation; otherwise one investigation per claim.
-     - INSIDE the source code (logic bug, dead code, wrong call, missing check, naming, control flow, mishandled error, anything answerable by reading this repo): spawn parallel \`Explore\` agents to independently verify the claim against the actual code. Size the fan-out by complexity:
-         * 3 agents  for SIMPLE findings (single function, narrow scope, one file, obvious to confirm or refute)
-         * 6 agents  for MEDIUM findings (multi-file change, cross-cutting concern, requires tracing a handful of callers)
-         * 12 agents for VERY COMPLEX findings (architectural claim, deep call graph, subtle invariant, contested behavior, anything where you'd want a quorum before believing the bot)
-       Each Explore agent reports independently. A finding survives only if the investigation confirms it; if the evidence contradicts the bot, mark the finding as a phantom and disqualify it.
-4. For the SURVIVING findings only, classify each as either:
-     (a) CLEAR -- the fix is obvious, low-risk, and doesn't require a judgment call.
-     (b) AMBIGUOUS -- multiple reasonable fixes, design tradeoff, or insufficient context.
-5. Follow the Apply policy above on the surviving findings. Build/test (e.g. \`go build ./... && go test ./... -count=1\` for Go).
-6. Commit locally on ${FIX_BRANCH}. Separate small commits per finding is fine, or one cohesive commit. Stage only the files you actually changed. Never \`git add -A\`.
-7. Print a short summary of: which findings you investigated and how (which used /investigate, which used 3/6/12 Explore agents and why), which findings were DISQUALIFIED as phantoms (with the evidence that refuted them), which SURVIVING findings were CLEAR vs. AMBIGUOUS, why each AMBIGUOUS item is ambiguous, and what you actually changed. Ring the tmux bell (\`printf '\\a'\`).
-8. Ask the user with AskUserQuestion what to do with ${FIX_BRANCH}. Offer three options: (a) merge into ${PR_BRANCH} AND push, (b) merge only (no push), (c) leave the fix branch in place. If they pick merge: run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`. On merge success and option (a), follow with \`git -C ${REPO_DIR} push\`. On merge failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. If they pick option (c), leave the fix branch in place.
-9. End your turn. Do NOT loop back waiting for further input.
-
-Hard rules:
-- Push only when option (a) was selected in step 8, or when the operator separately tells you to push. Never auto-push as a default wrap-up step. If the operator says "push" after the fact, run \`git -C ${REPO_DIR} push\` (from the main checkout, on ${PR_BRANCH}).
-- NEVER fix a finding you haven't investigated. The investigation in step 3 is mandatory, not optional, even for findings that "look obvious". Skipping it is the failure mode this prompt exists to prevent.
-- Treat every finding as a claim, not a fact. If the investigation refutes it, say so explicitly in the summary instead of "fixing" a phantom.
-- One pass only. After the merge prompt, end your turn.
-- Never switch branches, never force-push, never rebase, never amend, never \`git add -A\`.
-- The only merge you may perform is the single \`git merge --no-edit ${FIX_BRANCH}\` invocation in step 7, only if the user said yes.
-- Never skip hooks (--no-verify) or bypass signing.
-- Never touch vendor/ or generated files unless that IS the fix.
-
-Operator's main checkout: ${REPO_DIR}
-PR branch (operator's checkout): ${PR_BRANCH}
-Fix branch (your worktree): ${FIX_BRANCH}
+URL: ${URL}
+Platform: ${PLATFORM}
+Commit: ${HEAD_SHA}
+Blocking: ${blocking}
+Suggestions: ${suggestions}
+Apply policy: ${apply_policy}
 Worktree: ${WT_PATH}
-
-Output: under 200 words at the end, summarize what you changed, whether the merge into ${PR_BRANCH} ran, and whether you pushed (only if the operator asked).
-EOF
-
-  prompt="${prompt_head}
+Fix branch: ${FIX_BRANCH}
+Main checkout: ${REPO_DIR}
+PR branch: ${PR_BRANCH}
+Review body file: ${review_file}
+---
 ${review_body}
-${prompt_tail}"
+---
+EOF
 
   echo "[comments] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"
   if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude --dangerously-skip-permissions $(printf '%q' "$prompt")"; then
