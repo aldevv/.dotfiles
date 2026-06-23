@@ -39,6 +39,8 @@ increment from there.
 - echo rule only lives here in the deferred branch. step 4 and the line 91 terminal block don't restate the preset-vs-label split, so other statuses come out inconsistent across runs. (×1)
 - the read error here gets swallowed and returns nil. the SetManyJSON below then writes only this page's role for the folder, overwriting prior pages' cached roles, and folder.Grants later emits an incomplete grant set silently. propagate the read error up instead. (×1)
 - this revoke returns Unimplemented but the entitlement isn't EntitlementImmutable. mark it immutable or implement revoke. same on role.go:259. (×1)
+- dropping the annotation here. empty today so nothing breaks, but rate-limit hints would get silently lost if they ever land. could pass it through SyncOpResults.Annotations. (×1)
+- checkout needs to run before setup-go, otherwise `go-version-file: go.mod` errors out once `if: false` flips. (×1)
 
 ### Top-level PR/MR comments
 

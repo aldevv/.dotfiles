@@ -246,6 +246,10 @@ Each prompt MUST include this hard constraint verbatim:
 
 > **HARD CONSTRAINT:** only flag issues anchored to a `+` line in `/tmp/pr-<N>.diff`. Every finding MUST cite a `+` line. Skip concerns about unchanged code, even if PR behavior depends on it. Report `file:post-image-line` and the one-line excerpt of the `+` line so the user can verify it lives in the diff.
 
+Each prompt MUST include this hard constraint verbatim:
+
+> **HARD CONSTRAINT — moves and refactors:** if a `+` line is part of code that was relocated, extracted, renamed, or migrated (file move, function extraction, helper lift, V1→V2 signature migration, package rename, type rename) and the behavior on that line is unchanged versus the pre-PR code, do NOT flag the underlying behavior as a finding. The PR's contribution is the move itself; the pre-existing code's properties are out of scope for THIS review. To determine "pre-existing behavior," cross-reference the `-` lines in the same diff hunk OR read the file's previous version on the base branch (e.g. `git show origin/<base>:<path>`). Flag ONLY: (a) bugs introduced BY the move (wrong target, missing case, signature drift, lost annotation, broken control flow), (b) genuinely new logic added during the move (not just rephrased), (c) the move itself being wrong (e.g. wrong package, wrong abstraction). Pre-existing patterns the move preserves — client-side pagination drains that already existed, bare-error returns that already existed, missing tests that already existed, comments / naming / style that already existed — are cleanup follow-ups, NOT review findings for this PR. If the pre-existing pattern is severe enough to mention, frame it as a separate follow-up suggestion outside the per-finding loop, not as a comment to post on this PR.
+
 Each prompt MUST include this verification preamble verbatim:
 
 > **VERIFICATION RULE:** every claim you make about runtime behavior, framework / SDK behavior, vendor API, or rule violation will be re-checked by a different subagent. Do NOT assert behavior you have not directly traced in the code or read in the spec. If you are uncertain, say so explicitly with a confidence percentage (0-100%) on the finding. Confidence below 60% should not be a finding. It's a question; reword as "verify this against X" rather than asserting the bug.
@@ -297,6 +301,10 @@ What you DO flag stays the same: correctness bugs, missing/wrong error types whe
 - A naming-only nit (variable name, constant-vs-literal). MINOR.
 - A doc-link URL pointing at a stale family when the spec still resolves. MINOR.
 - A non-stylistic readability concern (e.g. an extracted helper would make a 50-line function clearer). MINOR.
+
+**Severity calibration — these are NOT findings (DROP entirely):**
+- Pre-existing patterns the PR's move/refactor preserves (drains that already drained, bare-error returns that already lacked codes, missing tests that were already missing, comments / naming / style that already existed in the previous shape). The PR moved them; it didn't introduce them. If you find yourself writing "this preserves a pre-existing pattern, but..." — stop, don't surface it. Cleanup belongs to a follow-up PR scoped to the cleanup.
+- Findings whose only consequence is "this could have been fixed during the move." The PR's contract is the move, not a cleanup. The maintainer didn't sign up for an audit of every line the diff touches incidentally.
 
 BLOCKER is reserved for: panics, data loss, wrong authentication, broken core semantics, a wrong vendor URL / method that produces 404 at runtime, a serialization mismatch that silently drops data. If you cannot describe the user-visible failure in one sentence, it is not a BLOCKER.
 
