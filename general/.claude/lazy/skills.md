@@ -1,7 +1,4 @@
 # Skills (conventions and layout)
-
-**Load this when:** the user asks to create, edit, audit, or move a Claude Code skill, or mentions `SKILL.md`, `skill-creator`, or skill frontmatter.
-
 ## Location
 
 - **Default**: `$HOME/.claude/skills/<skill-name>/SKILL.md`. Use this for all skills unless the skill is tightly coupled to a specific project. User-level skills must live under `~/.dotfiles/general/.claude/skills/<skill-name>/` and be stowed into `~/.claude/skills/` via GNU Stow, so they're versioned and available on every machine after a sync.

@@ -47,6 +47,12 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
 
   **Skip ONLY when:** no bug is being investigated AND no debug-only logging/tracing/dump code is being added AND no `String()`/`__repr__`/`Display` helper is being touched AND the user did not use a debug-intent phrase from the list above. If any fire-clause matches, the fire wins; do not skip. Concrete skip targets: fixing a typo, renaming a variable, adding a new endpoint, building a CLI wrapper.
 
+- [`~/.claude/lazy/external-apis.md`](.claude/lazy/external-apis.md). **Read when** any of:
+  - editing a file that constructs or describes an HTTP request to a third-party API: URL, method, headers, body, query params, or auth flow
+  - editing code or config that calls a third-party API
+  - swapping one third-party endpoint or operation for another (per-resource vs bulk, one verb vs another, one content-type vs another)
+  - review feedback that says "the docs say X but our code does Y" for any third-party API
+
 ## Machine connection notes
 Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
 

@@ -1,7 +1,5 @@
 # Trigger authoring
 
-**Load this when:** editing a "Lazy load" section in any `CLAUDE.md` or `SKILL.md`, adding a new `**Read when:**` clause, or fixing a trigger that fired wrong.
-
 Every `**Read when:**` clause must be broad enough to catch every situation it should fire on AND concrete enough that the match is unambiguous. Err broader: a wasted load is fine, a silently-missed load is not.
 
 **Completeness beats brevity.** A good trigger carries all the information Claude needs to recognize the load moment, even if that takes multiple lines or a bulleted list. Don't truncate a trigger to fit a one-liner if the result loses signals. A complex file with many entry points gets a complex trigger; that's fine.

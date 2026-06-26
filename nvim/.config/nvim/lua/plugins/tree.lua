@@ -110,6 +110,11 @@ return {
       -- default_on_attach binds K to First Sibling; drop it so global K -> N wins.
       pcall(vim.keymap.del, "n", "K", { buffer = bufnr })
 
+      -- Free `s` so `ss` can close the tree; move system_open to `S`.
+      pcall(vim.keymap.del, "n", "s", { buffer = bufnr })
+      vim.keymap.set("n", "S", api.node.run.system, opts("system open"))
+      vim.keymap.set("n", "ss", api.tree.close, opts("close tree"))
+
       -- netrw-style bindings (similar to `:Ex`).
       -- `-` (parent dir) is already the nvim-tree default.
       vim.keymap.set("n", "%", api.fs.create, opts("create (trailing / = dir)"))
@@ -151,7 +156,7 @@ return {
       hijack_cursor = true,
       sync_root_with_cwd = true,
       view = {
-        width = 35,
+        width = { min = 30, max = 60, padding = 1 },
         side = "left",
       },
       renderer = {
@@ -174,7 +179,11 @@ return {
         custom = { ".git$" },
       },
       actions = {
-        open_file = { quit_on_open = true, resize_window = true },
+        open_file = {
+          quit_on_open = true,
+          resize_window = true,
+          window_picker = { enable = false },
+        },
       },
     })
   end,

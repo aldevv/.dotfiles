@@ -45,3 +45,18 @@ increment from there.
 ### Top-level PR/MR comments
 
 - tested this locally. `role[]` isn't the cause, the empty `query=` is. `?role[]=admin` alone gives a real meta. add `&query=` and meta goes null. this pr still pulls in `zendesk.CommonOptions` which has no omitempty on Query, so `&query=` still goes out on every request and the cursor won't move at >100/role. (×1)
+
+### New line comments — nit
+
+- expand-columns is a string slice, same as skip-database above. could show comma-separated here: `"mydb.mytable,otherdb.othertable"`. (×1)
+
+## Anti-patterns — what NOT to post
+
+Calibration set. Each entry is something we drafted, the user rejected, and what should have shipped instead. Read this whenever a draft starts to sprawl.
+
+### Restating the whole fix when "done" is enough
+
+- Original comment from reviewer: `should we ship role grants from users? or what's the way to improve it? i think it is going to list all members for each role`
+- Don't post: `moved the base_role emit to user.grants with `item_path: "$"` + cross-resource grant_mapping in c29c960, so /members paginates once and the per-user /members/{id} reuses cache from the teams + customRoles entries. pattern's from baton-http examples/fivetran.yaml:158-170 + rapid7.yaml:62-74.`
+- Post instead: `done.`
+- Why: reviewer raised a concern, we already discussed the fix in chat with the operator, and the commit is linked on the PR. The reply only needs to close the thread. Saving the long-form rationale for the commit message or the PR description is correct; reposting it as a comment is noise.

@@ -25,7 +25,7 @@ Pick from the URL: `github.com` → `gh`, `gitlab.*` → `glab`. PR `#N` is gh; 
 
 Read like a tired engineer on Slack, not a memo:
 
-- **Short.** 1–3 sentences. Cut anything that doesn't carry weight.
+- **As short as possible.** Replies are ideally one word ("done", "fixed", "yep"). Aim for the fewest words that close the thread. If you wrote more than one sentence, ask whether each one is doing work that the reader actually needs. Never reference commit shas. Never restate what changed. The reviewer can see the diff.
 - **Plain words.** No fancy vocab. Say "matters", not "is load-bearing". Say "before the loop", not "prior to iteration".
 - **Simple grammar.** Short sentences. No semicolons. No nested "which" clauses. One idea per sentence.
 - **Lowercase.** Even product names (snowflake, not Snowflake).

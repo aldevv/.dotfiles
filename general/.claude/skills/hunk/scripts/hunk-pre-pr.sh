@@ -220,9 +220,9 @@ STEP 1 — REMOVE THE PLACEHOLDER (always, regardless of whether you have commen
 
   hunk session comment list --repo $repo_root --json | \\
     jq -r '.comments[] | select(.summary | startswith("[pending]")) | .commentId' | \\
-    while read -r cid; do hunk session comment rm "" "\$cid" --repo $repo_root; done
+    while read -r cid; do hunk session comment rm "\$cid" --repo $repo_root; done
 
-  (The empty positional is required: hunk's rm command takes [sessionId] then <commentId> as positionals; --repo replaces session lookup but leaves the first positional slot needing an empty string.)
+  (With --repo, hunk's rm command takes exactly one positional: the <commentId>. The two-form signature is "<session-id> <commentId>" OR "<commentId> --repo <path>".)
 
 STEP 2 — DECIDE:
 

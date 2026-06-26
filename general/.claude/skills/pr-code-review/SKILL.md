@@ -8,7 +8,25 @@ argument-hint: <pr-or-list> [count=<N>] (e.g. https://github.com/owner/repo/pull
 
 Multi-PR multi-angle review with verified findings, confidence scoring, and operator-in-the-loop comment posting. One or more PRs per invocation. Each subagent flags only issues anchored to `+` lines in the diff. Each factual claim is independently fact-checked by a different subagent before the operator sees the table. The operator approves each finding before it lands on the PR.
 
+Re-review awareness: each review appends a short entry to a per-PR log. When a PR is reviewed again, the skill reads that file first, so the next pass knows which lines were already commented on, which findings were filtered as FALSE, and what HEAD SHA the last review saw. That lets the new run focus on what changed since then rather than re-litigating settled ground.
+
+The log's location depends on where the operator invoked the skill (`INVOKED_FROM`, captured at Step 0a):
+- **Invoked inside a git repo** (`INVOKED_FROM` resolves under any `.git` directory) → log lives at `$REPO_DIR/.pr/$PR_NUM.md`. One folder per repo; one file per PR.
+- **Invoked outside any git repo** (typical: `~/work`, `~/repos`, a multi-repo coordinator dir) → log lives at `$INVOKED_FROM/.pr/$REPO/$PR_NUM.md`. One `.pr/` folder collecting every reviewed repo as a subdirectory; one file per PR.
+
+The repo-local layout keeps the log next to its repo. The parent-folder layout keeps cross-repo reviews grouped together, which is the common case when batch-reviewing PRs from a multi-repo home like `~/work`.
+
 See `references/examples.md` for sample findings, comment phrasing, and ask/post loop output.
+
+## CRITICAL: Approving a PR — no body unless explicitly asked
+
+When the operator says "approve the PR" / "approve it" / "lgtm it" / any equivalent during or after a review, submit the approval WITHOUT a `--body`. No `lgtm`, no `looks good`, no summary, no nothing:
+
+```bash
+gh pr review <N> --repo <owner>/<repo> --approve
+```
+
+The operator approves PRs all day and adds words to the approval only when they specifically want to. Auto-attaching a body (even something as short as `lgtm`) creates noise on every PR thread and clutters the reviewer's history. Only add `--body "<text>"` when the operator explicitly says "approve with body X" / "approve and say Y" / "leave a comment on the approval saying Z". Same rule applies to `--request-changes` and `--comment` reviews: no body unless explicitly asked.
 
 ## When to run
 
@@ -95,6 +113,36 @@ If only ONE PR was passed, proceed to Step 0a directly. The dispatcher mode is m
 
 ## Step 0a. Load applicable CLAUDE.md rules BEFORE fanning out
 
+Before anything else, snapshot the invocation directory. The skill `cd`s into each PR's checkout during Step 0b, so the original location has to be captured up front. This value drives where the per-PR `.pr/` log lives (Step 1b and Step 5c).
+
+```bash
+INVOKED_FROM=$(pwd -P)
+```
+
+Then resolve the canonical log root once and remember it for every PR in the batch:
+
+```bash
+# If INVOKED_FROM is inside any git repo, per-repo layout wins (one .pr/ folder
+# next to each repo's code). Otherwise, treat INVOKED_FROM as a multi-repo
+# parent (e.g. ~/work) and group all PR logs under <INVOKED_FROM>/.pr/<repo>/.
+if git -C "$INVOKED_FROM" rev-parse --show-toplevel >/dev/null 2>&1; then
+  PR_LOG_LAYOUT="per-repo"
+else
+  PR_LOG_LAYOUT="parent"
+  PR_LOG_ROOT="$INVOKED_FROM/.pr"
+fi
+```
+
+State the chosen layout in chat ("PR review logs will land under `~/work/.pr/<repo>/<N>.md` because cwd is not in a git repo.") so the operator can interrupt and override if the auto-detection picked wrong.
+
+Also resolve the operator's own GitHub login once. Step 5's author-aware dedup uses it to tell apart comments the operator wrote (candidates for INSIST or DROP) from comments other users wrote (always DROP since someone else has the thread):
+
+```bash
+OPERATOR_LOGIN=$(gh api user --jq .login)
+```
+
+If the call fails (no auth, network) set `OPERATOR_LOGIN=""` and fall back to treating every overlap as "different user" (drop). Don't block the whole skill on this lookup.
+
 The review agents need the same project rules the main session uses. This skill ALWAYS loads:
 
 1. **Home CLAUDE.md** — `~/CLAUDE.md` (global rules) and `~/CLAUDE.local.md` if it exists.
@@ -126,12 +174,14 @@ If `cwd` is outside any project checkout (e.g. running this skill from `~`), sti
 
 ## Step 0b. Resolve the local checkout (per PR)
 
-For each PR, the diff and the inline-comment workflow both need a local clone. The skill tries common checkout locations in priority order, falling back to a fresh clone in `$HOME/repos` (or the operator's preferred root if one is set in `$PROJECTS` / `$CODE` / similar env vars).
+For each PR, the diff and the inline-comment workflow both need a local clone. The skill first looks for an existing checkout in the common locations, and only clones if none is found.
+
+When a clone IS needed, the destination depends on whether the operator is currently working in a "work" context. Detection is based on `pwd`: if the current directory is inside `${WORK:-$HOME/work}` or `$HOME/worktrees/work`, the operator is working on work repos, so the clone lands under `${WORK:-$HOME/work}/$REPO`. Otherwise it lands under `${PROJECTS:-$HOME/repos}/$REPO`. This avoids dropping a work repo into the personal tree (or vice versa) just because the operator happens to be elsewhere when they kick off a review.
 
 ```bash
-# Try common locations the operator already uses, then clone if none match.
+# Existing-checkout search: any of these wins.
 candidates=(
-  "$HOME/work/$REPO"          # work-scope checkouts, if any
+  "${WORK:-$HOME/work}/$REPO"
   "$HOME/repos/$REPO"
   "${PROJECTS:-$HOME/projects}/$REPO"
   "${CODE:-$HOME/code}/$REPO"
@@ -140,16 +190,31 @@ REPO_DIR=""
 for c in "${candidates[@]}"; do
   [ -d "$c/.git" ] && { REPO_DIR="$c"; break; }
 done
+
+# Not found locally. Pick the clone target based on pwd.
 if [ -z "$REPO_DIR" ]; then
-  REPO_DIR="${PROJECTS:-$HOME/repos}/$REPO"
+  cwd=$(pwd -P)
+  work_root="${WORK:-$HOME/work}"
+  case "$cwd" in
+    "$work_root"|"$work_root"/*|"$HOME/worktrees/work"|"$HOME/worktrees/work"/*)
+      REPO_DIR="$work_root/$REPO"
+      ;;
+    *)
+      REPO_DIR="${PROJECTS:-$HOME/repos}/$REPO"
+      ;;
+  esac
+  mkdir -p "$(dirname "$REPO_DIR")"
   gh repo clone "$OWNER/$REPO" "$REPO_DIR"
 fi
+
 cd "$REPO_DIR"
 git fetch origin "pull/$PR_NUM/head:pr-$PR_NUM" -f
 git checkout "pr-$PR_NUM"
 ```
 
-The `-f` covers the case where the local clone already has a `pr-<N>` branch from a prior run.
+State which destination you picked and the reason in chat before the clone runs ("cloning $OWNER/$REPO under $REPO_DIR (pwd is inside $WORK, so this is a work-context clone)") so the operator can interrupt if the auto-detection is wrong. If the operator overrides ("no, put it in repos") just clone to `${PROJECTS:-$HOME/repos}/$REPO` instead; do not re-derive the path.
+
+The `-f` on the fetch covers the case where the local clone already has a `pr-<N>` branch from a prior run.
 
 When multiple PRs are passed, run the per-PR checkout sequentially (different repos can't safely `cd` in parallel inside the same shell). Each PR's diff lands in `/tmp/pr-<N>.diff` so the agents stay isolated.
 
@@ -166,13 +231,86 @@ gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" \
 
 git diff "origin/$(jq -r .base /tmp/pr-$PR_NUM.meta.json)...pr-$PR_NUM" > "/tmp/pr-$PR_NUM.diff"
 
-gh api repos/$OWNER/$REPO/pulls/$PR_NUM/comments --jq '.[] | {path, line, body: (.body[0:200])}' > /tmp/pr-$PR_NUM.existing-comments.json
-gh api repos/$OWNER/$REPO/issues/$PR_NUM/comments  --jq '.[] | {body: (.body[0:300])}'           > /tmp/pr-$PR_NUM.existing-issue-comments.json
+gh api "repos/$OWNER/$REPO/pulls/$PR_NUM/comments" \
+  --jq '[.[] | {id, in_reply_to_id, user: .user.login, path, line, commit_id, body: (.body[0:400])}]' \
+  > "/tmp/pr-$PR_NUM.existing-comments.json"
+
+gh api "repos/$OWNER/$REPO/issues/$PR_NUM/comments" \
+  --jq '[.[] | {id, user: .user.login, body: (.body[0:500])}]' \
+  > "/tmp/pr-$PR_NUM.existing-issue-comments.json"
+
+gh api "repos/$OWNER/$REPO/pulls/$PR_NUM/reviews" \
+  --jq '[.[] | select(.body != "" and .body != null) | {id, user: .user.login, state, submitted_at, commit_id, body: (.body[0:800])}]' \
+  > "/tmp/pr-$PR_NUM.existing-reviews.json"
 ```
+
+Three sources, all author-tagged so Step 5 can apply the author-aware policy:
+- `existing-comments.json` — inline review comments on lines (parents + replies; `in_reply_to_id` tells you which are replies). Bodies trimmed to 400 chars.
+- `existing-issue-comments.json` — top-level / issue-style comments on the PR. Bodies trimmed to 500 chars.
+- `existing-reviews.json` — paragraph-length review-summary bodies attached to a review submission (the "Request changes" / "Comment" / "Approve" body, when non-empty). Bodies trimmed to 800 chars since these are usually the longest.
 
 If the project has well-known noise paths the diff should exclude (generated files, vendored code, lockfiles), pass a path filter to `git diff` here. Detect them from `.gitattributes`, `.gitignore`, or the project's CLAUDE.md rather than hardcoding any path list.
 
 Note the `head` SHA. Every inline comment must be posted with `commit_id` equal to the PR head (FULL SHA, not abbreviated; `gh` rejects abbreviated commit IDs with `commit_id is not part of the pull request`).
+
+## Step 1b. Load prior-review log (per PR)
+
+After Step 1 fetches the diff and existing comments, also check for a prior-review log. The skill writes this file at Step 5c whenever it finishes a review; it's a short, append-only log per PR so the next pass can pick up where the last one left off.
+
+Resolve the log path using `PR_LOG_LAYOUT` from Step 0a:
+
+```bash
+if [ "$PR_LOG_LAYOUT" = "per-repo" ]; then
+  PR_LOG="$REPO_DIR/.pr/$PR_NUM.md"
+else
+  PR_LOG="$PR_LOG_ROOT/$REPO/$PR_NUM.md"
+fi
+
+PRIOR_REVIEW_SUMMARY=""
+LAST_REVIEWED_SHA=""
+if [ -f "$PR_LOG" ]; then
+  PRIOR_REVIEW_SUMMARY=$(cat "$PR_LOG")
+  # Entries are appended chronologically; the last `head: <sha>` line is the
+  # most recent review. `grep -m1` would pick the OLDEST, so use tail to flip.
+  LAST_REVIEWED_SHA=$(grep -oE 'head: [0-9a-f]{7,40}' "$PR_LOG" | tail -n1 | awk '{print $2}')
+  if [ -n "$LAST_REVIEWED_SHA" ] && git cat-file -e "$LAST_REVIEWED_SHA" 2>/dev/null; then
+    git diff "$LAST_REVIEWED_SHA...pr-$PR_NUM" > "/tmp/pr-$PR_NUM.new-since-last.diff"
+  else
+    : > "/tmp/pr-$PR_NUM.new-since-last.diff"
+  fi
+else
+  : > "/tmp/pr-$PR_NUM.new-since-last.diff"
+fi
+```
+
+If the log is absent (first review on this PR), `PRIOR_REVIEW_SUMMARY` stays empty and `new-since-last.diff` is empty too. The agents fall back to the full diff in that case (Step 3 handles this branch).
+
+If `LAST_REVIEWED_SHA` is unreachable (PR was force-pushed and the old SHA was garbage-collected from the local clone), treat it as a first review for diff-incremental purposes but still pass `PRIOR_REVIEW_SUMMARY` to agents so they know which findings were already posted or filtered. The full diff is the fallback.
+
+## Step 1c. Classify PR shape (REFACTOR vs MIXED vs FEATURE)
+
+Before sizing or fanning out, classify the PR as one of three shapes. The classification controls how strict the moves-and-refactors hard constraint binds for every agent in Step 3. Get this wrong and the agents will burn effort flagging implementation details of moved code that the reviewer has no intent to revisit. State the classification and the one-sentence rationale in chat before Step 2.
+
+**Read these signals from `/tmp/pr-<N>.meta.json` (PR description) and `/tmp/pr-<N>.diff`:**
+
+- **Description language.** Verbs like "migrate", "move", "extract", "rename", "replace X with Y", "convert", "switch to", "port to", "lift out", "consolidate", "containerize" all point at REFACTOR. Verbs like "add", "implement", "support", "introduce", "enable", "new" point at FEATURE.
+- **Diff shape.** A diff that's mostly `-` followed by `+` of the same logic with adjusted signatures, package paths, or call sites is REFACTOR. A diff that adds net-new top-level functions / resource types / endpoints / fields with no `-` counterpart is FEATURE.
+- **File creation pattern.** New file that's a relocation of logic from a deleted/shrunk file is REFACTOR (e.g. `pkg/x/cache.go` deleted, `pkg/x/session_cache.go` added, same operations). New file that introduces a new abstraction or resource is FEATURE.
+- **The base-branch comparison.** For every chunk of suspicious "new" code in the diff, run `git -C $REPO_DIR show origin/<base>:<old-path>` (when the path was renamed/relocated) or grep the base branch for the deleted symbols. If the pattern (drain loop, mutex, bare-error return, in-memory cache) existed pre-PR in any form, the PR's version is a RELOCATION, not new logic.
+
+Classification rules:
+
+| Shape | When | Behavior |
+| --- | --- | --- |
+| **REFACTOR** | The PR description explicitly says it's a migration/move/refactor/replace AND the diff is dominated by signature-style changes / file relocations / API-version migrations. Examples: "migrate to V2", "replace sync.Map with session store", "containerize the connector", "extract X into pkg/Y", "rename Foo to Bar". | Agents review the MOVE only: was the right thing moved, are all callers redirected, is anything dropped, is the new package/abstraction correct, did anything end up orphaned. Agents do NOT review the LOGIC of the moved code (concurrency model, error-wrapping style, granularity of cache writes, retry semantics) because that logic was forced into its current shape BY the move and is not the reviewer's choice to redesign on this PR. |
+| **MIXED** | The PR description names a refactor AND new behavior in the same change (e.g. "containerize + add new resource type", "migrate to V2 AND add Workspaces sync"). | Agents review the MOVE per REFACTOR rules, AND review the NEW behavior per FEATURE rules. Annotate each finding with which mode it falls under; FEATURE-mode findings are eligible to post, REFACTOR-mode findings stay out unless they break correctness. |
+| **FEATURE** | The PR adds net-new top-level functionality with little or no relocation of existing code. | Standard review: all six angles apply. |
+
+If unsure, lean toward REFACTOR. The cost of missing a logic bug in a refactor is small (the bug existed pre-PR or was forced by the move); the cost of dumping six logic findings on a refactor PR is real damage to the reviewer's relationship with the author.
+
+**Worked example (the one this skill is calibrated against).** PR description: "Containerizes the baton-panda-doc connector ... Migrated to ConnectorBuilderV2 / ResourceSyncerV2 ... Replaced in-memory user cache with session store ... Added workspace session cache: workspaces are written to the session store page-by-page during the List phase." Diff: 11 files, ~573 lines, all SDK signature migrations + relocation of `cacheUsers` (deleted) into `getUsersFromSession`/`fetchAllUsers` (added) + relocation of `roleBuilder.GetWorkspaces` (deleted) into `getWorkspacesFromSession`/`fetchAllWorkspaces` (added) + new metadata config options. **Classification: REFACTOR.** Wrong-classification findings that should NOT have been raised: "session-store errors lack connector prefix" (the pre-PR `cacheUsers` had the same bareness), "removing usersMtx introduces a double-drain race" (the mutex was removed BECAUSE of the lambda compatibility requirement that drives the entire refactor; the race is a consequence of the forced move, not a logic bug to fix on this PR), "per-page cache writes + non-empty short-circuit could expose partial cache" (this is the implementation of the move itself). Correct findings: orphan `ValidateConfig` left behind after its only caller was deleted (move debris).
+
+In REFACTOR mode, the finding bar is: "would this break, or has this already broken, something that worked pre-PR?" If the answer is no, drop it.
 
 ## Step 2. Decide the agent count and effort per agent
 
@@ -256,7 +394,40 @@ Each prompt MUST include this verification preamble verbatim:
 
 Each prompt MUST include the CONTEXT_PACK from Step 0a, either inline at the top (preferred for short packs) or as a path to `/tmp/pr-review-context-pack.md` with the instruction "read this file first." Subagents are NOT expected to walk the CLAUDE.md tree themselves; the main skill already did that.
 
-Each prompt MUST include the existing-comments JSON path (`/tmp/pr-<N>.existing-comments.json` + `/tmp/pr-<N>.existing-issue-comments.json`) and instruct the agent to drop overlaps with already-posted comments.
+Each prompt MUST include the three existing-comments JSON paths (`/tmp/pr-<N>.existing-comments.json`, `/tmp/pr-<N>.existing-issue-comments.json`, and `/tmp/pr-<N>.existing-reviews.json`) plus the operator's GitHub login (`OPERATOR_LOGIN=<login>` from Step 0a). Include this instruction verbatim:
+
+> **EXISTING DISCUSSION ON THIS PR.** Three sources to scan before reporting a finding:
+> 1. Inline review comments at `/tmp/pr-<N>.existing-comments.json` (parents + replies).
+> 2. Issue-style comments at `/tmp/pr-<N>.existing-issue-comments.json`.
+> 3. Review-summary bodies at `/tmp/pr-<N>.existing-reviews.json` (the "Request changes" / "Comment" paragraph).
+>
+> Each entry has `user` (GitHub login) and `body`. If your finding overlaps with an existing entry where `user != "<OPERATOR_LOGIN>"`, that's a different-user overlap and the coordinator will drop it at Step 5; you can skip the finding to save effort. If your finding overlaps with an entry where `user == "<OPERATOR_LOGIN>"`, still surface the finding (the coordinator decides at Step 5 whether to DROP it or upgrade it to INSIST). When unsure whether two phrasings describe the same issue, surface yours and let the coordinator dedup.
+
+If `PRIOR_REVIEW_SUMMARY` from Step 1b is non-empty, each prompt MUST also include the following block verbatim:
+
+> **PRIOR REVIEWS:** this PR has been reviewed before. The summary of every prior pass is below (each entry has a date, the HEAD SHA at the time, posted findings, and findings filtered as FALSE). Use it to:
+> 1. **Skip lines already posted** as comments in a previous round. Don't re-flag the same `file:line` unless the code at that line has actually changed since `LAST_REVIEWED_SHA`.
+> 2. **Do not re-litigate FALSE findings.** If a claim was filtered as FALSE in a prior round and the underlying code is unchanged, do not surface it again.
+> 3. **Check whether previously-flagged issues are addressed.** If a prior BLOCKER or MAJOR has been fixed, ignore it. If it has NOT been fixed and the line still appears in `/tmp/pr-<N>.diff`, flag it again with a note that it was previously flagged.
+> 4. **Prioritize new ground.** `/tmp/pr-<N>.new-since-last.diff` contains only the lines that changed since `LAST_REVIEWED_SHA`. Spend most of your effort there. The full diff at `/tmp/pr-<N>.diff` is still authoritative for the anchor-rule (every finding must cite a `+` line in the full diff), but the new-since-last diff is where you should look first.
+>
+> Prior review summary:
+>
+> ```
+> <PRIOR_REVIEW_SUMMARY contents>
+> ```
+
+If `PRIOR_REVIEW_SUMMARY` is empty (first review on this PR), omit the block entirely.
+
+**The PR_SHAPE classification from Step 1c MUST be included verbatim in every agent prompt.** Use this block:
+
+> **PR_SHAPE:** `<REFACTOR | MIXED | FEATURE>` — `<one-sentence rationale from Step 1c>`.
+>
+> If `REFACTOR`: your job is to review the MOVE, not the moved code. Acceptable findings: dropped behavior, missed call-site, wrong target package/abstraction, orphaned code/dead helpers/imports left behind, signature drift that breaks a downstream caller, lost annotation / pagination token / error path during the migration. UNACCEPTABLE findings (drop without surfacing, do NOT spend effort on these): error-wrapping style of the moved code, concurrency model of the moved code, cache write granularity, retry semantics, log-level choice, comment style. Those are properties of the move's design that the author committed to when picking the target shape; this PR is not the place to renegotiate them. The bar for a REFACTOR-mode finding is "does this break, or has this already broken, something that worked pre-PR?" If no, drop it.
+>
+> If `MIXED`: treat each `+` line as either MOVE or NEW. For MOVE lines (anything whose pre-PR equivalent existed in a deleted file / function / V1 signature), apply REFACTOR rules. For NEW lines (net-new functions, resource types, endpoints, fields that have no pre-PR equivalent), apply FEATURE rules. When in doubt for a given line, prefer REFACTOR.
+>
+> If `FEATURE`: all six angles apply normally.
 
 The six standing angles (specialize each prompt around the PR's actual content, but the lens stays constant):
 
@@ -293,7 +464,16 @@ Each finding now also carries an **agent-side confidence percentage (0-100%)**. 
 - String-literal style preferences (lowercase, no trailing periods, etc.).
 - Variable casing / abbreviation preferences inherited from the operator's CLAUDE.md.
 
-If the PR author also happens to follow these rules, that's fine; they'll see them in CI or their own review. The agent's job is to catch correctness, API, data-model, control-flow, and test issues. NOT to enforce the operator's writing style on someone else.
+**Do NOT flag the operator's personal git / PR / commit conventions.** These are operator-local guidelines about the operator's OWN work, not team rules every author has signed up for. Even when they appear in the loaded CLAUDE.md / lazy-rule files (because those configure the operator's behavior), do NOT enforce them on someone else's PR. Drop entirely:
+- Claude / AI / automation attribution in PR descriptions, commit messages, or branch names (`🤖 Generated with Claude Code`, `Co-Authored-By: Claude`, etc.). Operator-local rule about what THEY emit, not a team rule binding the PR author.
+- PR description format conventions: length caps, no `## Summary` / `## Test plan` section headers, no function names in bullets, "audience is upper management" framing. Operator-local PR-writing guidance, not the PR author's standard.
+- Branch naming conventions (`ticket-id + slug`, no `<username>/` prefix). Operator-local; other authors use their own conventions.
+- Commit-message format conventions (lowercase imperative, one line, no body).
+- PR title prefix conventions when the author isn't bound by the same ticket system (`CXH-XXX:` for the operator's tickets does NOT apply to a different team's PR).
+
+Rule of thumb: if the only reason something is "wrong" is because a CLAUDE.md / lazy-rule file telling the operator how to write THEIR commits and PRs says so, it's NOT a finding on someone else's PR. The PR author writes by THEIR conventions, not the operator's. **Past mistake:** flagged a Claude-attribution line in another author's PR body, a `Co-Authored-By: Claude` trailer in another author's commit, and an unusual branch name as MAJOR/MINOR findings. All three were operator-local rules; the operator rejected every comment and told the skill to stop catching these.
+
+If the PR author also happens to follow these rules, that's fine; they'll see them in CI or their own review. The agent's job is to catch correctness, API, data-model, control-flow, and test issues. NOT to enforce the operator's writing or git-hygiene rules on someone else.
 
 What you DO flag stays the same: correctness bugs, missing/wrong error types where the PROJECT (not the operator's personal config) requires them, wrong endpoints, JSON-tag mismatches, pagination shape mismatches, actually-swallowed errors, data-model issues, missing tests on changed behavior.
 
@@ -469,7 +649,16 @@ Now build the punch-list from surviving (VERIFIED + qualifying NUANCED) findings
 
 Dedupe overlapping findings across review agents on the same PR: two agents flagging the same line collapse to one row. Keep the higher severity and the higher final confidence. Use `references/examples.md` for examples of merged vs split findings.
 
-**Drop overlaps with existing PR comments** using `/tmp/pr-<N>.existing-comments.json` and `/tmp/pr-<N>.existing-issue-comments.json` from Step 1. For any consolidated finding that matches an existing comment on the same `file:line` (or the same conceptual issue, even at a nearby line), drop it from the punch-list. The user has already seen it; re-flagging looks like the skill didn't read the PR.
+**Author-aware overlap dedup** against `/tmp/pr-<N>.existing-comments.json`, `/tmp/pr-<N>.existing-issue-comments.json`, and `/tmp/pr-<N>.existing-reviews.json` from Step 1. For each consolidated finding, scan all three sources for an entry that hits the same `file:line` or describes the same conceptual issue (same line or a nearby line in the same hunk):
+
+1. **Overlap with a different user's entry** (`entry.user != OPERATOR_LOGIN`): **DROP** the finding. Someone else already raised it; piling on doesn't help. Log it to the verification log as "filtered: <user> already noted this on <file>:<line> / <review-summary-id>".
+2. **Overlap with the operator's own entry** (`entry.user == OPERATOR_LOGIN`):
+   - Inspect the thread. For inline comments, "thread has replies" = `any other entry in existing-comments.json has in_reply_to_id == entry.id`. For issue-comments and review summaries, "thread has engagement" = there's a later issue-comment from any user other than the operator OR a later review submission.
+   - **Thread has replies / engagement** → **DROP**. The operator already said it; the conversation moved on. Re-posting risks looking like a stale agent re-flag.
+   - **Thread is silent** (no replies, no engagement) → **INSIST**. Re-surface the finding with the body rewritten to lead with `(reiterating my earlier note since the line hasn't changed)` followed by the new, shorter punch. Tag the finding `insist=true` in the punch-list so Step 6a's headline shows `[INSIST]` and Step 8 makes the operator confirm explicitly.
+3. **No overlap** → keep as a fresh finding.
+
+When two phrasings might describe the same issue but you're not sure, err on the side of KEEPING the new finding (the operator can skip it in Step 8) rather than DROPPING it silently. False drops are worse than minor duplication.
 
 ### Comment phrasing
 
@@ -485,6 +674,52 @@ Comments are inline review notes, not essays. Match the operator's existing styl
 - **DO cite official vendor docs when the finding was verified against them.** Format: bare URL at the end of the comment, no `[label](url)` markdown. Single link: `(spec: https://docs.vendor.com/reference/foo)`. Multiple: `(spec: https://docs.vendor.com/reference/foo, https://docs.vendor.com/reference/bar)`. The PR author should be able to confirm the claim by clicking the link. Applies ONLY to claims actually verified, never invent a URL to make the comment look authoritative.
 
 Examples in `references/examples.md`.
+
+## Step 5a. Compute "approve PR" confidence
+
+After the punch-list is final (deduped per Step 5), compute a single 0-100% number per PR so the operator can tell at a glance whether it's safe to approve. The number IS opinionated: it weighs both severity and how much scrutiny each finding got.
+
+Formula. Start at 100 and deduct per surviving finding:
+
+```
+approve_pct = 100
+
+for each finding in surviving_punch_list:
+  if finding.severity == "BLOCKER":
+    approve_pct -= 50              # one BLOCKER drops you under the "approve" line
+  elif finding.severity == "MAJOR":
+    if finding.final_confidence >= 80: approve_pct -= 15
+    else:                              approve_pct -= 7
+  elif finding.severity == "MINOR":
+    if finding.final_confidence >= 85 and finding.has_concrete_fix:
+      approve_pct -= 2
+    # else MINOR doesn't move the needle
+  if finding.insist:
+    approve_pct -= 5               # re-flagged unaddressed comment, extra weight
+
+approve_pct = max(0, approve_pct)
+```
+
+Bucket the number into a recommendation tier and include both the number and the tier in the report and the wrap:
+
+| approve_pct | Tier                         | What it means                                                                                  |
+| ----------- | ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| 81-100      | **SAFE TO APPROVE**          | Zero BLOCKERs, at most a couple of low-conf MAJORs / MINORs. The PR can land.                  |
+| 61-80       | **APPROVE WITH NOTES**       | MAJORs present but advisory. Author should glance at the comments; nothing blocks merge.       |
+| 31-60       | **APPROVE WITH CAUTION**     | Multiple MAJORs or one high-conf BLOCKER bordering. Address the listed items before merge.     |
+| 0-30        | **DO NOT APPROVE YET**       | BLOCKER(s) outstanding. Material issues to resolve first.                                      |
+
+Floor and ceiling rules:
+- ANY BLOCKER caps the tier at "APPROVE WITH CAUTION" or lower (a single 50%-confidence BLOCKER is still a BLOCKER; never silently downgrade because the math floats).
+- An empty punch-list (zero surviving findings) is always `approve_pct = 100`, tier "SAFE TO APPROVE".
+- If `OPERATOR_LOGIN == pr.author.login` (the operator is reviewing their own PR), drop the tier one level (you're biased; the math should reflect that).
+
+State the number and tier in chat once it's computed so the operator sees it before Hunk opens:
+
+```
+PR #<N> — approve_pct=<P>%  →  <TIER>
+  reasons: <X> BLOCKER(s), <Y> MAJOR(s), <Z> INSIST'd, <W> MINOR(s) over the bar
+```
 
 ## Step 5b. Persist the consolidated report
 
@@ -514,7 +749,7 @@ REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG.md"
 
 **Contents (Markdown):** the report MUST include, in order:
 
-1. Header line: `# PR #<N>: <title>` and a metadata block listing PR URL, author, base/head SHA, agent count, verifier counts, run timestamp.
+1. Header line: `# PR #<N>: <title>` and a metadata block listing PR URL, author, base/head SHA, agent count, verifier counts, run timestamp, AND the approve verdict from Step 5a in the form `Approve: <P>% — <TIER>` (e.g. `Approve: 72% — APPROVE WITH NOTES`). Place this approve line first in the metadata block so a reader scanning the archive sees the verdict before the finding details.
 2. The findings table from Step 6a (verbatim, same Sev / Conf / ✓ / File:Line / Headline columns).
 3. One subsection per finding with the FULL comment body, the diff excerpt, the verifier verdict(s), and the resolved confidence. BLOCKERs first, MAJORs next, MINORs last.
 4. Link to the verification audit log at `/tmp/pr-<N>-verification.md` and instruction to copy it into the same persisted dir if the operator wants the FALSE-drop history retained.
@@ -523,6 +758,80 @@ REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG.md"
 Write the report BEFORE opening Hunk or asking the reduce question. The operator may interrupt at any point and the on-disk artifact survives.
 
 The `reviews` CLI util (commonly at `$SCRIPTS/shared/utilities/reviews`) fzf-picks any report under `${REVIEWS_DIR:-$HOME/.reviews}/` by date or across all dates.
+
+## Step 5c. Append entry to the per-PR log
+
+Alongside the full archive at Step 5b, append a short summary to the per-PR log. The path was already resolved into `$PR_LOG` at Step 1b (using `$PR_LOG_LAYOUT` from Step 0a):
+- per-repo layout: `$REPO_DIR/.pr/$PR_NUM.md`
+- parent layout: `$PR_LOG_ROOT/$REPO/$PR_NUM.md`
+
+This is the lightweight pointer that future re-reviews read at Step 1b. One entry per review run, one line per finding; full bodies live in the archive.
+
+Call the helper script `scripts/pr-log-append.sh` (shipped with this skill) rather than inlining the markdown template here. The script handles header initialization on first call, severity counts, and append-only ordering so Step 1b's SHA grep keeps working.
+
+First build two TSV files from the consolidated punch-list and the verification audit log:
+
+```bash
+# Findings TSV: one row per surviving finding (Step 5 punch-list, BLOCKER->MAJOR->MINOR).
+# Columns: sev<TAB>conf<TAB>verified-marker<TAB>file:line<TAB>headline
+findings_tsv=$(mktemp)
+# ... populate from the consolidated punch-list ...
+
+# Filtered TSV: one row per claim dropped at Step 4 (verifier FALSE / low-conf NUANCED).
+# Columns: angle<TAB>claim<TAB>reason
+filtered_tsv=$(mktemp)
+# ... populate from /tmp/pr-$PR_NUM-verification.md ...
+```
+
+Then call the script:
+
+```bash
+SKILL_DIR="${PR_REVIEW_SKILL_DIR:-$HOME/.claude/skills/pr-code-review}"
+"$SKILL_DIR/scripts/pr-log-append.sh" \
+  --pr-log    "$PR_LOG" \
+  --pr-num    "$PR_NUM" \
+  --title     "$(jq -r .title /tmp/pr-$PR_NUM.meta.json)" \
+  --url       "https://github.com/$OWNER/$REPO/pull/$PR_NUM" \
+  --author    "$AUTHOR" \
+  --head      "$HEAD_SHA" \
+  --agents    "$AGENT_COUNT" \
+  --verifiers "$VERIFIER_COUNT" \
+  --count     "$COUNT" \
+  --effort    "$EFFORT" \
+  --findings  "$findings_tsv" \
+  --filtered  "$filtered_tsv" \
+  --archive   "$REPORT_PATH"
+```
+
+Resulting file shape (the script writes this; here for reference so future readers know what to expect when reading the log at Step 1b):
+
+```markdown
+# PR #<N>: <title>
+
+URL: https://github.com/<owner>/<repo>/pull/<N>
+Author: <login>
+
+
+## <YYYY-MM-DD> (head: <full-40-char-SHA>)
+Agents: <N> review + <V> verifiers (count=<C>, effort=<E>)
+Surfaced: <total> findings (<B> BLOCKER, <Mj> MAJOR, <Mn> MINOR)
+Archive: <path to Step 5b report>
+
+### Surfaced (do not re-flag the same line unless code changed)
+- BLOCKER 92% ✓3 src/foo.go:42 wrong type breaks downstream consumer
+- MAJOR 78% ✓2 src/bar.go:18 items emitted twice across pages
+- MINOR 65% ✓1 src/baz.go:91 repeated literal could be a const
+
+### Filtered FALSE / low-confidence (do not re-litigate)
+- correctness: un-coded error skips framework retry (framework retry.go:60 only retries codes A+B)
+```
+
+Rules baked into the script:
+- Header is written only on first call (the `# PR #<N>: <title>` block). Subsequent calls append a new `## <date> (head: <sha>)` section.
+- The header sentinel `head: <40-char-SHA>` is the contract Step 1b reads. Do not edit it by hand.
+- Multiple sections in chronological order: each re-review on the same PR adds the most recent at the bottom. Step 1b's `tail -n1` grep picks the most recent SHA from there.
+
+Suggest the operator add `.pr/` to the repo's `.gitignore` or `.git/info/exclude`. The log is per-operator review state, not part of the project. The skill itself never commits `.pr/` and never blocks on its presence in `git status`.
 
 ## Step 6. Print findings table + open Hunk with EVERY finding attached
 
@@ -631,11 +940,11 @@ Prune the dropped findings from the Hunk session via `/tmp/pr-<N>-commentids.tsv
 
 ```bash
 for cid in $(awk -v keep="<keep-csv>" 'BEGIN{split(keep, K, ","); for(k in K) S[K[k]]=1} !($1 in S) {print $2}' /tmp/pr-<N>-commentids.tsv); do
-  hunk session comment rm "" "$cid" --repo "<REPO_ROOT>"
+  hunk session comment rm "$cid" --repo "<REPO_ROOT>"
 done
 ```
 
-The empty first positional is required: `hunk session comment rm` takes `[sessionId]` then `<commentId>`; `--repo` replaces session lookup but the slot still needs `""`.
+With `--repo`, `hunk session comment rm` takes exactly one positional: the `<commentId>`. The two-form signature is `<session-id> <commentId>` OR `<commentId> --repo <path>` — passing both an empty session-id and `--repo` errors with "Specify exactly one comment id with --repo".
 
 After pruning, also drop the dropped rows from the in-memory punch-list so Step 8 only walks survivors. The dropped findings stay in the persisted report at `${REVIEWS_DIR:-$HOME/.reviews}/.../pr-<N>-<slug>.md` and in the verification log at `/tmp/pr-<N>-verification.md` so the operator can recover them later.
 
@@ -787,16 +1096,35 @@ After every PR's ask loop finishes (or immediately after Step 6b in batch mode, 
 
 ```
 posted <K> comments across <M> PR(s):
-  PR #<N1>: <K1> posted, <S1> skipped, <F1> filtered as FALSE / low-confidence
-  PR #<N2>: <K2> posted, <S2> skipped, <F2> filtered
+  PR #<N1>: <K1> posted, <S1> skipped, <F1> filtered  →  approve <P1>% <TIER1>
+  PR #<N2>: <K2> posted, <S2> skipped, <F2> filtered  →  approve <P2>% <TIER2>
 reports:
   ${REVIEWS_DIR:-$HOME/.reviews}/<repo1>/<date>/<author1>/pr-<N1>-<slug1>.md
   ${REVIEWS_DIR:-$HOME/.reviews}/<repo2>/<date>/<author2>/pr-<N2>-<slug2>.md
+.pr logs appended this run (layout: per-repo or parent, picked at Step 0a):
+  <PR_LOG_1>
+  <PR_LOG_2>
 audit logs: /tmp/pr-<N1>-verification.md, /tmp/pr-<N2>-verification.md, ...
 (browse with `reviews`, fzf picks any report from today; `reviews --all` for any date)
 ```
 
 Nothing else. No recap of skipped findings, no encouragement.
+
+## Step 9b. Approving the PR (only on explicit operator request)
+
+The skill does NOT auto-approve based on Step 5a's confidence. The approve verdict is INFORMATION for the operator; the operator decides whether to approve.
+
+When the operator says "approve" (or "approve PR #N", "go ahead and approve") after the wrap, the default action is `gh pr review --approve` with NO body. No "LGTM", no "looks good", no summary of the review.
+
+```bash
+gh pr review "$PR_NUM" --repo "$OWNER/$REPO" --approve
+```
+
+Do NOT add `--body "<anything>"` unless the operator explicitly tells you to ("approve with a comment", "approve and say <text>", "approve with body: <text>"). A bodiless approve is the default; an approve-with-body requires an explicit operator instruction in the same message.
+
+When the operator says "approve" but the Step 5a tier is "APPROVE WITH CAUTION" or "DO NOT APPROVE YET", surface the mismatch once before running the command: "approve_pct was <P>% (<TIER>); still want to approve?" then act on the operator's confirmation. The mismatch check happens only once per `approve` request; if the operator confirms, do it and don't re-litigate.
+
+If the operator says "approve all" after a multi-PR run, do the bodiless approve in sequence for every PR whose punch-list was walked. Still apply the mismatch check per PR; one "yes, approve all even the cautious ones" covers the whole batch.
 
 ## Failure modes
 

@@ -160,6 +160,10 @@ vim.keymap.set("n", "<backspace>wi", "<cmd>e $WIKI<cr>", {silent=true, noremap=t
 vim.keymap.set("n","<backspace><a-p>wi", ":lua require('telescope.builtin').find_files({prompt_title = '<$WIKI>', cwd = '$WIKI', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>wi", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $WIKI>', cwd = '$WIKI', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
+vim.keymap.set("n", "<backspace>win", "<cmd>e $WIKI/notes<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>win", ":lua require('telescope.builtin').find_files({prompt_title = '<$WIKI/notes>', cwd = '$WIKI/notes', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>win", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $WIKI/notes>', cwd = '$WIKI/notes', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+
 vim.keymap.set("n", "<backspace>wp", "<cmd>e $WIKI/personal<cr>", {silent=true, noremap=true})
 vim.keymap.set("n","<backspace><a-p>wp", ":lua require('telescope.builtin').find_files({prompt_title = '<$WIKI/personal>', cwd = '$WIKI/personal', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>wp", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $WIKI/personal>', cwd = '$WIKI/personal', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
@@ -296,9 +300,17 @@ vim.keymap.set("n", "<backspace>p.", "<cmd>e $PROJECTS/<cr>", {silent=true, nore
 vim.keymap.set("n","<backspace><a-p>p.", ":lua require('telescope.builtin').find_files({prompt_title = '<$PROJECTS/>', cwd = '$PROJECTS/', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>p.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $PROJECTS/>', cwd = '$PROJECTS/', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<backspace>c.", "<cmd>e $CODE<cr>", {silent=true, noremap=true})
-vim.keymap.set("n","<backspace><a-p>c.", ":lua require('telescope.builtin').find_files({prompt_title = '<$CODE>', cwd = '$CODE', hidden = 'true'})<cr>", { noremap = true, silent = true })
-vim.keymap.set("n","<backspace><a-r>c.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $CODE>', cwd = '$CODE', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n", "<backspace>co.", "<cmd>e $CODE<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>co.", ":lua require('telescope.builtin').find_files({prompt_title = '<$CODE>', cwd = '$CODE', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>co.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $CODE>', cwd = '$CODE', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+
+vim.keymap.set("n", "<backspace>c.", "<cmd>e ./.claude<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>c.", ":lua require('telescope.builtin').find_files({prompt_title = '<./.claude>', cwd = './.claude', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>c.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ./.claude>', cwd = './.claude', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+
+vim.keymap.set("n", "<backspace>cs.", "<cmd>e ./.claude/skills<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>cs.", ":lua require('telescope.builtin').find_files({prompt_title = '<./.claude/skills>', cwd = './.claude/skills', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>cs.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ./.claude/skills>', cwd = './.claude/skills', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<backspace>pp", "<cmd>e ~/Pictures<cr>", {silent=true, noremap=true})
 vim.keymap.set("n","<backspace><a-p>pp", ":lua require('telescope.builtin').find_files({prompt_title = '<~/Pictures>', cwd = '~/Pictures', hidden = 'true'})<cr>", { noremap = true, silent = true })
@@ -311,6 +323,10 @@ vim.keymap.set("n","<backspace><a-r>xm.", ":lua require('telescope.builtin').gre
 vim.keymap.set("n", "<backspace>k.", "<cmd>e $HOME/qmk_firmware<cr>", {silent=true, noremap=true})
 vim.keymap.set("n","<backspace><a-p>k.", ":lua require('telescope.builtin').find_files({prompt_title = '<$HOME/qmk_firmware>', cwd = '$HOME/qmk_firmware', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>k.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP $HOME/qmk_firmware>', cwd = '$HOME/qmk_firmware', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+
+vim.keymap.set("n", "<backspace>cl.", "<cmd>e ./.claude/lazy<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>cl.", ":lua require('telescope.builtin').find_files({prompt_title = '<./.claude/lazy>', cwd = './.claude/lazy', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>cl.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ./.claude/lazy>', cwd = './.claude/lazy', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<backspace>.sf", "<cmd>e ~/.config/shortcuts/sf <cr>", {silent=true, noremap=true})
 vim.keymap.set("n", "<backspace>.sd", "<cmd>e ~/.config/shortcuts/sd <cr>", {silent=true, noremap=true})

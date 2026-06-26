@@ -214,10 +214,10 @@ First, clear any `[pending]` placeholder (the pre-PR/MR hook drops one; `/hunk` 
 ```bash
 hunk session comment list --repo <REPO_ROOT> --json | \
   jq -r '.comments[] | select(.summary | startswith("[pending]")) | .commentId' | \
-  while read -r cid; do hunk session comment rm "" "$cid" --repo <REPO_ROOT>; done
+  while read -r cid; do hunk session comment rm "$cid" --repo <REPO_ROOT>; done
 ```
 
-The empty first positional is required: `hunk session comment rm` takes `[sessionId]` then `<commentId>`; `--repo` replaces session lookup but the first arg slot still needs `""`.
+With `--repo`, `hunk session comment rm` takes exactly one positional: the `<commentId>`. The two-form signature is `<session-id> <commentId>` OR `<commentId> --repo <path>` — passing both an empty session-id and `--repo` errors with "Specify exactly one comment id with --repo".
 
 Then apply the orientation note using the same `comment apply --stdin && navigate --next-comment` pattern from above, with a single-entry payload:
 
