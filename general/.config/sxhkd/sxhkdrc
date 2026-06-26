@@ -6,7 +6,7 @@ super + x
 
 # key names can be found in xev
 super + BackSpace
-   st 2>/dev/null
+   kitty 2>/dev/null
     
 super + p
     dmenu_run
@@ -28,7 +28,7 @@ super + alt + 0
 
 # bug with npm
 super + r
-    st -e bash -c "ranger 2>/dev/null; clear; $SHELL"
+    kitty bash -c "ranger 2>/dev/null; clear; $SHELL"
 
 super + alt + n
     nt dmenu
@@ -50,7 +50,7 @@ mod5 + shift + e
 	emoji
 
 super + shift + x
-	st -e nvim ~/.config/xmonad/xmonad.hs
+	kitty nvim ~/.config/xmonad/xmonad.hs
 
 super + Escape
      nw dmenu 

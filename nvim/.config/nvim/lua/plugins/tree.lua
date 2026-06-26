@@ -8,16 +8,21 @@
 --   colemak motion:
 --     n         move down (was j)
 --     e         move up   (was k)
---     i         open / edit node (was l)
---     h         close node (default; physical key unchanged on colemak)
+--     j         end of word (was e)
+--     h         cursor left (overrides default close_node)
+--     i         cursor right (colemak equivalent of l)
+--     v         enter visual mode (overrides netrw-style open vertical split)
+--   word motions:
+--     b/w/B/W   native motions, fire on first press (defaults make `b` a
+--               prefix via bd/bt/bmv, and bind B/W to filter/collapse).
 --   netrw-style:
 --     %         create file (or dir with trailing /)
 --     R         rename
 --     o         open in horizontal split
---     v         open in vertical split
 --     t         open in tab
 --     -         parent dir (already default)
 --     <C-r>     refresh (was R)
+--   open files via the nvim-tree defaults: <CR> / o (horizontal) / t (tab).
 --   preview:
 --     M            one-shot `mdp <file>`. No synced server, no editor swap;
 --                  tree stays focused.
@@ -101,11 +106,21 @@ return {
         return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
       end
 
-      -- colemak motion (n=down, e=up, i=open). h keeps the default close_node
-      -- since its physical position is unchanged on colemak.
+      -- colemak motion: n=down, e=up, h/i = horizontal cursor motion.
+      -- h overrides nvim-tree's default close_node so the cursor can move left
+      -- inside a filename; i is colemak's right (QWERTY l).
       vim.keymap.set("n", "n", "j", opts("down"))
       vim.keymap.set("n", "e", "k", opts("up"))
-      vim.keymap.set("n", "i", api.node.open.edit, opts("open / edit"))
+      vim.keymap.set("n", "h", "h", opts("left"))
+      vim.keymap.set("n", "i", "l", opts("right"))
+      vim.keymap.set("n", "j", "e", opts("end of word"))
+
+      -- native word motions. defaults make `b` a prefix (bd/bt/bmv) so plain
+      -- `b` waits timeoutlen; B/W are bound to filter/collapse. nowait fires
+      -- the rebind on the first keypress.
+      for _, key in ipairs({ "b", "w", "B", "W" }) do
+        vim.keymap.set("n", key, key, opts("native " .. key))
+      end
 
       -- default_on_attach binds K to First Sibling; drop it so global K -> N wins.
       pcall(vim.keymap.del, "n", "K", { buffer = bufnr })
@@ -120,7 +135,6 @@ return {
       vim.keymap.set("n", "%", api.fs.create, opts("create (trailing / = dir)"))
       vim.keymap.set("n", "R", api.fs.rename, opts("rename"))
       vim.keymap.set("n", "o", api.node.open.horizontal, opts("open horizontal split"))
-      vim.keymap.set("n", "v", api.node.open.vertical, opts("open vertical split"))
       vim.keymap.set("n", "t", api.node.open.tab, opts("open in tab"))
       -- Default `R` was refresh; remap that to <C-r>.
       vim.keymap.set("n", "<C-r>", api.tree.reload, opts("refresh"))
@@ -153,7 +167,7 @@ return {
 
     require("nvim-tree").setup({
       on_attach = on_attach,
-      hijack_cursor = true,
+      hijack_cursor = false,
       sync_root_with_cwd = true,
       view = {
         width = { min = 30, max = 60, padding = 1 },
