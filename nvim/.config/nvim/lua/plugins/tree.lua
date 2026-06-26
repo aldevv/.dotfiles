@@ -129,6 +129,8 @@ return {
       pcall(vim.keymap.del, "n", "s", { buffer = bufnr })
       vim.keymap.set("n", "S", api.node.run.system, opts("system open"))
       vim.keymap.set("n", "ss", api.tree.close, opts("close tree"))
+      vim.keymap.set("n", "q", api.tree.close, opts("close tree"))
+      vim.keymap.set("n", "<Esc>", api.tree.close, opts("close tree"))
 
       -- netrw-style bindings (similar to `:Ex`).
       -- `-` (parent dir) is already the nvim-tree default.
