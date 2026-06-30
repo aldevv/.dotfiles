@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×20)
+- done. (×28)
 - good catch, will fix. (×1)
 - fixed. (×5)
 - done (×1)
@@ -29,6 +29,8 @@ increment from there.
 - `W` is writeup user, easy to mix up with ws. logindisabled is the ws-only flag per the [docs](https://developer.intacct.com/api/company-console/users/). (×1)
 - checked. baton-http's actions.go doesn't unwrap ErrIgnoreError, so a 404 on update_user still fails. confirmed against the mock. (×1)
 - enable/disable is not in the connector because the API doesn't expose it (×1)
+- Couldn't find a 400 in the OpenAPI, so I kept 409 and just expanded the message to cover self / last owner / SCIM. (×1)
+- new success_condition catches it. so it works as is (×1)
 
 ### New line comments — feedback
 
@@ -41,6 +43,7 @@ increment from there.
 - this revoke returns Unimplemented but the entitlement isn't EntitlementImmutable. mark it immutable or implement revoke. same on role.go:259. (×1)
 - dropping the annotation here. empty today so nothing breaks, but rate-limit hints would get silently lost if they ever land. could pass it through SyncOpResults.Annotations. (×1)
 - checkout needs to run before setup-go, otherwise `go-version-file: go.mod` errors out once `if: false` flips. (×1)
+- sdk caps exclusion groups at 50 per group id (`maxEntitlementsPerExclusionGroup` in baton-sdk sync/syncer.go:255). the key is per-envType, so every env-role in one environment shares one bucket. workato allows unlimited custom env-roles, so >50 in any env will fail sync. worth a code comment here calling out the cap as a known limitation. (×1)
 
 ### Top-level PR/MR comments
 

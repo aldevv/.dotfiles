@@ -65,6 +65,47 @@ Fire as much as possible in parallel. The workflow is three rounds; everything w
 - **Round 2 — Open + read** (the `git diff` and `tmux split/new-window` are parallel; an active poll on `hunk session list` confirms the session is live before Round 3; do NOT use a fixed `sleep` — poll instead).
 - **Round 3 — Apply** (sequential within the round): `comment apply` then `navigate`. These race if parallel.
 
+### PR-feedback path: addressed-reviewer summary
+
+If the work being reviewed in Hunk addressed reviewer feedback on an existing PR/MR (the common shape: someone left comments, this branch fixes each of them), attach one short note per addressed reviewer thread in addition to whatever feature-explanation / complex-flow notes you'd normally leave. The reader scrolls Hunk, lands on a `+` line, and sees "bjorn: did X. they said: '...'. <link>" right there.
+
+**Detection — fire any of these:**
+- The caller passes `pr_feedback=<path>` in `$ARGUMENTS`, where `<path>` is a JSON file with a top-level `pr_feedback: [...]` array (schema below).
+- `fix-bug` Phase 7b, `impl-connector` Step 6 post-implementation, or any orchestrator skill that just walked an End-of-phase recap hands you the same JSON.
+- Auto-detect from environment: if `$HOME/work/.auto-new-day/dispatch/<TICKET>.json` exists where `<TICKET>` is the lowercased ticket id from the current branch (`cxh-NNNN-...` style), AND the file has a `feedback` array, AND the latest commit (HEAD) was authored in the current session (heuristic: `git log -1 --format=%ar HEAD` is "X seconds/minutes ago" rather than hours/days), parse the dispatch and treat it as the payload. The dispatch's `feedback[]` entries carry `author`, `path`, `line`, `body`, and `source` — map these to the schema below.
+- Auto-detect from the latest commit message: `git log -1 --format=%B HEAD` contains a PR-fix marker (`fix: address PR feedback`, `Fixes PR #NN comments`, `Addresses <author>'s review`, or a recent commit that named the PR review explicitly). When this fires WITHOUT a structured payload, you don't have the verbatim quotes — fall back to the analysis path and skip per-thread notes.
+
+**Payload schema** (`pr_feedback[]` entries):
+
+```json
+{
+  "author": "Bjorn Tipling",
+  "author_handle": "bjorn-c1",
+  "thread_link": "https://github.com/conductorone/baton-foo/pull/9#discussion_r1234567890",
+  "comment": "Grant uses the bulk semantic-patch endpoint which returns 200 even on partial failure. Add a success_condition guard checking errors == [].",
+  "fix_file": "pkg/config/config.yaml",
+  "fix_line": 418,
+  "fix_summary": "added the CEL guard for 200+errors partial-fail"
+}
+```
+
+Field rules:
+- `author` is the display name; `author_handle` is the gh/glab login. Use the FIRST NAME (or handle if no first name) in the hunk summary.
+- `comment` is verbatim text from the comment. The skill truncates with `…` if it's over ~120 chars when building the rationale.
+- `fix_file` + `fix_line` anchor the note. They MUST be a real `+` line in the diff — the diff-line validator (Round 3) catches mistakes.
+- `fix_summary` is the one-line "how we fixed it" (the same content the operator wrote in the End-of-phase recap's `fix:` field, minus the file:line prefix).
+- `thread_link` is the permalink to the comment / review / ticket entry.
+
+**Workflow** when this fires:
+
+- **Round 1 — Discovery** unchanged.
+- **Round 2 — Open + read** unchanged.
+- **Round 3 — Apply** — generate one hunk note per `pr_feedback[]` entry per `references/review-guidance.md` → "PR-feedback mode" (format spec lives there). Plus, ALWAYS include the Feature Explanation orientation note at the top of the diff. Plus, if the diff contains a complex flow that would benefit from a code-explanation note (existing behavior), include that too.
+
+The three note categories are additive: orientation + per-reviewer + complex-flow can all coexist. They anchor on different lines, so the reader sees each one in context as they scroll.
+
+If detection picks up a context (e.g. dispatch JSON exists) but the payload turns out to be empty (`feedback: []`) or missing required fields, fall back to the analysis path and surface to the user that the payload was malformed.
+
 ### Fast path: pre-supplied comments
 
 If the caller hands you a ready-to-apply comment batch (e.g. `pr-code-review` invokes `Skill(hunk)` with the JSON inline, or you're handed `comments_json=<path>` in `$ARGUMENTS`), the workflow collapses to TWO rounds:
@@ -92,6 +133,18 @@ Fire ALL of these in a single message:
 - `tmux display-message -t "$TMUX_PANE" -p '#{window_panes} #{session_name}'` (drives split-vs-new-window in Round 2; `-t "$TMUX_PANE"` anchors on Claude's pane so the user's current view never affects the decision — see "Anchor every tmux call on `$TMUX_PANE`" above. The two fields come back space-separated; capture both since Round 2 also needs `session_name`)
 - `test -f "$HOME/.cache/hunk/state.json" && cat "$HOME/.cache/hunk/state.json" || echo MISSING` (Round 4 prompt state)
 - If `$ARGUMENTS` matches `^(--pr +)?[0-9]+$` or `^pr +[0-9]+$` (a numeric PR identifier, with optional `pr` / `--pr` prefix): also fire `gh pr view <N> --json baseRefName,headRefName,headRepository`. `HEAD~N` does NOT match because it starts with `HEAD`.
+- **PR-feedback detection** (fires the PR-feedback path described below): in parallel, run
+  ```bash
+  BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+  TICKET=$(echo "$BRANCH" | grep -oE '^(cxh|CXH)-[0-9]+' | tr '[:lower:]' '[:upper:]')
+  DISPATCH="$HOME/work/.auto-new-day/dispatch/${TICKET}.json"
+  test -f "$DISPATCH" && echo "DISPATCH=$DISPATCH" || echo "DISPATCH=NONE"
+  git log -1 --format='%ar | %s' HEAD 2>/dev/null
+  ```
+  Combine with `$ARGUMENTS` parsing: if `$ARGUMENTS` matches `pr_feedback=([^ ]+)` capture the path as `<PR_FEEDBACK_PATH>`. Decision rule:
+  - `pr_feedback=<path>` in args → PR-feedback path, payload at `<path>`.
+  - `DISPATCH != NONE` AND `git log -1 --format=%ar HEAD` shows minutes-or-seconds ago AND the dispatch file has a non-empty `feedback[]` array → PR-feedback path, payload constructed from the dispatch (see PR-feedback section above for the schema map).
+  - Otherwise → analysis path (no per-reviewer notes; just orientation + any complex-flow notes).
 
 Resolve `<RANGE>` from `$ARGUMENTS`:
 
@@ -152,6 +205,14 @@ If the poll loop exits without finding the session, tell the user "hunk failed t
 **Skip this round entirely in the fast path** — the apply + navigate already happened in Round 2 inside the same bash subshell as the poll loop.
 
 In the analysis path (no pre-supplied comments), read `references/review-guidance.md`. Read the diff. Decide whether it contains complex flows or difficult paths.
+
+In the PR-feedback path (Round 1 detection fired), read `references/review-guidance.md` → "PR-feedback mode" for the per-thread note format. Build the batch JSON by walking the payload (each entry → one comment with `filePath` = `fix_file`, `newLine` = `fix_line`, `summary` = `<first-name>: <fix_summary>`, `rationale` = `they said: "<comment, ≤120 chars with …>"\n\n<thread_link>`). Plus build the Feature Explanation orientation note at the top of the diff. Plus, if the diff also has a complex flow worth a code-explanation note, append that — all three categories ship in the same `comment apply --stdin` batch (the validator and the apply both accept multi-entry batches).
+
+When auto-detecting from the auto-new-day dispatch JSON, map fields:
+- dispatch `feedback[i].author` → payload `author_handle` (gh login). The display name isn't in the dispatch; fall back to the handle in the hunk summary unless the operator has handed you a separate `author_displayName` map.
+- dispatch `feedback[i].body` → payload `comment` (truncate to ≤120 chars; if the body is multiline, take the first sentence only).
+- dispatch `feedback[i].path` + `line` → original comment location, NOT the fix location. To find the fix anchor, grep the diff for the same `path` and pick the nearest `+` line (most-recent commit). If no `+` line in that file landed in this session's commits, skip that thread — the fix happened in an earlier session and isn't yours to attribute.
+- dispatch `feedback[i].source` (e.g. `pr-review`, `pr-comment`) plus the PR URL from the dispatch JSON's top-level `prUrl` → construct `thread_link`. For PR review inline comments specifically, the dispatch may not carry the discussion id; in that case use the PR URL itself plus the file:line as the link (the operator can scroll to it).
 
 **If real comments to apply** — fire these two SEQUENTIALLY in the SAME bash command (joined with `&&`) so navigate never races apply:
 

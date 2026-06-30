@@ -53,8 +53,15 @@ return {
   keys = {
     {
       "<Tab>",
-      function() require("nvim-tree.api").tree.toggle() end,
-      desc = "tree: toggle",
+      function()
+        local api = require("nvim-tree.api")
+        if api.tree.is_visible() then
+          api.tree.close()
+        else
+          api.tree.open({ path = vim.fn.getcwd(), update_root = true })
+        end
+      end,
+      desc = "tree: toggle (always opens at cwd)",
     },
     {
       "sE",
@@ -121,6 +128,10 @@ return {
       for _, key in ipairs({ "b", "w", "B", "W" }) do
         vim.keymap.set("n", key, key, opts("native " .. key))
       end
+
+      -- Global <CR> is mapped to `za` (toggle fold) in keybindings/init.lua.
+      -- Restore the nvim-tree default so <CR> expands folders and opens files.
+      vim.keymap.set("n", "<CR>", api.node.open.edit, opts("open"))
 
       -- default_on_attach binds K to First Sibling; drop it so global K -> N wins.
       pcall(vim.keymap.del, "n", "K", { buffer = bufnr })

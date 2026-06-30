@@ -113,7 +113,7 @@ If only ONE PR was passed, proceed to Step 0a directly. The dispatcher mode is m
 
 ## Step 0a. Load applicable CLAUDE.md rules BEFORE fanning out
 
-Before anything else, snapshot the invocation directory. The skill `cd`s into each PR's checkout during Step 0b, so the original location has to be captured up front. This value drives where the per-PR `.pr/` log lives (Step 1b and Step 5c).
+Before anything else, snapshot the invocation directory. The skill `cd`s into each PR's checkout during Step 0b, so the original location has to be captured up front. This value drives where the per-PR log lives (Step 1b and Step 5c).
 
 ```bash
 INVOKED_FROM=$(pwd -P)
@@ -122,18 +122,23 @@ INVOKED_FROM=$(pwd -P)
 Then resolve the canonical log root once and remember it for every PR in the batch:
 
 ```bash
-# If INVOKED_FROM is inside any git repo, per-repo layout wins (one .pr/ folder
-# next to each repo's code). Otherwise, treat INVOKED_FROM as a multi-repo
-# parent (e.g. ~/work) and group all PR logs under <INVOKED_FROM>/.pr/<repo>/.
+# Resolve the target date once (--date arg or today).
+SCRIPTS="$HOME/work/.claude/skills/auto-new-day/scripts"
+DATE=$("$SCRIPTS/resolve-date.sh" ${DATE_ARG:-today})
+
+# If INVOKED_FROM is inside any git repo, per-repo layout wins (one
+# .inreview/<DATE>/pr-code-review/ folder next to each repo's code).
+# Otherwise, treat INVOKED_FROM as a multi-repo parent (e.g. ~/work) and
+# group all PR logs under <INVOKED_FROM>/.inreview/<DATE>/pr-code-review/<repo>/.
 if git -C "$INVOKED_FROM" rev-parse --show-toplevel >/dev/null 2>&1; then
   PR_LOG_LAYOUT="per-repo"
 else
   PR_LOG_LAYOUT="parent"
-  PR_LOG_ROOT="$INVOKED_FROM/.pr"
+  PR_LOG_ROOT="$INVOKED_FROM/.inreview/$DATE/pr-code-review"
 fi
 ```
 
-State the chosen layout in chat ("PR review logs will land under `~/work/.pr/<repo>/<N>.md` because cwd is not in a git repo.") so the operator can interrupt and override if the auto-detection picked wrong.
+State the chosen layout in chat ("PR review logs will land under `~/work/.inreview/<DATE>/pr-code-review/<repo>/<N>.md` because cwd is not in a git repo.") so the operator can interrupt and override if the auto-detection picked wrong. (Note: this used to be a separate `.pr/` folder; it now lives under `.inreview/<DATE>/pr-code-review/` so auto-new-day's per-date archive picks it up automatically — `/auto-new-day --date X` replays this report with zero copy-around.)
 
 Also resolve the operator's own GitHub login once. Step 5's author-aware dedup uses it to tell apart comments the operator wrote (candidates for INSIST or DROP) from comments other users wrote (always DROP since someone else has the thread):
 
@@ -261,7 +266,7 @@ Resolve the log path using `PR_LOG_LAYOUT` from Step 0a:
 
 ```bash
 if [ "$PR_LOG_LAYOUT" = "per-repo" ]; then
-  PR_LOG="$REPO_DIR/.pr/$PR_NUM.md"
+  PR_LOG="$REPO_DIR/.inreview/$DATE/pr-code-review/$PR_NUM.md"
 else
   PR_LOG="$PR_LOG_ROOT/$REPO/$PR_NUM.md"
 fi
@@ -728,23 +733,23 @@ Before opening Hunk or asking the operator anything, write the full consolidated
 **Path:**
 
 ```
-${REVIEWS_DIR:-$HOME/.reviews}/<repo>/<YYYY-MM-DD>/<author>/<pr-N>-<slug>.md
+<REPO_DIR>/.inreview/<DATE>/pr-code-review/pr-<N>-<slug>-full.md
 ```
 
-- `REVIEWS_DIR` is an optional env var the operator can set to relocate the archive (e.g. work-scoped under `$HOME/work/.reviews` if they want work and personal reviews separated). Default is `$HOME/.reviews`.
-- `<repo>` = `$REPO`.
-- `<YYYY-MM-DD>` = today, `$(date +%Y-%m-%d)`.
-- `<author>` = the GitHub login of the PR's author, from `jq -r .author /tmp/pr-$PR_NUM.meta.json` (fetched in Step 1).
-- `<pr-title-slug>` = sanitized PR title: lowercase, replace any non-alnum run with `-`, trim leading/trailing `-`, cap at 120 chars. Prefix with the PR number for uniqueness: `pr-<N>-<slug>.md`.
+- `<DATE>` = the resolved date (`--date` arg or today), same value used at Step 1b for `$PR_LOG`.
+- `<pr-title-slug>` = sanitized PR title: lowercase, replace any non-alnum run with `-`, trim leading/trailing `-`, cap at 120 chars. Prefix with the PR number for uniqueness, suffix with `-full` to distinguish from the short per-PR log at `pr-<N>.md` (Step 5c).
+- The full report lives next to the per-PR log in the same per-date archive so auto-new-day's snapshot picks BOTH up — `/auto-new-day --date X` can replay the full review verbatim.
+
+Retired: the previous `${REVIEWS_DIR:-$HOME/.reviews}/<repo>/<DATE>/<author>/pr-<N>-<slug>.md` archive. It's been folded into the per-date in-repo archive so there's one source of truth. The `reviews` fzf util now points at `~/work/baton-*/.inreview/*/pr-code-review/*.md` instead of `~/.reviews/`.
 
 ```bash
-REPORT_DIR="${REVIEWS_DIR:-$HOME/.reviews}/$REPO/$(date +%Y-%m-%d)/$AUTHOR"
-mkdir -p "$REPORT_DIR"
 SLUG=$(jq -r '.title' "/tmp/pr-$PR_NUM.meta.json" \
   | tr '[:upper:]' '[:lower:]' \
   | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//' \
   | cut -c1-120)
-REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG.md"
+REPORT_DIR="$REPO_DIR/.inreview/$DATE/pr-code-review"
+mkdir -p "$REPORT_DIR"
+REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG-full.md"
 ```
 
 **Contents (Markdown):** the report MUST include, in order:
@@ -757,13 +762,13 @@ REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG.md"
 
 Write the report BEFORE opening Hunk or asking the reduce question. The operator may interrupt at any point and the on-disk artifact survives.
 
-The `reviews` CLI util (commonly at `$SCRIPTS/shared/utilities/reviews`) fzf-picks any report under `${REVIEWS_DIR:-$HOME/.reviews}/` by date or across all dates.
+The `reviews` CLI util (commonly at `$SCRIPTS/shared/utilities/reviews`) fzf-picks any report under `~/work/baton-*/.inreview/*/pr-code-review/*.md` (the per-date in-repo archive) by date or across all dates.
 
 ## Step 5c. Append entry to the per-PR log
 
 Alongside the full archive at Step 5b, append a short summary to the per-PR log. The path was already resolved into `$PR_LOG` at Step 1b (using `$PR_LOG_LAYOUT` from Step 0a):
-- per-repo layout: `$REPO_DIR/.pr/$PR_NUM.md`
-- parent layout: `$PR_LOG_ROOT/$REPO/$PR_NUM.md`
+- per-repo layout: `$REPO_DIR/.inreview/$DATE/pr-code-review/$PR_NUM.md`
+- parent layout: `$PR_LOG_ROOT/$REPO/$PR_NUM.md`  (where `$PR_LOG_ROOT` = `<INVOKED_FROM>/.inreview/$DATE/pr-code-review`)
 
 This is the lightweight pointer that future re-reviews read at Step 1b. One entry per review run, one line per finding; full bodies live in the archive.
 
@@ -856,31 +861,45 @@ Rules:
 - `#` matches the order the ask loop will walk in Step 8.
 - If a PR has zero surviving findings, print one line per PR saying so. Continue to other PRs.
 
-### Step 6b. Open Hunk with ALL findings
+### Step 6b. Open Hunk with ALL findings + existing reviewer threads
 
-After all tables print, invoke the `hunk` skill in its **fast path** with EVERY finding (no pre-filter). One Hunk session per PR if multiple PRs are in scope.
+After all tables print, invoke the `hunk` skill in its **fast path** with EVERY finding (no pre-filter) AND every existing reviewer thread from Step 1 attached as additional notes. One Hunk session per PR if multiple PRs are in scope. The operator scrolls Hunk and sees BOTH new findings (from this multi-agent pass) AND existing threads (from prior reviewers) anchored to the same diff lines, so they can address everything in one TUI pass.
 
-**Before calling Skill(hunk), write the full comment batch to `/tmp/pr-<N>-comments.json`** using `newLine` anchors so each comment lands on the exact `+` line it references (never on a hunk position that resolves to an unchanged context line):
+**Before calling Skill(hunk), write the full comment batch to `/tmp/pr-<N>-comments.json`** using `newLine` anchors so each comment lands on the exact `+` line it references (never on a hunk position that resolves to an unchanged context line). The batch combines two categories:
 
 ```bash
 cat > /tmp/pr-<N>-comments.json <<'JSON'
 {
   "comments": [
     {"filePath": "src/foo.go", "newLine": 67,
-     "summary": "BLOCKER (92% ✓3): <one-line headline>",
+     "summary": "[NEW] BLOCKER (92% ✓3): <one-line headline>",
      "rationale": "<the full comment body from Step 5>"},
+    {"filePath": "src/foo.go", "newLine": 142,
+     "summary": "[THREAD] <author-login>: <one-line excerpt of their comment>",
+     "rationale": "they said: \"<comment body trimmed to ~280 chars with …>\"\n\n<permalink>\n\nthread state: <unanswered-by-you | you-replied | resolved>"},
     ...
   ]
 }
 JSON
 ```
 
+Two categories, distinguished by the `summary` prefix:
+
+- **`[NEW] ...`** — one entry per surviving finding from Step 5, in the same order as the table (BLOCKERs first, MAJORs next, MINORs last). NO filtering happens yet.
+- **`[THREAD] ...`** — one entry per existing reviewer thread from `/tmp/pr-<N>.existing-comments.json` (inline review-thread comments) + `/tmp/pr-<N>.existing-issue-comments.json` (top-level / issue-style comments) + `/tmp/pr-<N>.existing-reviews.json` (review-summary bodies with non-empty body text). Skip:
+  - Threads where the LATEST message is from the operator (`author.login == OPERATOR_LOGIN`) — they already engaged.
+  - Bot-authored entries (`author.type == "Bot"`, `*[bot]` login suffix, `github-actions`, `dependabot`, `renovate`, `coderabbitai`, `sonarcloud`, `codecov`).
+  - Empty review summaries (the bare APPROVED/REQUEST_CHANGES with no body — there's nothing to reply to).
+  - Threads already deduplicated against a `[NEW]` finding in Step 5's overlap dedup (don't double-anchor the same line).
+
+  Per-thread anchor: inline comments → `filePath` + `newLine` from the comment's `line` / `original_line` (use `newLine` when the comment anchors a `+` line in the current diff; use `oldLine` for `-` lines). Issue-style comments and review summaries don't have a file anchor — represent them with `hunkNumber: 0` so they land at the top of the diff as PR-wide threads, with the summary prefix making the kind clear.
+
 Rules for the JSON:
-- One entry per surviving finding from Step 5, in the same order as the table (BLOCKERs first, MAJORs next, MINORs last). NO filtering happens yet.
-- `newLine` MUST match the exact `file:line` from the consolidated finding, and that line MUST be a `+` line in `/tmp/pr-<N>.diff`. If the finding describes a range, pick the most specific anchor inside the range.
+- `newLine` MUST match the exact `file:line` from the consolidated finding or existing thread, and that line MUST be a `+` line in `/tmp/pr-<N>.diff`. If the finding describes a range, pick the most specific anchor inside the range.
 - Use `oldLine` instead only for findings about a deleted line.
-- NEVER use `hunkNumber` for diff-anchored findings.
-- The `summary` field includes the confidence + ✓ marker so the operator sees verification status in the Hunk TUI title.
+- NEVER use `hunkNumber` for diff-anchored findings; only use `hunkNumber: 0` for PR-wide threads (issue-style + review summaries that have no file anchor).
+- The `summary` field includes the `[NEW]` or `[THREAD]` prefix + confidence + ✓ marker (NEW only) so the operator sees status in the Hunk TUI title.
+- Cap threads at 30 per PR. If more exist, attach the 30 most recent (by `created_at` desc) and surface the count in the post-table summary ("attached 30 of 47 existing threads — older ones available in the existing-*.json files").
 
 Hunk's fast path validates every anchor before applying. If you fed it a misaligned line, the apply aborts with a `MISSING ADD <file>:<line>` message; rebuild the JSON with the correct anchor and retry.
 
@@ -946,7 +965,7 @@ done
 
 With `--repo`, `hunk session comment rm` takes exactly one positional: the `<commentId>`. The two-form signature is `<session-id> <commentId>` OR `<commentId> --repo <path>` — passing both an empty session-id and `--repo` errors with "Specify exactly one comment id with --repo".
 
-After pruning, also drop the dropped rows from the in-memory punch-list so Step 8 only walks survivors. The dropped findings stay in the persisted report at `${REVIEWS_DIR:-$HOME/.reviews}/.../pr-<N>-<slug>.md` and in the verification log at `/tmp/pr-<N>-verification.md` so the operator can recover them later.
+After pruning, also drop the dropped rows from the in-memory punch-list so Step 8 only walks survivors. The dropped findings stay in the persisted report at `<REPO_DIR>/.inreview/<DATE>/pr-code-review/pr-<N>-<slug>-full.md` and in the verification log at `/tmp/pr-<N>-verification.md` so the operator can recover them later.
 
 ### Step 7b. If the operator picks "No, walk all"
 
@@ -1090,6 +1109,38 @@ When `target_session=<name>` was passed in and Hunk is open in that session, lea
 
 That left pane sits idle waiting for the user. When the user runs `tmux attach -t <name>` and walks to that window, the spawned Claude prompts them via AskUserQuestion. Each PR has its own independent comment-poster instance; they don't share state.
 
+### Step 8c. Existing-threads reply loop
+
+After Step 8b's per-new-finding ask-then-post loop finishes (and the operator has had time to scroll Hunk, where `[THREAD] ...` notes from Step 6b are visible alongside the new findings), iterate the same set of existing reviewer threads that were attached to Hunk in Step 6b — for each, ask the operator whether to draft a reply.
+
+Build the thread list from the same JSON sources fetched in Step 1, applying the same filters as Step 6b (skip threads where the latest message is the operator's, skip bot authors, skip empty review summaries). Then walk them ONE AT A TIME via `AskUserQuestion`:
+
+```
+You have <N> unanswered reviewer threads on this PR. Walk them now?
+  - "Walk all <N>"  → step through each, draft-and-confirm via add-comment
+  - "Pick which"    → show the list with anchors and excerpts; operator picks indices to walk
+  - "Skip threads"  → finish without replies; remaining threads stay unanswered until next sweep
+```
+
+For each thread the operator chooses to walk:
+
+1. **Show the thread context** in chat (file:line anchor, author, last 2 messages trimmed to ~200 chars each, the permalink).
+2. **Invoke `/add-comment`** with the thread's permalink as the argument. `add-comment` owns the draft+fact-check+confirm+post flow — voice rules, per-comment yes/no gate, all of it. Do NOT inline-write the reply here; the `add-comment` skill is the source of truth for reply voice.
+3. **Wait for `add-comment` to return** (it returns either "posted" with a comment URL, "skipped" if the operator said no, or "blocked" with a reason). Record the outcome in `/tmp/pr-<N>-replies.tsv` (columns: `thread_id\toutcome\turl_or_reason`).
+
+After all threads are walked, print a one-line summary:
+
+```
+threads: <R> replied, <S> skipped, <F> filtered (already-engaged / bot / empty)
+```
+
+**Hard rule: `add-comment` owns posting.** Don't draft and post inline — always go through the skill. If `add-comment` isn't available in the current session, surface that as a one-line warning and skip the reply loop (don't try to ad-hoc the voice yourself; the result is what the user called out as a regression in past sessions).
+
+**Skip the reply loop entirely when:**
+- The operator picked "Skip threads" in the umbrella question.
+- Batch mode (`target_session` set) — the spawned pane Claude handles both new-findings posting AND the reply loop after it; this skill doesn't drive them when batch mode owns the session.
+- Zero threads survived the Step 6b filter (no unanswered, non-bot, non-empty threads on this PR).
+
 ## Step 9. Wrap
 
 After every PR's ask loop finishes (or immediately after Step 6b in batch mode, since the reduce-ask and ask-then-post both run in the spawned-pane Claude there), print ONE summary block:
@@ -1098,10 +1149,10 @@ After every PR's ask loop finishes (or immediately after Step 6b in batch mode, 
 posted <K> comments across <M> PR(s):
   PR #<N1>: <K1> posted, <S1> skipped, <F1> filtered  →  approve <P1>% <TIER1>
   PR #<N2>: <K2> posted, <S2> skipped, <F2> filtered  →  approve <P2>% <TIER2>
-reports:
-  ${REVIEWS_DIR:-$HOME/.reviews}/<repo1>/<date>/<author1>/pr-<N1>-<slug1>.md
-  ${REVIEWS_DIR:-$HOME/.reviews}/<repo2>/<date>/<author2>/pr-<N2>-<slug2>.md
-.pr logs appended this run (layout: per-repo or parent, picked at Step 0a):
+full reports:
+  <REPO1>/.inreview/<DATE>/pr-code-review/pr-<N1>-<slug1>-full.md
+  <REPO2>/.inreview/<DATE>/pr-code-review/pr-<N2>-<slug2>-full.md
+per-PR logs appended this run (layout: per-repo or parent, picked at Step 0a):
   <PR_LOG_1>
   <PR_LOG_2>
 audit logs: /tmp/pr-<N1>-verification.md, /tmp/pr-<N2>-verification.md, ...
@@ -1109,6 +1160,23 @@ audit logs: /tmp/pr-<N1>-verification.md, /tmp/pr-<N2>-verification.md, ...
 ```
 
 Nothing else. No recap of skipped findings, no encouragement.
+
+### Step 9a. Dispatched-session snapshot hook (conditional)
+
+A dispatching system (one that fans this skill out to async sessions and wants a per-run archive of artifacts) can opt in via two env vars set in the session bootstrap:
+
+- `$AUTO_NEW_DAY_DATE_DIR` — the per-run archive directory (existence of this var is the gate).
+- `$AUTO_NEW_DAY_SNAPSHOT_CMD` — a shell-evaluable command string that performs the snapshot. The dispatching system owns the command's content; this skill just runs it.
+
+If both are set, eval the command after the wrap summary. Otherwise skip the step entirely (operator invoked the skill directly outside any dispatch flow).
+
+```bash
+if [ -n "${AUTO_NEW_DAY_DATE_DIR:-}" ] && [ -n "${AUTO_NEW_DAY_SNAPSHOT_CMD:-}" ]; then
+  eval "$AUTO_NEW_DAY_SNAPSHOT_CMD" || true
+fi
+```
+
+Best-effort; never block on this. The dispatching system is responsible for making its command idempotent and silent-on-failure. This skill has no opinion about what the command does — that's a concern of whatever system spawned this session.
 
 ## Step 9b. Approving the PR (only on explicit operator request)
 

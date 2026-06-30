@@ -38,9 +38,60 @@ Jargon trap: words like "idempotent guard", "single source of truth", "stale row
 
 When you do apply a comment:
 
-- **Match length to complexity.** A simple observation gets a one-line rationale. A genuinely complex flow can get two or three sentences. Don't pad simple things with caveats, restatements, or background. If the rationale repeats the summary in longer words, cut the rationale.
-- **Plain words.** Write like you'd tell a colleague over chat. Lowercase, contractions, fragments are fine. Skip "moreover", "thus", "ensure that", "deliberately maintains", "asymmetric invariant", "subsequently", "in order to".
-- `summary` is a chat-line headline (~80 chars, no period). `rationale` is the "why" in one or two sentences. Don't restate the summary.
+- **Hard length cap.** `summary` is ONE chat-line (~80 chars, no period). `rationale` is one or two short sentences MAX. If you wrote three sentences, delete the third. If the rationale is over 35 words, cut it. Verbosity is the most common failure mode — re-read after writing and cut at least one phrase.
+- **No padding.** Cut "this is", "note that", "we have", "in order to", "additionally", "as a result", "such that", "for the purposes of". Cut every "v1 / v2 polish" hedge. Cut every "live-verified / empirically reproduced" boilerplate (the reviewer doesn't need your testing methodology in a code note). Cut every "see also line X" cross-reference unless the cross-reference is the whole point of the note.
+- **Plain words.** Write like you'd tell a colleague over chat. Lowercase, contractions, fragments are fine. Skip "moreover", "thus", "ensure that", "deliberately maintains", "asymmetric invariant", "subsequently".
+- **No academic phrasing.** Drop "the system MUST", "this REQUIRES that", capitalized RFC verbs. Imperatives don't belong in informational notes (see "Be unambiguous about who you're talking to" below).
+- `summary` is a chat-line headline (~80 chars, no period). `rationale` is the "why" in one or two short sentences. Don't restate the summary.
+
+### Length self-test before applying
+
+Read your rationale out loud. If it sounds like a stand-up update or a slack message, you're done. If it sounds like a design doc, cut it in half and re-read. Repeat until it sounds like a slack message.
+
+Concrete examples (each pair is the SAME finding, before/after the cut):
+
+Too long (~50 words, padded):
+> "LD's bulk PATCH /api/v2/members returns 200 even when individual members fail (e.g. SCIM-managed member, self-edit). The previous success_condition treated 200 as unconditional success and silently dropped failures. This commit adds a CEL guard on role grant + revoke that requires non-empty members and empty errors."
+
+Right size (~20 words):
+> "LD's bulk PATCH returns 200 even on per-member failure. The CEL guard catches the silent-success case via members + errors."
+
+Too long (~60 words, includes methodology):
+> "LD's bulk semantic-patch endpoint returns 200 on partial failure with errors:[{memberId: msg}] and the failed memberIDs absent from members[]. has() wraps size() so the expression stays safe if LD ever drops a field. Live-verified: success path empirically exercised; partial-fail was walked against the recorded response shape rather than a live test."
+
+Right size (~20 words):
+> "LD returns 200 with errors:[{id:msg}] on partial fail. has() guards size() against missing field. revoke at L452 is the same."
+
+## PR-feedback mode — one short note per addressed reviewer thread
+
+If the caller hands you a `pr_feedback` payload (e.g. `fix-bug` Phase 7b passing the End-of-phase summary, or any skill handing you a JSON file with reviewer threads addressed in this branch), or you detect a PR-feedback context yourself (see "Round 1 — context detection" in `SKILL.md`), attach ONE hunk note per addressed thread in addition to whatever complex-flow / feature-explanation note you'd normally leave.
+
+Each thread becomes one short note anchored on the line of the fix, NOT the line of the original comment. Format:
+
+- **summary** (~80 chars, no period): `<First-name>: <one-line paraphrase of how we fixed it>`. Use the reviewer's first name or login, not their full name — keeps the chat-line short.
+- **rationale** (2 short lines max, blank line between, no padding):
+  - Line 1: `they said: "<comment text, verbatim>"` (truncate with `…` if it's over ~120 chars; the link is one click away if they want the full text).
+  - Line 2: `<permalink to the comment / review / ticket>`.
+- **Anchor**: `filePath` + `newLine` of the fix. The caller's payload should carry this; if it only carries the original comment's line, look at the diff and pick the closest `+` line in the same file.
+
+Worked example. PR thread:
+
+> bjorn-c1 on `pkg/config/config.yaml:422`: "Grant uses the bulk semantic-patch endpoint which returns 200 even on partial failure. Add a success_condition guard checking errors == []."
+
+Fix landed at `pkg/config/config.yaml:418`. Hunk note:
+
+```json
+{
+  "filePath": "pkg/config/config.yaml",
+  "newLine": 418,
+  "summary": "bjorn: added the CEL guard for 200+errors partial-fail",
+  "rationale": "they said: \"PATCH /members returns 200 even on partial failure. Add a guard checking errors == [].\"\n\nhttps://github.com/conductorone/baton-launchdarkly/pull/9#discussion_r1234567890"
+}
+```
+
+Note how the rationale is two short lines, the comment text is verbatim (so the operator can recognize it without clicking), and the link is the second line so it's one-click reachable. No methodology, no v2-polish hedge, no cross-references.
+
+When there's also a complex-flow / feature-explanation note to attach (the existing "explain complex flows" behavior), include BOTH: one Feature Explanation orientation note at the top of the diff plus one note per addressed reviewer thread. The reviewer-thread notes attach at their own anchor lines.
 
 ### Be unambiguous about who you're talking to
 
