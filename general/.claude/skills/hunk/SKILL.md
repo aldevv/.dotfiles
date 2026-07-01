@@ -1,6 +1,6 @@
 ---
 name: hunk
-description: Analyze a diff, compose review notes that explain complex flows or difficult paths, then open a Hunk session in a new tmux window with the notes already attached. Requires tmux + `hunk` CLI. Use when the user types `/hunk`, `/hunk-review`, asks to "open hunk", "review with hunk", "show changes in hunk", or wants to review a PR/branch/commit interactively in the Hunk TUI. Do NOT trigger for plain PR review prose with no Hunk/TUI mention (use `code-review:code-review`), for posting a comment on an existing PR/MR thread (use `add-comment`), for whole-plugin audits (use `neovim-plugin-review`), or when not inside tmux.
+description: Analyze a diff, compose review notes that explain complex flows or difficult paths, then open a Hunk session as a pane inside the caller claude session's current tmux window with the notes already attached. Requires tmux + `hunk` CLI. Use when the user types `/hunk`, `/hunk-review`, asks to "open hunk", "review with hunk", "show changes in hunk", or wants to review a PR/branch/commit interactively in the Hunk TUI. Do NOT trigger for plain PR review prose with no Hunk/TUI mention (use `code-review:code-review`), for posting a comment on an existing PR/MR thread (use `add-comment`), for whole-plugin audits (use `neovim-plugin-review`), or when not inside tmux.
 argument-hint: [target]   # e.g. "main...feature", "HEAD~1", "--pr 581", "pr 30", or a bare PR number. Omit for current-branch vs upstream default.
 allowed-tools:
   - Bash
@@ -30,7 +30,7 @@ Round 1 already loads it (`cat "$(hunk skill path)"`). Treat that read as mandat
 
 ## When NOT to use
 
-- Not inside tmux (`$TMUX` unset). The skill has nowhere to open the Hunk window.
+- Not inside tmux (`$TMUX` unset). The skill has nowhere to split off the Hunk pane.
 - `hunk` CLI not installed. Tell the user to install it first.
 - The user wants PR-review prose, not an interactive TUI session — defer to `code-review:code-review`.
 - The user wants to post a comment to an existing PR/MR thread — defer to `add-comment`.
@@ -46,23 +46,23 @@ If any of these fail, tell the user what failed and stop. Don't proceed to Round
 
 ## CRITICAL: Anchor every tmux call on `$TMUX_PANE`
 
-The pane-count check and the eventual `split-window` / `new-window` MUST target Claude's pane, NOT the active client's current window. Without `-t`, tmux uses whatever the user is currently looking at, which is often a different window in the same session (Claude's task ran for a while; the user moved focus). The pane then lands in the wrong window: a split next to some unrelated work, or a new window in the wrong session if the user switched sessions.
+Hunk always opens as a `split-window` off Claude's pane in the caller's current tmux window. The `-t "$TMUX_PANE"` target MUST be set on every tmux invocation; without it, tmux uses whatever the user is currently looking at (often a different window in the same session, because Claude's task ran for a while and the user moved focus), and the split lands in the wrong window.
 
 `$TMUX_PANE` is set in Claude's bash environment to the pane id (`%NN`) of the pane Claude is running in. Use it as the target on every tmux invocation:
 
-- `tmux display-message -t "$TMUX_PANE" -p '#{window_panes}'` — pane count of Claude's window
-- `tmux display-message -t "$TMUX_PANE" -p '#{session_name}'` — Claude's session name
-- `tmux split-window -t "$TMUX_PANE" ...` — split Claude's pane
-- `tmux new-window -t "<claude-session>:" ...` — new window in Claude's session (derive `<claude-session>` from `$TMUX_PANE`, never from `tmux display-message` without `-t`)
+- `tmux split-window -t "$TMUX_PANE" ...` — split Claude's pane (this is the ONLY tmux open call in the flow).
+- `tmux display-message -t "$TMUX_PANE" -p '#{...}'` — any pane-metadata read for diagnostics.
 
-This does not change focus behavior. `split-window` and `new-window` still auto-switch the focused client viewing Claude's session; clients viewing other windows or sessions are not yanked.
+`new-window` is NOT part of this skill anymore. If the user asks for a separate window, tell them the skill only splits the current one and let them promote the pane themselves with `<prefix> !` (break pane out to its own window) after the fact.
+
+`split-window` auto-switches focus for clients viewing Claude's session; clients viewing other windows or sessions are not yanked.
 
 ## Parallelism rules
 
-Fire as much as possible in parallel. The workflow is three rounds; everything within a round goes in a single message with parallel tool calls. Inter-round work is serial only because later rounds need earlier rounds' outputs (range, pane count, diff text).
+Fire as much as possible in parallel. The workflow is three rounds; everything within a round goes in a single message with parallel tool calls. Inter-round work is serial only because later rounds need earlier rounds' outputs (range, diff text).
 
-- **Round 1 — Discovery** (parallel): bundled skill, repo root, default branch, pane count, hook-prompt state, (if PR arg) `gh pr view`.
-- **Round 2 — Open + read** (the `git diff` and `tmux split/new-window` are parallel; an active poll on `hunk session list` confirms the session is live before Round 3; do NOT use a fixed `sleep` — poll instead).
+- **Round 1 — Discovery** (parallel): bundled skill, repo root, default branch, hook-prompt state, (if PR arg) `gh pr view`.
+- **Round 2 — Open + read** (the `git diff` and `tmux split-window` are parallel; an active poll on `hunk session list` confirms the session is live before Round 3; do NOT use a fixed `sleep` — poll instead).
 - **Round 3 — Apply** (sequential within the round): `comment apply` then `navigate`. These race if parallel.
 
 ### PR-feedback path: addressed-reviewer summary
@@ -112,7 +112,7 @@ If the caller hands you a ready-to-apply comment batch (e.g. `pr-code-review` in
 
 - **Round 1 — Discovery** unchanged. Skip the `gh pr view` parallel call only if the caller also provided `<RANGE>` verbatim.
 - **Round 2 — Open + apply** (single message, all parallel except the apply, which is gated on session-up):
-  - `tmux split-window` / `new-window` to open the Hunk TUI
+  - `tmux split-window -h -l 70% -t "$TMUX_PANE"` to open the Hunk TUI as a pane in Claude's window (only mode; no new-window branch)
   - poll-then-apply one-liner (below), which blocks on `hunk session list` finding the repo, then pipes the supplied JSON to `hunk session comment apply --stdin`
   - `hunk session navigate --next-comment` runs AFTER the poll-then-apply in the SAME bash subshell so it's strictly sequenced without an extra round trip
 
@@ -130,7 +130,6 @@ Fire ALL of these in a single message:
 - `cat "$(hunk skill path)"` (bundled session-control reference, the source of truth for `hunk session ...` semantics)
 - `git rev-parse --show-toplevel`
 - `git symbolic-ref --short refs/remotes/origin/HEAD` (faster than `git remote show origin`; the default branch is `${out#origin/}`)
-- `tmux display-message -t "$TMUX_PANE" -p '#{window_panes} #{session_name}'` (drives split-vs-new-window in Round 2; `-t "$TMUX_PANE"` anchors on Claude's pane so the user's current view never affects the decision — see "Anchor every tmux call on `$TMUX_PANE`" above. The two fields come back space-separated; capture both since Round 2 also needs `session_name`)
 - `test -f "$HOME/.cache/hunk/state.json" && cat "$HOME/.cache/hunk/state.json" || echo MISSING` (Round 4 prompt state)
 - If `$ARGUMENTS` matches `^(--pr +)?[0-9]+$` or `^pr +[0-9]+$` (a numeric PR identifier, with optional `pr` / `--pr` prefix): also fire `gh pr view <N> --json baseRefName,headRefName,headRepository`. `HEAD~N` does NOT match because it starts with `HEAD`.
 - **PR-feedback detection** (fires the PR-feedback path described below): in parallel, run
@@ -161,18 +160,11 @@ Resolve `<RANGE>` from `$ARGUMENTS`:
 Once `<RANGE>` is known, single message with these in parallel:
 
 - `git diff --no-color <RANGE>` (full diff for you to read; serves double duty as the emptiness check, no separate `--stat` call needed). **Skip in the fast path** — pre-supplied callers already analyzed the diff.
-- Open Hunk in tmux. Pick from `$ARGUMENTS` and Round 1's pane count, in priority order:
-  - **`target_session=<name>` is set** → open in that session, always as a new window. Create the session detached first if it doesn't exist:
-    ```bash
-    tmux has-session -t "<name>" 2>/dev/null || tmux new-session -d -s "<name>" -n placeholder
-    tmux new-window -t "<name>:" -n "hunk-$(basename <REPO_ROOT>):$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" "cd <REPO_ROOT> && hunk diff <RANGE>"
-    ```
-    Window does NOT auto-focus because the target session is different from the current session. That's intentional for batch use; the operator will `tmux attach -t <name>` after the run.
-  - **`force_new_window=true` is set (without `target_session`)** → `tmux new-window -t "$(tmux display-message -t "$TMUX_PANE" -p '#{session_name}'):" ...` in Claude's session regardless of pane count.
-  - **1 pane and no directives** → `tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff <RANGE>"`. `-l 70%` sizes the new pane (hunk) to 70% of the original pane's width; the diff viewer is the focal task and benefits from horizontal real estate (split-view diff columns), so Claude shrinks to ~30% on the left rather than splitting 50/50.
-  - **>1 panes and no directives** → `tmux new-window -t "$(tmux display-message -t "$TMUX_PANE" -p '#{session_name}'):" -n "hunk-$(basename <REPO_ROOT>):$(git -C <REPO_ROOT> rev-parse --abbrev-ref HEAD)" "cd <REPO_ROOT> && hunk diff <RANGE>"`
-  - The window-name shape is `hunk-<repo>:<branch>`. The status-bar regex splits on the first non-path char, so the left ("folder" color, slightly whiter) reads `hunk-<repo>` and the right ("program" color, soft blue) reads the branch — branch becomes the most visible signal at a glance. The repo-included prefix keeps dedupe per-branch across multiple repos in the same tmux session.
-  - If the user said "open in a new window" even with one pane, skip the conditional and go straight to `new-window`.
+- Open Hunk in tmux as a pane split off Claude's pane, ALWAYS:
+  ```bash
+  tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff <RANGE>"
+  ```
+  `-l 70%` sizes the new pane (hunk) to 70% of the original pane's width; the diff viewer is the focal task and benefits from horizontal real estate (split-view diff columns), so Claude shrinks to ~30% on the left rather than splitting 50/50. There is NO conditional on pane count, NO alternative `new-window` branch, and NO `target_session` / `force_new_window` opt-out. If the user asks for a "new window" or a "separate session," tell them the skill only splits — they can break the pane out afterwards with `<prefix> !` or move it to another window with `<prefix> .` if they want it standalone.
 - Active poll for session-up (replaces the old `sleep 2 && hunk session list`). MUST match on the absolute `repo:` path, not the basename, otherwise two repos with the same basename collide. MUST run inside the SAME bash command as any follow-up so the apply only fires after the session resolves:
   ```bash
   for i in $(seq 1 30); do
@@ -194,9 +186,9 @@ Once `<RANGE>` is known, single message with these in parallel:
   ```
   The diff-line validator (see Round 3) runs BEFORE this chain on its own line; misaligned comments abort the batch instead of half-attaching. If you split poll and apply across two separate tool calls, you'll regress to the bug where the apply landed zero comments because the session wasn't visible yet in the second subshell.
 
-`split-window` and `new-window` auto-switch focus for clients viewing Claude's session. A client attached to a different session, or viewing a different window in Claude's session, is not yanked — they'll see the new pane next time they navigate to Claude's window.
+`split-window` auto-switches focus for clients viewing Claude's session. A client attached to a different session, or viewing a different window in Claude's session, is not yanked — they'll see the new pane next time they navigate to Claude's window.
 
-If the diff returns empty, tell the user and stop. The Hunk window will be empty too; either close it (`tmux kill-pane -t <pane>`) or leave it for the user.
+If the diff returns empty, tell the user and stop. The Hunk pane will be empty too; either close it (`tmux kill-pane -t <pane>`) or leave it for the user.
 
 If the poll loop exits without finding the session, tell the user "hunk failed to start" and stop. Do NOT proceed to apply on the assumption "it'll be up by the next tool call" — that's the regression that drops 12 comments silently.
 

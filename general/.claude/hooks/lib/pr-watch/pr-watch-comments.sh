@@ -207,10 +207,10 @@ log: $LOG" \
     apply_policy="Blocking=0, Suggestions=${suggestions}. For EACH surviving finding, use AskUserQuestion BEFORE making any change. Group closely related findings into one question; otherwise ask per finding. Only apply findings the user approves."
   fi
 
-  # The pr-comment-fix skill owns the workflow body. The hook only ships the
+  # The auto-pr-comment-fix skill owns the workflow body. The hook only ships the
   # context block + the review body as the skill's first user message.
   read -r -d '' prompt <<EOF || true
-/pr-comment-fix
+/auto-pr-comment-fix
 
 URL: ${URL}
 Platform: ${PLATFORM}

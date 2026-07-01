@@ -141,11 +141,11 @@ log: $LOG" \
     gitlab) log_cmd="glab ci view <job-id>  # or 'glab ci trace <job-id>' for raw logs" ;;
   esac
 
-  # The pr-ci-fix skill owns the workflow body. The hook only ships the
+  # The auto-pr-ci-fix skill owns the workflow body. The hook only ships the
   # context the skill needs as its first user message.
   local prompt
   read -r -d '' prompt <<EOF || true
-/pr-ci-fix
+/auto-pr-ci-fix
 
 URL: ${URL}
 Platform: ${PLATFORM}

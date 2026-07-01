@@ -214,53 +214,57 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
 ## Batch mode
 
-When the user asks to mark a set of comments at once (e.g. "answer all of <reviewer>'s comments", "mark all as done/fixed"), the confirmation shape depends on N (count of replies to post):
+When the user asks to mark a set of comments at once (e.g. "answer all of <reviewer>'s comments", "mark all as done/fixed"), the default confirmation is a tmux pane with an editable draft file (see below). An editable file beats a wall of `AskUserQuestion` options every time: the operator can tweak wording, drop blocks, or SKIP the ones they don't want with a normal text editor instead of a modal picker.
+
+Fallback shape when tmux is NOT available (`$TMUX` unset):
 
 - **N ≤ 2** → single `AskUserQuestion` showing a comment-id → reply table with the **verbatim** body for each.
-- **N > 2 OR the user explicitly asks to edit** → open a tmux pane with an editable draft file (see below). Always do this when tmux is available and N > 2; one giant `AskUserQuestion` with 5+ drafts is hard to read and impossible to edit inline.
+- **N > 2** → still surface the drafts, but stack them in one `AskUserQuestion` prompt with the verbatim bodies. Warn the user inline that editing isn't possible without tmux.
 
 Either way, the user's "post" decision happens AFTER they see the verbatim bodies. Skip per-reply confirmation and fact-checking once they say go. Each successful post still records to `references/examples.md`.
 
 The batch-mode confirmation is REQUIRED, not optional. A prior plan listing reply intent in summary form (e.g. "reply 'done' to threads X/Y/Z") is not a substitute — the bodies must be shown literally. If the user said "go ahead" or "do it" without seeing the bodies, surface them and ask again.
 
-### Tmux-pane draft mode (N > 2)
+### Tmux-pane draft mode (default)
 
-When tmux is available (`$TMUX` set) and N > 2, swap the AskUserQuestion table for an editable draft file in a sibling tmux pane.
+When tmux is available (`$TMUX` set), always swap the AskUserQuestion table for an editable draft file in a sibling tmux pane, regardless of batch size. This is the default path.
 
 1. Build two files under `/tmp/`:
-   - `/tmp/add-comment-drafts-<PR_OR_MR>-<TIMESTAMP>.txt` — human-editable, one block per reply.
+   - `/tmp/add-comment-drafts-<PR_OR_MR>-<TIMESTAMP>.md` — human-editable, one block per reply. The `.md` extension is deliberate: `---` separators render as horizontal rules, `# block N` renders as a heading, and the bullet fields render as a list, giving free syntax highlighting.
    - `/tmp/add-comment-meta-<PR_OR_MR>-<TIMESTAMP>.json` — sidecar mapping each block index to the post metadata (thread_id, kind, post URL params). Keeps the draft file uncluttered so the operator only sees the fields that matter.
 
-2. Block shape in the draft file (one per reply, separated by `---` on its own line):
+2. Block shape in the draft file. Blocks are separated by `---` on its own line, and each block starts with a `# block N` heading followed by four bullet lines:
 
    ```
-   # === block N ===
-   author: <display name or login>
-   comment: <one-line paraphrase of what they raised>
-   context: <one or two short lines on what we did / decided / verified>
-   answer: <the proposed reply text>
+   ---
+   # block N
+   - author: <display name or login>
+   - comment: <one-line paraphrase of what they raised>
+   - context: <one or two short lines on what we did / decided / verified>
+   - answer: <the proposed reply text>
+   ---
    ```
 
-   The operator edits the `answer:` line as needed (or sets `answer: SKIP` to drop that block). The other fields are context-only and should not be edited (the skill ignores changes to them).
+   The operator edits the `- answer:` bullet as needed (or sets `- answer: SKIP` to drop that block). The other bullets are context-only and should not be edited (the skill ignores changes to them).
 
 3. Open the draft file in a tmux pane using the operator's editor. Anchor on `$TMUX_PANE` per the global tmux rules:
 
    ```bash
    editor="${VISUAL:-${EDITOR:-nvim}}"
-   tmux split-window -h -l 60% -t "$TMUX_PANE" "$editor /tmp/add-comment-drafts-<PR>-<TS>.txt"
+   tmux split-window -h -l 60% -t "$TMUX_PANE" "$editor /tmp/add-comment-drafts-<PR>-<TS>.md"
    ```
 
    If the operator's tmux session has more than one pane already, prefer `new-window` over `split-window` to avoid disturbing existing splits.
 
-4. Surface a one-line "edit then say 'post'" message in chat, then call `AskUserQuestion` with three options: **Post all** (post every non-SKIP block), **Cancel** (drop the batch), **Skip the bot blocks** (filter `author:` matching `*[bot]` and post the rest).
+4. Surface a one-line "edit then say 'post'" message in chat, then call `AskUserQuestion` with three options: **Post all** (post every non-SKIP block), **Cancel** (drop the batch), **Skip the bot blocks** (filter `- author:` matching `*[bot]` and post the rest).
 
 5. On "Post", re-read the draft file. Skip rules (any one of these drops the block entirely — nothing posts):
-   - Block header (`# === block N ===`) deleted from the file → that block does not post.
-   - `answer:` line missing → does not post.
-   - `answer:` value is empty (whitespace only) → does not post.
-   - `answer:` value is literally `SKIP` (case-insensitive) → does not post.
+   - Block heading (`# block N`) deleted from the file → that block does not post.
+   - `- answer:` bullet missing → does not post.
+   - `- answer:` value is empty (whitespace only) → does not post.
+   - `- answer:` value is literally `SKIP` (case-insensitive) → does not post.
 
-   For every block that survives, parse the `# === block N ===` header to recover the index, look up the matching sidecar entry by that index, post the `answer:` body via the endpoint named in the sidecar (`reply-inline` / `new-line` / `top-level`). Record each posted body to `references/examples.md` as usual.
+   For every block that survives, parse the `# block N` heading to recover the index, look up the matching sidecar entry by that index, post the `- answer:` body via the endpoint named in the sidecar (`reply-inline` / `new-line` / `top-level`). Record each posted body to `references/examples.md` as usual.
 
    The skill MUST NOT fall back to the sidecar's full list if the file is partial — the file is the source of truth for "what to post". Deleting a block IS the gesture for "don't post this one"; the skill respects that, no questions asked.
 
@@ -269,24 +273,24 @@ When tmux is available (`$TMUX` set) and N > 2, swap the AskUserQuestion table f
 A worked example of the file shape:
 
 ```
-# === block 1 ===
-# thread_id: 3494400256  (do not edit — used by the post step)
-author: mateoHernandez123
-comment: grant returns 200 even on partial failure — add a guard on errors == []
-context: addressed by 695d6a8. pkg/config/config.yaml:418 now requires members non-empty AND errors empty.
-answer: done.
-
 ---
-
-# === block 2 ===
-# thread_id: 3494400267
-author: mateoHernandez123
-comment: deleting the last Owner returns 400 — map it
-context: openapi documents only 204/401/403/404/409/429 for DELETE /members/{id}. live curl returned 409. kept 409, tightened the message.
-answer: no 400 in the openapi. kept 409, expanded the message to cover self / last owner / scim.
+# block 1
+<!-- thread_id: 3494400256  (do not edit, used by the post step) -->
+- author: mateoHernandez123
+- comment: grant returns 200 even on partial failure, add a guard on errors == []
+- context: addressed by 695d6a8. pkg/config/config.yaml:418 now requires members non-empty AND errors empty.
+- answer: done.
+---
+# block 2
+<!-- thread_id: 3494400267 -->
+- author: mateoHernandez123
+- comment: deleting the last Owner returns 400, map it
+- context: openapi documents only 204/401/403/404/409/429 for DELETE /members/{id}. live curl returned 409. kept 409, tightened the message.
+- answer: no 400 in the openapi. kept 409, expanded the message to cover self / last owner / scim.
+---
 ```
 
-The comment-prefixed `# thread_id:` line is for orientation only; the parser reads the matching entry from the sidecar JSON, not from this comment. If the operator deletes or rearranges the `# === block N ===` headers, the sidecar binding breaks — the skill detects this (count mismatch or stale block N reference) and stops with a clear error rather than guessing.
+The `<!-- thread_id: ... -->` HTML comment is for orientation only (invisible in rendered markdown); the parser reads the matching entry from the sidecar JSON, not from this comment. If the operator deletes or rearranges the `# block N` headings, the sidecar binding breaks. The skill detects this (count mismatch or stale block N reference) and stops with a clear error rather than guessing.
 
 ## Common failure modes
 

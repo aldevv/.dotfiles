@@ -1,18 +1,18 @@
 ---
-name: pr-comment-fix
-description: Single-pass automated reviewer-bot feedback handler for a PR/MR. Spawned by the `pr-watch` PostToolUse hook in a fresh tmux window inside a throwaway git worktree on a `pr-review-fix-<short_sha>` branch when a review bot (github-actions on GitHub, the configured GitLab review bot on GitLab) posts a review with actionable findings tied to HEAD. Trigger on `/pr-comment-fix` (the hook's first user message starts with this), or when the user explicitly asks for "handle the review bot feedback on this PR", "fix the bot's review", "the reviewer bot flagged things, look at them". Do NOT invoke manually unless you are inside a `pr-review-fix-*` worktree spawned by `pr-watch` — the skill assumes the worktree, the throwaway branch, and the context block that the hook injects. Sibling: `pr-ci-fix` handles red CI builds, not review-bot comments.
+name: auto-pr-comment-fix
+description: Single-pass automated reviewer-bot feedback handler for a PR/MR. Spawned by the `pr-watch` PostToolUse hook in a fresh tmux window inside a throwaway git worktree on a `pr-review-fix-<short_sha>` branch when a review bot (github-actions on GitHub, the configured GitLab review bot on GitLab) posts a review with actionable findings tied to HEAD. Trigger on `/auto-pr-comment-fix` (the hook's first user message starts with this), or when the user explicitly asks for "handle the review bot feedback on this PR", "fix the bot's review", "the reviewer bot flagged things, look at them". Do NOT invoke manually unless you are inside a `pr-review-fix-*` worktree spawned by `pr-watch`, the skill assumes the worktree, the throwaway branch, and the context block that the hook injects. Sibling: `auto-pr-ci-fix` handles red CI builds, not review-bot comments.
 argument-hint: "The hook injects a context block (URL, Platform, Commit, Blocking, Suggestions, Apply policy, Worktree, Fix branch, Main checkout, PR branch, Review-body file) followed by the review body. If invoked manually, paste an equivalent block + body."
 ---
 
-# pr-comment-fix
+# auto-pr-comment-fix
 
-You were spawned by the `pr-watch` hook into a fresh git worktree on a throwaway branch `pr-review-fix-<short_sha>`, created off the exact commit the bot reviewed. The operator's main checkout still has the PR branch checked out elsewhere — do NOT switch branches in their checkout and do NOT touch their working tree.
+You were spawned by the `pr-watch` hook into a fresh git worktree on a throwaway branch `pr-review-fix-<short_sha>`, created off the exact commit the bot reviewed. The operator's main checkout still has the PR branch checked out elsewhere, do NOT switch branches in their checkout and do NOT touch their working tree.
 
 Your job is **one** single, evidence-driven pass on the bot's findings. The bot is often wrong. Verify before fixing. After one pass, you ask whether to merge and you stop.
 
 ## Context block
 
-The first user message after `/pr-comment-fix` contains a header block, then the review body:
+The first user message after `/auto-pr-comment-fix` contains a header block, then the review body:
 
 ```
 URL: <pr/mr url>

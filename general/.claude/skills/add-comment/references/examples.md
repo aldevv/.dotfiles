@@ -15,13 +15,15 @@ increment from there.
 
 - done. (×28)
 - good catch, will fix. (×1)
-- fixed. (×5)
+- fixed. (×6)
 - done (×1)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
 - deleted. (×2)
 - moved to helpers.go. (×1)
+- fixed (×1)
+- fixed. no longer seeded from public data. (×1)
 
 ### Replies — pushback
 
@@ -31,6 +33,8 @@ increment from there.
 - enable/disable is not in the connector because the API doesn't expose it (×1)
 - Couldn't find a 400 in the OpenAPI, so I kept 409 and just expanded the message to cover self / last owner / SCIM. (×1)
 - new success_condition catches it. so it works as is (×1)
+- not a blocker, goja has no web crypto. (×1)
+- keeping math.random. goja has no web crypto. (×1)
 
 ### New line comments — feedback
 

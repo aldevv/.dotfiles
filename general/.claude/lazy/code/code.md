@@ -76,6 +76,10 @@ Exception: tests. A one-line function-header comment naming a non-obvious scenar
 
 The "Forbidden patterns" and "Justified comments" sections below show what these rules look like in practice.
 
+### Comments about runtime capabilities are snapshots, not facts
+
+When an existing comment asserts a runtime capability ("this runtime has no X", "X isn't available", "the interpreter doesn't expose Y"), treat it as a snapshot from whenever it was written, not a current fact. Before deferring to it, feature-detect: `typeof X === "function"` at runtime or grep the upstream API surface. Both take 30 seconds and beat a stale claim. Especially when a review or bot flags the capability, that's the trigger to verify, not the trigger to defend the comment.
+
 ### Forbidden patterns
 
 #### 1. Restating the next line

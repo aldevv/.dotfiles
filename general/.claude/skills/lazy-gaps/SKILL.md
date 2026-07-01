@@ -113,7 +113,13 @@ If creating a new lazy file is in the plan, surface the proposed filename + `**R
 
 ### 6. Apply edits
 
-Surgical `Edit` calls. One pass per target file. Confirm each file still parses (the lazy index entry exists if a new file was added, the `**Read when**` trigger is grammatical, no broken markdown fences).
+Delegate the actual file modification to the `claude-md-save` skill — one invocation per NOT-COVERED-KEEP item. Do NOT run raw `Edit` calls for new-rule adds. `claude-md-save` owns the shared plumbing: symlink resolution, section-picking, `CLAUDE.local.md` fallback, lazy-index registration in the parent CLAUDE file, `.git/info/exclude` writes, and the work/global/project scope decision. Duplicating any of that here rots the moment `claude-md-save` gains a step.
+
+For each NOT-COVERED-KEEP item, invoke the skill with the distilled rule text. `claude-md-save` re-runs its own target decision; when its choice differs from the target the operator approved in Step 5, surface the divergence in the Step 7 report so the operator can decide whether to move the entry. For the common case (scope=work + a rule that grep-audits into a specific lazy file), both skills land on the same target.
+
+For COVERED-BUT-WRONG items, keep using surgical `Edit` calls. `claude-md-save` is append-only, it does not rewrite an existing line in place, so an outdated rule needs a direct edit anchored on the wrong text.
+
+After every edit (delegated or direct), confirm the file still parses: the lazy-index entry exists if a new file was added, the `**Read when**` trigger is grammatical, no broken markdown fences.
 
 Do NOT commit. The operator owns the commit.
 
@@ -154,6 +160,6 @@ Audit result:
 
 ## Sibling skills
 
-- `claude-md-save` — single-rule saves the operator types directly ("save this in my claude"). `lazy-gaps` runs the broader audit pass; if you only have one rule, prefer the simpler skill.
+- `claude-md-save` — invoked by Step 6 above to actually write NOT-COVERED-KEEP entries. Owns symlink resolution, target-file decision, section-picking, lazy-index registration, and gitignore. Also usable directly when the operator has a single rule to save ("save this in my claude") and doesn't need the audit pass.
 - `claude-md-simplify` — restructure / trim an oversized CLAUDE.md or lazy file. Different problem; this skill ADDS rules and fixes wrong ones, simplify CONSOLIDATES.
 - `trigger-improver` — once a lazy file's `**Read when**` clause exists, this skill tunes the wording to fire correctly. Use after `lazy-gaps` creates the entry, if its triggers don't match real queries.

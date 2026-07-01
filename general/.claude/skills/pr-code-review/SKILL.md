@@ -1,7 +1,7 @@
 ---
 name: pr-code-review
 description: Multi-angle review of one OR more GitHub PRs. The coordinator adaptively picks an agent count between 1 and 12 plus an effort tier (low / medium / high) per PR based on the PR's scope, importance, and complexity — a one-file typo gets 1 agent at low effort; a security-sensitive multi-file refactor gets 10-12 at high effort. The user can still override with `count=<N>` or a leading integer. Loads applicable CLAUDE.md / CLAUDE.local.md / lazy rules from cwd, walking up to home, before fanning out, and passes the loaded rules to every subagent. After the review agents return, spawns a second parallel verification pass that has DIFFERENT subagents fact-check every factual claim. BLOCKER and MAJOR findings MUST be verified by public-doc fetch, local reproduction on the checked-out PR branch, or runtime-path trace through code; the "very obvious from the diff" escape hatch requires the verifier to state explicitly that no extra verification was needed. Each consolidated finding ships with a confidence percentage (0-100%), a ✓ marker, and the verification mode used. Opens Hunk with ALL findings attached first, then asks the operator a yes/no whether to reduce to the most important + highest-confidence findings (the skill picks an integer between 1 and 5 based on confidence and importance), then walks each surviving finding with the user for Yes-post / Edit / Skip. Trigger on "/pr-code-review <pr-or-list>", "code review this PR with N subagents", "review these PRs with subagents", "do a multi-angle review of PR #N", or any explicit request to deeply review one or more PRs. Use `pr-code-review` for explicit PRs with operator-in-the-loop comment posting. Sibling skills (project-scoped batch drivers like `pr-code-review-all`) call this skill under the hood.
-argument-hint: <pr-or-list> [count=<N>] (e.g. https://github.com/owner/repo/pull/80, "owner/repo#80 owner/other-repo#42 count=9", or "9 <url1> <url2>")
+argument-hint: <pr-or-list> [count=<N>] [--no-subagents] (e.g. https://github.com/owner/repo/pull/80, "owner/repo#80 owner/other-repo#42 count=9", or "9 <url1> <url2>"). `--no-subagents` (or `NO_SUBAGENTS=1` in env) collapses every parallel review / verification `Agent(...)` spawn into a sequential `TaskCreate` list in the main session — slower wall-time, much cheaper token cost.
 ---
 
 # pr-code-review
@@ -17,6 +17,10 @@ The log's location depends on where the operator invoked the skill (`INVOKED_FRO
 The repo-local layout keeps the log next to its repo. The parent-folder layout keeps cross-repo reviews grouped together, which is the common case when batch-reviewing PRs from a multi-repo home like `~/work`.
 
 See `references/examples.md` for sample findings, comment phrasing, and ask/post loop output.
+
+## Subagent execution mode (`--no-subagents` / `NO_SUBAGENTS=1`)
+
+Default: the parallel review / verification / hunk-prep fan-outs described below fire as designed (fastest wall time, highest token cost). Passing `--no-subagents` in `$ARGUMENTS`, OR setting `NO_SUBAGENTS=1` in the environment, replaces EVERY `Agent(...)` parallel-spawn step in this skill with a `TaskCreate` list executed sequentially by the main session — one task per would-be subagent role (each review lens, each verification pass), same brief, same synthesis at the end. Trades wall time for token cost (no context duplication across N subagents). `auto-new-day` sets this by default; its `--fast` flag suppresses it.
 
 ## CRITICAL: Approving a PR — no body unless explicitly asked
 
@@ -48,16 +52,14 @@ Multiple PRs are space-separated in the arg string. Order does not matter; agent
 
 Optional flags inside the arg string:
 - A bare leading integer (`9 <urls...>`) OR `count=<N>` → number of subagents per PR. When set, this OVERRIDES the adaptive sizing in Step 2 (clamped to `1..12`). When unset, Step 2 picks a count adaptively in `1..12` based on the PR's scope, importance, and complexity.
-- `target_session=<tmux-session>` — when set, the inner `hunk` call opens its TUI as a new window inside that session. Forwarded by sibling batch drivers.
-- `force_new_window=true` — when set without `target_session`, the inner `hunk` call opens a new window in the current session regardless of pane count.
 
-This skill ignores the hunk pass-throughs itself and forwards them verbatim when it invokes `Skill(hunk)` in the open-Hunk step.
+(Legacy note: `target_session=` and `force_new_window=` were forwarded to the inner `hunk` call in earlier versions. Hunk now always splits off the calling pane, so those flags are dead. If a sibling batch driver still passes them, ignore silently.)
 
 Parse each PR reference to `OWNER`, `REPO`, `PR_NUM`. If any reference is malformed, ask the user.
 
 ## Step 0. Multi-PR dispatcher (skipped for single PR)
 
-If MORE than one PR was passed AND `target_session` was NOT passed in (i.e. this is an operator-driven multi-PR run, not a batch driver calling us), the current session acts as a dispatcher: it does no review work itself. Instead it opens a tmux session called `<folder>-code-review` (where `<folder>` is `basename "$(pwd)"` slugified) and spawns one window per PR with a fresh `claude --dangerously-skip-permissions` instance reviewing that single PR.
+If MORE than one PR was passed, the current session acts as a dispatcher: it does no review work itself. Instead it opens a tmux session called `<folder>-code-review` (where `<folder>` is `basename "$(pwd)"` slugified) and spawns one window per PR with a fresh `claude --dangerously-skip-permissions` instance reviewing that single PR. Each spawned per-PR claude runs the single-PR flow end-to-end; its own hunk pane splits off inside that per-PR window when the review reaches the open-Hunk step.
 
 Why: each PR's review is independent, can take minutes, and benefits from running in its own claude context. The operator attaches to the session and watches each PR in its own window without cross-contamination.
 
@@ -106,8 +108,6 @@ fi
 ```
 
 After dispatching, exit the skill. Do not proceed to Step 0a / Step 1 / etc. on the original claude. Those steps belong to the per-PR claude instances in the spawned windows, each of which sees ONE PR url via `/pr-code-review <url>` and runs the single-PR flow end-to-end.
-
-If `target_session` IS set (batch mode driven by a sibling skill), proceed to Step 0a as before. The parent owns the session layout, and per-PR Hunk windows go inside that session.
 
 If only ONE PR was passed, proceed to Step 0a directly. The dispatcher mode is multi-PR-only.
 
@@ -396,6 +396,8 @@ Each prompt MUST include this hard constraint verbatim:
 Each prompt MUST include this verification preamble verbatim:
 
 > **VERIFICATION RULE:** every claim you make about runtime behavior, framework / SDK behavior, vendor API, or rule violation will be re-checked by a different subagent. Do NOT assert behavior you have not directly traced in the code or read in the spec. If you are uncertain, say so explicitly with a confidence percentage (0-100%) on the finding. Confidence below 60% should not be a finding. It's a question; reword as "verify this against X" rather than asserting the bug.
+>
+> **In-code comments claiming a runtime lacks a capability** ("this runtime has no X", "X isn't available", "the interpreter doesn't expose Y") are snapshots, not facts. When such a comment justifies a design choice on the PR (e.g. "we use Math.random because goja has no Web Crypto"), feature-detect (`typeof X === "function"` probe or upstream API grep) before treating the comment as evidence. If the capability is actually present, that's a MAJOR finding — the design choice is defending against a constraint that no longer exists.
 
 Each prompt MUST include the CONTEXT_PACK from Step 0a, either inline at the top (preferred for short packs) or as a path to `/tmp/pr-review-context-pack.md` with the instruction "read this file first." Subagents are NOT expected to walk the CLAUDE.md tree themselves; the main skill already did that.
 
@@ -906,23 +908,16 @@ Hunk's fast path validates every anchor before applying. If you fed it a misalig
 Then invoke the hunk skill once per PR:
 
 ```
-Skill(hunk, args: "comments_json=/tmp/pr-<N>-comments.json range=origin/<base>...pr-<N> target_session=<forwarded if set> force_new_window=<forwarded if set>")
+Skill(hunk, args: "comments_json=/tmp/pr-<N>-comments.json range=origin/<base>...pr-<N>")
 ```
 
 Capture the apply output — it lists one `commentId` per attached comment in the form `mcp:<session>:<index>`. Save the mapping `finding_# → commentId` to `/tmp/pr-<N>-commentids.tsv` (one row per finding, columns: `<#>\t<commentId>`). Step 7 needs it to prune dropped findings out of the Hunk session.
 
-For multi-PR runs and no `target_session`, each Hunk invocation opens a new window in the current tmux session (the operator switches between them with the standard tmux window-switch keys).
+Hunk always splits its TUI off the calling Claude's pane. For single-PR runs the operator sees Claude on the left and Hunk on the right in the same window. For multi-PR runs, the Step 0 dispatcher spawned each PR into its own per-PR tmux window, so each PR's Hunk pane splits inside that PR's window — the operator switches PRs with the standard tmux window-switch keys.
 
 ### Step 6c. Skipping Hunk
 
 Skip Step 6b only if `tmux` or the `hunk` CLI isn't available; print one line saying which is missing and continue to Step 7. The findings table from Step 6a still prints regardless.
-
-### Batch-mode shortcut
-
-If `target_session=<name>` was passed in, the operator is not driving this Claude. A sibling batch driver is moving on to the next PR. In that mode:
-1. Still print the findings table to the calling parent.
-2. Open Hunk as a new window inside `target_session` for each PR with EVERY finding attached (no reduce step).
-3. Skip Step 7 (the reduce ask) AND Step 8 (the ask-then-post loop) entirely. The ask loop runs in a spawned Claude instance in a left pane next to the Hunk window (see batch-mode pane spawn at the end of Step 8). The batch driver only opens the full view; the operator chooses what to post when they attach.
 
 ## Step 7. Ask the operator whether to reduce findings (yes/no)
 
@@ -1086,29 +1081,6 @@ gh pr comment "$PR_NUM" --repo "$OWNER/$REPO" --body "$BODY"
 
 The ask still happens, just the API endpoint differs.
 
-### Batch-mode: spawn the comment-poster pane
-
-When `target_session=<name>` was passed in and Hunk is open in that session, leave a per-PR Claude instance waiting in the LEFT pane next to the Hunk window so the operator can walk through confirmations later by attaching to the session. Run this immediately after Hunk's fast-path apply returns (end of Step 6b), before exiting the skill. In batch mode the reduce ask (Step 7) is owned by that spawned Claude, not this one.
-
-1. Write a per-PR context file:
-   ```bash
-   cat > /tmp/pr-<N>-context.md <<EOF
-   # PR <pr-url>
-   - owner/repo: <OWNER>/<REPO>
-   - pr number: <PR_NUM>
-   - head sha (full 40): <HEAD_SHA>
-   - base ref: <BASE>
-   - head ref: <HEAD>
-   - comments json: /tmp/pr-<N>-comments.json
-   - diff: /tmp/pr-<N>.diff
-   - verification log: /tmp/pr-<N>-verification.md
-   EOF
-   ```
-2. Capture the hunk window's index from the prior `tmux new-window -P -F '#{window_index}'` call.
-3. Split that window with a left pane running a fresh `claude` instance to walk each comment via AskUserQuestion and post on approval.
-
-That left pane sits idle waiting for the user. When the user runs `tmux attach -t <name>` and walks to that window, the spawned Claude prompts them via AskUserQuestion. Each PR has its own independent comment-poster instance; they don't share state.
-
 ### Step 8c. Existing-threads reply loop
 
 After Step 8b's per-new-finding ask-then-post loop finishes (and the operator has had time to scroll Hunk, where `[THREAD] ...` notes from Step 6b are visible alongside the new findings), iterate the same set of existing reviewer threads that were attached to Hunk in Step 6b — for each, ask the operator whether to draft a reply.
@@ -1138,12 +1110,11 @@ threads: <R> replied, <S> skipped, <F> filtered (already-engaged / bot / empty)
 
 **Skip the reply loop entirely when:**
 - The operator picked "Skip threads" in the umbrella question.
-- Batch mode (`target_session` set) — the spawned pane Claude handles both new-findings posting AND the reply loop after it; this skill doesn't drive them when batch mode owns the session.
 - Zero threads survived the Step 6b filter (no unanswered, non-bot, non-empty threads on this PR).
 
 ## Step 9. Wrap
 
-After every PR's ask loop finishes (or immediately after Step 6b in batch mode, since the reduce-ask and ask-then-post both run in the spawned-pane Claude there), print ONE summary block:
+After every PR's ask loop finishes, print ONE summary block:
 
 ```
 posted <K> comments across <M> PR(s):

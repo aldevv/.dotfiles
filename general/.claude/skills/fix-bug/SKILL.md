@@ -1,7 +1,7 @@
 ---
 name: fix-bug
 description: Multi-agent root-cause-and-fix workflow for any non-trivial bug in any codebase. Phase 1 spawns 12 parallel investigation agents (each a distinct hypothesis), phase 2 synthesizes a detailed plan, phase 3 spawns 6 parallel review agents (distinct critique angles), phase 4 revises the plan, phase 5 the orchestrator implements, phase 6 spawns 3 validation agents. Every plan and the final validation MUST include a numeric confidence score (0-100%) per symptom, with explicit gaps and assumptions called out, especially when the bug couldn't be reproduced end-to-end. Counts default to 12/6/3 but accept overrides as the first argument. Triggers on "/fix-bug", "fix this bug with N agents", "spawn agents to figure out X", "investigate this bug using N agents", "do a multi-agent debug", "use the fix-bug skill", or any ticket / stack-trace / repro paired with explicit multi-agent debugging intent. AUTO-INVOKE when the user pairs a substantial bug context (Linear/Jira URL, GitHub issue, log excerpt, stack trace, reproducer) with phrasing like "figure out why this is happening and fix it", "use N subagents to debug", "spawn investigators". Do NOT trigger for trivial bugs (typo, syntax error, one-line fix the model can see immediately), code reviews of an existing diff (use code-review), read-only investigations (use a plain Agent call), or bugs where the user has already identified the root cause and just wants the edit applied.
-argument-hint: "[N1/N2/N3] [reference] [--skip-hunk]" — N1/N2/N3 are agent counts for investigation/review/validation (defaults 12/6/3; pass "8/4/2" for lighter, "16/8/4" for heavier). Reference is the bug source (Linear URL, ticket ID, stack trace, repro path, free text). `--skip-hunk` ends the skill at Phase 6 (no Hunk invocation); use when a caller wraps fix-bug and wants to run its own pre-Hunk tail (e.g. `fix-bug-work` for Baton connectors). All optional; the orchestrator will ask if missing.
+argument-hint: "[N1/N2/N3] [reference] [--skip-hunk] [--no-subagents]" — N1/N2/N3 are agent counts for investigation/review/validation (defaults 12/6/3; pass "8/4/2" for lighter, "16/8/4" for heavier). Reference is the bug source (Linear URL, ticket ID, stack trace, repro path, free text). `--skip-hunk` ends the skill at Phase 6 (no Hunk invocation); use when a caller wraps fix-bug and wants to run its own pre-Hunk tail. `--no-subagents` (or `NO_SUBAGENTS=1` in env) collapses every parallel `Agent(...)` spawn into a sequential `TaskCreate` list in the main session (slower, cheaper). All optional; the orchestrator will ask if missing.
 ---
 
 # fix-bug
@@ -9,6 +9,10 @@ argument-hint: "[N1/N2/N3] [reference] [--skip-hunk]" — N1/N2/N3 are agent cou
 Generic multi-agent debug-and-fix workflow. Designed for non-trivial bugs where the root cause is unclear and the fix is risky. Spawns parallel critique agents at three phases (investigation, review, validation) so the operator gets independent verifications of every claim before code lands.
 
 **User input**: $ARGUMENTS
+
+## Subagent execution mode (`--no-subagents` / `NO_SUBAGENTS=1`)
+
+Default: the parallel-agent fan-outs described below fire as designed (fastest wall time, highest token cost). Passing `--no-subagents` in `$ARGUMENTS`, OR setting `NO_SUBAGENTS=1` in the environment, replaces EVERY `Agent(...)` parallel-spawn step in this skill (Phase 1 investigation, Phase 3 review, Phase 6 validation) with a `TaskCreate` list executed sequentially by the main session — one task per would-be subagent role, same brief, same synthesis at the end. Trades wall time for token cost (no context duplication across N subagents). `auto-new-day` sets this by default; its `--fast` flag suppresses it.
 
 ## When this skill earns its cost
 
@@ -383,19 +387,19 @@ author: Bjorn Tipling
 issue: gRPC code on the rate-limit path is wrong — ResourceExhausted tells the SDK to give up; use DeadlineExceeded so it retries.
 comment: "the gRPC code is wrong — use DeadlineExceeded, not ResourceExhausted, so the SDK retries"
 fix: pkg/auth/middleware.go:42 — switched ResourceExhausted → DeadlineExceeded; updated the matching error-wrap in pkg/auth/errors.go:18.
-link: https://github.com/conductorone/baton-foo/pull/42#discussion_r1234567890
+link: https://github.com/example/repo/pull/42#discussion_r1234567890
 ---
 author: Jane Doe
 issue: nit — rename `x` to `xs` in iterateThings(), plural reads better.
 comment: "nit: rename `x` to `xs`, plural reads better here"
 fix: pkg/foo/bar.go:128 — renamed `x` to `xs` throughout iterateThings (3 sites).
-link: https://github.com/conductorone/baton-foo/pull/42#discussion_r1234567891
+link: https://github.com/example/repo/pull/42#discussion_r1234567891
 ---
 author: John Allers
 issue: split the test-server change into its own commit so the review boundary is clean.
 comment: "can you split the test-server change into its own commit"
 fix: no code change; reorganised the local commit history — test-server diff is now commit 2 of 2.
-link: https://linear.app/conductorone/issue/CXH-1235#comment-abc123
+link: https://linear.app/example/issue/CXH-1235#comment-abc123
 ```
 
 Rules for each field:
@@ -413,7 +417,7 @@ Rules for each field:
   issue: nit — rename `x` to `xs` in iterateThings(), plural reads better.
   comment: "nit: rename `x` to `xs`, plural reads better here"
   fix: pkg/foo/bar.go:128 — renamed `x` to `xs` throughout iterateThings (3 sites).
-  link: https://github.com/conductorone/baton-foo/pull/42#discussion_r1234567891
+  link: https://github.com/example/repo/pull/42#discussion_r1234567891
   ---
   author: Bjorn Tipling
   issue: gRPC code on the rate-limit path is wrong — ResourceExhausted tells the SDK to give up; use DeadlineExceeded so it retries.
@@ -425,13 +429,13 @@ Rules for each field:
   // after
   return uhttp.WrapErrors(codes.DeadlineExceeded, "rate limited", err)
   ```
-  link: https://github.com/conductorone/baton-foo/pull/42#discussion_r1234567890
+  link: https://github.com/example/repo/pull/42#discussion_r1234567890
   ---
   author: Alice Smith
   issue: auth session-store integration needs to move from in-memory to persistent; current shape leaks tokens across tenants under high concurrency.
   comment: "the session-store needs to move from in-memory to persistent — current shape leaks tokens across tenants under high concurrency"
   fix: pkg/auth/session.go + 6 other files — rewrote the session layer to use attrs.Session, threaded through every grant/revoke path, moved the in-memory cache behind a TTL-bounded write-through wrapper. `COMPLEX CHANGE PAY ATTENTION ⚠️⚠️`
-  link: https://github.com/conductorone/baton-foo/pull/42#pullrequestreview-2345678900
+  link: https://github.com/example/repo/pull/42#pullrequestreview-2345678900
   ```
 - `link:` is the permalink to the source item:
   - PR conversation comment: `https://github.com/<owner>/<repo>/pull/<num>#issuecomment-<id>`
@@ -440,6 +444,33 @@ Rules for each field:
   - Linear ticket comment: `https://linear.app/<workspace>/issue/<id>#comment-<commentId>`
   - Linear ticket itself (no specific comment): the ticket URL
   When running under auto-new-day, the source IDs are in the dispatch JSON's `feedback[]` entries; construct the URL from the IDs there. If a link genuinely cannot be constructed, write `link: (no permalink available)` rather than omitting the field.
+
+### Defer policy — bias toward "just do it"
+
+Before writing a `Deferred:` block for any item, apply this rule:
+
+**Default: do NOT defer. Apply the change in this pass.** Even if the item is technically outside the immediate bug's scope, if it is a simple safe change, do it now — a deferred fix that could have taken ten seconds becomes a note the operator must chase later. Concrete things that MUST NOT be deferred:
+
+- Updating an error string / log message / user-visible wording.
+- Adding permission metadata (`capabilityPermissions(...)`, IAM scopes, OAuth scope lists) that was missing.
+- Creating or renaming a small helper function.
+- Fixing a broken import, missing return, dead variable, or obviously wrong constant.
+- One-line doc / comment / README correction.
+- Adding a nil check, gRPC code, or context propagation that was clearly missed.
+- Any change of roughly three lines or fewer that carries no design decision.
+
+**Defer ONLY when the item is genuinely complex or difficult.** Concrete triggers for a real defer:
+
+- Adding a new feature, user-visible flow, or new API surface.
+- Adding a new resource type / builder / provisioning surface / capability.
+- A non-trivial refactor: moving files across packages, redesigning a client, rewriting sync semantics.
+- A design call the operator has to make (which endpoint, which auth model, which capability shape).
+- Anything that requires a separate ticket, a live tenant that's not available, paid-tier access, or vendor coordination.
+- Anything blocked upstream by another team's managed file, an unmerged spec, or missing docs.
+
+When in doubt, do the change. A wrongly-not-deferred simple edit is at worst a small extra diff; a wrongly-deferred simple edit costs the operator's follow-up cycle.
+
+The `defer reason:` line must read as either "this genuinely needs its own effort because X" (name the concrete blocker) OR, if you cannot articulate that, drop the defer and apply the change instead.
 
 If any item could NOT be addressed, append a "Deferred:" section after the last `---`, formatted the same way but with `fix:` replaced by `defer reason:` and `link:` retained:
 
@@ -450,7 +481,7 @@ author: Alice Smith
 issue: refactor the entire auth subsystem to use the new session-store API.
 comment: "we should move the whole auth subsystem off the in-memory session store and onto the new attrs.Session API"
 defer reason: out of scope for this PR; the auth subsystem refactor is its own multi-PR project. Recommend opening a follow-up ticket.
-link: https://github.com/conductorone/baton-foo/pull/42#discussion_r1234567892
+link: https://github.com/example/repo/pull/42#discussion_r1234567892
 ```
 
 Under auto-new-day specifically, also append the deferred block(s) to `~/work/.auto-new-day/dispatch/<TICKET_ID>.blocked.md` so the morning report surfaces the count.
@@ -522,7 +553,7 @@ The operator gets the truth, not a pep talk. A 70% confident fix is fine to ship
 
 After Phase 6's validators return (or the operator accepts a sub-95% composite), invoke the `hunk` skill against the implemented diff so the operator returning to the session has a one-click review of every change that landed. Do this BEFORE printing the operator-facing summary; the summary should reference the Hunk tmux window by name.
 
-**`--skip-hunk` short-circuit.** If `--skip-hunk` was passed in `$ARGUMENTS`, skip Phase 7 entirely and exit after the operator-facing summary at the end of Phase 6. Callers that wrap fix-bug and run their own pre-Hunk tail use this to keep ordering correct (the canonical example is `fix-bug-work` for Baton connector repos: it invokes `/fix-bug ... --skip-hunk`, then runs `validate-connector-changes` + `my-connector-review`, then calls `hunk` itself so the `.inreview/` reports are visible alongside the diff). The summary in `--skip-hunk` mode says `Hunk skipped (caller will open it)` instead of naming a window.
+**`--skip-hunk` short-circuit.** If `--skip-hunk` was passed in `$ARGUMENTS`, skip Phase 7 entirely and exit after the operator-facing summary at the end of Phase 6. Callers that wrap fix-bug and run their own pre-Hunk tail use this to keep ordering correct (e.g. a wrapper that invokes `/fix-bug ... --skip-hunk`, runs its own project-specific validation, then calls `hunk` itself so extra reports show up alongside the diff). The summary in `--skip-hunk` mode says `Hunk skipped (caller will open it)` instead of naming a window.
 
 **Hunk-note status markers (mandatory).** For every note this skill attaches via `hunk`, anchored to a comment / CHANGES_REQUESTED item / validator finding, include a status block at the top of the note body so the operator can scan the diff and immediately tell what's resolved:
 
@@ -624,7 +655,6 @@ If all three disagree on a fundamental question (e.g. "is the fix correct"), tha
 ## Sibling skills
 
 - `code-review:code-review` — single-pass code review of an existing diff. Use that for "review this PR", NOT for "find the bug".
-- `validate-connector-changes` — Baton-connector-specific pre-PR validation. Different artifact, different rules. The fix-bug skill is generic; that one is for connectors.
 - `hook-review`, `neovim-plugin-review`, `readme-md-improver`, `skill-md-improver` — artifact-specific multi-agent reviews. Use one of those when the artifact is a hook / nvim plugin / README / SKILL.md respectively.
 - `simplify` — single-pass code cleanup of a recent diff. Run after Phase 5 if the orchestrator's edits left rough patches; do NOT run during a phase.
 
