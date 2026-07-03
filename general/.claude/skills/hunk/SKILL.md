@@ -118,6 +118,8 @@ If the caller hands you a ready-to-apply comment batch (e.g. `pr-code-review` in
 
 In this mode you do NOT read `review-guidance.md`, do NOT read the diff to decide whether to comment, and do NOT re-derive hunk numbers if the caller supplied `newLine` (preferred; see "Targeting" in Round 3). Total elapsed time is dominated by Hunk's cold-start (typically ~500ms-1s), not by Claude latency.
 
+**CRITICAL: apply every comment the caller supplied.** Fast-path is a load-all path: if the caller wrote N comments into the JSON, all N land in Hunk. Never drop a comment because you judge it low-severity, duplicative of an existing thread, redundant, or "the operator won't want that one" — the caller (typically `pr-code-review`) already made the include/exclude decision when it built the batch. Filtering on the hunk side hides notes from the operator's read-out and breaks the "Hunk = full picture" invariant. The ONLY reason to reject a comment mid-apply is a hard anchor error (the pre-apply diff-line validator flags `MISSING ADD <file>:<line>`); in that case, surface the error and let the caller fix the anchor, don't silently drop.
+
 Recognize "pre-supplied" by any of:
 - The skill prompt body contains a JSON object with a top-level `comments:` array.
 - `$ARGUMENTS` includes `comments_json=<path>` or `comments=<path>`.
@@ -296,6 +298,8 @@ cat "$HOME/.claude/skills/hunk/scripts/hunk-pre-pr.sh"
 ```
 
 To make the hook **block** PR/MR creation until the user closes Hunk (instead of the default deny-then-retry-then-Allow), change the final `exit 0` to `exit 2`.
+
+The hook exits early (no Hunk, no deny) when the current tmux session name matches `AUTO-inreview`, `AUTO-inprogress`, or `AUTO-inreview-others` — the three sessions `auto-new-day` dispatches. Those sessions' dispatch skills (`fix-bug-work`, `impl-connector`, `newconnector`, `pr-code-review-work`) already run `/hunk` themselves before returning control, so re-opening Hunk on `gh pr create` is redundant. To disable the bailout, drop the `case` block at the top of the script.
 
 ## Agent notes visibility
 

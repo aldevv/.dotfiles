@@ -22,6 +22,21 @@ See `references/examples.md` for sample findings, comment phrasing, and ask/post
 
 Default: the parallel review / verification / hunk-prep fan-outs described below fire as designed (fastest wall time, highest token cost). Passing `--no-subagents` in `$ARGUMENTS`, OR setting `NO_SUBAGENTS=1` in the environment, replaces EVERY `Agent(...)` parallel-spawn step in this skill with a `TaskCreate` list executed sequentially by the main session — one task per would-be subagent role (each review lens, each verification pass), same brief, same synthesis at the end. Trades wall time for token cost (no context duplication across N subagents). `auto-new-day` sets this by default; its `--fast` flag suppresses it.
 
+## CRITICAL: Validation loop in `--no-subagents` mode
+
+When `--no-subagents` is active, the Step 4 verification round MUST run as a **repeated checklist**, not a single sequential pass. A single pass in the same session shares context with the review, so it counts as `✓1` at best — the operator ends up with reviewed-but-not-independently-verified findings. That defeats the review.
+
+Policy (applies whenever `--no-subagents` / `NO_SUBAGENTS=1` is set):
+
+- Build a **VALIDATION_CHECKLIST** at Step 4 with one row per surviving finding from Step 3. Each row lists: the claim, the anchor `file:line`, the specific check to run (doc fetch, code path trace, spec quote, local reproduction), and the pass counter.
+- Run the checklist end-to-end **at least three times** (default `VALIDATION_PASSES=3`; the operator may override with `passes=<N>` in `$ARGUMENTS`, clamped to `2..5`). Each pass is a fresh sweep over the whole checklist — do NOT stop early on the first "looks fine" pass, and do NOT skip rows on later passes because an earlier pass passed them.
+- Each independent pass counts as `+1` toward the finding's `✓N` marker. `✓3` in sequential mode means three independent re-checks in the SAME session, each performed after clearing local scratch state (drop the prior verifier's notes, re-read the code / doc from scratch, form the verdict without looking at earlier passes' answers).
+- If any pass FLIPS a verdict (e.g. `TRUE` → `FALSE` or vice versa), surface the disagreement in Step 5 and lower the confidence — do NOT quietly average. Two out of three still leaves the finding uncertain; say so.
+- BLOCKER and MAJOR findings ALWAYS get the full pass count. MINOR findings may cap at `VALIDATION_PASSES=2` when the operator opts in via `--fast-minor`, otherwise they run the full count too.
+- The rule also applies to Step 5a's "approve PR" confidence: the final go/no-go is computed only after all validation passes complete, and the confidence percentage is scaled down when passes disagreed.
+
+Why: `--no-subagents` exists to save tokens on runs no human is watching in real time (typically `auto-new-day`). Cheap wall time is fine to spend on multiple sequential re-checks; the alternative is shipping `✓1` findings that were never actually verified.
+
 ## CRITICAL: Approving a PR — no body unless explicitly asked
 
 When the operator says "approve the PR" / "approve it" / "lgtm it" / any equivalent during or after a review, submit the approval WITHOUT a `--body`. No `lgtm`, no `looks good`, no summary, no nothing:
@@ -140,7 +155,7 @@ fi
 
 State the chosen layout in chat ("PR review logs will land under `~/work/.inreview/<DATE>/pr-code-review/<repo>/<N>.md` because cwd is not in a git repo.") so the operator can interrupt and override if the auto-detection picked wrong. (Note: this used to be a separate `.pr/` folder; it now lives under `.inreview/<DATE>/pr-code-review/` so auto-new-day's per-date archive picks it up automatically — `/auto-new-day --date X` replays this report with zero copy-around.)
 
-Also resolve the operator's own GitHub login once. Step 5's author-aware dedup uses it to tell apart comments the operator wrote (candidates for INSIST or DROP) from comments other users wrote (always DROP since someone else has the thread):
+Also resolve the operator's own GitHub login once. Step 5's author-aware overlap tagging uses it to tell apart comments the operator wrote (tag `overlap=self-silent` for insist, `overlap=self-engaged` for lower-default) from comments other humans wrote (tag `overlap=external-human`) and from bot comments (tag `overlap=external-bot`). No overlap ever silently drops a finding; every consolidated finding still ships to Hunk in Step 6b with its tag in the summary prefix. The operator makes the drop decision in Step 8.
 
 ```bash
 OPERATOR_LOGIN=$(gh api user --jq .login)
@@ -231,7 +246,7 @@ For each PR, in a single message run these in parallel:
 
 ```bash
 gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" \
-  --jq '{title, body, head: .head.sha, base: .base.ref, additions, deletions, changed_files, author: .user.login}' \
+  --jq '{title, body, head: .head.sha, base: .base.ref, additions, deletions, changed_files, author: .user.login, created_at, updated_at, state, draft, html_url}' \
   > "/tmp/pr-$PR_NUM.meta.json"
 
 git diff "origin/$(jq -r .base /tmp/pr-$PR_NUM.meta.json)...pr-$PR_NUM" > "/tmp/pr-$PR_NUM.diff"
@@ -656,16 +671,30 @@ Now build the punch-list from surviving (VERIFIED + qualifying NUANCED) findings
 
 Dedupe overlapping findings across review agents on the same PR: two agents flagging the same line collapse to one row. Keep the higher severity and the higher final confidence. Use `references/examples.md` for examples of merged vs split findings.
 
-**Author-aware overlap dedup** against `/tmp/pr-<N>.existing-comments.json`, `/tmp/pr-<N>.existing-issue-comments.json`, and `/tmp/pr-<N>.existing-reviews.json` from Step 1. For each consolidated finding, scan all three sources for an entry that hits the same `file:line` or describes the same conceptual issue (same line or a nearby line in the same hunk):
+**Author-aware overlap tagging** against `/tmp/pr-<N>.existing-comments.json`, `/tmp/pr-<N>.existing-issue-comments.json`, and `/tmp/pr-<N>.existing-reviews.json` from Step 1. For EVERY consolidated finding, scan all three sources — **including bot comments (Copilot, coderabbit, sourcery, greptile, DeepSource, sonarcloud, and any `*[bot]` login)** — for an entry that already raises the same concern. This is a HARD requirement: never surface a finding without running this check first, and never re-raise an issue a human developer or bot already flagged on this PR.
 
-1. **Overlap with a different user's entry** (`entry.user != OPERATOR_LOGIN`): **DROP** the finding. Someone else already raised it; piling on doesn't help. Log it to the verification log as "filtered: <user> already noted this on <file>:<line> / <review-summary-id>".
-2. **Overlap with the operator's own entry** (`entry.user == OPERATOR_LOGIN`):
+Matching rules (a finding overlaps if ANY of these are true against an existing entry):
+- **Same `file:line`** where the existing entry is an inline comment on the exact anchor line the finding targets.
+- **Same hunk** where the existing entry is an inline comment on a nearby line within the same continuous diff hunk (±5 lines from the finding's anchor).
+- **Same conceptual issue** where the existing entry (inline OR issue-comment OR review body) describes the same problem in different words on the same file. Match on: normalized keywords from the finding headline vs. the existing body, symbol / identifier / API name overlap (e.g. both mention `ListUsers` on `pkg/client/users.go`), or the same vendor-doc URL cited by both. When in doubt, treat it as a match — a false-dup tag is cheap; a re-raised comment is not.
+
+Bots emit canonical wording; make the semantic match generous for them. Coderabbit's "Add error handling for the ignored return value" and a review-agent's "This return err is dropped" are the same finding.
+
+**CRITICAL: never silently drop a finding at consolidation.** Every consolidated finding surfaces into the Step 6b Hunk batch and the Step 6a table. Overlap information is a TAG on the finding (surfacing to the operator so they can decide), NOT a pre-filter that hides the finding from Hunk. The operator makes the drop decision at Step 8, not the skill.
+
+Tag each finding as follows:
+
+1. **Overlap with a bot** (`entry.user` matches `*[bot]` OR is one of the known bot logins listed above): tag `overlap=external-bot`, add a one-line note to the finding body ("already flagged by <bot-login> at <permalink>"), and set the default action in Step 8 to **skip**. Bot findings are almost always already visible to the PR author; re-posting them just adds noise. The operator can override per-finding in Step 8 if the bot's phrasing was weak.
+2. **Overlap with a different HUMAN user's entry** (`entry.user != OPERATOR_LOGIN` AND not a bot): tag `overlap=external-human`, add a one-line note to the finding body ("also noted by <user> at <permalink>"), and lower the default action from post to skip in Step 8. Do NOT drop — the operator sees it in Hunk with the DUP-EXTERNAL-HUMAN summary prefix and picks per-finding whether to +1 the existing thread or skip.
+3. **Overlap with the operator's own entry** (`entry.user == OPERATOR_LOGIN`):
    - Inspect the thread. For inline comments, "thread has replies" = `any other entry in existing-comments.json has in_reply_to_id == entry.id`. For issue-comments and review summaries, "thread has engagement" = there's a later issue-comment from any user other than the operator OR a later review submission.
-   - **Thread has replies / engagement** → **DROP**. The operator already said it; the conversation moved on. Re-posting risks looking like a stale agent re-flag.
-   - **Thread is silent** (no replies, no engagement) → **INSIST**. Re-surface the finding with the body rewritten to lead with `(reiterating my earlier note since the line hasn't changed)` followed by the new, shorter punch. Tag the finding `insist=true` in the punch-list so Step 6a's headline shows `[INSIST]` and Step 8 makes the operator confirm explicitly.
-3. **No overlap** → keep as a fresh finding.
+   - **Thread has replies / engagement** → tag `overlap=self-engaged`. Lower default action to skip. Body note: "you already said this on <permalink>; thread moved on."
+   - **Thread is silent** (no replies, no engagement) → tag `overlap=self-silent`, mark `insist=true`. Body leads with `(reiterating my earlier note since the line hasn't changed)`.
+4. **No overlap** → tag `overlap=none` (implicit), fresh finding.
 
-When two phrasings might describe the same issue but you're not sure, err on the side of KEEPING the new finding (the operator can skip it in Step 8) rather than DROPPING it silently. False drops are worse than minor duplication.
+Every tagged finding still lands in Hunk via Step 6b so the operator sees the full picture and decides in Step 8. Two phrasings that might describe the same issue: keep both, tag the newer one `overlap=maybe-dup` with a body note pointing at the possible dup. False drops are worse than minor duplication; the operator will skip the redundant ones during the ask loop.
+
+**Report the check ran.** The Step 6a table's header line MUST include a "dedup checked against N existing entries (H human, B bot)" note so the operator can see the check happened. If any of the three JSON files was empty (Step 1 returned no comments/reviews), print "no existing comments to dedup against" instead so it's obvious no coverage was possible.
 
 ### Comment phrasing
 
@@ -756,11 +785,21 @@ REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG-full.md"
 
 **Contents (Markdown):** the report MUST include, in order:
 
-1. Header line: `# PR #<N>: <title>` and a metadata block listing PR URL, author, base/head SHA, agent count, verifier counts, run timestamp, AND the approve verdict from Step 5a in the form `Approve: <P>% — <TIER>` (e.g. `Approve: 72% — APPROVE WITH NOTES`). Place this approve line first in the metadata block so a reader scanning the archive sees the verdict before the finding details.
-2. The findings table from Step 6a (verbatim, same Sev / Conf / ✓ / File:Line / Headline columns).
-3. One subsection per finding with the FULL comment body, the diff excerpt, the verifier verdict(s), and the resolved confidence. BLOCKERs first, MAJORs next, MINORs last.
-4. Link to the verification audit log at `/tmp/pr-<N>-verification.md` and instruction to copy it into the same persisted dir if the operator wants the FALSE-drop history retained.
-5. List of agents that ran (angles) and their individual report paths (`/tmp/pr-<N>.agent<K>.md`) so the operator can dig deeper.
+1. Header line: `# PR #<N>: <title>` (title verbatim from `.title` in the meta.json).
+2. Metadata block listing, in this order:
+   - **Approve verdict** first: `Approve: <P>% — <TIER>` (e.g. `Approve: 72% — APPROVE WITH NOTES`). The verdict is the first line so a reader scanning the archive sees it before the finding details.
+   - **PR URL** (from `.html_url`).
+   - **Author** (from `.author`).
+   - **Created** (from `.created_at`, formatted as `YYYY-MM-DD HH:MM UTC` — trim the `T`/`Z` for readability).
+   - **State** (from `.state`) + `(draft)` suffix if `.draft` is true.
+   - **Base / Head SHA** (base ref + full 40-char head SHA).
+   - **Agent count** + **verifier counts** (per severity tier).
+   - **Run timestamp** (this review's local ISO-8601).
+3. **PR description** section: a `## Description` heading followed by the PR body verbatim from `.body`. If `.body` is empty or null, write `_(no description provided)_`. Fence with `> ` block-quote prefix on every line so the description is visually distinct from this skill's own prose. This gives the reader the PR author's intent right next to the findings, so they don't have to switch to GitHub to read what the PR was for.
+4. The findings table from Step 6a (verbatim, same Sev / Conf / ✓ / File:Line / Headline columns).
+5. One subsection per finding with the FULL comment body, the diff excerpt, the verifier verdict(s), and the resolved confidence. BLOCKERs first, MAJORs next, MINORs last.
+6. Link to the verification audit log at `/tmp/pr-<N>-verification.md` and instruction to copy it into the same persisted dir if the operator wants the FALSE-drop history retained.
+7. List of agents that ran (angles) and their individual report paths (`/tmp/pr-<N>.agent<K>.md`) so the operator can dig deeper.
 
 Write the report BEFORE opening Hunk or asking the reduce question. The operator may interrupt at any point and the on-disk artifact survives.
 
@@ -844,6 +883,8 @@ Suggest the operator add `.pr/` to the repo's `.gitignore` or `.git/info/exclude
 
 The operator decides what to post by scanning the full picture once: a table of every surviving finding plus an open Hunk TUI showing every comment on its diff anchor. Do NOT filter or ask anything yet — open ALL findings first, then ask in Step 7.
 
+**Hunk opens by DEFAULT for every PR.** The only reasons to skip Hunk are the two cases enumerated in Step 6c. "Recommendation is SAFE TO APPROVE" is NOT one of them — an approve verdict still gets a Hunk pane (with existing reviewer threads attached, if any) so the operator can eyeball the diff before hitting approve. Do not silently skip Hunk because the punch-list is short; if you are skipping it, Step 6c REQUIRES you to print the one-line reason in chat.
+
 ### Step 6a. Print the findings table
 
 Print one Markdown table per PR to the user before opening Hunk. Columns:
@@ -861,11 +902,20 @@ Rules:
 - The Verified column shows `✓<N>` when all N verifiers agreed, or `✓<K>/<N>` when K of N agreed (one or more NUANCED). Every surfaced row carries a marker by construction (FALSE / low-confidence-NUANCED rows were dropped at Step 4). The number tells the operator how much scrutiny the finding got.
 - Headline is the one-line lede of the comment body (under ~70 chars). Not the full body.
 - `#` matches the order the ask loop will walk in Step 8.
-- If a PR has zero surviving findings, print one line per PR saying so. Continue to other PRs.
+- If a PR has zero surviving findings, print one line per PR saying so and STILL proceed to Step 6b — existing reviewer threads (`[THREAD]` entries) may still need a Hunk pane. Only after Step 6b's filter shows zero `[NEW]` AND zero eligible `[THREAD]` entries does Step 6c's "nothing to attach" clause fire.
 
-### Step 6b. Open Hunk with ALL findings + existing reviewer threads
+### Step 6b. Open Hunk with EVERY finding + every existing reviewer thread
 
-After all tables print, invoke the `hunk` skill in its **fast path** with EVERY finding (no pre-filter) AND every existing reviewer thread from Step 1 attached as additional notes. One Hunk session per PR if multiple PRs are in scope. The operator scrolls Hunk and sees BOTH new findings (from this multi-agent pass) AND existing threads (from prior reviewers) anchored to the same diff lines, so they can address everything in one TUI pass.
+After all tables print, invoke the `hunk` skill in its **fast path** with EVERY consolidated finding attached AND every eligible existing reviewer thread from Step 1. **"Every consolidated finding"** = every row that survived Step 4 verification (VERIFIED or NUANCED≥60%), regardless of Step 5's overlap tags, regardless of severity, regardless of the operator's likely eventual disposition. The Hunk pane is the operator's read-out; the skill does not pre-filter it.
+
+The mandate is explicit:
+
+- Findings tagged `overlap=external-bot`, `overlap=external-human`, `overlap=self-engaged`, `overlap=self-silent`, `overlap=maybe-dup` — all land in the batch. The summary prefix carries the tag so the operator sees it in the TUI list.
+- `[THREAD]` entries for existing reviewer threads that don't overlap a `[NEW]` finding — all land in the batch (up to the 30-thread cap below).
+- Severity-downgraded rows (BLOCKER → MAJOR, MAJOR → MINOR after verifier NUANCE) — land in the batch at their final severity, not their initial one.
+- MINORs — land regardless of confidence, as long as they passed Step 4.
+
+The Step 6a table shows the SAME set of rows as the Hunk batch, in the same order. If a row is in the table but not in Hunk (or vice versa), that's a skill bug — the two views MUST be consistent. Step 7's "reduce to 1-5" is the ONLY place a survivor gets hidden, and it's operator-gated.
 
 **Before calling Skill(hunk), write the full comment batch to `/tmp/pr-<N>-comments.json`** using `newLine` anchors so each comment lands on the exact `+` line it references (never on a hunk position that resolves to an unchanged context line). The batch combines two categories:
 
@@ -887,12 +937,12 @@ JSON
 
 Two categories, distinguished by the `summary` prefix:
 
-- **`[NEW] ...`** — one entry per surviving finding from Step 5, in the same order as the table (BLOCKERs first, MAJORs next, MINORs last). NO filtering happens yet.
+- **`[NEW] ...`** — one entry per consolidated finding (Step 5 output), in the same order as the table (BLOCKERs first, MAJORs next, MINORs last). NO filtering. Overlap-tagged findings still ship; their summary prefix carries the tag (e.g. `[NEW][DUP-EXTERNAL-HUMAN] MAJOR (78% ✓2): ...` or `[NEW][DUP-EXTERNAL-BOT] MINOR (72% ✓2): ...`).
 - **`[THREAD] ...`** — one entry per existing reviewer thread from `/tmp/pr-<N>.existing-comments.json` (inline review-thread comments) + `/tmp/pr-<N>.existing-issue-comments.json` (top-level / issue-style comments) + `/tmp/pr-<N>.existing-reviews.json` (review-summary bodies with non-empty body text). Skip:
   - Threads where the LATEST message is from the operator (`author.login == OPERATOR_LOGIN`) — they already engaged.
   - Bot-authored entries (`author.type == "Bot"`, `*[bot]` login suffix, `github-actions`, `dependabot`, `renovate`, `coderabbitai`, `sonarcloud`, `codecov`).
   - Empty review summaries (the bare APPROVED/REQUEST_CHANGES with no body — there's nothing to reply to).
-  - Threads already deduplicated against a `[NEW]` finding in Step 5's overlap dedup (don't double-anchor the same line).
+  - Do NOT skip on "already deduplicated against a `[NEW]` finding" — attach the thread anyway. Step 5 no longer drops overlaps; it tags them. When a thread and a `[NEW]` finding anchor to the same line, the operator sees both entries in Hunk (the finding shows the agent's take, the thread shows the reviewer's) and picks per-comment in Step 8.
 
   Per-thread anchor: inline comments → `filePath` + `newLine` from the comment's `line` / `original_line` (use `newLine` when the comment anchors a `+` line in the current diff; use `oldLine` for `-` lines). Issue-style comments and review summaries don't have a file anchor — represent them with `hunkNumber: 0` so they land at the top of the diff as PR-wide threads, with the summary prefix making the kind clear.
 
@@ -917,7 +967,14 @@ Hunk always splits its TUI off the calling Claude's pane. For single-PR runs the
 
 ### Step 6c. Skipping Hunk
 
-Skip Step 6b only if `tmux` or the `hunk` CLI isn't available; print one line saying which is missing and continue to Step 7. The findings table from Step 6a still prints regardless.
+Skip Step 6b ONLY in these two enumerated cases. Every other run opens Hunk, including runs where the approve_pct verdict from Step 5a is SAFE TO APPROVE.
+
+1. **Missing tools.** `tmux` is not running, OR the `hunk` CLI is not on `$PATH`. Print one line saying which is missing (`hunk skipped: tmux not running` or `hunk skipped: hunk CLI not found on $PATH`) and continue to Step 7.
+2. **Nothing to attach.** After building the Step 6b JSON, BOTH counters are zero: zero `[NEW]` findings survived Step 5 AND zero `[THREAD]` entries survived the Step 6b filters (all threads were already-engaged, bot-authored, empty, or deduped). Print `hunk skipped: no new findings and no eligible existing threads to attach` and continue to Step 7.
+
+If EITHER (a) the tools are available AND (b) at least one `[NEW]` or `[THREAD]` entry exists, Hunk opens. Do not gate Hunk on approve_pct, on the tier, on operator preference guessed from context, or on "this looks like an approve" — none of those are in this list.
+
+The findings table from Step 6a still prints regardless of which branch fires.
 
 ## Step 7. Ask the operator whether to reduce findings (yes/no)
 
@@ -968,14 +1025,18 @@ No pruning. Hunk stays as-is. Proceed straight to Step 8 with every finding.
 
 ## Step 8. Ask-then-post loop
 
-**MANDATORY: read the `add-comment` skill before drafting or posting any comment in this step.** Run `Skill(add-comment)` once at the top of Step 8 (or `Read ~/.claude/skills/add-comment/SKILL.md` directly) so the voice rules, fact-check policy, examples corpus, and per-comment confirmation requirement are loaded. The skill is the source of truth for:
-- Voice (1-3 sentences, lowercase, no em-dash, no greetings, plain words)
-- The `references/examples.md` corpus of approved phrasings (skim it; reuse what fits)
-- When to spawn fact-check verifier subagents for a draft (factual claims yes, opinions no)
-- The exact `gh api ...` shape for line comments, replies, and top-level PR comments
-- The MANDATORY per-comment confirmation rule (per-batch approval in summary form does NOT cover the literal posted text)
+**MANDATORY: delegate to the `add-comment` skill for drafting AND posting every comment in this step.** Run `Skill(add-comment)` at the top of Step 8 with all surviving findings batched as one call. Do NOT inline the ask-then-post loop with per-finding `AskUserQuestion` calls — that's the regression that produced modal-picker churn in past sessions and bypassed the tmux-pane draft file that `add-comment` opens by default.
 
-You can either (a) invoke `add-comment` per approved finding to do the actual draft+confirm+post, or (b) inline the post call here but follow add-comment's voice and confirmation rules exactly. Skipping the read is the regression that produced robot-flavored drafts in past sessions.
+The `add-comment` skill is the source of truth for:
+- Voice (1-3 sentences, lowercase, no em-dash, no greetings, plain words)
+- The `references/examples.md` corpus of approved phrasings
+- When to spawn fact-check verifier subagents for a draft
+- The exact `gh api ...` shape for line comments, replies, and top-level PR comments
+- The tmux-pane editable-draft-file confirmation flow (the DEFAULT when `$TMUX` is set — see add-comment "Tmux-pane draft mode (default)"). Every surviving finding becomes one block in ONE draft file the operator can scan, edit, or SKIP in a normal editor.
+
+When invoking `add-comment`, hand it EVERY surviving finding at once so it batches them into a single draft file (one block per finding). The operator ends up looking at one screen with all N drafts, not N modal pickers in a row. Skipping this delegation and inlining per-finding `AskUserQuestion` calls is a REGRESSION — it violates add-comment's default and forces the operator into a slower, less-editable flow.
+
+**Fallback ONLY when `$TMUX` is unset AND `add-comment` cannot open the draft-file pane:** inline the `AskUserQuestion` loop below, but even then follow add-comment's voice and per-comment confirmation rules exactly.
 
 ### Step 8a. Read operator's Hunk notes as feedback for the agent
 

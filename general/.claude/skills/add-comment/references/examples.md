@@ -48,10 +48,25 @@ increment from there.
 - dropping the annotation here. empty today so nothing breaks, but rate-limit hints would get silently lost if they ever land. could pass it through SyncOpResults.Annotations. (×1)
 - checkout needs to run before setup-go, otherwise `go-version-file: go.mod` errors out once `if: false` flips. (×1)
 - sdk caps exclusion groups at 50 per group id (`maxEntitlementsPerExclusionGroup` in baton-sdk sync/syncer.go:255). the key is per-envType, so every env-role in one environment shares one bucket. workato allows unlimited custom env-roles, so >50 in any env will fail sync. worth a code comment here calling out the cap as a known limitation. (×1)
+- Lucid's SCIM Role enum is `[AccountAdmin, BillingAdmin, Developer, DocumentAdmin, EnterpriseShieldAdmin, TemplateAdmin]`. `TeamAdmin` isn't valid and three real values are missing. Fix the list. (https://lucid.readme.io/reference/modifyuserpatch) (×1)
+- if the caller passes `roles: []`, `updateUserHandler` still appends "roles" to `updated`, so the guard passes but the PATCH goes out with `Operations: null` and Lucid 400s per RFC 7644 §3.5.2. Guard `len(ops)==0` here before `newScimRequest`. (×1)
+- `CAPABILITY_RESOURCE_DELETE` and `CAPABILITY_ACTIONS` ship unconditionally, but Delete and the three actions all require SCIM. On OAuth2-only tenants the UI shows buttons that 500 at invoke. Gate the capabilities on `ScimConfigured()` in `connector.go`, or return `codes.Unimplemented` (×1)
+- `POST /v1/transferUserContent` requires the `account.user.transfercontent` scope per Lucid's docs, separate from `account.user`. Since Delete calls it, existing customers who only granted `account.user` will 403 at Delete time. Add it here. (spec: https://developer.lucid.co/reference/transferusercontent) (×1)
+- delete idempotency never fires. the real not-found message is `could not find the target or you are unauthorized.` and none of the substrings match. add that string or key off `Extensions["errorClass"]`. (spec: https://github.com/newrelic/newrelic-client-go/blob/main/pkg/usermanagement/users_integration_test.go) (×1)
+- this drains every page to find one email AND returns the wrong ID (v1 aggregator, not the v2 identity id the mutations need). one filtered v2 query fixes both. (spec: https://docs.newrelic.com/docs/apis/nerdgraph/examples/nerdgraph-manage-users/) (×1)
+- provisioning also needs the **authentication domain manager** role. worth calling out near the warning at line 23. (spec: https://docs.newrelic.com/docs/apis/nerdgraph/examples/nerdgraph-manage-users/) (×1)
+- this drains every org's networks paginated to find one auth user. fix is having parentResourceID and return InvalidArgument otherwise. (×1)
+- drop `none` here. createaccount rejects it; it's still fine for the update action. (×1)
+- ListOrganizations doesn't paginate. meraki supports it (max perPage=9000). cli-delete fallback misses orgs past page 1 (https://developer.cisco.com/meraki/api-v1/get-organizations/) (×1)
+- same, ListSMRoles doesn't paginate. default page = 50, orgs with more sm roles lose them. https://developer.cisco.com/meraki/api-v1/get-organization-sm-admins-roles/ (×1)
+- these all surface to c1 as codes.Unknown, and every other gocloak error in the connector has the same problem. worth adding a MapAPIError helper next to IsAlreadyExistsError that unwraps *gocloak.APIError and returns the matching gRPC code (429 and 5xx as Unavailable, 403 as PermissionDenied, 400 as InvalidArgument, etc), then wrapping every gocloak call site with status.Error(MapAPIError(err), ...). (×1)
+- these all surface to c1 as `codes.Unknown`, and every other gocloak error in the connector has the same problem. worth adding a `MapAPIError` helper next to `IsAlreadyExistsError` that unwraps `*gocloak.APIError` and returns the matching gRPC code (`429` and `5xx` as `codes.Unavailable`, `403` as `codes.PermissionDenied`, `400` as `codes.InvalidArgument`, etc), then wrapping every gocloak call site with `status.Error(MapAPIError(err), ...)`. (×1)
 
 ### Top-level PR/MR comments
 
 - tested this locally. `role[]` isn't the cause, the empty `query=` is. `?role[]=admin` alone gives a real meta. add `&query=` and meta goes null. this pr still pulls in `zendesk.CommonOptions` which has no omitempty on Query, so `&query=` still goes out on every request and the cursor won't move at >100/role. (×1)
+- docs/connector.mdx table is stale, doesn't reflect the new provision / delete / actions surface. same in readme. worth a pass before merge. (×1)
+- that meraki api key in the deleted .claude/settings.json from dc05c3e is still in git history. rotate it on the draftkings tenant before merge. (×1)
 
 ### New line comments — nit
 

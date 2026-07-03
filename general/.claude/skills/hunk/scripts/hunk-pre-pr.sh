@@ -78,6 +78,14 @@ case "$cd_target" in
 esac
 [[ -n "$cd_target" && -d "$cd_target" ]] && cd "$cd_target" 2>/dev/null || true
 
+# Skip inside auto-new-day dispatched tmux sessions. The dispatch skills
+# (`fix-bug-work`, `impl-connector`, `newconnector`, `pr-code-review-work`)
+# already run `/hunk` themselves before returning control, so re-opening
+# Hunk on `gh pr create` / `glab mr create` is redundant.
+case "$(tmux display-message -p '#{session_name}' 2>/dev/null || true)" in
+  AUTO-inreview|AUTO-inprogress|AUTO-inreview-others) exit 0 ;;
+esac
+
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 [[ -n "$repo_root" ]] || exit 0
 

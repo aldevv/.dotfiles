@@ -7,6 +7,7 @@ export VISUAL=nvim
 export LESS="-isSMRQJ"
 # export LESS="-isSMRQJ -j.5" for middle screen when searching
 export PAGER='less'
+export LESSKEYIN="$HOME/.config/colemak-less"
 # export PAGER='bat'
 export READER=zathura
 # export MANPAGER="less"

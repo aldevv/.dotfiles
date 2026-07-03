@@ -14,6 +14,21 @@ Generic multi-agent debug-and-fix workflow. Designed for non-trivial bugs where 
 
 Default: the parallel-agent fan-outs described below fire as designed (fastest wall time, highest token cost). Passing `--no-subagents` in `$ARGUMENTS`, OR setting `NO_SUBAGENTS=1` in the environment, replaces EVERY `Agent(...)` parallel-spawn step in this skill (Phase 1 investigation, Phase 3 review, Phase 6 validation) with a `TaskCreate` list executed sequentially by the main session — one task per would-be subagent role, same brief, same synthesis at the end. Trades wall time for token cost (no context duplication across N subagents). `auto-new-day` sets this by default; its `--fast` flag suppresses it.
 
+## CRITICAL: Validation loop in `--no-subagents` mode
+
+When `--no-subagents` is active, Phase 6 (validation) MUST run as a **repeated checklist**, not a single sequential pass. A single pass in the same session shares context with the implementation, so from the operator's perspective it counts as `✓1` — the fix was written and "checked" by the same head. That's not validation.
+
+Policy (applies whenever `--no-subagents` / `NO_SUBAGENTS=1` is set):
+
+- Build a **VALIDATION_CHECKLIST** at the start of Phase 6 with one row per validation task the parallel agents would have done: reproduce the original bug on the unpatched code, run the patched code against the same repro, exercise the golden path, exercise edge cases, run the test suite the plan called out, verify each symptom listed in the Phase 2 "Confidence breakdown". Each row lists the specific command / action, the expected outcome, and the pass counter.
+- Run the checklist end-to-end **at least three times** (default `VALIDATION_PASSES=3`; the operator may override with `passes=<N>` in `$ARGUMENTS`, clamped to `2..5`; the third positional-arg slot `N1/N2/N3` still governs the "how many roles per pass" fan-out — passes multiply on top of that). Each pass is a fresh sweep. Do NOT stop early on the first green pass, and do NOT skip rows on later passes because an earlier pass passed them.
+- Each independent pass counts as `+1` toward the finding's `✓N` marker. `✓3` in sequential mode means three independent re-checks in the SAME session, each performed after clearing local scratch state (re-read the plan, re-read the diff, re-run the repro from scratch, form the verdict without looking at earlier passes' answers).
+- If any pass FLIPS a verdict (e.g. green → red or vice versa), surface the disagreement in the Phase 6 report and lower the confidence — do NOT quietly average. Two out of three still leaves the fix uncertain; say so.
+- Symptoms flagged BLOCKER by the Phase 2 confidence breakdown ALWAYS get the full pass count. Non-blocker symptoms may cap at `VALIDATION_PASSES=2` when the operator opts in via `--fast-minor`, otherwise they run the full count too.
+- The mandatory confidence-breakdown table in Phase 6 must reflect the multi-pass result: each symptom's confidence is the WORST verdict across passes, not the best.
+
+Why: `--no-subagents` exists to save tokens on runs no human is watching in real time (typically `auto-new-day`). Cheap wall time is fine to spend on multiple sequential re-checks; the alternative is shipping `✓1` fixes that were validated by the same head that wrote them.
+
 ## When this skill earns its cost
 
 This skill spends 20+ agent invocations. Use it when the bug has any of:

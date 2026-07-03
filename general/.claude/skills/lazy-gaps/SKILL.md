@@ -86,11 +86,21 @@ For each KEEP item (and every COVERED-BUT-WRONG item), pick a target. Preference
 3. **Add a tightly-scoped paragraph to `~/work/CLAUDE.md`** — only for portfolio-wide CRITICAL rules that must load on every run.
 4. **Create a brand-new lazy file** — last resort. Justification required: the item is broad (5+ connectors will touch it), has a clear `**Read when**` trigger, and no existing file is a natural home. New files MUST be registered in `~/work/CLAUDE.md`'s `## Detail files (load on demand)` index with a precise `**Read when**` clause.
 
-Drafted entry must obey:
+### CRITICAL: as small as possible while still clear
 
-- **SHORT.** Aim for 1-3 sentences plus at most one small code snippet. Reviewers read these dozens of times; every word that doesn't change behaviour is a tax.
+Every entry has a hard size budget. Draft, then cut.
+
+- **Bullet in an existing list**: 1 sentence, max 2 lines. No snippet.
+- **New sub-section in an existing lazy file**: 3-6 lines of prose, plus at most ONE minimal snippet (5-10 lines, only the load-bearing shape). Anything explainable in prose stays as prose.
+- **Worked case / new pattern**: 12-20 lines TOTAL including snippet. If the draft is longer, cut the snippet to the smallest shape that shows the pattern (drop repeated fields, drop non-load-bearing lines), or split into two sub-sections when they're independently useful.
+- **New lazy file**: only when 5+ rules land at once. See Step 4 for the justification bar.
+
+**Mandatory trim pass.** After drafting each entry, delete every sentence that doesn't change what a reader will DO. Ban: repetition ("as noted above..."), meta-narration ("added because..."), context prose that could live in the commit message, ceremony phrases ("worth noting that", "it should be pointed out"). If cutting a sentence loses information the reader must have, keep it; otherwise it's tax.
+
+Style directives:
+
 - **CLEAR.** State the rule as a directive: "use X", "every Y must Z", "never do W". Not "consider", "you might want to", "in some cases". If the rule has exceptions, list them in the same breath.
-- **GREP-FRIENDLY.** Name the SDK helper, the vendor field, the annotation type, the gRPC code. Future agents grep for these strings.
+- **GREP-FRIENDLY.** Name the SDK helper, the vendor field, the annotation type, the gRPC code. Future agents grep for these strings. Keep the file:line pointer that anchors the rule; drop everything else.
 - **NO EM-DASHES.** Use commas, periods, parens. (Global writing-style rule.)
 - **NO META-NARRATION.** "added because luisina flagged this" belongs in the commit message, not the rule. Rules state what to do, not the history of why we wrote them down.
 
@@ -113,11 +123,13 @@ If creating a new lazy file is in the plan, surface the proposed filename + `**R
 
 ### 6. Apply edits
 
-Delegate the actual file modification to the `claude-md-save` skill — one invocation per NOT-COVERED-KEEP item. Do NOT run raw `Edit` calls for new-rule adds. `claude-md-save` owns the shared plumbing: symlink resolution, section-picking, `CLAUDE.local.md` fallback, lazy-index registration in the parent CLAUDE file, `.git/info/exclude` writes, and the work/global/project scope decision. Duplicating any of that here rots the moment `claude-md-save` gains a step.
+**CRITICAL: every new-rule add goes through `claude-md-save`. Never use raw `Edit` / `Write` for a NOT-COVERED-KEEP item.**
 
-For each NOT-COVERED-KEEP item, invoke the skill with the distilled rule text. `claude-md-save` re-runs its own target decision; when its choice differs from the target the operator approved in Step 5, surface the divergence in the Step 7 report so the operator can decide whether to move the entry. For the common case (scope=work + a rule that grep-audits into a specific lazy file), both skills land on the same target.
+Invoke `claude-md-save` once per NOT-COVERED-KEEP item with the trimmed rule text from Step 4. This applies to bullets, new sub-sections, new worked-cases, and new lazy files alike — anything that ADDS content. `claude-md-save` owns symlink resolution, section-picking, `CLAUDE.local.md` fallback, lazy-index registration in the parent CLAUDE file, `.git/info/exclude` writes, and the work/global/project scope decision. Duplicating any of that here rots the moment `claude-md-save` gains a step.
 
-For COVERED-BUT-WRONG items, keep using surgical `Edit` calls. `claude-md-save` is append-only, it does not rewrite an existing line in place, so an outdated rule needs a direct edit anchored on the wrong text.
+`claude-md-save` re-runs its own target decision; when its choice differs from the target the operator approved in Step 5, surface the divergence in the Step 7 report so the operator can decide whether to move the entry. For the common case (scope=work + a rule that grep-audits into a specific lazy file), both skills land on the same target.
+
+**Only exception** — COVERED-BUT-WRONG edits use surgical `Edit` calls, because `claude-md-save` is append-only and cannot rewrite an existing line in place. Anchor the `old_string` on the wrong text and swap it. Do not use this exception for anything else.
 
 After every edit (delegated or direct), confirm the file still parses: the lazy-index entry exists if a new file was added, the `**Read when**` trigger is grammatical, no broken markdown fences.
 
@@ -137,6 +149,8 @@ End with the `Changes made` block from the auto-new-day pattern: `Verdict: Yes |
 
 ## Anti-patterns
 
+- **Oversize entries.** Worked-case sections that spill past 20 lines, snippets that reproduce a whole config block when 6 lines show the shape, prose that repeats what the snippet shows. Cut the snippet, cut the prose.
+- **Bypassing `claude-md-save`** for NOT-COVERED-KEEP adds. The only Edit-tool exception is COVERED-BUT-WRONG (rewrite in place). Anything that ADDS content goes through the save skill.
 - **Padded rules.** "It is generally considered best practice to..." → delete and write "use X."
 - **Rule-by-attribution.** "Per luisina's review, ..." → state the rule, not the source.
 - **Creating a new lazy file for one bullet.** Append to the closest existing file instead. New files exist when a topic has 5+ rules.
