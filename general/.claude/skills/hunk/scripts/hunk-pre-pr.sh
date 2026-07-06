@@ -233,7 +233,7 @@ Tell the user in chat:
 - That the Hunk TUI split pane is open in their current tmux window and ready for their review.
 - That you'll re-run \`$tool_label\` ONLY after they confirm they're done looking at Hunk.
 
-Wait for an affirmative reply from the user (e.g. "go", "lgtm", "create the $artifact_label") before re-running \`$tool_label\`. Do NOT re-run immediately — the user needs wall-clock time to actually look at the Hunk window in tmux, and the gap between your "applied" report and a re-run is what prevents them from reviewing.
+Wait for an affirmative reply from the user (e.g. "go", "lgtm", "create the $artifact_label") before re-running \`$tool_label\`. Do NOT re-run immediately — the user needs wall-clock time to actually look at the Hunk pane in tmux, and the gap between your "applied" report and a re-run is what prevents them from reviewing.
 
 When the user confirms, re-run \`$tool_label\` with the same arguments. The hook will then surface a single Allow/Deny UI prompt for the $artifact_label as the final confirmation gate.
 
