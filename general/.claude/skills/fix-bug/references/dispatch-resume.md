@@ -1,1 +1,0 @@
-/home/kanon/work/.claude/skills/auto-new-day/references/dispatch-resume.md
