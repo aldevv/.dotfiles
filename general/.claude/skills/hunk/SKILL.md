@@ -26,6 +26,7 @@ Round 1 already loads it (`cat "$(hunk skill path)"`). Treat that read as mandat
 
 - `scripts/hunk-pre-pr.sh` — the PreToolUse hook this skill optionally installs. Read it directly when you need to know what runs: `cat "$HOME/.claude/skills/hunk/scripts/hunk-pre-pr.sh"`.
 - `references/review-guidance.md` — comment scope (what to flag, what to skip) plus tone rules and a worked example. Read at Round 3 before deciding what to apply.
+- `references/examples.md` — curated good / bad concrete Hunk notes the operator has explicitly labeled in prior sessions. Read at Round 3 alongside `review-guidance.md` so you can pattern-match on shape before applying. Also the file to update when the operator labels a note good or bad in the current session — see "Operator feedback → examples.md" below.
 - `references/hook-install.md` — the prompt + commands + settings.json target shape for Round 4. Read at Round 4 only when the state file is missing.
 
 ## When NOT to use
@@ -164,7 +165,7 @@ Once `<RANGE>` is known, single message with these in parallel:
 - `git diff --no-color <RANGE>` (full diff for you to read; serves double duty as the emptiness check, no separate `--stat` call needed). **Skip in the fast path** — pre-supplied callers already analyzed the diff.
 - Open Hunk in tmux as a pane split off Claude's pane, ALWAYS:
   ```bash
-  tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff <RANGE>"
+  tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff --watch <RANGE>"
   ```
   `-l 70%` sizes the new pane (hunk) to 70% of the original pane's width; the diff viewer is the focal task and benefits from horizontal real estate (split-view diff columns), so Claude shrinks to ~30% on the left rather than splitting 50/50. There is NO conditional on pane count, NO alternative `new-window` branch, and NO `target_session` / `force_new_window` opt-out. If the user asks for a "new window" or a "separate session," tell them the skill only splits — they can break the pane out afterwards with `<prefix> !` or move it to another window with `<prefix> .` if they want it standalone.
 - Active poll for session-up (replaces the old `sleep 2 && hunk session list`). MUST match on the absolute `repo:` path, not the basename, otherwise two repos with the same basename collide. MUST run inside the SAME bash command as any follow-up so the apply only fires after the session resolves:
@@ -198,7 +199,7 @@ If the poll loop exits without finding the session, tell the user "hunk failed t
 
 **Skip this round entirely in the fast path** — the apply + navigate already happened in Round 2 inside the same bash subshell as the poll loop.
 
-In the analysis path (no pre-supplied comments), read `references/review-guidance.md`. Read the diff. Decide whether it contains complex flows or difficult paths.
+In the analysis path (no pre-supplied comments), read `references/review-guidance.md` AND `references/examples.md`. The guidance file has the rules; the examples file has concrete good / bad Hunk notes the operator has labeled in prior sessions. Pattern-match your draft against the good examples' shapes and against the bad examples' anti-patterns before applying.
 
 In the PR-feedback path (Round 1 detection fired), read `references/review-guidance.md` → "PR-feedback mode" for the per-thread note format. Build the batch JSON by walking the payload (each entry → one comment with `filePath` = `fix_file`, `newLine` = `fix_line`, `summary` = `<first-name>: <fix_summary>`, `rationale` = `they said: "<comment, ≤120 chars with …>"\n\n<thread_link>`). Plus build the Feature Explanation orientation note at the top of the diff. Plus, if the diff also has a complex flow worth a code-explanation note, append that — all three categories ship in the same `comment apply --stdin` batch (the validator and the apply both accept multi-entry batches).
 
@@ -311,13 +312,34 @@ hunk session reload --repo <REPO_ROOT> -- diff --agent-notes <RANGE>
 
 **WARNING**: `reload` clears all live comments. Re-apply the batch afterwards.
 
+## Operator feedback → examples.md
+
+When the operator explicitly labels a Hunk note **good** or **bad** in the current session ("that's a good note", "this one is bad", "the summary is confusing", "keep this as an example"), record it in `references/examples.md` before continuing.
+
+Trigger phrases (any of these fires the update):
+- "this is a good note" / "that's a good note" / "keep this one as an example" / "this note is useful"
+- "this is a bad note" / "that's a bad note" / "this doesn't help" / "the summary is confusing" / "rewrite this"
+- "keep track of good notes" / "save this as a good example" / "save this as bad"
+
+Update procedure:
+1. Identify the specific note being labeled (its `filePath`, `newLine`, `summary`, `rationale`). If the operator's message references only the summary text, grep the current Hunk session's `comment list --json` to find the full note.
+2. Genericize: replace project-specific tokens with generic placeholders. Ticket IDs → `<TICKET>`, vendor names → `<VENDOR>`, error codes → `<VENDOR_ERR_A>` / `<VENDOR_ERR_B>`, operation names → `<op>`, field names → `<field>`, method names → `<method>`. Keep the sentence shape intact; strip only the identifying data.
+3. Append the genericized note under `## Good examples` or `## Bad examples` in `references/examples.md`. Number sequentially (`G3`, `G4`, `B3`, `B4`, ...). Include the summary line, the rationale, and a one-sentence paraphrase of the operator's reason.
+4. If the operator gave a corrected version in the same turn (e.g. "the bad shape was X, do it like Y instead"), save both — the bad one under `## Bad examples` with a cross-reference to the good.
+
+Never move an entry between Good and Bad without an explicit operator statement — the file is stable evidence, not editable opinions.
+
+The examples file is a first-class part of the Round 3 review process. Load it alongside `review-guidance.md` before every note-application decision. Skipping it means re-committing anti-patterns the operator has already flagged.
+
 ## Common arguments → command mapping
 
 | User says | Command to run |
 |---|---|
-| `/hunk` (no arg) | `hunk diff <remote-default>...HEAD` |
-| `/hunk HEAD~1` | `hunk diff HEAD~1` |
-| `/hunk --pr 30` | resolve via `gh pr view`, `hunk diff <base>...<head>` |
-| `/hunk main..feature` | `hunk diff main..feature` |
-| (working tree changes) | `hunk diff` (no args) |
-| (staged changes) | `hunk diff --staged` |
+| `/hunk` (no arg) | `hunk diff --watch <remote-default>...HEAD` |
+| `/hunk HEAD~1` | `hunk diff --watch HEAD~1` |
+| `/hunk --pr 30` | resolve via `gh pr view`, `hunk diff --watch <base>...<head>` |
+| `/hunk main..feature` | `hunk diff --watch main..feature` |
+| (working tree changes) | `hunk diff --watch` (no args) |
+| (staged changes) | `hunk diff --watch --staged` |
+
+`--watch` is the default so Hunk auto-reloads whenever the diff input changes (e.g. new commits, edited files, cursor movement across the branch). Drop `--watch` only if the caller explicitly asks for a static snapshot.

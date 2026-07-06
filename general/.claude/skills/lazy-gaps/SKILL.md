@@ -83,8 +83,13 @@ For each KEEP item (and every COVERED-BUT-WRONG item), pick a target. Preference
 
 1. **Update the closest matching lazy file in place** — usually the right choice. Append to the most relevant existing section, or add one short bullet to a "Common Mistakes" / "Gotchas" list.
 2. **Add a new top-level section to an existing lazy file** — when the item is a new sub-topic of an existing file (e.g. a new `### 404 on Revoke` section under `golang-connectors.md`'s idempotency block).
-3. **Add a tightly-scoped paragraph to `~/work/CLAUDE.md`** — only for portfolio-wide CRITICAL rules that must load on every run.
-4. **Create a brand-new lazy file** — last resort. Justification required: the item is broad (5+ connectors will touch it), has a clear `**Read when**` trigger, and no existing file is a natural home. New files MUST be registered in `~/work/CLAUDE.md`'s `## Detail files (load on demand)` index with a precise `**Read when**` clause.
+3. **Create a brand-new lazy file** — when no existing lazy file is a natural home, or when the topic has its own trigger distinct from any current file. Justification bar: the item has a clear `**Read when**` trigger that a fresh agent can recognize (a specific file path, a command, an error string, a user phrase — see `~/.claude/lazy/trigger-authoring.md`). Register the new file in `~/work/CLAUDE.md`'s `## Detail files (load on demand)` index with that trigger. **Do NOT gate this option on "5+ connectors will touch it" or "5+ rules land at once".** A single well-triggered rule that has no home already justifies a new lazy file — a wasted lazy load is fine, a rule buried in the wrong file is not.
+
+**CRITICAL: `~/work/CLAUDE.md` is not a save target for new rules.** Do NOT append new bullets, sections, or paragraphs to `~/work/CLAUDE.md`. Every KEEP item lands in an existing lazy file or a new lazy file. Even portfolio-wide CRITICAL rules go into a lazy file — the Detail-files index in `~/work/CLAUDE.md` names the trigger, so `**Read when:** working in any baton connector` is legitimate for a rule that truly applies every turn. If the rule doesn't fit any existing lazy file's trigger, that's the signal to CREATE a new one, not to inline it in CLAUDE.md.
+
+The ONLY exception is a COVERED-BUT-WRONG edit that surgically rewrites an existing wrong line already inside `~/work/CLAUDE.md` (see Step 6). Adding new content is off-limits.
+
+**When `~/work/CLAUDE.md` looks too big or a section reads as out-of-place**, treat that as a signal to extract or move content into a lazy file (delegate to `claude-md-simplify` — see Sibling skills), not to keep piling on inline.
 
 ### CRITICAL: as small as possible while still clear
 
@@ -93,7 +98,7 @@ Every entry has a hard size budget. Draft, then cut.
 - **Bullet in an existing list**: 1 sentence, max 2 lines. No snippet.
 - **New sub-section in an existing lazy file**: 3-6 lines of prose, plus at most ONE minimal snippet (5-10 lines, only the load-bearing shape). Anything explainable in prose stays as prose.
 - **Worked case / new pattern**: 12-20 lines TOTAL including snippet. If the draft is longer, cut the snippet to the smallest shape that shows the pattern (drop repeated fields, drop non-load-bearing lines), or split into two sub-sections when they're independently useful.
-- **New lazy file**: only when 5+ rules land at once. See Step 4 for the justification bar.
+- **New lazy file**: when no existing file's trigger fits, or when the topic has its own distinct load moment. See Step 4 for the trigger-fit bar. A single well-triggered rule is enough justification.
 
 **Mandatory trim pass.** After drafting each entry, delete every sentence that doesn't change what a reader will DO. Ban: repetition ("as noted above..."), meta-narration ("added because..."), context prose that could live in the commit message, ceremony phrases ("worth noting that", "it should be pointed out"). If cutting a sentence loses information the reader must have, keep it; otherwise it's tax.
 
@@ -153,7 +158,8 @@ End with the `Changes made` block from the auto-new-day pattern: `Verdict: Yes |
 - **Bypassing `claude-md-save`** for NOT-COVERED-KEEP adds. The only Edit-tool exception is COVERED-BUT-WRONG (rewrite in place). Anything that ADDS content goes through the save skill.
 - **Padded rules.** "It is generally considered best practice to..." → delete and write "use X."
 - **Rule-by-attribution.** "Per luisina's review, ..." → state the rule, not the source.
-- **Creating a new lazy file for one bullet.** Append to the closest existing file instead. New files exist when a topic has 5+ rules.
+- **Adding new content to `~/work/CLAUDE.md`.** New rules land in a lazy file (existing or new). The only edit allowed on `~/work/CLAUDE.md` is a surgical rewrite of an existing wrong line (COVERED-BUT-WRONG). If a rule "must apply every turn," its lazy file trigger says so, `~/work/CLAUDE.md` itself does not accumulate content.
+- **Piling into an existing lazy file when the topic doesn't fit its trigger.** If a rule's natural trigger differs from every existing lazy file's `**Read when:**`, that's the signal to create a new lazy file, not to shoehorn the rule into the closest wrong home. Trigger fit beats file-count minimalism.
 - **Rules that restate `~/CLAUDE.md`.** Don't re-encode global writing-style or git-safety rules into work-scope files. Point to them by name.
 - **Burying the rule in a code example.** The rule must be readable as prose first; the snippet is the illustration.
 - **Forgetting the index.** A new lazy file that isn't registered in `~/work/CLAUDE.md`'s `## Detail files (load on demand)` index won't get loaded on trigger. Always register.

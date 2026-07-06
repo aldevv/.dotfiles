@@ -95,71 +95,27 @@ for _, key in ipairs({ "x", "X", "r", "s", "~" }) do
   vim.keymap.set("n", key, open_then(key), { expr = true })
 end
 
--- ufo doesn't honor `foldopen=search` for manually-closed folds. While typing
--- a /? search, open every fold whose line matches; restore on Esc, keep on Enter.
-local search_fold_snapshot = nil
-
-local function snapshot_closed_folds()
-  local snap = {}
-  local last = vim.api.nvim_buf_line_count(0)
-  local lnum = 1
-  while lnum <= last do
-    local s = vim.fn.foldclosed(lnum)
-    if s ~= -1 then
-      local e = vim.fn.foldclosedend(lnum)
-      table.insert(snap, { s, e })
-      lnum = e + 1
-    else
-      lnum = lnum + 1
-    end
-  end
-  return snap
-end
-
-local function restore_closed_folds(snap)
-  pcall(vim.cmd, "silent! normal! zR")
-  for _, r in ipairs(snap) do
-    pcall(vim.cmd, string.format("silent! %d,%dfoldclose", r[1], r[2]))
-  end
-end
-
-vim.api.nvim_create_autocmd("CmdlineEnter", {
-  group = fold_group,
-  pattern = { "/", "?" },
-  callback = function()
-    search_fold_snapshot = snapshot_closed_folds()
-  end,
-})
-
-vim.api.nvim_create_autocmd("CmdlineChanged", {
-  group = fold_group,
-  pattern = { "/", "?" },
-  callback = function()
-    if not search_fold_snapshot then return end
-    local pattern = vim.fn.getcmdline()
-    restore_closed_folds(search_fold_snapshot)
-    if pattern ~= "" then
-      local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-      for i, line in ipairs(lines) do
-        if vim.fn.match(line, pattern) ~= -1 and vim.fn.foldclosed(i) ~= -1 then
-          pcall(vim.cmd, string.format("silent! %dfoldopen", i))
-        end
-      end
-    end
-    vim.cmd("redraw")
-  end,
-})
-
+-- ufo doesn't honor `foldopen=search` for manually-closed folds. On a confirmed
+-- /? search (Enter, not Esc), open every fold whose line matches the pattern.
+-- Live preview during typing was removed: work in CmdlineChanged clobbered
+-- incsearch highlight.
 vim.api.nvim_create_autocmd("CmdlineLeave", {
   group = fold_group,
   pattern = { "/", "?" },
   callback = function()
-    if vim.v.event.abort and search_fold_snapshot then
-      restore_closed_folds(search_fold_snapshot)
-    elseif not vim.v.event.abort then
-      vim.schedule(function() pcall(vim.cmd, "silent! normal! zv") end)
-    end
-    search_fold_snapshot = nil
+    if vim.v.event.abort then return end
+    vim.schedule(function()
+      local pattern = vim.fn.getreg("/")
+      if pattern ~= "" then
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        for i, line in ipairs(lines) do
+          if vim.fn.match(line, pattern) ~= -1 and vim.fn.foldclosed(i) ~= -1 then
+            pcall(vim.cmd, string.format("silent! %dfoldopen", i))
+          end
+        end
+      end
+      pcall(vim.cmd, "silent! normal! zv")
+    end)
   end,
 })
 

@@ -10,3 +10,4 @@ h   left-scroll
 i   right-scroll
 H   help
 g   goto-line
+M   set-mark zG|\^less-mdp %\r'z

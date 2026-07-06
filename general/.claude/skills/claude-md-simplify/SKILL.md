@@ -1,6 +1,6 @@
 ---
 name: claude-md-simplify
-description: "Trim and reorganize a CLAUDE.md or CLAUDE.local.md so the upfront read stays lean and on-budget. Use this whenever the user says their CLAUDE file is too long, hard to navigate, or mixes always-relevant rules with one-off reference material — also when they ask to 'simplify', 'trim', 'reorganize', 'split up', 'extract from', or 'clean up' a CLAUDE.md / CLAUDE.local.md / ~/.claude/CLAUDE.md. The skill extracts sections that should only load on a specific trigger (hook reference → loads when a hook fires; Snowflake CLI setup → loads when the user runs `snow`) into `.claude/lazy/<topic>.md` with a `**Load this when:** <trigger>` line, collapses verbose-but-eager sections into tighter rules, migrates referenced sibling files (always `CLAUDE-*.md` AND every file under a sibling `.claude/files/` directory, optionally other reference docs) into `.claude/lazy/`, and adds a 'Detail files (load on demand)' index + Table of Contents at the top. Critical behavioral rules stay inline. Strict about triggers: if you can't name a specific trigger that should cause Claude to read a section, it stays inline."
+description: "Trim and reorganize a CLAUDE.md or CLAUDE.local.md so the upfront read stays lean and on-budget. Use this whenever the user says their CLAUDE file is too long, hard to navigate, or mixes always-relevant rules with one-off reference material — also when they ask to 'simplify', 'trim', 'reorganize', 'split up', 'extract from', or 'clean up' a CLAUDE.md / CLAUDE.local.md / ~/.claude/CLAUDE.md. The skill extracts sections that should only load on a specific trigger (hook reference → loads when a hook fires; Snowflake CLI setup → loads when the user runs `snow`) into `.claude/lazy/<topic>.md`, collapses verbose-but-eager sections into tighter rules, migrates referenced sibling files (always `CLAUDE-*.md` AND every file under a sibling `.claude/files/` directory, optionally other reference docs) into `.claude/lazy/`, and adds a 'Detail files (load on demand)' index + Table of Contents at the top. The Detail-files index in the main file is the single source of truth for triggers — the skill NEVER writes a `**Load this when:**` or `**Referenced from:**` block into the extracted file body (those duplicate the index and go stale). Critical behavioral rules stay inline. Strict about triggers: if you can't name a specific trigger that should cause Claude to read a section, it stays inline."
 ---
 
 Reorganize a CLAUDE.md / CLAUDE.local.md so:
@@ -71,7 +71,7 @@ Both patterns target the same destination tree (`.claude/lazy/`), so the user ge
 **For each migration candidate, gather:**
 - Source path (resolve relative paths against the main file's directory)
 - Target path under `<root>/.claude/lazy/` — derived per source pattern: `CLAUDE-foo.md` → `lazy/foo.md`; `.claude/files/<path>.md` → `lazy/<path>.md` verbatim; other candidates → topic name agreed in the plan. See Step 6 for the full rule.
-- Trigger — derive it in this priority order: (1) the one-line description in the main file's index ("References to Specialized Guides", "Detail files (load on demand)", or equivalent); (2) the file's own existing `**Load this when:**` line (common for files under `.claude/files/`); (3) the file's first paragraph; (4) ask the user. The trigger has to be specific enough that the same `**Load this when:**` discipline from Step 2 applies — "working with X" is too broad; reject and tighten.
+- Trigger — derive it in this priority order (this trigger will land in the main file's Detail-files index in Step 8; it does NOT get written into the migrated file body): (1) the one-line description in the main file's index ("References to Specialized Guides", "Detail files (load on demand)", or equivalent); (2) any `**Load this when:**` line already inside the source file (common for files under `.claude/files/`) — use it as a hint, then discard the line when the file moves; (3) the file's first paragraph; (4) ask the user. The trigger has to be specific enough that the same trigger discipline from Step 2 applies — "working with X" is too broad; reject and tighten.
 - Whether the derived target name collides with a planned section extraction (Step 2). If yes, dedup or merge under shared headings.
 
 These candidates flow into the plan in Step 3 as a separate "Files to move" list.
@@ -122,19 +122,7 @@ For each approved extraction:
    - If the target CLAUDE.md is inside a git repo → `<repo-root>/.claude/lazy/<topic>.md`
    - Otherwise → `<dir-of-CLAUDE.md>/.claude/lazy/<topic>.md`
 2. **If the target file already exists** (re-running the skill, or a prior extraction put something there): read it, show the user the existing content, and ask whether to (a) merge new sections into it under a new heading, (b) replace it, or (c) pick a different filename. Do not overwrite silently.
-3. Create (or update) the file. **The first two lines after the `# <Title>` must be a trigger block** so Claude knows when to load it:
-   ```markdown
-   # <Topic>
-
-   **Load this when:** <specific trigger in one line — the same trigger you identified in Step 2>.
-   **Referenced from:** `<source-file>.md`
-   ```
-   Examples of good trigger lines:
-   - `**Load this when:** a hook fires or blocks, or when running a Quavo replication/recreation skill.`
-   - `**Load this when:** the user runs the \`snow\` CLI, hits a Snowflake auth error, or asks about Okta FastPass / network-policy bypass.`
-   Bad trigger lines (too vague — reject and tighten):
-   - `**Load this when:** needed.`
-   - `**Load this when:** working with Snowflake.` (too broad — every turn could "work with Snowflake")
+3. Create (or update) the file with a `# <Topic>` H1 followed directly by the content. **Do NOT add a `**Load this when:**` line or a `**Referenced from:**` line** inside the file body. The Detail-files index in the main CLAUDE.md is the single source of truth for triggers — duplicating a trigger inside the extracted file creates two places to maintain, and referenced-from lines go stale as content evolves. The trigger lives in the main file's index; the extracted file just carries content.
 4. Preserve the original section's content verbatim inside the extracted file. Don't reformat, don't rewrite — move it as-is so readers comparing the two see a 1:1 correspondence.
 5. If multiple sections merge into one file (only when they share the same trigger), use `---` separators and keep each section's original heading.
 
@@ -151,22 +139,7 @@ For each approved file migration:
 
    Use the same root-resolution rule as Step 5 (repo root if inside a git repo, otherwise the CLAUDE.md's directory).
 2. **Handle collisions.** If the target file already exists (a Step 5 extraction landed there, or a prior run did): either merge the migrated content under a new `## <Original Heading>` subsection separated by `---`, or pick a different filename. Confirm the choice was approved in Step 3 — don't overwrite silently.
-3. **Read the source file.** Preserve its body content verbatim. The migrated file MUST start with the trigger block, exactly like Step 5 extractions:
-   ```markdown
-   # <Topic Title — derive from the original H1, or the topic name title-cased>
-
-   **Load this when:** <trigger from Step 2b — same wording as the Detail-files index entry>.
-   **Referenced from:** `<source-file>.md`
-
-   <rest of the original content>
-   ```
-   If the source already has a `# Title`, demote it (or replace with the new H1) — only one H1 per file. If the source already has its own `**Load this when:**` / `**Referenced from:**` lines (typical for files originating in `.claude/files/`), replace them rather than stacking duplicates.
-
-   **Trigger evaluation pass (run on every migration, even when the source already has a trigger):**
-   - **Convert to bullet format when the trigger names multiple distinct signals.** If the existing trigger lists two or more independent load moments — different tools, different error modes, different files, different workflows — rewrite it from a single-line comma list into the bulleted `**Load this when** any of:` form (matching the Step 8 index format). Example: `**Load this when:** creating AWS resources (CLI vs Playwright) or working with GameLift Streams setup.` becomes a bullet list `**Load this when** any of:\n  - creating AWS resources (deciding between CLI and Playwright)\n  - tagging AWS resources (required tags)\n  - working with GameLift Streams setup`. Keep single-line when the trigger names one signal or several verb-forms of the same concept.
-   - **Tighten vague clauses.** Replace introspective or abstract phrasing with observable signals: file paths about to be edited, commands about to run, tool calls, specific error strings, explicit user phrases. "working with X" / "when needed" / "considering Y" → reject and rewrite. See Step 2's "Bad triggers" list for the full pattern.
-   - **Inline the Detail-files index entry's signals.** If the main file's old index entry for this doc carried richer signals than the source file's own trigger (e.g. the index says "investigating ODCR autoshutdown ECS task logs, CloudWatch monitoring, or scheduling" but the file's own first line just says "**Load this when:** autoshutdown stuff"), merge so the migrated file's trigger has the better wording. The Step 8 index entry and the migrated file's `**Load this when:**` line must agree afterward.
-   - **Don't lengthen a trigger that's already concrete and singular.** A precise one-line trigger ("**Load this when:** the user runs `pass otp`") stays as is — bulleting it would be noise.
+3. **Read the source file.** Preserve its body content verbatim under a `# <Topic Title — derive from the original H1, or the topic name title-cased>` H1. **Do NOT add a `**Load this when:**` line or `**Referenced from:**` line** inside the migrated file body — the Detail-files index in the main CLAUDE.md is the single source of truth for triggers, and referenced-from lines go stale as content evolves. If the source already has a `# Title`, keep or rewrite that H1 (only one H1 per file). If the source already carries its own `**Load this when:**` / `**Referenced from:**` block (typical for files originating in `.claude/files/`), **strip those lines out** — they belong only in the main file's Detail-files index. All trigger authoring happens in Step 8 on the main file's index, not here.
 4. **Delete the original.** Remove the source file (`CLAUDE-*.md` or the file under `.claude/files/`) after the new file is written. (References to it get rewritten in Step 7.) After all migrations complete, if `.claude/files/` is now empty, remove the directory too.
 5. **Note cross-references.** If a migrated file references *another* migrated file (e.g. `CLAUDE-testing.md` says "see CLAUDE-golang-connectors.md", or `.claude/files/prod.md` links to `.claude/files/secrets.md`), record the rewrite needed — Step 7 will fix both the main file and these in-file cross-refs to use the new locations (`.claude/lazy/secrets.md` etc.).
 
@@ -218,7 +191,7 @@ Extracted reference content lives in `.claude/lazy/`. Each entry names the trigg
 
 Rules:
 - **Detail files** come first (they're the lazy-load contract), then **Table of contents** for the eager content.
-- **Every Detail-files entry must name its trigger** using a `**Read when**` clause. This mirrors the `**Load this when:**` line inside the extracted file — the two must agree. A reference without a trigger is a bug.
+- **Every Detail-files entry must name its trigger** using a `**Read when**` clause. This index is the single source of truth for triggers; the extracted file body does NOT repeat the trigger. A reference without a trigger is a bug.
 - **Trigger format depends on signal count:**
   - One concrete signal (or several verb-forms of the same concept) → single-line: `**Read when:** <trigger>.`
   - Multiple distinct signals / load moments → bulleted: `**Read when** any of:` + indented bullet list. Use this whenever spelling out the signals as a comma-list would make the trigger dense or ambiguous.
@@ -232,10 +205,10 @@ Rules:
 
 ## Step 9 — Update any "save in my claude" (or equivalent) guidance
 
-If the main file has a rule that tells Claude where to save user-added content (common names: "Save in my claude", "Save in my CLAUDE.md", "When saving preferences"), update it to include the newly-created `.claude/lazy/*.md` files as valid save targets. After extraction, the rule needs to say: pick the best location — either the main file (for cross-cutting rules that apply every turn) or one of the `.claude/lazy/*.md` files (for content matching that file's `**Load this when:**` trigger).
+If the main file has a rule that tells Claude where to save user-added content (common names: "Save in my claude", "Save in my CLAUDE.md", "When saving preferences"), update it to include the newly-created `.claude/lazy/*.md` files as valid save targets. After extraction, the rule needs to say: pick the best location — either the main file (for cross-cutting rules that apply every turn) or one of the `.claude/lazy/*.md` files (for content matching that file's trigger as declared in the Detail-files index).
 
 **Template to merge in**:
-> When the user says "save in my claude" (or equivalent), pick the best location: the main `<CLAUDE*.md>` file for cross-cutting rules/directives, OR one of the `.claude/lazy/*.md` files when the content matches that file's `**Load this when:**` trigger (e.g. hook behavior → `.claude/lazy/hooks.md`; Snowflake CLI details → `.claude/lazy/snow.md`). Trigger specificity wins: if the saved content would only be read when a specific thing happens, put it in the matching `.claude/lazy/*.md`.
+> When the user says "save in my claude" (or equivalent), pick the best location: the main `<CLAUDE*.md>` file for cross-cutting rules/directives, OR one of the `.claude/lazy/*.md` files when the content matches that file's trigger as declared in the main file's Detail-files index (e.g. hook behavior → `.claude/lazy/hooks.md`; Snowflake CLI details → `.claude/lazy/snow.md`). Trigger specificity wins: if the saved content would only be read when a specific thing happens, put it in the matching `.claude/lazy/*.md`.
 
 Rules:
 - **Don't invent this rule** if the file doesn't already have one — this skill doesn't add new behavioral directives on its own. Just update what's there.
@@ -264,7 +237,6 @@ Summarize:
 - Sections extracted (count)
 - Sibling files migrated (count, with old → new paths). Note separately if a stale `.claude/files/` directory was removed because it ended up empty.
 - Sections simplified (count, with line-delta)
-- Triggers rewritten (count of migrated files where Step 6's trigger-evaluation pass changed the existing `**Load this when:**` line — converted to bullets, tightened vague wording, or merged with the index entry's signals)
 - Main file before/after line count
 - Whether `.git/info/exclude` was updated
 - Whether any migrated files were tracked in git (flag for the user to commit the move)

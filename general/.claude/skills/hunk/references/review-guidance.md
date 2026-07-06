@@ -6,17 +6,38 @@ When to read this: at Round 3 of the `hunk` workflow, before deciding what (if a
 
 **The bar is high.** Default to applying nothing.
 
-Apply when:
+### CRITICAL: every note is a call to action OR a call to inaction — never trivia
 
-- **Complex flows** — fan-out/await, retry loops with subtle conditions, async patterns, recursion, non-obvious state transitions. One brief shape-of-the-flow note at the entry point ("this fans out N tasks then awaits all, retrying any that return WouldBlock"). Never per-step narration.
-- **Difficult paths** — a non-obvious invariant the reader has to hold in their head, a subtle ordering requirement, a workaround for a specific bug or platform quirk, a control-flow edge that's easy to misread.
+A Hunk note earns its spot only when it tells the reader ONE of these two things clearly:
 
-Do NOT comment on:
+1. **"You should change X"** (actionable). Say what to change.
+2. **"You don't need to do anything here — and here's what breaks if you touch it."** (inaction). State that no action is needed AND the consequence of reverting or "cleaning up" the line.
+
+If the note doesn't fit one of those two shapes, delete it. Raw facts about the vendor API, the algorithm, the config value — with no "so if you change this, X breaks" — are trivia. The reader can look those facts up. What they cannot look up is which lines are load-bearing.
+
+**CRITICAL: the summary line must state action-or-inaction in plain English.** Terse tag openers (`intentional:`, `heads-up:`, `note:`, `fyi:`) fail this rule — they're jargon that assumes the reader already knows the convention. The summary is the ONE chat-line the reader sees at the anchor point; it has to answer "should I do something?" without them having to open the rationale.
+
+- Actionable summary shapes: `should <X>`, `<X> should be <Y>`, `please <do X>`, `would you mind <X>ing here?`, `suggest: <X>`.
+- Inaction summary shapes: `no action needed — <one-line what-this-is>`, `nothing to do here — this is the <feature/fix>`, `leave as-is — <reason>`.
+
+Never lead the summary with a bare jargon tag. If the summary reads "intentional: X" or "heads-up: Y", rewrite it to "no action needed — X" or a similarly plain-English action-tagged form.
+
+**Self-test before applying every non-actionable note**: finish the sentence "if the reader ignores this note and reverts / rewrites the line, ___". If the answer is "the <TICKET> bug returns" or "we widen the access-control boundary" or "the retry path stops working", the note is earned. If the answer is "nothing measurable" or "they'd just have a slightly different constant", it's trivia — cut it.
+
+**Where the consequence lives in the rationale.** Don't append a redundant closing sentence like "reverting this line brings <TICKET> back". Embed the consequence inside the mechanism explanation: describing WHAT the old code would do wrong (`"matching it treated every failure as a duplicate"`) is the consequence, expressed naturally. A separate closer restates what the reader already knows and adds noise. If the mechanism explanation doesn't make the consequence obvious, the mechanism explanation is what needs fixing — not a closer bolted on.
+
+### Apply when
+
+- **Complex flows** — fan-out/await, retry loops with subtle conditions, async patterns, recursion, non-obvious state transitions. One brief shape-of-the-flow note at the entry point ("this fans out N tasks then awaits all, retrying any that return WouldBlock"). Never per-step narration. Still pair with a consequence when the flow's shape is load-bearing ("collapsing this back to a single call re-introduces the race that caused CXH-NNNN").
+- **Difficult paths** — a non-obvious invariant the reader has to hold in their head, a subtle ordering requirement, a workaround for a specific bug or platform quirk, a control-flow edge that's easy to misread. Same rule: name the consequence of getting it wrong, not just the fact.
+
+### Do NOT comment on
 
 - Behavioral changes obvious from the diff itself (return-shape changes, new branches a careful reader will catch).
 - Cross-file invariants, rollout footguns, test gaps, env-var changes. Those belong in the PR description, not in Hunk.
 - Pure renames, signature widening, comment-only changes, generated files.
 - Anything a careful read of the function makes obvious.
+- Trivia — a note that states a fact the reader could look up (vendor error codes, endpoint names, algorithm names) with no call-to-action and no consequence-if-changed. This is the most common failure mode and the hardest to catch, because trivia notes feel useful when you write them. Apply the self-test above.
 
 ## Content — explain the code, not the history of how you got here
 
