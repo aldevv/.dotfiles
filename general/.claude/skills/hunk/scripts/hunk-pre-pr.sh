@@ -151,8 +151,8 @@ fi
 #      for this repo (works for both the new-window and split-pane paths).
 #   2. Named window match — covers the brief startup gap before the hunk
 #      session registers (~1s).
-# Layout choice: if the current window has only one pane, split right (less
-# window churn for casual use). Otherwise open a new named window.
+# Layout: always split right in the session's current window — never a new
+# window, regardless of how many panes the current window already has.
 already_open=0
 if hunk session list 2>/dev/null | grep -qF "$repo_root"; then
   already_open=1
@@ -161,14 +161,8 @@ elif tmux list-windows -t "$session_name" -F '#{window_name}' 2>/dev/null \
   already_open=1
 fi
 if (( ! already_open )); then
-  pane_count="$(tmux display-message -p '#{window_panes}' 2>/dev/null || echo 0)"
-  if [[ "$pane_count" == "1" ]]; then
-    tmux split-window -h -t "$session_name" -c "$repo_root" \
-      "hunk diff '$range'" 2>/dev/null || true
-  else
-    tmux new-window -t "$session_name" -n "$window_name" \
-      "cd '$repo_root' && hunk diff '$range'" 2>/dev/null || true
-  fi
+  tmux split-window -h -t "$session_name" -c "$repo_root" \
+    "hunk diff '$range'" 2>/dev/null || true
 fi
 
 git -C "$repo_root" diff --no-color "$range" > "$diff_file" 2>/dev/null || true
@@ -199,7 +193,7 @@ placeholder_rationale="The main Claude session is composing review comments now.
 ) </dev/null >/dev/null 2>&1 & disown
 
 review_brief=$(cat <<EOF
-A Hunk TUI session is open in tmux window "$window_name" for $repo_root (range $range). The pre-computed diff is at $diff_file — read it with: cat $diff_file.
+A Hunk TUI session is open in a split pane in your current tmux window for $repo_root (range $range). The pre-computed diff is at $diff_file — read it with: cat $diff_file.
 
 Comments are reserved for **complex flows or difficult paths** only. The bar is high: a comment must explain something a careful reader would still find non-obvious after reading the function. Default to applying nothing.
 
@@ -236,7 +230,7 @@ STEP 3 — STOP and let the user review Hunk.
 
 Tell the user in chat:
 - What you applied (or that you chose to skip — one short sentence on why).
-- That the Hunk TUI window "$window_name" is open and ready for their review.
+- That the Hunk TUI split pane is open in their current tmux window and ready for their review.
 - That you'll re-run \`$tool_label\` ONLY after they confirm they're done looking at Hunk.
 
 Wait for an affirmative reply from the user (e.g. "go", "lgtm", "create the $artifact_label") before re-running \`$tool_label\`. Do NOT re-run immediately — the user needs wall-clock time to actually look at the Hunk window in tmux, and the gap between your "applied" report and a re-run is what prevents them from reviewing.
