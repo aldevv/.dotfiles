@@ -48,7 +48,8 @@ if not os.getenv("USE_QWERTY") then
 
 
   map("n", "l", "i", nor) --the o messes with mini.ai and targets.vim https://github.com/echasnovski/mini.nvim/issues/206
-  map({ "n", "x" }, "i", "lzv", nor)
+  map("n", "i", "lzv", nor)
+  map("x", "i", "l", nor)
 
   -- useful for targets.vim
   map("x", "l", "i", nor)

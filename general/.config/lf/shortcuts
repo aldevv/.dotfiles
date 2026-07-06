@@ -120,6 +120,9 @@ map Ywa $ cp -rv $f /home/kanon/Pictures/Wallpapers/all_time
 map <backspace2>wi cd /home/kanon/.local/share/wiki
 map mwi $ mv -v $f /home/kanon/.local/share/wiki
 map Ywi $ cp -rv $f /home/kanon/.local/share/wiki
+map <backspace2>win cd /home/kanon/.local/share/wiki/notes
+map mwin $ mv -v $f /home/kanon/.local/share/wiki/notes
+map Ywin $ cp -rv $f /home/kanon/.local/share/wiki/notes
 map <backspace2>wp cd /home/kanon/.local/share/wiki/personal
 map mwp $ mv -v $f /home/kanon/.local/share/wiki/personal
 map Ywp $ cp -rv $f /home/kanon/.local/share/wiki/personal
@@ -222,9 +225,15 @@ map Yp $ cp -rv $f /home/kanon/projects/
 map <backspace2>p. cd /home/kanon/projects/
 map mp. $ mv -v $f /home/kanon/projects/
 map Yp. $ cp -rv $f /home/kanon/projects/
-map <backspace2>c. cd /home/kanon/code
-map mc. $ mv -v $f /home/kanon/code
-map Yc. $ cp -rv $f /home/kanon/code
+map <backspace2>co. cd /home/kanon/code
+map mco. $ mv -v $f /home/kanon/code
+map Yco. $ cp -rv $f /home/kanon/code
+map <backspace2>c. cd ./.claude
+map mc. $ mv -v $f ./.claude
+map Yc. $ cp -rv $f ./.claude
+map <backspace2>cs. cd ./.claude/skills
+map mcs. $ mv -v $f ./.claude/skills
+map Ycs. $ cp -rv $f ./.claude/skills
 map <backspace2>pp cd ~/Pictures
 map mpp $ mv -v $f ~/Pictures
 map Ypp $ cp -rv $f ~/Pictures
@@ -234,6 +243,9 @@ map Yxm. $ cp -rv $f ~/.config/xmonad
 map <backspace2>k. cd /home/kanon/qmk_firmware
 map mk. $ mv -v $f /home/kanon/qmk_firmware
 map Yk. $ cp -rv $f /home/kanon/qmk_firmware
+map <backspace2>cl. cd ./.claude/lazy
+map mcl. $ mv -v $f ./.claude/lazy
+map Ycl. $ cp -rv $f ./.claude/lazy
 map <backspace2>.sf $ $EDITOR ~/.config/shortcuts/sf
 map <backspace2>.sd $ $EDITOR ~/.config/shortcuts/sd
 map <backspace2>.z $ $EDITOR ~/.config/zsh/.zshrc

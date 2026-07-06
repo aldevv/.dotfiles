@@ -16,7 +16,6 @@ import XMonad.Hooks.WindowSwallowing (swallowEventHook)
 import XMonad.Layout.Magnifier (magnifiercz)
 import XMonad.Layout.NoBorders (Ambiguity (OnlyScreenFloat, Screen), lessBorders, noBorders, smartBorders)
 import XMonad.Layout.Renamed
-import XMonad.Layout.Simplest
 import XMonad.Layout.Spacing
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.ToggleLayouts (ToggleLayout (..), toggleLayouts)
@@ -118,7 +117,7 @@ customLayout =
     tiled = renamed [Replace "T"] $ mySpacing 10 $ Tall nmaster delta ratio
     mirrorTiled = smartBorders $ Mirror tiled
     threeCol = renamed [Replace "W"] $ mySpacing 10 $ magnifiercz 1.3 (ThreeColMid nmaster delta ratio)
-    toggleSimplest = toggleLayouts $ renamed [Replace "S"] $ noBorders Simplest -- monocle one over other
+    toggleSimplest = toggleLayouts $ renamed [Replace "S"] $ noBorders Full
     nmaster = 1 -- Default number of windows in the master pane
     ratio = 1 / 2 -- Default proportion of screen occupied by master pane
     delta = 3 / 100 -- Percent of screen to increment by when resizing panes

@@ -298,18 +298,7 @@ bindkey "^ " autosuggest-execute
 # bindkey "^" autosuggest-toggle
 
 
-# -- less 
-# New less versions will read this file directly
-export LESSKEYIN="$HOME/.config/colemak-less"
-
-# Only run lesskey if less version is older than v582
-#less_ver=$(less --version | awk '{print $2;exit}')
-#autoload -Uz is-at-least
-#if ! is-at-least 582 $less_ver; then
-#  # Old less versions will read this transformed file
-#  lesskey $LESSKEYIN
-#fi
-#unset less_ver
+# LESSKEYIN lives in .zprofile so non-interactive `zsh -lc` picks it up too.
 
 
 # install https://github.com/relastle/pmy

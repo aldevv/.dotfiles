@@ -76,6 +76,10 @@ Exception: tests. A one-line function-header comment naming a non-obvious scenar
 
 The "Forbidden patterns" and "Justified comments" sections below show what these rules look like in practice.
 
+### Comments about runtime capabilities are snapshots, not facts
+
+When an existing comment asserts a runtime capability ("this runtime has no X", "X isn't available", "the interpreter doesn't expose Y"), treat it as a snapshot from whenever it was written, not a current fact. Before deferring to it, feature-detect: `typeof X === "function"` at runtime or grep the upstream API surface. Both take 30 seconds and beat a stale claim. Especially when a review or bot flags the capability, that's the trigger to verify, not the trigger to defend the comment.
+
 ### Forbidden patterns
 
 #### 1. Restating the next line
@@ -200,6 +204,21 @@ type Order struct {
 ```
 
 Delete. The type name plus its fields says it. A comment is only justified if it documents an invariant the fields cannot express (e.g., "Total includes shipping but excludes tax").
+
+#### 11. References to my Claude setup, dotfiles, rules system, or internal vocabulary
+
+```go
+// ponytail: simple lock; switch to per-account if throughput matters
+var mu sync.Mutex
+
+// Per the lazy file code.md "Comments" section, only annotate non-obvious WHY.
+const ttl = 5 * time.Minute
+
+// CLAUDE.md says we always use json.Number for IDs.
+type ID json.Number
+```
+
+Delete the prefixes and the rule-name references. Code comments are for code-related content only: algorithm intent, vendor-API quirks, non-obvious WHY, external dependency notes, workarounds for specific upstream bugs. No `ponytail:` prefix, no "per the lazy file X", no "CLAUDE.md says", no "skills/Y says", no internal vocabulary. The setup is mine, not the reader's; the reader sees only the committed source. Setup or rule justifications belong in the PR description, the commit message, or chat — never in the source tree. Re-write the comment to state the actual code-level reason in the reader's vocabulary, or delete it.
 
 ### Justified comments
 

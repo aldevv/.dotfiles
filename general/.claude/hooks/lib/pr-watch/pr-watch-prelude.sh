@@ -295,6 +295,43 @@ prelude_create_fix_worktree() {
   return 0
 }
 
+# Pre-seed Claude Code's per-project trust state for $1=worktree path, so the
+# fresh `claude` we spawn inside it doesn't pause on the workspace-trust dialog
+# (there's no interactive-mode flag to skip it; the state lives in ~/.claude.json
+# under .projects[<path>]). Also flips hasClaudeMdExternalIncludesApproved so the
+# linked CLAUDE.md doesn't re-prompt about its external @-includes. flock keeps
+# us race-safe against any other claude/hook concurrently mutating the file.
+# $1=worktree path. Best-effort: missing jq / missing ~/.claude.json -> silent skip.
+prelude_trust_worktree() {
+  local wt=$1
+  local config="$HOME/.claude.json"
+  local lock="/tmp/claude-json-trust-$(id -u).lock"
+  [ -z "$wt" ] && return 0
+  [ -f "$config" ] || return 0
+  command -v jq >/dev/null 2>&1 || { echo "[trust] jq not on PATH — skip"; return 0; }
+  command -v flock >/dev/null 2>&1 || { echo "[trust] flock not on PATH — skip"; return 0; }
+
+  (
+    exec 9>"$lock"
+    flock -w 5 9 || { echo "[trust] could not acquire lock on $lock — skip"; exit 0; }
+    local tmp
+    tmp=$(mktemp "${config}.XXXXXX")
+    if jq --arg p "$wt" '
+          .projects[$p] = ((.projects[$p] // {}) + {
+            hasTrustDialogAccepted: true,
+            hasClaudeMdExternalIncludesApproved: true,
+            hasClaudeMdExternalIncludesWarningShown: true
+          })
+        ' "$config" > "$tmp" 2>/dev/null; then
+      mv "$tmp" "$config"
+      echo "[trust] seeded hasTrustDialogAccepted=true for $wt"
+    else
+      rm -f "$tmp"
+      echo "[trust] jq edit of $config failed — skip"
+    fi
+  )
+}
+
 # Check the PR/MR is OPEN (not merged or closed). Requires PLATFORM set.
 # For gitlab, also requires HOST, PROJ_PATH_ENC, MR_IID.
 prelude_pr_is_open() {

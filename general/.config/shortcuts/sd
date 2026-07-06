@@ -39,6 +39,7 @@ O       ~/Documents
 vv      ~/Videos
 wa      $WALL
 wi      $WIKI
+win     $WIKI/notes
 wp      $WIKI/personal
 wcv      $WIKI/personal/cv/latex
 wS      $WIKI/cheatsheets
@@ -73,8 +74,12 @@ P       $PROGRAMS/
 P.      $PROGRAMS/
 p       $PROJECTS/
 p.      $PROJECTS/
-c.      $CODE
+co.      $CODE
+c.      ./.claude
+cs.      ./.claude/skills
 pp      ~/Pictures
 xm.     ~/.config/xmonad
 k.      $HOME/qmk_firmware
+cl.     ./.claude/lazy
 # temp shortcuts
+

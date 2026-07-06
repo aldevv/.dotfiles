@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# less-mdp: open the current less buffer / file with `mdp`.
+#
+# Called from the M-binding in $HOME/.config/colemak-less. Less pipes its
+# buffer to this script on stdin and passes its `%` expansion (either the
+# real file path when less has one, or `-` when reading a pipe) as $1.
+#
+# MDP_TARGET overrides both — if set, mdp opens THAT file (e.g. auto-new-day
+# pagers point it at the original brief.md so the pre-folded content in
+# less's buffer isn't rendered as broken markdown).
+#
+# LESS_MDP_EXT controls the temp-file suffix used for the piped-stdin case;
+# defaults to .md. Set to .tex / .html / whatever else mdp dispatches on when
+# piping non-markdown content through less. Ignored when a real file path is
+# resolved (that path already carries its own extension).
+#
+# Concurrent-safe: each invocation writes to a unique mktemp file, so
+# N less instances pressing M simultaneously never clobber each other.
+#
+# Standalone use:
+#   echo "# Hello" | less-mdp -                        # markdown pipe
+#   LESS_MDP_EXT=.tex cat paper.tex | less-mdp -       # tex pipe
+#   less-mdp /path/to/file.tex                         # real file (any ext)
+#   MDP_TARGET=/other/file.md less-mdp -               # override
+
+set -u
+
+less_arg=${1:--}
+
+target=${MDP_TARGET:-$less_arg}
+
+if [ "$target" = "-" ] || [ ! -f "$target" ]; then
+    target=$(mktemp --suffix="${LESS_MDP_EXT:-.md}")
+    tee "$target" > /dev/null
+fi
+
+mdp "$target"

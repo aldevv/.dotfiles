@@ -6,6 +6,14 @@ print_exec() {
 }
 # programs
 alias tmux="tmux -f ~/.config/tmux/tmux.conf"
+tmuxr() {
+  local conf=~/.config/tmux/tmux.conf
+  tmux -f "$conf" new-session -d -s _restore_placeholder 2>/dev/null
+  tmux -f "$conf" run-shell ~/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh
+  tmux -f "$conf" kill-session -t _restore_placeholder 2>/dev/null
+  tmux -f "$conf" attach
+}
+alias tmr="tmuxr"
 alias v="nvim"
 alias vf="source _vf"
 alias vfl="source _vf .claude/lazy"

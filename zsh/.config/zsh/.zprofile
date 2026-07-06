@@ -7,15 +7,18 @@ export VISUAL=nvim
 export LESS="-isSMRQJ"
 # export LESS="-isSMRQJ -j.5" for middle screen when searching
 export PAGER='less'
+export LESSKEYIN="$HOME/.config/colemak-less"
 # export PAGER='bat'
 export READER=zathura
 # export MANPAGER="less"
 # export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 # export MANPAGER="nvim -c ' set ft=man' -"
-if [[ -n $(command -v st) ]]; then
-    export TERMINAL=st
-    export TERM=tmux-256color
-fi 
+# if [[ -n $(command -v st) ]]; then
+export TERMINAL=kitty
+# if [[ -n $(command -v st) ]]; then
+# export TERMINAL=st
+# export TERM=tmux-256color
+# fi 
 export DEFAULT_DMENU_FONT="Cascadia:style=Italic"
 export COLORTERM=truecolor
 export BAT_PAGER='less -R'

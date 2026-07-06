@@ -11,15 +11,18 @@ if xwininfo -name as_toolbar >/dev/null 2>&1 || xwininfo -name "teams.microsoft.
 		# for notification to appear, sleep
 		sleep 6
 		dunstctl set-paused true
-		echo ""
-	else
-		echo ""
 	fi
-
 else
 	if [ -f "/tmp/zoom.lock" ]; then
 		rm /tmp/zoom.lock
 		dunstctl set-paused false
 	fi
-	echo ""
 fi
+
+if [[ "$(dunstctl is-paused)" == "true" ]]; then
+	icon="⚐"
+else
+	icon="⚑"
+fi
+
+echo '<action=`dunstctl history-pop` button=1><fn=3>'"${icon}"'</fn></action>'

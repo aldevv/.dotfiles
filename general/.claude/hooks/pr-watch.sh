@@ -75,30 +75,52 @@ URL=$(printf '%s' "$STDOUT_TEXT" \
   | grep -Eo 'https://[^ ]+/(pull|merge_requests)/[0-9]+' \
   | head -n1)
 
-if [ -z "$URL" ]; then
-  if git -C "$REPO_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    BRANCH=$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
-    if [ -n "$BRANCH" ] && [ "$BRANCH" != "HEAD" ]; then
-      ORIGIN_URL=$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null || true)
-      case "$ORIGIN_URL" in
-        *github.com*|*conductorone*)
-          command -v gh >/dev/null 2>&1 && \
-            URL=$(cd "$REPO_DIR" && gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // ""' 2>/dev/null || true)
-          ;;
-        *gitlab*)
-          command -v glab >/dev/null 2>&1 && \
-            URL=$(cd "$REPO_DIR" && glab mr list --source-branch "$BRANCH" --opened --output json 2>/dev/null \
-                    | jq -r '.[0].web_url // ""' 2>/dev/null || true)
-          ;;
-        *)
-          command -v gh >/dev/null 2>&1 && \
-            URL=$(cd "$REPO_DIR" && gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // ""' 2>/dev/null || true)
-          if [ -z "$URL" ] && command -v glab >/dev/null 2>&1; then
-            URL=$(cd "$REPO_DIR" && glab mr list --source-branch "$BRANCH" --opened --output json 2>/dev/null \
-                    | jq -r '.[0].web_url // ""' 2>/dev/null || true)
-          fi
-          ;;
-      esac
+lookup_pr_url_by_head() {
+  local ref="$1"
+  [ -z "$ref" ] && return 0
+  [ "$ref" = "HEAD" ] && return 0
+  local origin_url
+  origin_url=$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null || true)
+  case "$origin_url" in
+    *github.com*|*conductorone*)
+      command -v gh >/dev/null 2>&1 && \
+        (cd "$REPO_DIR" && gh pr list --head "$ref" --state open --json url --jq '.[0].url // ""' 2>/dev/null) || true
+      ;;
+    *gitlab*)
+      command -v glab >/dev/null 2>&1 && \
+        (cd "$REPO_DIR" && glab mr list --source-branch "$ref" --opened --output json 2>/dev/null \
+                | jq -r '.[0].web_url // ""' 2>/dev/null) || true
+      ;;
+    *)
+      local url_gh=""
+      command -v gh >/dev/null 2>&1 && \
+        url_gh=$(cd "$REPO_DIR" && gh pr list --head "$ref" --state open --json url --jq '.[0].url // ""' 2>/dev/null || true)
+      if [ -n "$url_gh" ]; then
+        printf '%s\n' "$url_gh"
+      elif command -v glab >/dev/null 2>&1; then
+        (cd "$REPO_DIR" && glab mr list --source-branch "$ref" --opened --output json 2>/dev/null \
+                | jq -r '.[0].web_url // ""' 2>/dev/null) || true
+      fi
+      ;;
+  esac
+}
+
+if [ -z "$URL" ] && git -C "$REPO_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  BRANCH=$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+  URL=$(lookup_pr_url_by_head "$BRANCH")
+
+  if [ -z "$URL" ]; then
+    # Extract the destination refspec from `git push <url> HEAD:<remote-ref>`.
+    # Per-token match; URL tokens like `git@host:path` fail the ref char class.
+    DEST_REF=$(printf '%s\n' "$TOOL_CMD" | awk '
+      { for (i=1; i<=NF; i++)
+          if ($i ~ /^[+]?(HEAD|[[:alnum:]_./-]+):[[:alnum:]_./-]+$/) {
+            n = split($i, parts, ":"); print parts[n]
+          }
+      }' | tail -n1)
+    if [ -n "$DEST_REF" ]; then
+      echo "trying refspec-based lookup: DEST_REF=$DEST_REF"
+      URL=$(lookup_pr_url_by_head "$DEST_REF")
     fi
   fi
 fi
