@@ -24,6 +24,7 @@ increment from there.
 - moved to helpers.go. (×1)
 - fixed (×1)
 - fixed. no longer seeded from public data. (×1)
+- added `codes.AlreadyExists` (×1)
 
 ### Replies — pushback
 
@@ -67,6 +68,8 @@ increment from there.
 - tested this locally. `role[]` isn't the cause, the empty `query=` is. `?role[]=admin` alone gives a real meta. add `&query=` and meta goes null. this pr still pulls in `zendesk.CommonOptions` which has no omitempty on Query, so `&query=` still goes out on every request and the cursor won't move at >100/role. (×1)
 - docs/connector.mdx table is stale, doesn't reflect the new provision / delete / actions surface. same in readme. worth a pass before merge. (×1)
 - that meraki api key in the deleted .claude/settings.json from dc05c3e is still in git history. rotate it on the draftkings tenant before merge. (×1)
+- I don't think this is a blocker, and this would add pagination to the delete/provisioning operations, which would have side effects. I think we should keep it as is. (×1)
+- closing as won't fix. the owner grant already fails cleanly with a 400, not worth a breaking change. moving owner to `base_role_owner` changes its id and forces a one-time remove+add on every tenant. (×1)
 
 ### New line comments — nit
 

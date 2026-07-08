@@ -19,7 +19,7 @@ Multi-agent root-cause-and-fix workflow for any non-trivial bug.
 - Phase 4: revise the plan from reviewer findings.
 - Phase 5: orchestrator implements (no agents).
 - Phase 6: N3 parallel validation agents.
-- Phase 7: open the diff in `/hunk` with status-marked notes.
+- Phase 7: open the diff in `/report` with status-marked notes.
 - Phase 8: `/lazy-gaps` audit.
 - Phase 9 (conditional): per-run snapshot + completion manifest write so a re-dispatch fast-paths to Hunk.
 

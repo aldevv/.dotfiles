@@ -1,6 +1,6 @@
 ---
 name: lazy-gaps
-description: Audit a set of PR-review comments / bug findings / lessons against $HOME/work/CLAUDE.md + $HOME/work/.claude/lazy/*.md. For each item, decide COVERED-AND-CORRECT / COVERED-BUT-WRONG-OR-OUTDATED / NOT-COVERED, judge whether the gap is worth a rule, then update an existing lazy file or create a new one. Entries land SHORT and CLEAR. Triggers on "/lazy-gaps", "audit lazy gaps", "are these documented in lazy", "save these review notes as rules", "check if my lazy files cover X". AUTO-INVOKE at the tail of a PR-feedback fix run (after the commit + `/hunk` land) when the operator says "save the rules" or "document these in lazy". Do NOT trigger for skill-body edits (use the relevant skill directly), for connector-specific notes that belong in `CLAUDE.local.md`, or to bulk-rewrite a lazy file (that's `claude-md-simplify`).
+description: Audit a set of PR-review comments / bug findings / lessons against $HOME/work/CLAUDE.md + $HOME/work/.claude/lazy/*.md. For each item, decide COVERED-AND-CORRECT / COVERED-BUT-WRONG-OR-OUTDATED / NOT-COVERED, judge whether the gap is worth a rule, then update an existing lazy file or create a new one. Entries land SHORT and CLEAR. Triggers on "/lazy-gaps", "audit lazy gaps", "are these documented in lazy", "save these review notes as rules", "check if my lazy files cover X". AUTO-INVOKE (1) at the tail of a PR-feedback fix run (after the commit + `/report` land) when the operator says "save the rules" or "document these in lazy", and (2) after any bug-fix PR is created in a Baton connector for previously-shipped code (bug ticket filed against a feature the operator already merged, e.g. CXH-1980 / CXH-1981 landing on the shipped CXH-752 impl). The fix itself is evidence a rule was missing, so audit before ending the turn even without an explicit ask. Do NOT trigger for skill-body edits (use the relevant skill directly), for connector-specific notes that belong in `CLAUDE.local.md`, or to bulk-rewrite a lazy file (that's `claude-md-simplify`).
 argument-hint: "[source] [scope=work|all|auto]" — `source` is either a path to a dispatch JSON (`~/work/.auto-new-day/dispatch/<TICKET>.json`), a PR URL whose comments you want audited, or free text describing each item one per line. `scope` controls which lazy files the audit walks: `work` = only `$HOME/work/CLAUDE.md` + `$HOME/work/.claude/lazy/*.md`; `all` = work files plus the global `~/CLAUDE.md` + `~/.claude/lazy/**/*.md`; `auto` (default) = walk ancestors from cwd (work files when inside `$HOME/work/`, global otherwise). `fix-bug-work` always passes `scope=work`. Empty source = ask the operator.
 ---
 
@@ -113,7 +113,9 @@ For COVERED-BUT-WRONG edits, prefer rewriting the wrong line in place rather tha
 
 ### 5. Confirm before editing
 
-Show the operator one `AskUserQuestion` with the planned set. The question lists per item:
+**CRITICAL: never ask when dispatched under an `AUTO-` tmux session.** If the current tmux session name starts with `AUTO-` (auto-new-day dispatch: `AUTO-inreview`, `AUTO-inprogress`, `AUTO-inreview-others`, `AUTO-ready-to-merge`), OR `$AUTO_NEW_DAY_DATE_DIR` is set, SKIP the `AskUserQuestion` entirely and auto-apply every KEEP + WRONG edit. These sessions run unattended; a question blocks the dispatch forever. Detect with `tmux display-message -p '#S' 2>/dev/null` and bail on the prompt when it matches `^AUTO-`. Record the auto-applied set in the Step 7 report instead of asking.
+
+Otherwise (interactive session), show the operator one `AskUserQuestion` with the planned set. The question lists per item:
 
 - `<short rule statement>`
 - Verdict: COVERED-AND-CORRECT / COVERED-BUT-WRONG / NOT-COVERED-KEEP / NOT-COVERED-SKIP

@@ -12,6 +12,8 @@ Draft a short, human review comment on a GitHub PR or GitLab MR, confirm with `A
 Three flavors. Pick exactly one:
 
 1. **Reply to an existing comment** — the user is answering a thread (gave a comment URL, said "reply to <reviewer>", "answer this comment"). Post as a note under the existing discussion. Don't relocate the reply to a different line, even if a different line would anchor better.
+
+   **CRITICAL: answering a comment MUST be a threaded reply.** When the intent is to respond to something a reviewer said, post it in-reply (GitHub `in_reply_to`, GitLab `discussions/<id>/notes`), never as a fresh top-level or new-line comment that floats free of the thread. If a threaded reply is genuinely impossible (no reply endpoint for that comment type, or you only have the comment text and no id / discussion id), quote the original comment at the top of the body (`> <what they said>`) so it's unambiguous which comment you're answering. A standalone answer with no reply link and no quote is wrong: the reader can't tell what it responds to.
 2. **New line comment** — a NEW comment AND the feedback is about a specific file/line of code. This is the default for any new comment that critiques, questions, or suggests a change to code. Anchor it on the exact line the comment is about. If you don't know the line yet, find it before posting (read the diff or the file).
 
    **CRITICAL: the anchor line MUST match the comment's subject.** Before finalizing an anchor, read the target line and confirm the code AT that line is what the comment describes. Common mis-anchor patterns to avoid:
@@ -229,9 +231,9 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
 ## Batch mode
 
-When the user asks to mark a set of comments at once (e.g. "answer all of <reviewer>'s comments", "mark all as done/fixed"), the default confirmation is a tmux pane with an editable draft file (see below). An editable file beats a wall of `AskUserQuestion` options every time: the operator can tweak wording, drop blocks, or SKIP the ones they don't want with a normal text editor instead of a modal picker.
+When the user asks to mark a set of comments at once (e.g. "answer all of <reviewer>'s comments", "mark all as done/fixed"), the default confirmation is an editable draft file surfaced by the **qa** skill's helper (a tmux pane, or a fresh `$TERMINAL` window when not in tmux; see below). An editable file beats a wall of `AskUserQuestion` options every time: the operator can tweak wording, drop blocks, or SKIP the ones they don't want with a normal text editor instead of a modal picker.
 
-Fallback shape when tmux is NOT available (`$TMUX` unset):
+Fallback shape only when neither tmux NOR `$TERMINAL` is available (the qa helper exits 3):
 
 - **N ≤ 2** → single `AskUserQuestion` showing a comment-id → reply table with the **verbatim** body for each.
 - **N > 2** → still surface the drafts, but stack them in one `AskUserQuestion` prompt with the verbatim bodies. Warn the user inline that editing isn't possible without tmux.
@@ -378,33 +380,17 @@ When tmux is available (`$TMUX` set), always swap the AskUserQuestion table for 
 
    Block index is positional (order of `---`-separated chunks in the file). Since there is no sidecar, deleting a whole block simply removes that entry from the batch. Rearranging blocks is fine (each is self-describing).
 
-3. Open the draft file in a tmux **pane** using the operator's editor. Always split off Claude's pane; never `new-window`. Anchor on `$TMUX_PANE` per the global tmux rules. The direction depends on whether Claude already has a right-side neighbour:
+3. Open the draft file by delegating the pane/terminal plumbing to the **qa** skill's helper, which owns the split-direction and pane-reuse logic:
 
    ```bash
-   editor="${VISUAL:-${EDITOR:-nvim}}"
-
-   # Detect whether Claude's pane has anything to its right. Compare the
-   # right edge of Claude's pane to the window width; if there's another
-   # pane past Claude's right edge (typical: hunk, htop, log tail), split
-   # vertically so that neighbour stays at full height. Otherwise split
-   # horizontally with the draft claiming 70% on the right.
-   pane_info=$(tmux display-message -t "$TMUX_PANE" -p '#{pane_right} #{window_width}')
-   claude_right=$(echo "$pane_info" | awk '{print $1}')
-   window_width=$(echo "$pane_info" | awk '{print $2}')
-   if [ "$claude_right" -lt "$((window_width - 1))" ]; then
-     # Something is to the right of Claude → open below.
-     tmux split-window -v -l 60% -t "$TMUX_PANE" "$editor /tmp/add-comment-drafts-<PR>-<TS>.md"
-   else
-     # Nothing to Claude's right → open on the right at 70%.
-     tmux split-window -h -l 70% -t "$TMUX_PANE" "$editor /tmp/add-comment-drafts-<PR>-<TS>.md"
-   fi
+   ~/.claude/skills/qa/scripts/open-qa-pane.sh /tmp/add-comment-drafts-<PR>-<TS>.md
    ```
 
+   The helper splits a sibling pane off Claude's pane (right at 70% width, or below at 60% height when a neighbour already sits to the right), reuses the pane on a repeat call for the same file, and never opens a new window. When `$TMUX` is unset it opens the draft in a fresh `$TERMINAL` window instead, so the operator can still edit (see the fallback note below). This skill keeps ownership of the draft file's format (the block shape above); qa only opens and re-reads it.
+
    Rules:
-   - **Never open the draft in a new tmux window.** The operator will not switch windows to review a batch of drafts. The pane keeps everything on one screen.
-   - **Default: right-side pane at 70% width** (`-h -l 70%`). The editor gets the bigger share since the operator will be scanning and editing the draft; Claude shrinks to ~30%.
-   - **Fallback: split below at 60% height** (`-v -l 60%`) when a right-side pane already exists (typical: `hunk` diff, `htop`, log tail). Preserves the neighbour at full height.
-   - **Append, don't spawn a new draft file, on a same-session second invocation.** If a draft file from THIS session already exists (grep `/tmp/add-comment-drafts-<PR>-*` and pick the newest whose timestamp is within the last hour), append the new blocks to that file (parse the existing sidecar, extend it, save both under the same timestamp basename) and reuse the existing pane rather than opening a second one. The operator ends up with a single draft file that grows as findings arrive.
+   - **Never open the draft in a new tmux window.** The operator will not switch windows to review a batch of drafts. The pane keeps everything on one screen. (The qa helper enforces this: it only ever splits a pane.)
+   - **Append, don't spawn a new draft file, on a same-session second invocation.** If a draft file from THIS session already exists (grep `/tmp/add-comment-drafts-<PR>-*` and pick the newest whose timestamp is within the last hour), append the new blocks to that file and re-run the helper on the same path — it focuses the already-open pane rather than opening a second one. The operator ends up with a single draft file that grows as findings arrive.
 
 4. Surface a one-line "edit then say 'post'" message in chat, then call `AskUserQuestion` with three options: **Post all** (post every non-SKIP block), **Cancel** (drop the batch), **Skip the bot blocks** (filter `- author:` matching `*[bot]` and post the rest).
 
@@ -507,6 +493,7 @@ Everything the parser needs is in the file header + each block's bullets. Rearra
 - **Line comment anchored on the wrong line.** The anchor is on a line that doesn't demonstrate the issue the comment is about (typical failure: the comment mentions a specific function like `o.client.CreateUser(...)` but the anchor is on an unrelated validation guard several lines earlier because that was the first `+` line in the block). Concrete check before posting: read the anchor line's code, restate what it does in one sentence, then re-read the comment. If they don't naturally connect ("this line does X, comment is about Y where X is Y"), the anchor is wrong. Fix it before the post, not after — a mis-anchored comment surfaces on the wrong construct in the reviewer's UI and looks like an LLM stapling.
 - **Bare code identifiers instead of backticks.** Function names, type names, error codes, gRPC codes, field names, package paths all need `` `backticks` `` in the posted body. GitHub renders them as monospace; without backticks they blend into prose and the reader has to squint. See the Voice section's backtick rule.
 - **Zsh globbing the `position[...]` brackets in glab.** Quote the whole `-F "position[key]=value"` argument. Unquoted, zsh hits "no matches found" and the curl never runs.
+- **Fragile shell loops over comment/PR fields.** When iterating comment ids, thread ids, or PR numbers in the shell, never lean on `for x in $var` word-splitting or `set -- $line` positional splitting. An empty or space-containing field mis-parses silently: an empty PR number builds `.../pulls//comments` and 404s, a two-word value shifts every later field by one. Instead emit one JSON object per row with `gh api ... --jq` and consume it with `while IFS= read -r ...`, or capture each field into an explicitly named variable (`local repo=$1 num=$2`) and quote every expansion. If a loop returns a "Not Found" or an off-by-one field, this is the first thing to check.
 
 ## When NOT to use this skill
 

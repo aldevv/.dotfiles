@@ -90,9 +90,11 @@ If the caller hands you a `pr_feedback` payload (e.g. `fix-bug` Phase 7b passing
 Each thread becomes one short note anchored on the line of the fix, NOT the line of the original comment. Format:
 
 - **summary** (~80 chars, no period): `<First-name>: <one-line paraphrase of how we fixed it>`. Use the reviewer's first name or login, not their full name — keeps the chat-line short.
-- **rationale** (2 short lines max, blank line between, no padding):
-  - Line 1: `they said: "<comment text, verbatim>"` (truncate with `…` if it's over ~120 chars; the link is one click away if they want the full text).
-  - Line 2: `<permalink to the comment / review / ticket>`.
+- **rationale** (four lines, blank line between each, no padding):
+  - Line 1: `fixed: yes — <short clause>` or `fixed: no — <short clause>` — did this branch actually address the comment? First line so the operator sees at a glance whether the thread is resolved. The clause names what the `+` line at THIS anchor does (for `yes`) or why it wasn't a code change (for `no`). This matters because the diff shown is the full PR (`origin/<base>...HEAD`), so the `+` line is the cumulative result, not visibly "your commit" — the `fixed:` clause is what ties the anchor line to the reviewer's thread. Be honest: `yes` ONLY when the resolving change is actually present at this anchor. Use `no` when it's "not a code change" (you're explaining the current code is already correct, or punting to the operator); pair a `no` with a recommended-action naming what's still owed. E.g. `fixed: yes — this line now returns codes.AlreadyExists` / `fixed: no — current code is already correct, needs a reply not a change`.
+  - Line 2: `they said: "<comment text — VERBATIM and COMPLETE>"`. Quote the reviewer 1:1: paste their comment exactly as written, do NOT paraphrase, summarize, or truncate it (no `…`). The operator wants to read the real words at the anchor, not your compression of them.
+  - Line 3: `recommended action: <shortest possible>` — what the operator still owes on THIS thread, in as few words as possible. E.g. `reply + push`, `reply, then decide on <X>`, `nothing, push`.
+  - Line 4: `<permalink to the comment / review / ticket>`.
 - **Anchor**: `filePath` + `newLine` of the fix. The caller's payload should carry this; if it only carries the original comment's line, look at the diff and pick the closest `+` line in the same file.
 
 Worked example. PR thread:
@@ -106,11 +108,11 @@ Fix landed at `pkg/config/config.yaml:418`. Hunk note:
   "filePath": "pkg/config/config.yaml",
   "newLine": 418,
   "summary": "bjorn: added the CEL guard for 200+errors partial-fail",
-  "rationale": "they said: \"PATCH /members returns 200 even on partial failure. Add a guard checking errors == [].\"\n\nhttps://github.com/conductorone/baton-launchdarkly/pull/9#discussion_r1234567890"
+  "rationale": "fixed: yes — this line now guards on errors == []\n\nthey said: \"Grant uses the bulk semantic-patch endpoint which returns 200 even on partial failure. Add a success_condition guard checking errors == [].\"\n\nrecommended action: reply + push\n\nhttps://github.com/conductorone/baton-launchdarkly/pull/9#discussion_r1234567890"
 }
 ```
 
-Note how the rationale is two short lines, the comment text is verbatim (so the operator can recognize it without clicking), and the link is the second line so it's one-click reachable. No methodology, no v2-polish hedge, no cross-references.
+Note: the comment is quoted 1:1 (full, unedited — the operator recognizes their own words), the recommended-action line is as short as it can be, and the link is last so it's one-click reachable. No methodology, no v2-polish hedge, no cross-references, no mechanism essay.
 
 When there's also a complex-flow / feature-explanation note to attach (the existing "explain complex flows" behavior), include BOTH: one Feature Explanation orientation note at the top of the diff plus one note per addressed reviewer thread. The reviewer-thread notes attach at their own anchor lines.
 

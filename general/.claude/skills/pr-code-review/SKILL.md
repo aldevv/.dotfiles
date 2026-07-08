@@ -897,16 +897,17 @@ Print one Markdown table per PR to the user before opening Hunk. Columns:
 | 4 | BLOCKER | 95% | ✓3      | obvious              | src/baz.go:18 | nil deref on next line (no guard) |
 | 5 | MINOR   | 65% | ✓1      | —                    | src/baz.go:91 | repeated literal could be a const |
 
-Rules:
+Rules (canonical format spec lives in the shared hunk references — [`~/.claude/skills/report/references/format.md`](~/.claude/skills/report/references/format.md) for the finding marker + verdict/report block, and [`diff-note-format.md`](~/.claude/skills/report/references/diff-note-format.md) for the Hunk note shape; keep every surface consistent with them):
 - BLOCKERs first, MAJORs next, MINORs last. Within tier, sort by confidence desc.
 - The Verified column shows `✓<N>` when all N verifiers agreed, or `✓<K>/<N>` when K of N agreed (one or more NUANCED). Every surfaced row carries a marker by construction (FALSE / low-confidence-NUANCED rows were dropped at Step 4). The number tells the operator how much scrutiny the finding got.
+- **Sub-80% + multi-validated → justify the ceiling.** Any finding with final confidence < 80% AND `✓2`+ (or `✓K/N`) MUST include a one-line "why not higher" in its comment body, naming the residual uncertainty the verifiers could not close. A `✓1` sub-80% finding is self-explanatory.
 - Headline is the one-line lede of the comment body (under ~70 chars). Not the full body.
 - `#` matches the order the ask loop will walk in Step 8.
 - If a PR has zero surviving findings, print one line per PR saying so and STILL proceed to Step 6b — existing reviewer threads (`[THREAD]` entries) may still need a Hunk pane. Only after Step 6b's filter shows zero `[NEW]` AND zero eligible `[THREAD]` entries does Step 6c's "nothing to attach" clause fire.
 
 ### Step 6b. Open Hunk with EVERY finding + every existing reviewer thread
 
-After all tables print, invoke the `hunk` skill in its **fast path** with EVERY consolidated finding attached AND every eligible existing reviewer thread from Step 1. **"Every consolidated finding"** = every row that survived Step 4 verification (VERIFIED or NUANCED≥60%), regardless of Step 5's overlap tags, regardless of severity, regardless of the operator's likely eventual disposition. The Hunk pane is the operator's read-out; the skill does not pre-filter it.
+After all tables print, invoke the `report` skill in its **fast path** with EVERY consolidated finding attached AND every eligible existing reviewer thread from Step 1. **"Every consolidated finding"** = every row that survived Step 4 verification (VERIFIED or NUANCED≥60%), regardless of Step 5's overlap tags, regardless of severity, regardless of the operator's likely eventual disposition. The Hunk pane is the operator's read-out; the skill does not pre-filter it.
 
 The mandate is explicit:
 
@@ -917,7 +918,7 @@ The mandate is explicit:
 
 The Step 6a table shows the SAME set of rows as the Hunk batch, in the same order. If a row is in the table but not in Hunk (or vice versa), that's a skill bug — the two views MUST be consistent. Step 7's "reduce to 1-5" is the ONLY place a survivor gets hidden, and it's operator-gated.
 
-**Before calling Skill(hunk), write the full comment batch to `/tmp/pr-<N>-comments.json`** using `newLine` anchors so each comment lands on the exact `+` line it references (never on a hunk position that resolves to an unchanged context line). The batch combines two categories:
+**Before calling Skill(report), write the full comment batch to `/tmp/pr-<N>-comments.json`** using `newLine` anchors so each comment lands on the exact `+` line it references (never on a hunk position that resolves to an unchanged context line). The batch combines two categories:
 
 ```bash
 cat > /tmp/pr-<N>-comments.json <<'JSON'
@@ -955,10 +956,10 @@ Rules for the JSON:
 
 Hunk's fast path validates every anchor before applying. If you fed it a misaligned line, the apply aborts with a `MISSING ADD <file>:<line>` message; rebuild the JSON with the correct anchor and retry.
 
-Then invoke the hunk skill once per PR:
+Then invoke the report skill once per PR:
 
 ```
-Skill(hunk, args: "comments_json=/tmp/pr-<N>-comments.json range=origin/<base>...pr-<N>")
+Skill(report, args: "comments_json=/tmp/pr-<N>-comments.json range=origin/<base>...pr-<N>")
 ```
 
 Capture the apply output — it lists one `commentId` per attached comment in the form `mcp:<session>:<index>`. Save the mapping `finding_# → commentId` to `/tmp/pr-<N>-commentids.tsv` (one row per finding, columns: `<#>\t<commentId>`). Step 7 needs it to prune dropped findings out of the Hunk session.

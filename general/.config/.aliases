@@ -244,7 +244,7 @@ docker run -d --name "$1" ubuntu tail -f /dev/null
 }
 
 # tmux
-alias tms="tmux-sessionizer"
+alias tms="tma scratch"
 
 # curl
 alias curlh='curl --header "Content-Type: application/json"'

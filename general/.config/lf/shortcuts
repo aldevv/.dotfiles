@@ -102,9 +102,6 @@ map Ya. $ cp -rv $f /home/kanon/.local/share/scripts/automation
 map <backspace2>A. cd /home/kanon/.local/share/scripts/apps
 map mA. $ mv -v $f /home/kanon/.local/share/scripts/apps
 map YA. $ cp -rv $f /home/kanon/.local/share/scripts/apps
-map <backspace2>ml. cd 
-map mml. $ mv -v $f 
-map Yml. $ cp -rv $f 
 map <backspace2>o cd ~/Downloads
 map mo $ mv -v $f ~/Downloads
 map Yo $ cp -rv $f ~/Downloads
@@ -123,12 +120,12 @@ map Ywi $ cp -rv $f /home/kanon/.local/share/wiki
 map <backspace2>win cd /home/kanon/.local/share/wiki/notes
 map mwin $ mv -v $f /home/kanon/.local/share/wiki/notes
 map Ywin $ cp -rv $f /home/kanon/.local/share/wiki/notes
-map <backspace2>wp cd /home/kanon/.local/share/wiki/personal
-map mwp $ mv -v $f /home/kanon/.local/share/wiki/personal
-map Ywp $ cp -rv $f /home/kanon/.local/share/wiki/personal
-map <backspace2>wcv cd /home/kanon/.local/share/wiki/personal/cv/latex
-map mwcv $ mv -v $f /home/kanon/.local/share/wiki/personal/cv/latex
-map Ywcv $ cp -rv $f /home/kanon/.local/share/wiki/personal/cv/latex
+map <backspace2>wip cd /home/kanon/.local/share/wiki/personal
+map mwip $ mv -v $f /home/kanon/.local/share/wiki/personal
+map Ywip $ cp -rv $f /home/kanon/.local/share/wiki/personal
+map <backspace2>wicv cd /home/kanon/.local/share/wiki/personal/cv/latex
+map mwicv $ mv -v $f /home/kanon/.local/share/wiki/personal/cv/latex
+map Ywicv $ cp -rv $f /home/kanon/.local/share/wiki/personal/cv/latex
 map <backspace2>wS cd /home/kanon/.local/share/wiki/cheatsheets
 map mwS $ mv -v $f /home/kanon/.local/share/wiki/cheatsheets
 map YwS $ cp -rv $f /home/kanon/.local/share/wiki/cheatsheets

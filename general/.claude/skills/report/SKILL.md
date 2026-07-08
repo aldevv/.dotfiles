@@ -1,6 +1,6 @@
 ---
-name: hunk
-description: Analyze a diff, compose review notes that explain complex flows or difficult paths, then open a Hunk session as a pane inside the caller claude session's current tmux window with the notes already attached. Requires tmux + `hunk` CLI. Use when the user types `/hunk`, `/hunk-review`, asks to "open hunk", "review with hunk", "show changes in hunk", or wants to review a PR/branch/commit interactively in the Hunk TUI. Do NOT trigger for plain PR review prose with no Hunk/TUI mention (use `code-review:code-review`), for posting a comment on an existing PR/MR thread (use `add-comment`), for whole-plugin audits (use `neovim-plugin-review`), or when not inside tmux.
+name: report
+description: Analyze a diff, compose review notes that explain complex flows or difficult paths, then open a Hunk session as a pane inside the caller claude session's current tmux window with the notes already attached. Also the home of the shared review/report output-format references (`references/diff-note-format.md`, `references/format.md`) that every review and own-work skill follows. Requires tmux + `hunk` CLI. Use when the user types `/report`, `/report-review`, asks to "open hunk", "review with hunk", "show changes in hunk", or wants to review a PR/branch/commit interactively in the Hunk TUI. Do NOT trigger for plain PR review prose with no Hunk/TUI mention (use `code-review:code-review`), for posting a comment on an existing PR/MR thread (use `add-comment`), for whole-plugin audits (use `neovim-plugin-review`), or when not inside tmux.
 argument-hint: [target]   # e.g. "main...feature", "HEAD~1", "--pr 581", "pr 30", or a bare PR number. Omit for current-branch vs upstream default.
 allowed-tools:
   - Bash
@@ -24,7 +24,7 @@ Round 1 already loads it (`cat "$(hunk skill path)"`). Treat that read as mandat
 
 ## Files
 
-- `scripts/hunk-pre-pr.sh` — the PreToolUse hook this skill optionally installs. Read it directly when you need to know what runs: `cat "$HOME/.claude/skills/hunk/scripts/hunk-pre-pr.sh"`.
+- `scripts/hunk-pre-pr.sh` — the PreToolUse hook this skill optionally installs. Read it directly when you need to know what runs: `cat "$HOME/.claude/skills/report/scripts/hunk-pre-pr.sh"`.
 - `references/review-guidance.md` — comment scope (what to flag, what to skip) plus tone rules and a worked example. Read at Round 3 before deciding what to apply.
 - `references/examples.md` — curated good / bad concrete Hunk notes the operator has explicitly labeled in prior sessions. Read at Round 3 alongside `review-guidance.md` so you can pattern-match on shape before applying. Also the file to update when the operator labels a note good or bad in the current session — see "Operator feedback → examples.md" below.
 - `references/hook-install.md` — the prompt + commands + settings.json target shape for Round 4. Read at Round 4 only when the state file is missing.
@@ -109,7 +109,7 @@ If detection picks up a context (e.g. dispatch JSON exists) but the payload turn
 
 ### Fast path: pre-supplied comments
 
-If the caller hands you a ready-to-apply comment batch (e.g. `pr-code-review` invokes `Skill(hunk)` with the JSON inline, or you're handed `comments_json=<path>` in `$ARGUMENTS`), the workflow collapses to TWO rounds:
+If the caller hands you a ready-to-apply comment batch (e.g. `pr-code-review` invokes `Skill(report)` with the JSON inline, or you're handed `comments_json=<path>` in `$ARGUMENTS`), the workflow collapses to TWO rounds:
 
 - **Round 1 — Discovery** unchanged. Skip the `gh pr view` parallel call only if the caller also provided `<RANGE>` verbatim.
 - **Round 2 — Open + apply** (single message, all parallel except the apply, which is gated on session-up):
@@ -133,6 +133,7 @@ Fire ALL of these in a single message:
 - `cat "$(hunk skill path)"` (bundled session-control reference, the source of truth for `hunk session ...` semantics)
 - `git rev-parse --show-toplevel`
 - `git symbolic-ref --short refs/remotes/origin/HEAD` (faster than `git remote show origin`; the default branch is `${out#origin/}`)
+- **Refresh the base ref — the local one may be stale.** Fetch the base/default branch (and, for a PR arg, its base) before resolving `<RANGE>`: `git fetch origin <default-or-base> --quiet` (fall back to a bare `git fetch origin --quiet` if you don't yet know the base). A stale local `main` is the #1 cause of a wrong diff — it makes `main...HEAD` report `no merge base` or dump the whole tree, and makes local `main..HEAD` diff against an old base. After fetching, ALWAYS compute ranges against the remote-tracking ref (`origin/<base>`), never the local branch name. Sanity-check with `git merge-base origin/<base> HEAD`; a returned sha means `origin/<base>...HEAD` is the correct, GitHub-matching range.
 - `test -f "$HOME/.cache/hunk/state.json" && cat "$HOME/.cache/hunk/state.json" || echo MISSING` (Round 4 prompt state)
 - If `$ARGUMENTS` matches `^(--pr +)?[0-9]+$` or `^pr +[0-9]+$` (a numeric PR identifier, with optional `pr` / `--pr` prefix): also fire `gh pr view <N> --json baseRefName,headRefName,headRepository`. `HEAD~N` does NOT match because it starts with `HEAD`.
 - **PR-feedback detection** (fires the PR-feedback path described below): in parallel, run
@@ -153,10 +154,13 @@ Resolve `<RANGE>` from `$ARGUMENTS`:
 | `$ARGUMENTS` | `<RANGE>` |
 |---|---|
 | empty | `origin/<default>...HEAD` |
-| `HEAD~1`, `main..feature`, `origin/master..HEAD`, etc. | pass through verbatim |
+| `HEAD~1`, `origin/master..HEAD`, etc. | pass through verbatim |
+| a range naming a LOCAL base branch (`main..feature`, `main...HEAD`) | rewrite the local base to its remote-tracking ref (`origin/main...HEAD`) after fetching — never diff against a local base that may be stale |
 | `--pr N` / `pr N` / bare numeric `N` | `origin/<base>...<head>` from `gh pr view` |
 | (working-tree review, no commits) | no range; use `hunk diff` / `git diff` with no args |
 | (staged review) | `hunk diff --staged` / `git diff --staged` |
+
+Two-dot (`origin/<branch>..HEAD`) vs three-dot (`origin/<base>...HEAD`) is the caller's choice, not something to override: two-dot shows only the commits on HEAD past the pushed branch head (a minimal delta of new work); three-dot shows the whole PR the way GitHub/GitLab render it. When a caller passes an explicit range, honor it verbatim after the local→remote rewrite above. Note the tradeoff only if asked: in a two-dot delta, a line a new commit replaced shows as `-` even where the web PR shows it as `+`.
 
 ## Round 2 — Open Hunk + read diff (parallel)
 
@@ -236,7 +240,7 @@ Never mix: pick exactly one of `newLine` / `oldLine` / `hunkNumber` per comment.
 Before piping the JSON to `hunk session comment apply`, run a one-shot validator that pulls the diff once and confirms each `(filePath, newLine|oldLine)` pair is actually a `+` or `-` line. Reject the apply if any comment is misaligned — emit a fix-up message naming the offenders so the caller can correct or drop them.
 
 ```bash
-# /tmp/hunk-validate.sh
+# /tmp/report-validate.sh
 git diff --no-color <RANGE> | awk '
   /^diff --git / { sub("^.*b/", ""); file=$0; next }
   /^@@ / {
@@ -247,25 +251,25 @@ git diff --no-color <RANGE> | awk '
   /^\+/  { nl++; print "ADD\t" file "\t" nl; next }
   /^-/   { ol++; print "DEL\t" file "\t" ol; next }
   /^ /   { nl++; ol++; next }
-' > /tmp/hunk-lines.tsv
+' > /tmp/report-lines.tsv
 
 jq -r '.comments[] | [.filePath, (.newLine // ""), (.oldLine // "")] | @tsv' /tmp/pr-N-comments.json |
 while IFS=$'\t' read -r file nl ol; do
   if [ -n "$nl" ]; then
-    grep -qP "^ADD\t${file}\t${nl}$" /tmp/hunk-lines.tsv || echo "MISSING ADD ${file}:${nl}"
+    grep -qP "^ADD\t${file}\t${nl}$" /tmp/report-lines.tsv || echo "MISSING ADD ${file}:${nl}"
   elif [ -n "$ol" ]; then
-    grep -qP "^DEL\t${file}\t${ol}$" /tmp/hunk-lines.tsv || echo "MISSING DEL ${file}:${ol}"
+    grep -qP "^DEL\t${file}\t${ol}$" /tmp/report-lines.tsv || echo "MISSING DEL ${file}:${ol}"
   fi
 done
 ```
 
 If the validator prints any `MISSING` lines, stop and surface them to the caller. Do NOT silently fall back to `hunkNumber` — that's exactly the foot-gun this validation prevents.
 
-If `comment apply` errors for any reason, fall back to `hunk session review --json` (per the bundled skill) to confirm the file/hunk structure. If the session is gone, stop and tell the user; don't try to reopen Hunk on its own.
+If `comment apply` errors for any reason, fall back to `hunk session review --json` (per the bundled skill) to confirm the file/report structure. If the session is gone, stop and tell the user; don't try to reopen Hunk on its own.
 
 **If nothing worth commenting on** — still leave one `Feature Explanation:` orientation note at the top of the diff. This is the minimum bar so the reader doesn't have to derive the feature from the code.
 
-First, clear any `[pending]` placeholder (the pre-PR/MR hook drops one; `/hunk` usually doesn't):
+First, clear any `[pending]` placeholder (the pre-PR/MR hook drops one; `/report` usually doesn't):
 
 ```bash
 hunk session comment list --repo <REPO_ROOT> --json | \
@@ -295,12 +299,12 @@ You already loaded `$HOME/.cache/hunk/state.json` in Round 1.
 `scripts/hunk-pre-pr.sh` is the source of truth — its header comment block lists what fires, when, and the two-phase deny-then-retry flow. Read it for detail:
 
 ```bash
-cat "$HOME/.claude/skills/hunk/scripts/hunk-pre-pr.sh"
+cat "$HOME/.claude/skills/report/scripts/hunk-pre-pr.sh"
 ```
 
 To make the hook **block** PR/MR creation until the user closes Hunk (instead of the default deny-then-retry-then-Allow), change the final `exit 0` to `exit 2`.
 
-The hook exits early (no Hunk, no deny) when the current tmux session name matches `AUTO-inreview`, `AUTO-inprogress`, or `AUTO-inreview-others` — the three sessions `auto-new-day` dispatches. Those sessions' dispatch skills (`fix-bug-work`, `impl-connector`, `newconnector`, `pr-code-review-work`) already run `/hunk` themselves before returning control, so re-opening Hunk on `gh pr create` is redundant. To disable the bailout, drop the `case` block at the top of the script.
+The hook exits early (no Hunk, no deny) when the current tmux session name matches `AUTO-inreview`, `AUTO-inprogress`, or `AUTO-inreview-others` — the three sessions `auto-new-day` dispatches. Those sessions' dispatch skills (`fix-bug-work`, `impl-connector`, `newconnector`, `pr-code-review-work`) already run `/report` themselves before returning control, so re-opening Hunk on `gh pr create` is redundant. To disable the bailout, drop the `case` block at the top of the script.
 
 ## Agent notes visibility
 
@@ -310,7 +314,13 @@ If the user reports "I don't see the comments", they likely have `agent_notes = 
 hunk session reload --repo <REPO_ROOT> -- diff --agent-notes <RANGE>
 ```
 
-**WARNING**: `reload` clears all live comments. Re-apply the batch afterwards.
+**WARNING**: `reload` clears live comments but does NOT clear persisted agent notes — they survive the reload. If you re-apply your batch after a reload without clearing first, every note DUPLICATES (the operator sees each note twice). So before ANY re-apply that follows a reload (e.g. you changed the range, or fixed a note's wording), clear ALL notes first, not just the live ones:
+
+```bash
+hunk session comment clear --repo <REPO_ROOT> --yes
+```
+
+A `comment list --json | rm` loop is NOT enough — the default `comment list` returns only live comments and misses the persisted agent notes (visible via `comment list --type all --json`, keyed by `noteId`), which is exactly what leaves a stale duplicate behind. Use `comment clear --yes` (clears everything), then re-apply the batch.
 
 ## Operator feedback → examples.md
 
@@ -335,10 +345,10 @@ The examples file is a first-class part of the Round 3 review process. Load it a
 
 | User says | Command to run |
 |---|---|
-| `/hunk` (no arg) | `hunk diff --watch <remote-default>...HEAD` |
-| `/hunk HEAD~1` | `hunk diff --watch HEAD~1` |
-| `/hunk --pr 30` | resolve via `gh pr view`, `hunk diff --watch <base>...<head>` |
-| `/hunk main..feature` | `hunk diff --watch main..feature` |
+| `/report` (no arg) | `hunk diff --watch <remote-default>...HEAD` |
+| `/report HEAD~1` | `hunk diff --watch HEAD~1` |
+| `/report --pr 30` | resolve via `gh pr view`, `hunk diff --watch <base>...<head>` |
+| `/report main..feature` | `hunk diff --watch main..feature` |
 | (working tree changes) | `hunk diff --watch` (no args) |
 | (staged changes) | `hunk diff --watch --staged` |
 

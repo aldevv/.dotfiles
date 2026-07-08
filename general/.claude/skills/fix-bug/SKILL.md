@@ -566,7 +566,7 @@ The operator gets the truth, not a pep talk. A 70% confident fix is fine to ship
 
 ## Phase 7 — open the implemented diff in Hunk
 
-After Phase 6's validators return (or the operator accepts a sub-95% composite), invoke the `hunk` skill against the implemented diff so the operator returning to the session has a one-click review of every change that landed. Do this BEFORE printing the operator-facing summary; the summary should reference the Hunk tmux window by name.
+After Phase 6's validators return (or the operator accepts a sub-95% composite), invoke the `report` skill against the implemented diff so the operator returning to the session has a one-click review of every change that landed. Do this BEFORE printing the operator-facing summary; the summary should reference the Hunk tmux window by name.
 
 **`--skip-hunk` short-circuit.** If `--skip-hunk` was passed in `$ARGUMENTS`, skip Phase 7 entirely and exit after the operator-facing summary at the end of Phase 6. Callers that wrap fix-bug and run their own pre-Hunk tail use this to keep ordering correct (e.g. a wrapper that invokes `/fix-bug ... --skip-hunk`, runs its own project-specific validation, then calls `hunk` itself so extra reports show up alongside the diff). The summary in `--skip-hunk` mode says `Hunk skipped (caller will open it)` instead of naming a window.
 
@@ -593,7 +593,7 @@ Set the three flags independently. A typical fix-bug note ends up `fixed: yes / 
   - Pick the range by checking the upstream: `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null` resolves to `origin/<branch>` when the branch tracks a remote head. If that's set AND `git rev-list --count "@{u}..HEAD"` > 0, default to `@{u}..HEAD`. Otherwise fall back to `<base>..HEAD`.
   - If the operator explicitly asked for the full PR diff ("show me everything", "full diff"), honor that with `<base>..HEAD` regardless.
 
-- **Hand the recap to Hunk as a `pr_feedback` payload.** Build a JSON file at `/tmp/fix-bug-pr-feedback-<id>.json` from the End-of-phase recap blocks (Phase 5's `author / issue / comment / fix / link` data), one entry per addressed thread. The schema lives in `~/.claude/skills/hunk/SKILL.md` → "PR-feedback path". Mapping is one-to-one from the recap fields to the schema:
+- **Hand the recap to Hunk as a `pr_feedback` payload.** Build a JSON file at `/tmp/fix-bug-pr-feedback-<id>.json` from the End-of-phase recap blocks (Phase 5's `author / issue / comment / fix / link` data), one entry per addressed thread. The schema lives in `~/.claude/skills/report/SKILL.md` → "PR-feedback path". Mapping is one-to-one from the recap fields to the schema:
   - recap `author` → `author` (display name) and `author_handle` (the gh / glab login, derived from the link's host + slug if not already known)
   - recap `comment` → `comment`
   - recap `fix` → `fix_summary` (drop the `file:line —` prefix; just the "what changed" phrase)
@@ -620,7 +620,7 @@ After Hunk is open, invoke the `lazy-gaps` skill with the dispatched feedback li
 
 This skill participates in the shared dispatch-resume contract (operator-facing `--date <date>` / `--force` args plus a manifest read at start and write at end). See [`references/dispatch-resume.md`](references/dispatch-resume.md) for the full block, key derivation, and skip conditions.
 
-- **Phase 0c** runs the start-of-run resume check BEFORE Phase 0 triage. If a prior manifest exists (and `--force` was not passed), fast-path: re-invoke `/hunk` with the saved `diffRange` + `prFeedbackPath`, print the saved verdict / reason / artifacts, exit. No agent fan-out.
+- **Phase 0c** runs the start-of-run resume check BEFORE Phase 0 triage. If a prior manifest exists (and `--force` was not passed), fast-path: re-invoke `/report` with the saved `diffRange` + `prFeedbackPath`, print the saved verdict / reason / artifacts, exit. No agent fan-out.
 - **Phase 9** runs at the end (after Phase 7 / Hunk + Phase 8 / lazy-gaps): the per-run snapshot command (`eval "$AUTO_NEW_DAY_SNAPSHOT_CMD" || true` when set) AND the manifest write so the next dispatch can fast-path.
 
 Skip both hooks when invoked with `--skip-hunk` — a calling wrapper owns the close in that path (avoids double-write).

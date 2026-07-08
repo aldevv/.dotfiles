@@ -40,8 +40,8 @@ vv      ~/Videos
 wa      $WALL
 wi      $WIKI
 win     $WIKI/notes
-wp      $WIKI/personal
-wcv      $WIKI/personal/cv/latex
+wip      $WIKI/personal
+wicv    tmux $WIKI/personal/cv/latex
 wS      $WIKI/cheatsheets
 mm      ~/Music
 ca      ~/.cache

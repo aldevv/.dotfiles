@@ -37,6 +37,7 @@ To unblock other files in the package while resolving, pass `--ignore='<basename
 
 - Personal push: run `personal-push-all` (alias `dgpA`) — commits and pushes `~/.dotfiles`, `~/notes`, `~/wiki`, `~/.local/share/ansible`.
 - Cross-machine sync: invoke the `sync-dotfiles` skill — pulls, resolves conflicts, restows packages with new files, pushes a `sync: dotfiles update [<os>, machine-<id>]` commit.
+- Wiki submodule bump: `wiki/.local/share/wiki` is a git submodule. After committing and pushing inside it, record the new commit in the parent — from `~/.dotfiles`, first confirm it's pushed (`git -C wiki/.local/share/wiki log @{upstream}..HEAD` is empty) so the parent never points at an unpushed commit, then `git add wiki/.local/share/wiki` and commit + push on `main`. Stage only the submodule path so unrelated working-tree changes aren't swept in.
 - **Never** mention Claude or add `Co-Authored-By: Claude` in commits or PR descriptions.
 
 ## Repo-level gitignore

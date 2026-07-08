@@ -80,7 +80,7 @@ esac
 
 # Skip inside auto-new-day dispatched tmux sessions. The dispatch skills
 # (`fix-bug-work`, `impl-connector`, `newconnector`, `pr-code-review-work`)
-# already run `/hunk` themselves before returning control, so re-opening
+# already run `/report` themselves before returning control, so re-opening
 # Hunk on `gh pr create` / `glab mr create` is redundant.
 case "$(tmux display-message -p '#{session_name}' 2>/dev/null || true)" in
   AUTO-inreview|AUTO-inprogress|AUTO-inreview-others) exit 0 ;;
@@ -103,7 +103,7 @@ window_name="hunk-${repo_name}:${branch_name}"
 session_name="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
 [[ -n "$session_name" ]] || exit 0
 
-state_root="${XDG_RUNTIME_DIR:-/tmp}/hunk-state"
+state_root="${XDG_RUNTIME_DIR:-/tmp}/report-state"
 mkdir -p "$state_root"
 state_key="$(printf '%s' "${session_name}-${window_name}" | tr '/ ' '__')"
 sentinel="$state_root/$state_key.sentinel"

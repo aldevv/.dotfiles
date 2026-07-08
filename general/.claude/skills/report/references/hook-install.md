@@ -19,7 +19,7 @@ Fire these two in parallel:
 
 ```bash
 mkdir -p "$HOME/.claude/hooks" && \
-  ln -sf "$HOME/.claude/skills/hunk/scripts/hunk-pre-pr.sh" \
+  ln -sf "$HOME/.claude/skills/report/scripts/hunk-pre-pr.sh" \
          "$HOME/.claude/hooks/hunk-pre-pr.sh"
 ```
 
@@ -65,4 +65,4 @@ mkdir -p "$HOME/.cache/hunk" && \
 
 ## On "Ask me later"
 
-Do not write state. The next `/hunk` invocation will ask again.
+Do not write state. The next `/report` invocation will ask again.
