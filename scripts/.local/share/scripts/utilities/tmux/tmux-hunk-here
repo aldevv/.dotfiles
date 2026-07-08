@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# `prefix + +` helper: a centered floating hunk diff of the current branch against
+# origin/main, for the repo the current tmux window is working on.
+#
+# Two modes:
+#   tmux-hunk-here <pane-id>   Launcher (bound to the key). Resolves the repo dir:
+#                              the working dir of a claude pane in <pane-id>'s
+#                              window (the dir claude's statusline shows, which
+#                              follows claude as it cd's, not just its launch dir),
+#                              falling back to the pane's own cwd when there's no
+#                              claude pane. Opens a centered floating pane (~85%)
+#                              running review mode there.
+#   tmux-hunk-here --review    Runs inside that pane: shows committed, staged and
+#                              unstaged changes vs origin/main plus untracked new
+#                              files, without mutating the index. Holds the pane
+#                              open with a message if it can't run.
+
+set -euo pipefail
+
+# ~85% of the window, centered. new-pane takes integer cells only, so 85% is
+# expressed as *17/20 to stay integer-only; -X/-Y center it as (dim - size) / 2.
+readonly W='#{e|/:#{e|*:#{window_width},17},20}'
+readonly H='#{e|/:#{e|*:#{window_height},17},20}'
+readonly X='#{e|/:#{e|-:#{window_width},#{e|/:#{e|*:#{window_width},17},20}},2}'
+readonly Y='#{e|/:#{e|-:#{window_height},#{e|/:#{e|*:#{window_height},17},20}},2}'
+
+review() {
+	local root patch f
+	root="$(git rev-parse --show-toplevel 2>/dev/null)" || return 1
+	cd "$root" || return 1
+
+	# Compose the diff without touching the index: tracked changes vs origin/main,
+	# then each untracked file as an addition. Written to a file (not piped) so
+	# hunk's TUI keeps the terminal for keyboard input.
+	patch="$(mktemp)"
+	trap 'rm -f "$patch"' EXIT
+	{
+		git diff origin/main || return 1
+		git ls-files --others --exclude-standard -z |
+			while IFS= read -r -d '' f; do
+				git diff --no-index -- /dev/null "$f" || true
+			done
+	} >"$patch"
+
+	hunk patch "$patch"
+}
+
+# First descendant of $1 (inclusive) whose command is claude. Walks a frozen ps
+# snapshot with a visited guard so a reparented-process cycle can't loop forever.
+claude_pid_under() {
+	local root="$1" snapshot p kids nf
+	snapshot="$(ps -eo pid=,ppid=,comm=)"
+	declare -A seen
+	local frontier="$root"
+	while [ -n "$frontier" ]; do
+		nf=""
+		for p in $frontier; do
+			[ -n "${seen[$p]:-}" ] && continue
+			seen[$p]=1
+			[ "$(awk -v x="$p" '$1==x{print $3; exit}' <<<"$snapshot")" = claude ] && {
+				printf '%s' "$p"
+				return 0
+			}
+			kids="$(awk -v pp="$p" '$2==pp{print $1}' <<<"$snapshot")"
+			nf="$nf $kids"
+		done
+		frontier="$nf"
+	done
+	return 1
+}
+
+# The working dir claude's statusline shows for the claude process under pane pid
+# $1: claude's launch cwd names its ~/.claude/projects/<mangled> dir; the newest
+# session jsonl there is the live session, and its last "cwd" entry is the dir
+# claude is currently working in (it follows cd's; the process cwd does not).
+# ponytail: newest-mtime jsonl picks the wrong session if two claudes share one
+# launch dir; rare enough to accept.
+claude_current_dir() {
+	local pane_pid="$1" claude_pid launch proj jsonl current
+	claude_pid="$(claude_pid_under "$pane_pid")" || return 0
+	launch="$(readlink "/proc/$claude_pid/cwd" 2>/dev/null)" || return 0
+	proj="$HOME/.claude/projects/$(printf '%s' "$launch" | tr './' '-')"
+	[ -d "$proj" ] || { printf '%s' "$launch"; return 0; }
+	jsonl="$(ls -t "$proj"/*.jsonl 2>/dev/null | head -n1)"
+	[ -n "$jsonl" ] || { printf '%s' "$launch"; return 0; }
+	current="$(grep -oE '"cwd":"[^"]*"' "$jsonl" | tail -n1 | sed 's/^"cwd":"//; s/"$//')"
+	printf '%s' "${current:-$launch}"
+}
+
+if [[ "${1:-}" == "--review" ]]; then
+	if ! review; then
+		printf '\033[31mhunk could not run here (not a git repo, or origin/main missing)\033[0m\n'
+		printf 'press any key to close\n'
+		read -r -s -n1
+	fi
+	exit 0
+fi
+
+# Launcher mode. $1 = the invoking pane id, passed as #{pane_id} from the bind.
+pane="${1:?pane id required; call as tmux-hunk-here PANE_ID}"
+self="$(command -v -- "$0" 2>/dev/null || printf '%s' "$0")"
+
+# Repo dir: the claude pane's working dir in this window, else the invoking pane's.
+dir=""
+claude_pane_pid="$(tmux list-panes -t "$pane" -f '#{==:#{pane_current_command},claude}' -F '#{pane_pid}' | head -n1)"
+[ -n "$claude_pane_pid" ] && dir="$(claude_current_dir "$claude_pane_pid")"
+[ -n "$dir" ] || dir="$(tmux display-message -p -t "$pane" '#{pane_current_path}')"
+
+tmux new-pane -t "$pane" -c "$dir" -x "$W" -y "$H" -X "$X" -Y "$Y" "$self --review"

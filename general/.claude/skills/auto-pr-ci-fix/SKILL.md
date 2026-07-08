@@ -123,7 +123,7 @@ Read those values once and refer back to them by name. Don't re-derive them.
    <!-- Append new entries below this line. -->
    ~~~
 
-   Keep entries tight: one signature line, one fix line. If the same category-5a rotation keeps recurring for the same vendor, escalate to the operator (add a Notes line pointing at the ticket) instead of stacking near-duplicate entries.
+   Keep entries tight: one signature line, one fix line. Do NOT put code comments (`//`, `#`, `/* */`, docstrings) inside any code snippet in an entry; the reasoning is obvious from the surrounding prose, so write the bare call/identifier and let the Fix/Notes text carry the why. If the same category-5a rotation keeps recurring for the same vendor, escalate to the operator (add a Notes line pointing at the ticket) instead of stacking near-duplicate entries.
 
 10. **Novel-fix approval gate.** Only runs when step 3 found no matching signature (matched 5c fixes already merged+pushed in step 3a; matched 5a fixes stopped at the report). Ask the user via `AskUserQuestion` whether to merge `Fix branch` into `PR branch` (and push). If they say yes:
     ```
