@@ -11,10 +11,14 @@ notes that roll up into this block are defined in the sibling `diff-note-format.
    doesn't change what the operator does next. Prefer a status glyph + one clause over a paragraph.
    Emojis are welcome where they speed understanding (✅ ⛔ ❌ for status; a leading 🔴/🟠/🟡 for
    BLOCKER/MAJOR/MINOR if it helps scanning) — never decorative, never more than one per line.
-1. **Decision first.** The FIRST lines are the decision the operator needs (approve? / ready to
-   push?) plus a one-clause reason. Never bury the decision under a findings table or a narrative.
-2. **No prose walkthrough.** Do NOT append a "Detail" / breakdown / "here's everything I did"
-   section. The full write-up lives in the context/report file. The closing block is status +
+1. **Decision clearly labeled.** The decision the operator needs (approve? / ready to push?) lives in
+   its OWN clearly-labeled section so it's found at a glance, never buried inside a findings table or
+   a narrative. Variant A leads with it (`Recommendation`); Variant B (own-work, operator preference)
+   leads with the mechanical `## Changes made` and a short `## Summary`, with `## Ready to push` right
+   after — still its own section, still skimmable.
+2. **No long prose walkthrough.** Do NOT append a "Detail" / blow-by-blow "here's everything I did"
+   section. A short `## Summary` (2-4 sentences / bullets: what was done + why) is allowed in Variant
+   B; anything longer lives in the context/report file. The closing block stays status + summary +
    recommended actions, nothing more.
 3. **Print once**, as the last thing in the run-ending response. Follow-up turns: answer normally,
    no trailing block.
@@ -40,19 +44,32 @@ Re-review with no new findings: add a line mapping each prior comment to its fix
 
 ---
 
-## Variant B — Own-work "Changes made" (`## Changes made`)
+## Variant B — Own-work "Changes made"
 
-Status lines, decision first:
+Each piece is its OWN top-level `##` section — never fold the push/verify status or the summary as
+lines under "Changes made". Sections in THIS order (own-work leads with the raw detail, then the
+summary, then the decision — operator preference):
 
-- `Ready to push: ✅ Yes — <short why>` OR `Ready to push: ⛔ No — <short why>`.
-  - `✅ Yes` = ≥1 new commit AND complete + e2e-verified + no unresolved blocker. The why names what
-    landed, e.g. `✅ Yes — fixed the pagination drain in ListUsers`.
-  - `⛔ No` = no new commit this run, or a blocker the operator must resolve first. The why names the
-    open decision, e.g. `⛔ No — operator needs to decide retry-on-429 vs fail-fast before this ships`.
-  - The inline why is REQUIRED on both; it's the one-line justification for the push/hold call.
-- `Confidence: <N>%` — for `fix-bug`-backed runs, the composite/ per-symptom confidence (lead with it if the skill's own contract says so).
-- `Live tenant tested: ✅ Yes` (e2e tier `live`) OR `❌ No — <tier / reason>` (`mock` / `unit-test` / `blocked`; `❌ No — no code changes this run` when nothing changed). Keep the required `e2e: <tier> — <observation>` line if the skill mandates one.
-- `### Recommended actions` — universal rule 4. When `Ready to push: ⛔ No`, the FIRST bullet is the exact decision/step the operator must take to unblock (e.g. `you: decide X vs Y — options in <context path>`). When `✅ Yes`, the first bullet is the push step (`you: push \`<sha>\` — nothing else owed`).
+1. `## Changes made` — ONLY the actual changes: a bullet per change, each citing `file:line` (or
+   `file` + function). It matters least for the decision, so it leads and gets skimmed past. When
+   nothing changed this run (resume from prior manifest, all items blocked), one bullet saying so
+   (e.g. `- no code changes this run (resumed from prior manifest)`).
+2. `## Summary` — 2-4 sentences (or 2-4 bullets): what was done and WHY, merged into one. This is the
+   only "why" in the block; there is no separate Why line. Plain and skimmable; the full write-up
+   stays in the context/report file (universal rule 2).
+3. `## Ready to push` — one line: `✅ Yes` OR `⛔ No — <short blocker>`. The push/hold call at a glance;
+   the reasoning already lives in `## Summary`, so no inline why is needed on `✅ Yes`.
+   - `✅ Yes` = ≥1 new commit AND complete + e2e-verified + no unresolved blocker.
+   - `⛔ No` = no new commit this run, or a blocker the operator must resolve first (name it inline).
+   - `fix-bug`-backed runs append a `Confidence: <N>%` line here (composite / per-symptom; lead with
+     it if the skill's own contract says so).
+4. `## Live tenant tested` — one line: `✅ Yes` (e2e tier `live`) OR `❌ No — <tier / reason>` (`mock` /
+   `unit-test` / `blocked`; `❌ No — no code changes this run` when nothing changed). Keep the required
+   `e2e: <tier> — <observation>` line if the skill mandates one.
+5. `### Recommended actions` — universal rule 4. When `Ready to push: ⛔ No`, the FIRST bullet is the
+   exact decision/step the operator must take to unblock (e.g. `you: decide X vs Y — options in
+   <context path>`). When `✅ Yes`, the first bullet is the push step (`you: push \`<sha>\` — nothing
+   else owed`).
 
 No prose walkthrough after (universal rule 2); the context file holds the full detail.
 
