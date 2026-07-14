@@ -4,9 +4,12 @@
 #
 # watch_comments()
 #   Polls automated review-bot comments tied to HEAD_SHA. When a review with
-#   actionable findings (Blocking>0 || Suggestions>0) is posted, notifies the
-#   operator and spawns a Claude fixer in a fresh git worktree on a throwaway
-#   branch (pr-review-fix-<short_sha>).
+#   actionable findings is posted, notifies the operator and spawns a Claude
+#   fixer in a fresh git worktree on a throwaway branch (pr-review-fix-<short_sha>).
+#   Actionable = Blocking>0 || Suggestions>0 (parsed counts) || a finding-language
+#   keyword (block/blocking/nit/suggestion/...) appears in the Concern/Suggestion
+#   sections. The keyword scan ignores the fixed template header + Reasoning prose,
+#   so a clean zero-finding approval does not trigger.
 #
 # Required env (set by the parent script):
 #   REPO_DIR REPO_BASENAME URL PLATFORM HEAD_SHA SHORT_SHA BRANCH PR_BRANCH
@@ -100,9 +103,33 @@ watch_comments() {
   suggestions=${suggestions:-0}
   echo "[comments] blocking=$blocking suggestions=$suggestions"
 
-  if [ "$blocking" -eq 0 ] && [ "$suggestions" -eq 0 ]; then
+  # Keyword fallback: the numeric "Blocking Issues: N | Suggestions: N" line is
+  # brittle (format drift, a non-judge reviewer, a malformed count), so also scan
+  # for finding-language keywords. Scan ONLY the content under the Concern /
+  # Suggestion section headings -- never the fixed header block or the Reasoning
+  # prose -- so a clean approval (both sections "None.") does not false-trigger.
+  local kw_re='\b(block|blocking|blocker|nit|nits|nitpick|suggest|suggestion|must fix|should fix|should|consider)\b'
+  local findings_text kw_hit=0
+  # Keep only bullet/numbered lines inside those sections: real findings are
+  # list items, while the empty-section sentinel ("None." / "None. ...prose")
+  # and any narrative never are.
+  findings_text=$(printf '%s' "$review_body" | awk '
+    /^###[[:space:]]/ { insec = ($0 ~ /[Cc]oncern|[Ss]uggestion/) ? 1 : 0; next }
+    /^<!--/           { insec = 0 }
+    insec             { print }
+  ' | grep -E '^[[:space:]]*([-*]|[0-9]+[.)])[[:space:]]')
+  if printf '%s' "$findings_text" | grep -qiE "$kw_re"; then
+    kw_hit=1
+  fi
+  echo "[comments] keyword scan (findings sections): kw_hit=$kw_hit"
+
+  if [ "$blocking" -eq 0 ] && [ "$suggestions" -eq 0 ] && [ "$kw_hit" -eq 0 ]; then
     echo "[comments] no actionable items"
     return 0
+  fi
+  if [ "$blocking" -eq 0 ] && [ "$suggestions" -eq 0 ] && [ "$kw_hit" -eq 1 ]; then
+    suggestions=1
+    echo "[comments] keyword-triggered: treating as 1 suggestion"
   fi
 
   # If the bot left inline review comments and every one of them is outdated, treat the review as stale and skip spawn.

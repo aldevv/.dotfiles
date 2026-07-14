@@ -243,6 +243,29 @@ tmux resize-pane -t <index> -x 80   # set width to 80 cols
 tmux resize-pane -t <index> -y 20   # set height to 20 rows
 ```
 
+## Troubleshooting: `server exited unexpectedly` = two tmux versions
+
+If any tmux command (`ls`, `new-session`, `new-window`, `attach`) fails with `server exited unexpectedly` (or `protocol version mismatch` / `lost server`) even though a tmux server is clearly running and the user's own shells use it fine, the cause is almost always **two different tmux versions installed**. The `tmux` your shell resolves on `PATH` is a different version from the one that started the running server; the client connects to the socket, the server rejects the protocol, and tmux prints that generic message. It is NOT a tmux bug and the server is NOT broken (clients of the matching version keep working).
+
+This bites the agent specifically: the agent's `PATH` often resolves bare `tmux` to an old distro build (`/usr/bin/tmux`) while the user's login `PATH` puts a newer build (Homebrew `/home/linuxbrew/.linuxbrew/bin/tmux`, nix, etc.) first, so the user never sees it.
+
+Diagnose:
+
+```bash
+tmux -V                                        # client version on PATH
+readlink -f "$(command -v tmux)"               # which binary that is
+readlink -f /proc/$(pgrep -x tmux | head -1)/exe   # binary the RUNNING server uses
+for t in $(command -v -a tmux); do printf '%s -> ' "$t"; "$t" -V; done   # all installs + versions
+```
+
+Fix, no need to ask: **remove the older tmux install** so bare `tmux` falls through to the newer one that matches the server. Use whatever package manager owns the older binary (`sudo apt-get remove -y tmux` for a distro `/usr/bin/tmux`, `brew uninstall tmux` for an old brew keg, etc.). Simulate first when using apt (`apt-get -s remove tmux`) to confirm only `tmux` goes. Then verify the fix reaches the real server:
+
+```bash
+hash -r; tmux -V; tmux ls
+```
+
+Only fall back to a private socket (`tmux -L <name> ...`) when you genuinely cannot remove the older binary (no sudo, shared machine). A `-L` socket sidesteps the mismatch because you create and own that server with the same binary you query it with, but the user cannot reach it with a plain `tmux attach`, so it is the last resort, not the fix.
+
 ## Common mistakes to avoid
 
 - Defaulting to `new-window` when the user said "pane" or "panel". **Always default to `split-window`.**
