@@ -1,0 +1,10 @@
+[Unit]
+Description=Run auto-new-day sweep on weekday mornings
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 06:00:00__TZ__
+Persistent=true
+Unit=auto-new-day-sweep.service
+
+[Install]
+WantedBy=timers.target

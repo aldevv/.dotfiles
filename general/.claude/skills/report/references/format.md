@@ -17,7 +17,7 @@ notes that roll up into this block are defined in the sibling `diff-note-format.
    leads with the mechanical `## Changes made` and a short `## Summary`, with `## Ready to push` right
    after — still its own section, still skimmable.
 2. **No long prose walkthrough.** Do NOT append a "Detail" / blow-by-blow "here's everything I did"
-   section. A short `## Summary` (2-4 sentences / bullets: what was done + why) is allowed in Variant
+   section. A short `## Summary` (2-4 bullets: what was done + why) is allowed in Variant
    B; anything longer lives in the context/report file. The closing block stays status + summary +
    recommended actions, nothing more.
 3. **Print once**, as the last thing in the run-ending response. Follow-up turns: answer normally,
@@ -53,10 +53,12 @@ summary, then the decision — operator preference):
 1. `## Changes made` — ONLY the actual changes: a bullet per change, each citing `file:line` (or
    `file` + function). It matters least for the decision, so it leads and gets skimmed past. When
    nothing changed this run (resume from prior manifest, all items blocked), one bullet saying so
-   (e.g. `- no code changes this run (resumed from prior manifest)`).
-2. `## Summary` — 2-4 sentences (or 2-4 bullets): what was done and WHY, merged into one. This is the
-   only "why" in the block; there is no separate Why line. Plain and skimmable; the full write-up
-   stays in the context/report file (universal rule 2).
+   (e.g. `- no code changes this run (resumed from prior manifest)`). NEVER emit the `## Changes
+   made` header with nothing under it — it is a section with its own bullets, not the block title.
+   Every run has at least one bullet here (a real change, or the no-change bullet).
+2. `## Summary` — 2-4 bullets: what was done and WHY, merged into one (bullets, not a prose
+   paragraph). This is the only "why" in the block; there is no separate Why line. Plain and
+   skimmable; the full write-up stays in the context/report file (universal rule 2).
 3. `## Ready to push` — one line: `✅ Yes` OR `⛔ No — <short blocker>`. The push/hold call at a glance;
    the reasoning already lives in `## Summary`, so no inline why is needed on `✅ Yes`.
    - `✅ Yes` = ≥1 new commit AND complete + e2e-verified + no unresolved blocker.
@@ -66,7 +68,11 @@ summary, then the decision — operator preference):
 4. `## Live tenant tested` — one line: `✅ Yes` (e2e tier `live`) OR `❌ No — <tier / reason>` (`mock` /
    `unit-test` / `blocked`; `❌ No — no code changes this run` when nothing changed). Keep the required
    `e2e: <tier> — <observation>` line if the skill mandates one.
-5. `### Recommended actions` — universal rule 4. When `Ready to push: ⛔ No`, the FIRST bullet is the
+5. `## Lazy-gaps` — one line, ONLY when the run invoked the `lazy-gaps` skill (the own-work dispatch
+   flows do). State whether gaps were found and addressed: `N rule(s) added (<file>, <file>); M
+   covered, K skipped`, or `none — all findings already covered`, or `not run — <reason>`. Omit this
+   section entirely for skills that never run lazy-gaps (e.g. the standalone report skill).
+6. `### Recommended actions` — universal rule 4. When `Ready to push: ⛔ No`, the FIRST bullet is the
    exact decision/step the operator must take to unblock (e.g. `you: decide X vs Y — options in
    <context path>`). When `✅ Yes`, the first bullet is the push step (`you: push \`<sha>\` — nothing
    else owed`).

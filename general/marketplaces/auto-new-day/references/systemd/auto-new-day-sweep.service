@@ -1,0 +1,19 @@
+[Unit]
+Description=Daily auto-new-day sweep (Claude Code in $TERMINAL + tmux)
+
+[Service]
+Type=simple
+# KillMode=process: launcher exits after backgrounding the terminal + tmux server; default control-group would kill them with it.
+KillMode=process
+WorkingDirectory=__WORKING_ROOT__
+# PATH widened to cover the common user-bin locations claude+tmux+gh may live under.
+Environment=PATH=%h/.local/bin:%h/.nix-profile/bin:%h/.cargo/bin:%h/.bun/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin
+Environment=TERMINAL=kitty
+Environment=AUTO_NEW_DAY_STATE_DIR=__STATE_DIR__
+Environment=AUTO_NEW_DAY_WORKING_ROOT=__WORKING_ROOT__
+Environment=AUTO_NEW_DAY_SLASH=__SLASH__
+ExecStartPre=/usr/bin/mkdir -p %h/.cache/auto-new-day-sweep __STATE_DIR__/dispatch __STATE_DIR__/done
+ExecStart=__LAUNCHER__
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=auto-new-day-sweep

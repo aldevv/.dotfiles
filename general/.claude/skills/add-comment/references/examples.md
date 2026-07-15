@@ -62,6 +62,7 @@ increment from there.
 - same, ListSMRoles doesn't paginate. default page = 50, orgs with more sm roles lose them. https://developer.cisco.com/meraki/api-v1/get-organization-sm-admins-roles/ (×1)
 - these all surface to c1 as codes.Unknown, and every other gocloak error in the connector has the same problem. worth adding a MapAPIError helper next to IsAlreadyExistsError that unwraps *gocloak.APIError and returns the matching gRPC code (429 and 5xx as Unavailable, 403 as PermissionDenied, 400 as InvalidArgument, etc), then wrapping every gocloak call site with status.Error(MapAPIError(err), ...). (×1)
 - these all surface to c1 as `codes.Unknown`, and every other gocloak error in the connector has the same problem. worth adding a `MapAPIError` helper next to `IsAlreadyExistsError` that unwraps `*gocloak.APIError` and returns the matching gRPC code (`429` and `5xx` as `codes.Unavailable`, `403` as `codes.PermissionDenied`, `400` as `codes.InvalidArgument`, etc), then wrapping every gocloak call site with `status.Error(MapAPIError(err), ...)`. (×1)
+- `parent_resource` works in `tmpl:` but isn't a declared cel variable in baton-http, so `organization_id` here (and the static role at :177) fails the connector's `Validate` with `undeclared reference to 'parent_resource'` and the sync returns 0 resources. i built the branch and ran a sync against the mock to confirm. `go build`/`go vet` won't catch this, only a sync run does. needs a cel-reachable org id, or derive `organization_id` another way. (×1)
 
 ### Top-level PR/MR comments
 

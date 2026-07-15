@@ -1,0 +1,14 @@
+{
+  "name": "auto-new-day",
+  "owner": {
+    "name": "Alejandro Bernal"
+  },
+  "description": "Personal Claude Code plugins from kanon's dotfiles.",
+  "plugins": [
+    {
+      "name": "auto-new-day",
+      "source": "./",
+      "description": "Morning triage engine: discover work assigned to you, classify it, dispatch a child agent per item that commits locally (never pushes), and leave a report to read. Domain-neutral, GitHub-based by default, parameterized by a dispatch profile."
+    }
+  ]
+}

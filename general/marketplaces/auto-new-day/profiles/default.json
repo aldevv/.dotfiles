@@ -1,0 +1,28 @@
+{
+  "working_root": ".",
+  "state_dir": "~/.local/state/auto-new-day",
+  "tz": null,
+  "gh_account": null,
+  "ticket_source": "github",
+  "discovery": {
+    "assignee": "@me",
+    "repos": [],
+    "issue_states": ["open"],
+    "pr_states": ["open"]
+  },
+  "buckets": {
+    "inreview": "one of your open PRs has new review comments or a CHANGES_REQUESTED review",
+    "inprogress": "an issue assigned to you with no linked PR yet",
+    "inreview-others": "a PR that has requested your review",
+    "ready-to-merge": "one of your open PRs approved by a listed approver"
+  },
+  "bucket_skills": {
+    "inreview": "/auto-new-day:impl",
+    "inprogress": "/auto-new-day:impl",
+    "inreview-others": "/auto-new-day:impl"
+  },
+  "review_chain": [],
+  "approvers": [],
+  "caps": { "review_prs_per_sweep": 5 },
+  "guards": { "push": "blocked", "pr_create": "blocked", "pr_comment": "blocked" }
+}

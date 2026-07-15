@@ -1,6 +1,6 @@
 ---
 name: pr-code-review
-description: Multi-angle review of one OR more GitHub PRs. The coordinator adaptively picks an agent count between 1 and 12 plus an effort tier (low / medium / high) per PR based on the PR's scope, importance, and complexity — a one-file typo gets 1 agent at low effort; a security-sensitive multi-file refactor gets 10-12 at high effort. The user can still override with `count=<N>` or a leading integer. Loads applicable CLAUDE.md / CLAUDE.local.md / lazy rules from cwd, walking up to home, before fanning out, and passes the loaded rules to every subagent. After the review agents return, spawns a second parallel verification pass that has DIFFERENT subagents fact-check every factual claim. BLOCKER and MAJOR findings MUST be verified by public-doc fetch, local reproduction on the checked-out PR branch, or runtime-path trace through code; the "very obvious from the diff" escape hatch requires the verifier to state explicitly that no extra verification was needed. Each consolidated finding ships with a confidence percentage (0-100%), a ✓ marker, and the verification mode used. Opens Hunk with ALL findings attached first, then asks the operator a yes/no whether to reduce to the most important + highest-confidence findings (the skill picks an integer between 1 and 5 based on confidence and importance), then walks each surviving finding with the user for Yes-post / Edit / Skip. Trigger on "/pr-code-review <pr-or-list>", "code review this PR with N subagents", "review these PRs with subagents", "do a multi-angle review of PR #N", or any explicit request to deeply review one or more PRs. Use `pr-code-review` for explicit PRs with operator-in-the-loop comment posting. Sibling skills (project-scoped batch drivers like `pr-code-review-all`) call this skill under the hood.
+description: Multi-angle review of one OR more GitHub PRs. The coordinator adaptively picks an agent count between 1 and 12 plus an effort tier (low / medium / high) per PR based on the PR's scope, importance, and complexity — a one-file typo gets 1 agent at low effort; a security-sensitive multi-file refactor gets 10-12 at high effort. The user can still override with `count=<N>` or a leading integer. Loads applicable CLAUDE.md / CLAUDE.local.md / lazy rules from cwd, walking up to home, before fanning out, and passes the loaded rules to every subagent. After the review agents return, spawns a second parallel verification pass that has DIFFERENT subagents fact-check every factual claim. BLOCKER and MAJOR findings MUST be verified by public-doc fetch, local reproduction on the checked-out PR branch, or runtime-path trace through code; the "very obvious from the diff" escape hatch requires the verifier to state explicitly that no extra verification was needed. Each consolidated finding ships with a confidence percentage (0-100%), a ✓ marker, and the verification mode used. Opens Hunk with ALL findings attached first, then asks the operator a yes/no whether to reduce to the most important + highest-confidence findings (the skill picks an integer between 1 and 5 based on confidence and importance), then walks each surviving finding with the user for Yes-post / Edit / Skip. Trigger on "/auto-new-day:pr-code-review <pr-or-list>", "code review this PR with N subagents", "review these PRs with subagents", "do a multi-angle review of PR #N", or any explicit request to deeply review one or more PRs. Use `pr-code-review` for explicit PRs with operator-in-the-loop comment posting. Sibling skills (project-scoped batch drivers like `pr-code-review-all`) call this skill under the hood.
 argument-hint: <pr-or-list> [count=<N>] [--no-subagents] (e.g. https://github.com/owner/repo/pull/80, "owner/repo#80 owner/other-repo#42 count=9", or "9 <url1> <url2>"). `--no-subagents` (or `NO_SUBAGENTS=1` in env) collapses every parallel review / verification `Agent(...)` spawn into a sequential `TaskCreate` list in the main session — slower wall-time, much cheaper token cost.
 ---
 
@@ -49,7 +49,7 @@ The operator approves PRs all day and adds words to the approval only when they 
 
 ## When to run
 
-- User types `/pr-code-review <pr>` or `/pr-code-review N <pr1> <pr2> ...` and asks to "review this PR with subagents" / "review these PRs with N subagents".
+- User types `/auto-new-day:pr-code-review <pr>` or `/auto-new-day:pr-code-review N <pr1> <pr2> ...` and asks to "review this PR with subagents" / "review these PRs with N subagents".
 - User pastes one or more PR URLs and asks for a deep review with posted comments.
 
 Do NOT trigger for:
@@ -104,7 +104,7 @@ fi
 posted=0
 for url in "${pr_urls[@]}"; do
   win_name=$(name_for "$url")  # e.g. <repo>-<N>
-  cmd="claude --dangerously-skip-permissions '/pr-code-review ${url}'"
+  cmd="claude --dangerously-skip-permissions '/auto-new-day:pr-code-review ${url}'"
   if [ -n "$placeholder_idx" ] && [ $posted -eq 0 ]; then
     tmux rename-window -t "${session}:${placeholder_idx}" "$win_name"
     tmux send-keys     -t "${session}:${placeholder_idx}" "$cmd" C-m
@@ -122,7 +122,7 @@ else
 fi
 ```
 
-After dispatching, exit the skill. Do not proceed to Step 0a / Step 1 / etc. on the original claude. Those steps belong to the per-PR claude instances in the spawned windows, each of which sees ONE PR url via `/pr-code-review <url>` and runs the single-PR flow end-to-end.
+After dispatching, exit the skill. Do not proceed to Step 0a / Step 1 / etc. on the original claude. Those steps belong to the per-PR claude instances in the spawned windows, each of which sees ONE PR url via `/auto-new-day:pr-code-review <url>` and runs the single-PR flow end-to-end.
 
 If only ONE PR was passed, proceed to Step 0a directly. The dispatcher mode is multi-PR-only.
 
@@ -142,18 +142,18 @@ SCRIPTS="$HOME/work/.claude/skills/auto-new-day/scripts"
 DATE=$("$SCRIPTS/resolve-date.sh" ${DATE_ARG:-today})
 
 # If INVOKED_FROM is inside any git repo, per-repo layout wins (one
-# .inreview/<DATE>/pr-code-review/ folder next to each repo's code).
+# .inreview/<DATE>/auto-new-day:pr-code-review/ folder next to each repo's code).
 # Otherwise, treat INVOKED_FROM as a multi-repo parent (e.g. ~/work) and
-# group all PR logs under <INVOKED_FROM>/.inreview/<DATE>/pr-code-review/<repo>/.
+# group all PR logs under <INVOKED_FROM>/.inreview/<DATE>/auto-new-day:pr-code-review/<repo>/.
 if git -C "$INVOKED_FROM" rev-parse --show-toplevel >/dev/null 2>&1; then
   PR_LOG_LAYOUT="per-repo"
 else
   PR_LOG_LAYOUT="parent"
-  PR_LOG_ROOT="$INVOKED_FROM/.inreview/$DATE/pr-code-review"
+  PR_LOG_ROOT="$INVOKED_FROM/.inreview/$DATE/auto-new-day:pr-code-review"
 fi
 ```
 
-State the chosen layout in chat ("PR review logs will land under `~/work/.inreview/<DATE>/pr-code-review/<repo>/<N>.md` because cwd is not in a git repo.") so the operator can interrupt and override if the auto-detection picked wrong. (Note: this used to be a separate `.pr/` folder; it now lives under `.inreview/<DATE>/pr-code-review/` so auto-new-day's per-date archive picks it up automatically — `/auto-new-day --date X` replays this report with zero copy-around.)
+State the chosen layout in chat ("PR review logs will land under `~/work/.inreview/<DATE>/auto-new-day:pr-code-review/<repo>/<N>.md` because cwd is not in a git repo.") so the operator can interrupt and override if the auto-detection picked wrong. (Note: this used to be a separate `.pr/` folder; it now lives under `.inreview/<DATE>/auto-new-day:pr-code-review/` so auto-new-day's per-date archive picks it up automatically — `/auto-new-day --date X` replays this report with zero copy-around.)
 
 Also resolve the operator's own GitHub login once. Step 5's author-aware overlap tagging uses it to tell apart comments the operator wrote (tag `overlap=self-silent` for insist, `overlap=self-engaged` for lower-default) from comments other humans wrote (tag `overlap=external-human`) and from bot comments (tag `overlap=external-bot`). No overlap ever silently drops a finding; every consolidated finding still ships to Hunk in Step 6b with its tag in the summary prefix. The operator makes the drop decision in Step 8.
 
@@ -281,7 +281,7 @@ Resolve the log path using `PR_LOG_LAYOUT` from Step 0a:
 
 ```bash
 if [ "$PR_LOG_LAYOUT" = "per-repo" ]; then
-  PR_LOG="$REPO_DIR/.inreview/$DATE/pr-code-review/$PR_NUM.md"
+  PR_LOG="$REPO_DIR/.inreview/$DATE/auto-new-day:pr-code-review/$PR_NUM.md"
 else
   PR_LOG="$PR_LOG_ROOT/$REPO/$PR_NUM.md"
 fi
@@ -764,21 +764,21 @@ Before opening Hunk or asking the operator anything, write the full consolidated
 **Path:**
 
 ```
-<REPO_DIR>/.inreview/<DATE>/pr-code-review/pr-<N>-<slug>-full.md
+<REPO_DIR>/.inreview/<DATE>/auto-new-day:pr-code-review/pr-<N>-<slug>-full.md
 ```
 
 - `<DATE>` = the resolved date (`--date` arg or today), same value used at Step 1b for `$PR_LOG`.
 - `<pr-title-slug>` = sanitized PR title: lowercase, replace any non-alnum run with `-`, trim leading/trailing `-`, cap at 120 chars. Prefix with the PR number for uniqueness, suffix with `-full` to distinguish from the short per-PR log at `pr-<N>.md` (Step 5c).
 - The full report lives next to the per-PR log in the same per-date archive so auto-new-day's snapshot picks BOTH up — `/auto-new-day --date X` can replay the full review verbatim.
 
-Retired: the previous `${REVIEWS_DIR:-$HOME/.reviews}/<repo>/<DATE>/<author>/pr-<N>-<slug>.md` archive. It's been folded into the per-date in-repo archive so there's one source of truth. The `reviews` fzf util now points at `~/work/baton-*/.inreview/*/pr-code-review/*.md` instead of `~/.reviews/`.
+Retired: the previous `${REVIEWS_DIR:-$HOME/.reviews}/<repo>/<DATE>/<author>/pr-<N>-<slug>.md` archive. It's been folded into the per-date in-repo archive so there's one source of truth. The `reviews` fzf util now points at `~/work/baton-*/.inreview/*/auto-new-day:pr-code-review/*.md` instead of `~/.reviews/`.
 
 ```bash
 SLUG=$(jq -r '.title' "/tmp/pr-$PR_NUM.meta.json" \
   | tr '[:upper:]' '[:lower:]' \
   | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//' \
   | cut -c1-120)
-REPORT_DIR="$REPO_DIR/.inreview/$DATE/pr-code-review"
+REPORT_DIR="$REPO_DIR/.inreview/$DATE/auto-new-day:pr-code-review"
 mkdir -p "$REPORT_DIR"
 REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG-full.md"
 ```
@@ -803,13 +803,13 @@ REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG-full.md"
 
 Write the report BEFORE opening Hunk or asking the reduce question. The operator may interrupt at any point and the on-disk artifact survives.
 
-The `reviews` CLI util (commonly at `$SCRIPTS/shared/utilities/reviews`) fzf-picks any report under `~/work/baton-*/.inreview/*/pr-code-review/*.md` (the per-date in-repo archive) by date or across all dates.
+The `reviews` CLI util (commonly at `$SCRIPTS/shared/utilities/reviews`) fzf-picks any report under `~/work/baton-*/.inreview/*/auto-new-day:pr-code-review/*.md` (the per-date in-repo archive) by date or across all dates.
 
 ## Step 5c. Append entry to the per-PR log
 
 Alongside the full archive at Step 5b, append a short summary to the per-PR log. The path was already resolved into `$PR_LOG` at Step 1b (using `$PR_LOG_LAYOUT` from Step 0a):
-- per-repo layout: `$REPO_DIR/.inreview/$DATE/pr-code-review/$PR_NUM.md`
-- parent layout: `$PR_LOG_ROOT/$REPO/$PR_NUM.md`  (where `$PR_LOG_ROOT` = `<INVOKED_FROM>/.inreview/$DATE/pr-code-review`)
+- per-repo layout: `$REPO_DIR/.inreview/$DATE/auto-new-day:pr-code-review/$PR_NUM.md`
+- parent layout: `$PR_LOG_ROOT/$REPO/$PR_NUM.md`  (where `$PR_LOG_ROOT` = `<INVOKED_FROM>/.inreview/$DATE/auto-new-day:pr-code-review`)
 
 This is the lightweight pointer that future re-reviews read at Step 1b. One entry per review run, one line per finding; full bodies live in the archive.
 
@@ -832,7 +832,7 @@ filtered_tsv=$(mktemp)
 Then call the script:
 
 ```bash
-SKILL_DIR="${PR_REVIEW_SKILL_DIR:-$HOME/.claude/skills/pr-code-review}"
+SKILL_DIR="${PR_REVIEW_SKILL_DIR:-$HOME/.claude/skills/auto-new-day:pr-code-review}"
 "$SKILL_DIR/scripts/pr-log-append.sh" \
   --pr-log    "$PR_LOG" \
   --pr-num    "$PR_NUM" \
@@ -1018,7 +1018,7 @@ done
 
 With `--repo`, `hunk session comment rm` takes exactly one positional: the `<commentId>`. The two-form signature is `<session-id> <commentId>` OR `<commentId> --repo <path>` — passing both an empty session-id and `--repo` errors with "Specify exactly one comment id with --repo".
 
-After pruning, also drop the dropped rows from the in-memory punch-list so Step 8 only walks survivors. The dropped findings stay in the persisted report at `<REPO_DIR>/.inreview/<DATE>/pr-code-review/pr-<N>-<slug>-full.md` and in the verification log at `/tmp/pr-<N>-verification.md` so the operator can recover them later.
+After pruning, also drop the dropped rows from the in-memory punch-list so Step 8 only walks survivors. The dropped findings stay in the persisted report at `<REPO_DIR>/.inreview/<DATE>/auto-new-day:pr-code-review/pr-<N>-<slug>-full.md` and in the verification log at `/tmp/pr-<N>-verification.md` so the operator can recover them later.
 
 ### Step 7b. If the operator picks "No, walk all"
 
@@ -1103,7 +1103,7 @@ gh api "repos/$OWNER/$REPO/pulls/$PR_NUM/comments" \
 
 Print the returned `html_url` so the user can verify. If `gh` returns `commit_id is not part of the pull request`, you used an abbreviated SHA; refetch the full SHA via `gh api repos/$OWNER/$REPO/pulls/$PR_NUM/commits --jq '.[-1].sha'`.
 
-**Append every approved comment to `references/examples.md`** so the corpus grows with the operator's actual voice. After a successful post, edit `~/.claude/skills/pr-code-review/references/examples.md` to add the new entry under the matching category section (Correctness / Data model / Error handling / API surface / Pagination / Tests / Style nits). Format:
+**Append every approved comment to `references/examples.md`** so the corpus grows with the operator's actual voice. After a successful post, edit `~/.claude/skills/auto-new-day:pr-code-review/references/examples.md` to add the new entry under the matching category section (Correctness / Data model / Error handling / API surface / Pagination / Tests / Style nits). Format:
 
 ```
 **<short label>** (`<file>:<line>`)
@@ -1183,8 +1183,8 @@ posted <K> comments across <M> PR(s):
   PR #<N1>: <K1> posted, <S1> skipped, <F1> filtered  →  approve <P1>% <TIER1>
   PR #<N2>: <K2> posted, <S2> skipped, <F2> filtered  →  approve <P2>% <TIER2>
 full reports:
-  <REPO1>/.inreview/<DATE>/pr-code-review/pr-<N1>-<slug1>-full.md
-  <REPO2>/.inreview/<DATE>/pr-code-review/pr-<N2>-<slug2>-full.md
+  <REPO1>/.inreview/<DATE>/auto-new-day:pr-code-review/pr-<N1>-<slug1>-full.md
+  <REPO2>/.inreview/<DATE>/auto-new-day:pr-code-review/pr-<N2>-<slug2>-full.md
 per-PR logs appended this run (layout: per-repo or parent, picked at Step 0a):
   <PR_LOG_1>
   <PR_LOG_2>
