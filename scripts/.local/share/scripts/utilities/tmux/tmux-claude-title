@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tmux-claude-title <raw-pane-title>
-# Print a 1-to-5 word kebab-case summary of a claude pane title for tmux's
-# automatic-rename-format. Fewer words is better; 5 is the hard cap.
+# Print a 1-to-3 word kebab-case summary of a claude pane title for tmux's
+# automatic-rename-format. Fewer words is better; 3 is the hard cap.
 # Cache-first to keep the bar snappy: cache hit prints the cached value
 # instantly. On cache miss, print the first-word fallback NOW and spawn
 # `claude -p` in the background to compute the real summary; once it lands,
@@ -14,15 +14,68 @@
 
 set -u
 
-max_words=5
+max_words=3
 
-raw="${1-}"
+# Stopwords dropped from titles so filler like "for"/"the"/"has" never leads or
+# trails the summary.
+stopwords="a an the and or but for nor of to in on at by with from into onto is are was were be been has have had do does did can could will would shall should may might must not this that these those it its we you they my your our their please just also then as if when while about"
+
+# Drop every stopword token from a kebab string and cap to $max_words words.
+# $1=kebab string. Keeps titles short and free of filler like "for"/"the"/"has".
+tidy_kebab() {
+    printf '%s' "$1" | awk -F- -v sw="$stopwords" -v cap="$max_words" '
+    BEGIN { n=split(sw, a, " "); for (i=1;i<=n;i++) stop[a[i]]=1 }
+    {
+        c=0; out=""
+        for (i=1; i<=NF && c<cap; i++) {
+            if ($i=="" || ($i in stop)) continue
+            out=(out==""?$i:out"-"$i); c++
+        }
+        print out
+    }'
+}
+
+# --usage (default on) logs per-call token/cost metrics; --no-usage disables.
+usage_log=true
+raw=""
+for arg in "$@"; do
+    case "$arg" in
+        --usage) usage_log=true ;;
+        --no-usage) usage_log=false ;;
+        *) [ -z "$raw" ] && raw="$arg" ;;
+    esac
+done
 [ -z "$raw" ] && exit 0
+
+script_name="tmux-claude-title"
+# Usage metrics (when usage_log=true and jq is present): every claude -p run
+# appends ONE tab-separated row to this append-only log, never overwritten, so
+# calls/day and tokens/day can be summed over any range. Columns:
+#   date  time  script  input_tokens  cache_read_tokens  output_tokens  cost_usd  summary
+# Per-day rollup (calls + tokens + cost):
+#   awk -F'\t' '{n[$1]++;i[$1]+=$4;c[$1]+=$5;o[$1]+=$6;u[$1]+=$7}
+#     END{for(d in n)printf "%s calls=%d in=%d cache_read=%d out=%d $%.4f\n",d,n[d],i[d],c[d],o[d],u[d]}' \
+#     "${XDG_STATE_HOME:-$HOME/.local/state}/tmux-claude-title/usage.log" | sort
+usage_log_file="${XDG_STATE_HOME:-$HOME/.local/state}/tmux-claude-title/usage.log"
 
 cleaned="$(printf %s "$raw" | sed -E 's/^[^[:space:]]+[[:space:]]+//')"
 [ -z "$cleaned" ] && cleaned="$raw"
 
-first_word="$(printf %s "$cleaned" | sed -E 's/[[:space:]].*//' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9-]//g')"
+# Synchronous fallback while the background summary lands: take the first
+# meaningful words of the title, then drop filler and cap to $max_words.
+first_word="$(printf %s "$cleaned" \
+    | head -c 120 \
+    | tr 'A-Z' 'a-z' \
+    | tr -c 'a-z0-9 ' ' ' \
+    | awk '{
+        out="";
+        for (i=1; i<=NF && i<=8; i++) {
+            if (length($i) >= 3) out = (out=="" ? $i : out"-"$i);
+        }
+        print out;
+      }' \
+    | sed -E 's/[^a-z0-9-]//g; s/^-+//; s/-+$//')"
+first_word="$(tidy_kebab "$first_word")"
 [ -z "$first_word" ] && first_word="claude"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tmux-claude-title"
@@ -53,17 +106,52 @@ fi
     mkdir "$lockdir" 2>/dev/null || exit 0
     trap 'rmdir "$lockdir" 2>/dev/null' EXIT
 
-    prompt="Summarize this work session in 1 to ${max_words} lowercase words that describe what the session is about. Fewer words is better: use 1 if it captures it, only reach ${max_words} when nothing shorter works. Join words with '-' (no spaces). Output ONLY the summary token, no quotes, no period, no explanation. Title: $cleaned"
-    out=$("${timeout_cmd[@]}" claude -p "$prompt" 2>/dev/null \
+    prompt="Summarize this work session as 2 or 3 lowercase words joined with '-' (e.g. 'reopen-request-bug'). Keep each word separate with a hyphen; never merge words into one run-on token. Prefer 2 words. Skip filler words (the, for, a, to, of, and, is, has). Output ONLY the token, no quotes, no period, no trailing words, no explanation. Title: $cleaned"
+    # Ask for JSON when logging so token counts return with the summary;
+    # otherwise plain text. jq parses the JSON, so fall back without it.
+    if [ "$usage_log" = true ] && command -v jq >/dev/null 2>&1; then
+        json=$("${timeout_cmd[@]}" claude -p "$prompt" --output-format json 2>/dev/null)
+        text=$(printf %s "$json" | jq -r '.result // empty' 2>/dev/null)
+    else
+        json=""
+        text=$("${timeout_cmd[@]}" claude -p "$prompt" 2>/dev/null)
+    fi
+    out=$(printf %s "$text" \
         | head -n1 \
         | tr -d '\r\n' \
         | tr 'A-Z' 'a-z' \
         | sed -E 's/[^a-z0-9-]//g; s/^-+//; s/-+$//')
+    out=$(tidy_kebab "$out")
 
-    if printf %s "$out" | grep -qE "^[a-z0-9]+(-[a-z0-9]+){0,$((max_words - 1))}\$"; then
-        printf %s "$out" > "$cache_file"
-        tmux refresh-client -S 2>/dev/null || true
+    # Append one usage row (see header comment for columns + rollup command).
+    if [ -n "$json" ]; then
+        mkdir -p "$(dirname "$usage_log_file")"
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+            "$(date +%F)" "$(date +%T)" "$script_name" \
+            "$(printf %s "$json" | jq -r '.usage.input_tokens // 0')" \
+            "$(printf %s "$json" | jq -r '.usage.cache_read_input_tokens // 0')" \
+            "$(printf %s "$json" | jq -r '.usage.output_tokens // 0')" \
+            "$(printf %s "$json" | jq -r '.total_cost_usd // 0')" \
+            "$out" >> "$usage_log_file"
     fi
+
+    # Cache exactly once per key: the LLM summary if it is usable, else the
+    # fallback. Writing the cache unconditionally means claude never re-runs for
+    # a title that is already set. A hyphenless token longer than 15 chars is a
+    # glued run-on, not a real word, so it falls back.
+    is_usable=false
+    if printf %s "$out" | grep -qE "^[a-z0-9]+(-[a-z0-9]+){0,$((max_words - 1))}\$"; then
+        case "$out" in
+            *-*) is_usable=true ;;
+            *) [ "${#out}" -le 15 ] && is_usable=true ;;
+        esac
+    fi
+    if [ "$is_usable" = true ]; then
+        printf %s "$out" > "$cache_file"
+    else
+        printf %s "$first_word" > "$cache_file"
+    fi
+    tmux refresh-client -S 2>/dev/null || true
 ) </dev/null >/dev/null 2>&1 &
 
 disown 2>/dev/null || true

@@ -76,6 +76,7 @@ done
 read -r -d '' MSG <<EOF || true
 PRE-EDIT REMINDER: these lazy files have NOT been loaded in this session yet. For each one, check its **Read when** clause in the relevant CLAUDE.md (global ~/CLAUDE.md plus any project / ancestor-walk CLAUDE.md / CLAUDE.local.md) and load it if its trigger fires on the current work:
 $list
+If this edit adds or modifies a code comment, \`code.md\` carries the comment-writing rules: load it first.
 After a compaction summary, treat every lazy file as evicted and re-read every triggered file, the summary preserves the fact of reading, not the content.
 EOF
 

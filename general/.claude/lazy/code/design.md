@@ -1,7 +1,5 @@
 # Design
 
-**Load this when:** planning a code implementation, designing architecture, choosing file or module layout, deciding where logic should live, or modifying / reading / updating / deleting code that crosses multiple files. Precedents for separation of responsibilities and where work belongs.
-
 ## Priority order: works → understandable → optimized
 
 Get it working. Make it readable. Then think about optimization. Reverse this order and you build something fast and broken, or clever and unmaintainable. Readability is the multiplier; the rest is downstream.

@@ -132,6 +132,7 @@ log: $LOG" \
     echo "[ci] could not create fixer worktree -- skip spawn"
     return 0
   fi
+  prelude_trust_worktree "$WT_PATH"
 
   local window_name="AUTO-CI-FIX:${REPO_BASENAME}#${SHORT_SHA}"
   local log_cmd
@@ -140,44 +141,22 @@ log: $LOG" \
     gitlab) log_cmd="glab ci view <job-id>  # or 'glab ci trace <job-id>' for raw logs" ;;
   esac
 
+  # The auto-pr-ci-fix skill owns the workflow body. The hook only ships the
+  # context the skill needs as its first user message.
   local prompt
   read -r -d '' prompt <<EOF || true
-A CI failure was detected on ${URL} (platform: ${PLATFORM}) for commit ${HEAD_SHA}.
-Failing checks/jobs: ${failed}.
-
-You are running in a fresh git worktree at ${WT_PATH}, on a throwaway branch
-${FIX_BRANCH} that was created off ${HEAD_SHA} (the same commit the failing CI
-ran against). The operator's main checkout still has ${PR_BRANCH} checked out
-elsewhere -- do NOT switch branches and do NOT touch their working tree.
-
-Your job is to attempt a single, minimal fix.
-
-Workflow:
-1. Confirm pwd is ${WT_PATH} and \`git rev-parse --abbrev-ref HEAD\` prints ${FIX_BRANCH}. If not, stop and tell the user.
-2. For each failing check/job, fetch its failed log lines: ${log_cmd}.
-3. Diagnose the root cause. Apply the SMALLEST possible fix. Do not refactor, do not rework architecture, do not touch unrelated files.
-4. If the failure looks like a flake (intermittent timeout, network blip, vendor-side outage, no clear code-level cause), do NOT edit code or re-run anything. Stop and tell the user it looks like a flake.
-5. Build/test locally for whatever language the repo uses (e.g. \`go build ./... && go test ./... -count=1\` for Go).
-6. Commit locally on ${FIX_BRANCH} with a short imperative message ("fix <thing>"). Stage only the files you actually changed. Never use \`git add -A\`.
-7. Print a short summary of what you changed and ring the tmux bell (\`printf '\\a'\`).
-8. Ask the user with AskUserQuestion whether to merge ${FIX_BRANCH} into ${PR_BRANCH} (and push). If they say yes, run \`git -C ${REPO_DIR} merge --no-edit ${FIX_BRANCH}\`, then on success run \`git -C ${REPO_DIR} push\`. Report both the merge and push output. On merge failure (dirty working tree in the main checkout, merge conflict, anything else), report the exact git output and stop -- do NOT retry, do NOT \`git merge --abort\` and retry, do NOT push. On push failure (non-fast-forward, auth, etc.), report the exact git output and stop -- do NOT \`--force\`, do NOT retry. If they say no, leave the fix branch in place.
-9. End your turn. Do NOT re-run CI. Do NOT loop back waiting for further input.
-
-Hard rules:
-- Never open a new PR or MR. Never change reviewers, labels, or assignees.
-- Never switch branches, never rebase, never force-push, never amend.
-- The only merge you may perform is the single \`git merge --no-edit ${FIX_BRANCH}\` invocation in step 8, only if the user said yes. The only push you may perform is the single \`git push\` from ${REPO_DIR} immediately after that merge succeeds.
-- Never touch vendor/ or generated files unless that IS the bug.
-- Never skip hooks (--no-verify) or bypass signing.
-- One fix attempt total. After the merge prompt, end your turn.
+/auto-pr-ci-fix
 
 URL: ${URL}
-Operator's main checkout: ${REPO_DIR}
-PR branch (operator's checkout): ${PR_BRANCH}
-Fix branch (your worktree): ${FIX_BRANCH}
+Platform: ${PLATFORM}
+Commit: ${HEAD_SHA}
+Failing: ${failed}
 Worktree: ${WT_PATH}
-Failing (comma-separated): ${failed}
-Hook log for context: ${LOG}
+Fix branch: ${FIX_BRANCH}
+Main checkout: ${REPO_DIR}
+PR branch: ${PR_BRANCH}
+Hook log: ${LOG}
+Log command: ${log_cmd}
 EOF
 
   echo "[ci] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"

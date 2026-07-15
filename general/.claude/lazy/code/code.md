@@ -18,10 +18,23 @@ When refactoring existing code: write a passing test first, make the change, con
 
 ## Readability is priority #1
 
-Apply clean-code practices only when they make the code easier to read, not as ends in themselves.
+Apply clean-code practices only when they make the code easier to read, not as ends in themselves. Code is read and maintained by humans far more often than it is written; optimize every line for the next reader, not for the fewest keystrokes now.
 
 - **Prefer guard clauses and early returns over if-else nesting.** Check the failure/edge case first, return immediately, then write the happy path without indentation. `if err != nil { return err }` at the top beats an `else` block that pushes the main logic rightward. Apply this whenever the condition is a pre-check, validation, or error, not when both branches are equally weighted logic.
 - **Complex `if` conditions get extracted to a named predicate, when the condition is genuinely hard to read inline.** `if isEligibleForRefund(order) { ... }` beats five chained boolean clauses. Apply to switch/case guards and nested ternaries too. Short conditions used once stay inline (see "Don't extract short expressions" below).
+- **Normalize into named locals before comparing; don't cram fallback/coalescing into the condition.** A comparison that makes the reader mentally evaluate two `or ""` (or `?? ""`, `COALESCE`, etc.) fallbacks *and* the `!=` at once is a re-read every time. Bind the normalized values to named locals first, then compare the locals. Bad:
+  ```python
+  if (src_dtl.get("COMMENT") or "") != (tgt_dtl.get("COMMENT") or ""):
+      comment_changes.append({"column_name": col, "comment": src_dtl.get("COMMENT") or ""})
+  ```
+  Good:
+  ```python
+  src_comment = src_dtl.get("COMMENT") or ""
+  tgt_comment = tgt_dtl.get("COMMENT") or ""
+  if src_comment != tgt_comment:
+      comment_changes.append({"column_name": col, "comment": src_comment})
+  ```
+  The locals also kill the duplicated `src_dtl.get("COMMENT") or ""` in the body.
 - **Prefer positive `if` conditions over negated ones inside a predicate function.** Once a condition is already extracted to a `should_X` / `is_Y` helper, the bodies should read forwards. `if a && b { return x }; return c` is easier to parse than `if !a { return false }; if !b { return true }; return c`. The guard-clause rule above still applies at the outer function (entry preconditions, error checks); inside a small predicate, restructure to avoid `!`. If the cleanest form genuinely requires a negation, keep it. Don't bend logic to chase the rule.
 - **Prefer many small named functions over one long function with inline comments.** A well-named function call is self-documenting; a comment above an inline block isn't.
 - **No hardcoded strings for values defined elsewhere.** If a constant, config field, env var, or enum already names a value, reference it instead of retyping the literal. `conf.GetString("base-url")` becomes `conf.BaseURL`. Same rule for raw `os.Getenv("FOO")` calls when the config layer already wraps them. Magic separators (`"@"`, `":"`, `"/"`) referenced more than once become a named `const` next to their point of use.
@@ -75,6 +88,10 @@ When touching existing code: if a comment restates the line that follows it, del
 Exception: tests. A one-line function-header comment naming a non-obvious scenario is OK. Per-line narration inside the test body is not.
 
 The "Forbidden patterns" and "Justified comments" sections below show what these rules look like in practice.
+
+### Comments about runtime capabilities are snapshots, not facts
+
+When an existing comment asserts a runtime capability ("this runtime has no X", "X isn't available", "the interpreter doesn't expose Y"), treat it as a snapshot from whenever it was written, not a current fact. Before deferring to it, feature-detect: `typeof X === "function"` at runtime or grep the upstream API surface. Both take 30 seconds and beat a stale claim. Especially when a review or bot flags the capability, that's the trigger to verify, not the trigger to defend the comment.
 
 ### Forbidden patterns
 
@@ -200,6 +217,21 @@ type Order struct {
 ```
 
 Delete. The type name plus its fields says it. A comment is only justified if it documents an invariant the fields cannot express (e.g., "Total includes shipping but excludes tax").
+
+#### 11. References to my Claude setup, dotfiles, rules system, or internal vocabulary
+
+```go
+// ponytail: simple lock; switch to per-account if throughput matters
+var mu sync.Mutex
+
+// Per the lazy file code.md "Comments" section, only annotate non-obvious WHY.
+const ttl = 5 * time.Minute
+
+// CLAUDE.md says we always use json.Number for IDs.
+type ID json.Number
+```
+
+Delete the prefixes and the rule-name references. Code comments are for code-related content only: algorithm intent, vendor-API quirks, non-obvious WHY, external dependency notes, workarounds for specific upstream bugs. No `ponytail:` prefix, no "per the lazy file X", no "CLAUDE.md says", no "skills/Y says", no internal vocabulary. The setup is mine, not the reader's; the reader sees only the committed source. Setup or rule justifications belong in the PR description, the commit message, or chat — never in the source tree. Re-write the comment to state the actual code-level reason in the reader's vocabulary, or delete it.
 
 ### Justified comments
 

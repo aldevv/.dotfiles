@@ -15,6 +15,9 @@ vim.g.loaded_2html_plugin = 1
 vim.g.loaded_tutor_mode_plugin = 1
 vim.g.loaded_remote_plugins = 1
 
+-- Treat .h files as C, not C++ (suckless config.h, plain C headers).
+vim.g.c_syntax_for_h = 1
+
 -- Disable language-host providers we don't use; without this, nvim probes
 -- $PATH for each on startup.
 vim.g.loaded_perl_provider = 0

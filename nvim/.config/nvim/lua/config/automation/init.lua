@@ -7,28 +7,13 @@ local has = function(bin) return vim.fn.executable(bin) == 1 end
 local g = function(name) return vim.api.nvim_create_augroup(name, { clear = true }) end
 
 -- ============================================================================
--- suckless-build helpers (gated by binaries that only exist on the dwm host)
+-- suckless-build helper: sudo make install on config.h save
 -- ============================================================================
-vim.cmd([[
-    function CompileSuck()
-        let _path = expand('%:p:h')
-        let name = system('basename '.shellescape(_path))
-        if name =~ "dwm"
-            echo name
-            :exec '!changeWallpaperKeepBorders'
-        else
-            :exec 'cd '. _path
-            :exec '!sudo make PREFIX=$HOME/.local/builds/st clean install '
-        endif
-    endfunction
-]])
-
 vim.api.nvim_create_autocmd("BufWritePost", {
   group = g("compile_suck"),
   pattern = "config.h",
   callback = function()
-    if not has("changeWallpaperKeepBorders") and not has("sudo") then return end
-    vim.cmd("call CompileSuck()")
+    vim.cmd("!cd " .. vim.fn.shellescape(vim.fn.expand("%:p:h")) .. " && sudo make install")
   end,
 })
 

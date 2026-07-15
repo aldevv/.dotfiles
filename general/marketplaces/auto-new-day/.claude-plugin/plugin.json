@@ -1,0 +1,7 @@
+{
+  "name": "auto-new-day",
+  "version": "0.1.0",
+  "description": "Morning triage engine. Discovers work assigned to you, classifies it into buckets, dispatches one child agent per item that commits locally and never pushes, and leaves a report you read later. Domain-neutral and GitHub-based by default; behavior is driven by a dispatch profile.",
+  "author": { "name": "Alejandro Bernal" },
+  "keywords": ["triage", "automation", "github", "agents"]
+}

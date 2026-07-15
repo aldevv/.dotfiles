@@ -48,6 +48,15 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 
 vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#9ef87a" })
 
+local function link_search_to_cursearch()
+  vim.api.nvim_set_hl(0, "Search", { link = "CurSearch" })
+end
+link_search_to_cursearch()
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("search_uniform_color", { clear = true }),
+  callback = link_search_to_cursearch,
+})
+
 -- -- transparent float for harpoon
 vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "FloatBorder", { bg = "NONE" })

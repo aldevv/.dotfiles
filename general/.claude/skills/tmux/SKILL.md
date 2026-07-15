@@ -1,6 +1,6 @@
 ---
 name: tmux
-description: Spawn a tmux pane, window, or session running claude (or any other command) without leaving the current session. Triggers on "open a new pane", "split with claude", "open another claude beside this one", "new tmux pane/panel", "new tmux window", "new tmux tab", "side-by-side claude", "create a new session to do X", "spawn a new session for X", "open a session for <task>", or any request to launch a sibling shell/claude instance from inside tmux. Also fires when the user asks for two or more clearly unrelated tasks in one request (different repos, different long-running concerns, different features or PRs in the same project, "fix issue #N AND resolve conflicts in PR #M") so the skill can spawn the extras into their own windows/sessions instead of running them serially in the current pane. When the parallel tasks live in the same repo but need different branches checked out (a feature branch and a PR branch, two different issues), spawn a git worktree per extra task and open the new window in that worktree so the branches don't collide. Defaults to a new pane (split). Opens a new window when the user says "window" or "tab". Opens a new tmux session when the user says "session to do X" / "session for X" AND the task lives outside the current repo/working directory tree; otherwise a "session" request becomes a new window. For multi-task splits: same-repo tasks get a new window (in a worktree if branch-isolating); off-tree tasks get a new session. Pick decisively, do not ask the user.
+description: Spawn a tmux pane, window, or session running claude (or any other command) without leaving the current session. Triggers on "open a new pane", "split with claude", "open another claude beside this one", "new tmux pane/panel", "new tmux window", "new tmux tab", "side-by-side claude", "create a new session to do X", "spawn a new session for X", "open a session for <task>", "run X in a new pane/window/session", "do X in a new pane/window/session", "start X in a new pane/window/session", "kick off X in a new pane/window/session", or any request to launch a sibling shell/claude instance from inside tmux, including any request phrased as "run/do/start <task> in a new <pane|window|session|tab|panel|split>". Also fires when the user asks for two or more clearly unrelated tasks in one request (different repos, different long-running concerns, different features or PRs in the same project, "fix issue #N AND resolve conflicts in PR #M") so the skill can spawn the extras into their own windows/sessions instead of running them serially in the current pane. When the parallel tasks live in the same repo but need different branches checked out (a feature branch and a PR branch, two different issues), spawn a git worktree per extra task and open the new window in that worktree so the branches don't collide. Defaults to a new pane (split). Opens a new window when the user says "window" or "tab". Opens a new tmux session when the user says "session to do X" / "session for X" AND the task lives outside the current repo/working directory tree; otherwise a "session" request becomes a new window. For multi-task splits: same-repo tasks get a new window (in a worktree if branch-isolating); off-tree tasks get a new session. Pick decisively, do not ask the user.
 ---
 
 # tmux pane/window helper
@@ -32,6 +32,22 @@ tmux new-window -t "$claude_session:" -c <dir> "<command>"
 
 Apply this to the examples below: every `split-window`, `new-window`, and inspecting `display-message` in the rest of this skill should carry `-t "$TMUX_PANE"` (or `-t "$claude_session:"` for cross-window spawns) unless the spawn is explicitly into a different named session (the `tmux new-session -d -s <name>` flow). The skill examples below omit `-t` for readability; add it in real invocations.
 
+## Spawning claude: standard invocation
+
+Spawned claude sessions are autonomous side jobs — the user is not sitting in the new pane approving each tool call. The default invocation is:
+
+```bash
+claude --dangerously-skip-permissions "<prompt>"
+```
+
+That single line is the whole pattern. It works the same for `split-window`, `new-window`, `new-session`, and worktree windows: the trailing command on any of those spawns is just that. Skip the flag only when the user explicitly says the new session should be interactive.
+
+For prompts longer than a sentence or that contain awkward quoting, pre-write the prompt to a file and pipe it:
+
+```bash
+claude --dangerously-skip-permissions < /tmp/prompt.txt
+```
+
 ## Default: new pane (`split-window`)
 
 ```bash
@@ -47,13 +63,13 @@ Examples:
 
 ```bash
 # claude with a prompt, side-by-side, in a specific repo
-tmux split-window -h -c /home/kanon/work/c1 "claude 'explain the current branch and quote the key code'"
+tmux split-window -h -c /home/kanon/work/c1 "claude --dangerously-skip-permissions 'explain the current branch and quote the key code'"
 
 # plain shell stacked below
 tmux split-window -v -c /home/kanon/work/baton-sdk
 
 # inherit current pane's cwd (omit -c)
-tmux split-window -h "claude"
+tmux split-window -h "claude --dangerously-skip-permissions"
 ```
 
 ## When the user says "session to do X" / "session for X" / "new session for ..."
@@ -158,7 +174,7 @@ tmux new-window -c <dir> "<command>"
 - **Don't pass `-n` by default.** This user's tmux config sets `automatic-rename-format` to `#{b:pane_current_path}:#{pane_current_command}`, so new windows automatically get a `<folder>:<program>` name (e.g. `md-preview.nvim:nvim`). The status bar splits the name on the first `:` and colorizes the halves (folder `#d5c4a1` warm-light, program `#83a598` muted blue-green). Active vs inactive is distinguished by the `#F` flag (`*` marker), not a color change. Passing `-n` *turns auto-rename off* for that window, freezing the name forever, which is usually wrong.
 - **Pass `-n` only when you need a stable name for dedupe / matching.** Example: a skill that checks `tmux list-windows | grep -F "$expected_name"` before opening, so a second invocation reuses the existing window. Two rules:
   - The shape is `<left-half>:<right-half>` with exactly one `:` (the first one) acting as the split point.
-  - Pick the halves by what you want visually prominent. The status bar splits on the first `:` and renders left side in `#d5c4a1` (warm light tan — "the project / category") and right side in `#83a598` (muted blue-green — "the distinguishing detail"). Put the *grouping* on the left, the *most distinguishing signal* on the right. Examples: `md-preview.nvim:nvim` (auto-rename shape; project on left, running program on right), `hunk-c1:feature/foo` (the hunk skill's shape; "this is a hunk window for c1" on the left, branch as the standout on the right).
+  - Pick the halves by what you want visually prominent. The status bar splits on the first `:` and renders left side in `#d5c4a1` (warm light tan — "the project / category") and right side in `#83a598` (muted blue-green — "the distinguishing detail"). Put the *grouping* on the left, the *most distinguishing signal* on the right. Examples: `md-preview.nvim:nvim` (auto-rename shape; project on left, running program on right), `hunk-c1:feature/foo` (the report skill's shape; "this is a hunk window for c1" on the left, branch as the standout on the right).
 - A new window hides the current pane; a split keeps both visible. Use only when the user explicitly says "window" or "tab".
 
 ## Vocabulary map
@@ -226,6 +242,29 @@ Resize a specific pane:
 tmux resize-pane -t <index> -x 80   # set width to 80 cols
 tmux resize-pane -t <index> -y 20   # set height to 20 rows
 ```
+
+## Troubleshooting: `server exited unexpectedly` = two tmux versions
+
+If any tmux command (`ls`, `new-session`, `new-window`, `attach`) fails with `server exited unexpectedly` (or `protocol version mismatch` / `lost server`) even though a tmux server is clearly running and the user's own shells use it fine, the cause is almost always **two different tmux versions installed**. The `tmux` your shell resolves on `PATH` is a different version from the one that started the running server; the client connects to the socket, the server rejects the protocol, and tmux prints that generic message. It is NOT a tmux bug and the server is NOT broken (clients of the matching version keep working).
+
+This bites the agent specifically: the agent's `PATH` often resolves bare `tmux` to an old distro build (`/usr/bin/tmux`) while the user's login `PATH` puts a newer build (Homebrew `/home/linuxbrew/.linuxbrew/bin/tmux`, nix, etc.) first, so the user never sees it.
+
+Diagnose:
+
+```bash
+tmux -V                                        # client version on PATH
+readlink -f "$(command -v tmux)"               # which binary that is
+readlink -f /proc/$(pgrep -x tmux | head -1)/exe   # binary the RUNNING server uses
+for t in $(command -v -a tmux); do printf '%s -> ' "$t"; "$t" -V; done   # all installs + versions
+```
+
+Fix, no need to ask: **remove the older tmux install** so bare `tmux` falls through to the newer one that matches the server. Use whatever package manager owns the older binary (`sudo apt-get remove -y tmux` for a distro `/usr/bin/tmux`, `brew uninstall tmux` for an old brew keg, etc.). Simulate first when using apt (`apt-get -s remove tmux`) to confirm only `tmux` goes. Then verify the fix reaches the real server:
+
+```bash
+hash -r; tmux -V; tmux ls
+```
+
+Only fall back to a private socket (`tmux -L <name> ...`) when you genuinely cannot remove the older binary (no sudo, shared machine). A `-L` socket sidesteps the mismatch because you create and own that server with the same binary you query it with, but the user cannot reach it with a plain `tmux attach`, so it is the last resort, not the fix.
 
 ## Common mistakes to avoid
 

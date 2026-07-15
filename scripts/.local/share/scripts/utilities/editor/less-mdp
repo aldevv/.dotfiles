@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# less-mdp: open the current less buffer / file with `mdp`.
+#
+# Called from the M-binding in $HOME/.config/colemak-less. Less pipes its
+# buffer to this script on stdin and passes its `%` expansion (either the
+# real file path when less has one, or `-` when reading a pipe) as $1.
+#
+# mdp dispatches to pandoc internally based on extension, so all this script
+# has to do is hand mdp a file with the right extension.
+#
+# - File arg: pass through unchanged (extension carries the format).
+# - MDP_TARGET: override target path (auto-new-day pagers set this to the
+#   original brief.md when less is showing pre-folded content).
+# - Piped stdin: write to a mktemp with a detected extension. Sniff first
+#   1KB for LaTeX / HTML markers; default to .md. Override with
+#   LESS_MDP_EXT=.tex|.rst|.html|... to force explicitly.
+#
+# Concurrent-safe: each invocation writes to a unique mktemp file.
+#
+# Standalone use:
+#   echo "# Hi" | less-mdp -                            # md pipe
+#   printf '\documentclass{article}...' | less-mdp -     # tex sniffed
+#   LESS_MDP_EXT=.rst cat notes.rst | less-mdp -         # rst forced
+#   less-mdp /path/to/report.tex                         # file → mdp
+#   MDP_TARGET=/other.md less-mdp -                      # override target
+
+set -u
+
+less_arg=${1:--}
+target=${MDP_TARGET:-$less_arg}
+
+if [ "$target" = "-" ] || [ ! -f "$target" ]; then
+    ext=${LESS_MDP_EXT:-}
+    if [ -n "$ext" ]; then
+        target=$(mktemp --suffix="$ext")
+        tee "$target" >/dev/null
+    else
+        raw=$(mktemp)
+        tee "$raw" >/dev/null
+        head_bytes=$(head -c 1024 "$raw")
+        case "$head_bytes" in
+            *'\documentclass'* | *'\begin{document}'* | *'\usepackage'*) ext=.tex ;;
+            *'<!DOCTYPE html'* | *'<!doctype html'* | *'<html'* | *'<HTML'*) ext=.html ;;
+            *) ext=.md ;;
+        esac
+        target=${raw}${ext}
+        mv "$raw" "$target"
+    fi
+fi
+
+setsid mdp "$target" </dev/null >/dev/null 2>&1 &
+disown 2>/dev/null || true
