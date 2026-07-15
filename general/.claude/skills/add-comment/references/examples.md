@@ -22,7 +22,7 @@ increment from there.
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
 - deleted. (×2)
 - moved to helpers.go. (×1)
-- fixed (×1)
+- fixed (×2)
 - fixed. no longer seeded from public data. (×1)
 - added `codes.AlreadyExists` (×1)
 
