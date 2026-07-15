@@ -264,6 +264,11 @@ except FileNotFoundError:
 def is_day(l):  return l.startswith("- **")
 def is_sub(l):  return l.startswith("  - **")
 
+# canonical subheading order within a day: Worked on always before reviews.
+SECTION_ORDER = ["Worked on", "Reviewed teammate PRs"]
+def rank(title):
+    return SECTION_ORDER.index(title) if title in SECTION_ORDER else len(SECTION_ORDER)
+
 # locate (or create) the day block
 try:
     h = lines.index(heading)
@@ -296,9 +301,19 @@ for i in range(h + 1, end):
         sub_idx = i
         break
 if sub_idx is None:
-    at = end
-    while at - 1 > h and lines[at - 1].strip() == "":
-        at -= 1
+    # insert the new subheading in canonical order: before the first existing
+    # subheading that ranks after it (so "Worked on" lands above reviews).
+    newrank = rank(sec)
+    at = None
+    for i in range(h + 1, end):
+        s = lines[i].strip()
+        if s.startswith("- **") and s.endswith(":**") and rank(s[4:-3]) > newrank:
+            at = i
+            break
+    if at is None:
+        at = end
+        while at - 1 > h and lines[at - 1].strip() == "":
+            at -= 1
     lines[at:at] = [sub, item]
     with open(wf, "w") as f:
         f.write("\n".join(lines) + "\n")
