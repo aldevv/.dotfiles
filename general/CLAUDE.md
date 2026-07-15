@@ -53,6 +53,18 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - swapping one third-party endpoint or operation for another (per-resource vs bulk, one verb vs another, one content-type vs another)
   - review feedback that says "the docs say X but our code does Y" for any third-party API
 
+- [`~/.claude/lazy/plugins.md`](.claude/lazy/plugins.md). **Read when** any of:
+  - authoring or editing any Claude Code plugin or marketplace manifest (`.claude-plugin/marketplace.json`, `plugin.json`, plugin `dependencies`, `allowCrossMarketplaceDependenciesOn`)
+  - managing plugins: running `claude plugin …`, installing/enabling/updating a plugin, or diagnosing why a plugin edit didn't take effect (stale version-keyed cache), `/reload-plugins`
+  - any question about how Claude Code plugins work (anatomy, `/plugin:skill` namespacing, cross-marketplace deps, source-vs-cache)
+  - This is the general mechanism; `marketplaces.md` is my concrete `~/marketplaces/` instances.
+
+- [`~/.claude/lazy/marketplaces.md`](.claude/lazy/marketplaces.md). **Read when** any of:
+  - editing any file under `~/marketplaces/` or `~/.dotfiles/general/marketplaces/` (a Claude Code plugin/marketplace)
+  - the user says "update the plugin", "update my auto-new-day skills", or names a skill in the generic `auto-new-day` plugin
+  - running any `claude plugin …` command (install / marketplace add|update|remove / enable), or asked where a plugin/skill lives or how to edit/apply a plugin change
+  - the user mentions `~/marketplaces`, "the marketplace", or the auto-new-day morning sweep / its systemd timer
+
 ## Machine connection notes
 Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
 
