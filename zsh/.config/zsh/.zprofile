@@ -95,7 +95,7 @@ export GOPATH=$HOME/.local/share/go
 # export PIPENV_VENV_IN_PROJECT="enabled"
 
 
-export PATH="$GOROOT/bin:$GOPATH/bin:$CARGO_HOME/bin:$JAVA_HOME/bin:$PATH"
+export PATH="$GOROOT/bin:$GOPATH/bin${CARGO_HOME:+:$CARGO_HOME/bin}${JAVA_HOME:+:$JAVA_HOME/bin}:$PATH"
 export PATH="$PYENV_ROOT/bin:${PATH}"
 #=============================================================================
 

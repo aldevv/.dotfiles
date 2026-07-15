@@ -202,6 +202,152 @@ cmd_upsert() {
 	printf '%s\n' "$WF"
 }
 
+# cmd_add_item: idempotent single-bullet merge into a day's section, keyed by a
+# stable substring (the PR/issue URL). Unlike upsert (which REPLACES the whole
+# day section), this MERGES one bullet under a named subheading, so several
+# dispatched skills can each record their own line on the same day without
+# clobbering each other. Re-running with the same --key updates that bullet in
+# place. Creates the file, the day heading, and the subheading as needed.
+cmd_add_item() {
+	local DATE="" SECTION="" KEY="" BULLET=""
+	while [ $# -gt 0 ]; do
+		case "$1" in
+		--date) shift; DATE=${1:-} ;;
+		--section) shift; SECTION=${1:-} ;;
+		--key) shift; KEY=${1:-} ;;
+		--bullet) shift; BULLET=${1:-} ;;
+		*) die "add-item: unknown arg $1" ;;
+		esac
+		shift
+	done
+	[ -n "$DATE" ] || die "add-item: --date required"
+	[ -n "$SECTION" ] || die "add-item: --section required"
+	[ -n "$BULLET" ] || die "add-item: --bullet required"
+	command -v python3 >/dev/null 2>&1 || {
+		warn "python3 not found; skipping add-item"
+		exit 0
+	}
+
+	local WF
+	WF=$(week_file_for_date "$DATE") || { warn "bad date '$DATE'"; exit 0; }
+	mkdir -p "$ROOT" 2>/dev/null || { warn "cannot mkdir $ROOT"; exit 0; }
+
+	local WEEKDAY DOW MON_START
+	WEEKDAY=$(date -d "$DATE" +%a 2>/dev/null || echo "")
+	DOW=$(date -d "$DATE" +%u 2>/dev/null || echo 1)
+	MON_START=$(date -d "$DATE -$((DOW - 1)) days" +%Y-%m-%d 2>/dev/null || echo "$DATE")
+
+	WR_FILE="$WF" WR_DATE="$DATE" WR_WEEKDAY="$WEEKDAY" WR_MON="$MON_START" \
+		WR_SECTION="$SECTION" WR_KEY="$KEY" WR_BULLET="$BULLET" \
+		python3 - <<'PY' || { warn "add-item merge failed"; exit 0; }
+import os, io
+
+wf   = os.environ["WR_FILE"]
+date = os.environ["WR_DATE"]
+wkd  = os.environ["WR_WEEKDAY"]
+mon  = os.environ["WR_MON"]
+sec  = os.environ["WR_SECTION"]
+key  = os.environ.get("WR_KEY", "")
+bul  = os.environ["WR_BULLET"]
+
+heading = f"- **{date} ({wkd})**"
+sub     = f"  - **{sec}:**"
+item    = f"    - {bul}"
+placeholder = "- (no dispatchable work this sweep)"
+
+try:
+    with open(wf) as f:
+        lines = f.read().splitlines()
+except FileNotFoundError:
+    lines = [f"# Weekly report — week of {mon}"]
+
+def is_day(l):  return l.startswith("- **")
+def is_sub(l):  return l.startswith("  - **")
+
+# canonical subheading order within a day: Worked on always before reviews.
+SECTION_ORDER = ["Worked on", "Reviewed teammate PRs"]
+def rank(title):
+    return SECTION_ORDER.index(title) if title in SECTION_ORDER else len(SECTION_ORDER)
+
+# locate (or create) the day block
+try:
+    h = lines.index(heading)
+except ValueError:
+    while lines and lines[-1].strip() == "":
+        lines.pop()
+    if lines:
+        lines.append("")
+    lines += [heading, sub, item]
+    with open(wf, "w") as f:
+        f.write("\n".join(lines) + "\n")
+    print(wf)
+    raise SystemExit(0)
+
+end = len(lines)
+for i in range(h + 1, len(lines)):
+    if is_day(lines[i]):
+        end = i
+        break
+
+# drop the "(no dispatchable work)" placeholder once real work lands
+kept = [l for l in lines[h + 1:end] if l.strip() != placeholder]
+lines[h + 1:end] = kept
+end = h + 1 + len(kept)
+
+# locate (or create) the subheading within the day block
+sub_idx = None
+for i in range(h + 1, end):
+    if lines[i].strip() == f"- **{sec}:**":
+        sub_idx = i
+        break
+if sub_idx is None:
+    # insert the new subheading in canonical order: before the first existing
+    # subheading that ranks after it (so "Worked on" lands above reviews).
+    newrank = rank(sec)
+    at = None
+    for i in range(h + 1, end):
+        s = lines[i].strip()
+        if s.startswith("- **") and s.endswith(":**") and rank(s[4:-3]) > newrank:
+            at = i
+            break
+    if at is None:
+        at = end
+        while at - 1 > h and lines[at - 1].strip() == "":
+            at -= 1
+    lines[at:at] = [sub, item]
+    with open(wf, "w") as f:
+        f.write("\n".join(lines) + "\n")
+    print(wf)
+    raise SystemExit(0)
+
+# find the end of this subheading's sub-block
+sub_end = end
+for i in range(sub_idx + 1, end):
+    if is_sub(lines[i]) or is_day(lines[i]):
+        sub_end = i
+        break
+
+# update in place when the key already appears, else append
+found = None
+if key:
+    for i in range(sub_idx + 1, sub_end):
+        if key in lines[i]:
+            found = i
+            break
+if found is not None:
+    lines[found] = item
+else:
+    at = sub_end
+    while at - 1 > sub_idx and lines[at - 1].strip() == "":
+        at -= 1
+    lines[at:at] = [item]
+
+with open(wf, "w") as f:
+    f.write("\n".join(lines) + "\n")
+print(wf)
+PY
+}
+
 cmd_show() {
 	local DATE="" FILE="" DO_MDP=1 ONLY_FRIDAY=0
 	while [ $# -gt 0 ]; do
@@ -287,7 +433,8 @@ SUB=${1:-}
 shift 2>/dev/null || true
 case "$SUB" in
 upsert) cmd_upsert "$@" ;;
+add-item) cmd_add_item "$@" ;;
 show) cmd_show "$@" ;;
 report-day) report_day_for_week "${1:-$(date +%F)}" ;;
-*) die "usage: weekly-report.sh {upsert|show|report-day} ..." ;;
+*) die "usage: weekly-report.sh {upsert|add-item|show|report-day} ..." ;;
 esac

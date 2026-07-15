@@ -27,7 +27,7 @@ unsetopt complete_aliases
 [[ -n "$ZDOTDIR" ]] && fpath=($ZDOTDIR/completions $fpath)
 
 # only source if you dont login from a terminal
-# source ~/.zprofile
+[[ -o login ]] || source $ZDOTDIR/.zprofile
 #COLEMAK DOTFILES
 #!  https://rgoswami.me/posts/colemak-dots-refactor/
 #
