@@ -36,7 +36,7 @@ In order:
 2. `Recommendation: APPROVE | APPROVE WITH NOTES | HOLD (comment) | HOLD (request-changes)` + ` — <one plain clause>`. A decision, not a hedge.
 3. `Verified how: <one clause>` — what you actually ran (build/test/repro/doc-fetch) vs only read. Be honest; never imply e2e when you only read.
 4. `Comments: <...>` — per the wrapper's posting model (e.g. `<D> drafted (in <path>), 0 posted` when the skill never posts).
-5. `Findings: <nB> BLOCKER, <nMaj> MAJOR, <nMin> MINOR, …` (tally, or `none`), then a table with EXACT columns `Sev | Conf | ✓N | File:line | Finding`. `Conf` and `✓N` are BOTH required on every row. Under the table, name what the `✓N` checks were per finding, and the "why not higher" line for any sub-80% multi-validated finding (see `diff-note-format.md` §2-3).
+5. `Findings: <nB> BLOCKER, <nMaj> MAJOR, <nMin> MINOR, …` (tally, or `none`), then a table with EXACT columns `Sev | Conf | ✓N | File:line | Finding`. `Conf` and `✓N` are BOTH required on every row. The `Finding` cell is the crisp one-phrase defect headline from `diff-note-format.md` §2 (`GrantableTo contains a non-principal resource type`), NOT a sentence that re-explains it. Under the table, name what the `✓N` checks were per finding, and the "why not higher" line for any sub-80% multi-validated finding (see `diff-note-format.md` §2-3).
 6. `Why: <one sentence>` — the headline finding, or "no blocking findings".
 7. `### Recommended actions` — universal rule 4. First bullet restates approve/hold as a runnable next step.
 
@@ -59,10 +59,20 @@ summary, then the decision — operator preference):
 2. `## Summary` — 2-4 bullets: what was done and WHY, merged into one (bullets, not a prose
    paragraph). This is the only "why" in the block; there is no separate Why line. Plain and
    skimmable; the full write-up stays in the context/report file (universal rule 2).
-3. `## Ready to push` — one line: `✅ Yes` OR `⛔ No — <short blocker>`. The push/hold call at a glance;
-   the reasoning already lives in `## Summary`, so no inline why is needed on `✅ Yes`.
-   - `✅ Yes` = ≥1 new commit AND complete + e2e-verified + no unresolved blocker.
-   - `⛔ No` = no new commit this run, or a blocker the operator must resolve first (name it inline).
+3. `## Ready to push` — lead with the **ready-to-push confidence** `<N>%` (how ready the change is
+   for a PR: correctness + e2e + docs/scope; EXCLUDES CI-pipeline risk like lint-version drift,
+   metadata-regen, and `sync-test`/integration, which routinely fail in the PR and get corrected
+   there — never dock the number for them). Then the push/hold call, and, when a PR was opened this
+   run, its status. The reasoning already lives in `## Summary`.
+   - `✅ Yes — <N>%` = ≥1 new commit AND complete + e2e-verified + no unresolved blocker. If the run
+     pushed and opened a PR (a skill whose push gate fired at its threshold, or an explicit operator
+     push), append `· PR created 🚀 <url>`.
+   - `⛔ No — <N>%, <short blocker>` = no new commit this run, confidence below the skill's push gate,
+     or a blocker the operator must resolve first (name it inline).
+   - The rocket emoji is an explicit operator-requested exception to the global no-emoji rule; keep it
+     on the PR-created status. Whether a skill auto-pushes at a confidence threshold is the SKILL's
+     decision (e.g. fix-bug-work pushes at ≥95%), not this format's — this section only renders the
+     number and the outcome.
    - `fix-bug`-backed runs append a `Confidence: <N>%` line here (composite / per-symptom; lead with
      it if the skill's own contract says so).
 4. `## Live tenant tested` — one line: `✅ Yes` (e2e tier `live`) OR `❌ No — <tier / reason>` (`mock` /

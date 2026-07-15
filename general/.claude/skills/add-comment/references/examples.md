@@ -63,6 +63,7 @@ increment from there.
 - these all surface to c1 as codes.Unknown, and every other gocloak error in the connector has the same problem. worth adding a MapAPIError helper next to IsAlreadyExistsError that unwraps *gocloak.APIError and returns the matching gRPC code (429 and 5xx as Unavailable, 403 as PermissionDenied, 400 as InvalidArgument, etc), then wrapping every gocloak call site with status.Error(MapAPIError(err), ...). (×1)
 - these all surface to c1 as `codes.Unknown`, and every other gocloak error in the connector has the same problem. worth adding a `MapAPIError` helper next to `IsAlreadyExistsError` that unwraps `*gocloak.APIError` and returns the matching gRPC code (`429` and `5xx` as `codes.Unavailable`, `403` as `codes.PermissionDenied`, `400` as `codes.InvalidArgument`, etc), then wrapping every gocloak call site with `status.Error(MapAPIError(err), ...)`. (×1)
 - `parent_resource` works in `tmpl:` but isn't a declared cel variable in baton-http, so `organization_id` here (and the static role at :177) fails the connector's `Validate` with `undeclared reference to 'parent_resource'` and the sync returns 0 resources. i built the branch and ran a sync against the mock to confirm. `go build`/`go vet` won't catch this, only a sync run does. needs a cel-reachable org id, or derive `organization_id` another way. (×1)
+- both `user` and `userAccount` register as account managers, so the sdk's `getCredentialDetails` (in `baton-sdk`) picks the credential option nondeterministically (`capabilities` flips between `NO_PASSWORD` and `RANDOM_PASSWORD`). (×1)
 
 ### Top-level PR/MR comments
 
@@ -76,6 +77,7 @@ increment from there.
 
 - expand-columns is a string slice, same as skip-database above. could show comma-separated here: `"mydb.mytable,otherdb.othertable"`. (×1)
 - `optionalStringField` at line 501-504 already does `strings.TrimSpace(raw)`, so the outer `strings.TrimSpace(...)` here is redundant. can drop it: `if mapped := optionalStringField(profileMap, "email"); mapped != "" {`. (×1)
+- let's not log `user_id`, it's user data. `role` is enough here. and this can be `Debug` instead of `Warn`. (×1)
 
 ## Anti-patterns — what NOT to post
 

@@ -5,7 +5,7 @@ description: Draft a short, casual review comment on a GitHub PR or GitLab MR, a
 
 # add-comment
 
-Draft a short, human review comment on a GitHub PR or GitLab MR, confirm with `AskUserQuestion`, optionally fact-check with subagents, then post.
+Draft a short, human review comment on a GitHub PR or GitLab MR, surface it in an editable qa pane for the operator to edit/approve (mandatory, not an `AskUserQuestion` picker), optionally fact-check with subagents, then post.
 
 ## Routing (decide before drafting)
 
@@ -36,6 +36,7 @@ Pick from the URL: `github.com` → `gh`, `gitlab.*` → `glab`. PR `#N` is gh; 
 Read like a tired engineer on Slack, not a memo:
 
 - **As short as possible.** Replies are ideally one word ("done", "fixed", "yep"). Aim for the fewest words that close the thread. If you wrote more than one sentence, ask whether each one is doing work that the reader actually needs. Never reference commit shas. Never restate what changed. The reviewer can see the diff.
+- **Once the point or question is out, STOP.** The comment ends at the ask ("is that intended?") or the position. Everything after is noise: a trailing qualifier ("just want to check...", "just making sure", "asking because..."), a restatement of the same point in other words, or a list of every other place it also applies. Cut all of it. If a second instance genuinely needs raising, it's its own one-line comment, not a tail glued onto this one. Shorter is better every time the shorter version still lands.
 - **Plain words.** No fancy vocab. Say "matters", not "is load-bearing". Say "before the loop", not "prior to iteration".
 - **Simple grammar.** Short sentences. No semicolons. No nested "which" clauses. One idea per sentence.
 - **Lowercase.** Even product names (snowflake, not Snowflake).
@@ -46,11 +47,13 @@ Read like a tired engineer on Slack, not a memo:
 - **Position first.** Then the reason. Then maybe one clarification. Stop.
 - **Contractions.** i'd, doesn't, isn't.
 - **Backticks for every code identifier.** Function names, type names, package names, method names, variable names, error codes, gRPC codes, HTTP status codes, JSON field names, config keys, CLI flags, file paths — wrap in backticks. GitHub / GitLab render backtick spans as monospace, which visually separates code from prose and makes the comment easier to scan. Concrete: write `` `MapAPIError` `` not `MapAPIError`, `` `IsAlreadyExistsError` `` not `IsAlreadyExistsError`, `` `codes.Unknown` `` not `codes.Unknown`, `` `*gocloak.APIError` `` not `*gocloak.APIError`, `` `pkg/config/config.yaml:418` `` not `pkg/config/config.yaml:418`. Exceptions: don't backtick prose that names a concept generically ("the users endpoint", "the auth flow", "the pagination cursor"); backticks are for THIS SPECIFIC identifier the reader can grep for. Regular English words never get backticks.
+- **Name the library for symbols the author doesn't own.** When the comment references a function, type, or field that lives in a dependency, an sdk, or vendored code (not the author's diff), say where it lives — "`getCredentialDetails` in `baton-sdk`", "the sdk's `accountManagers` map", "`gocloak.APIError` from the gocloak client". Otherwise the author goes looking for it in their own code and can't find it. Symbols the author defined in this repo need no qualifier.
 - **No unusual noun shortenings.** A human reads this. Do NOT use uncommon slang like `caps` (for capabilities) or `impl` (for implementation) — spell them out. Widely-recognized industry shortenings ARE fine because every developer already reads them without translation: `docs`, `auth`, `env`, `repo`, `config`, `sync`, `spec`, `api`, `oauth`, `scim`, `url`. The dividing line: if a new hire would need a second to unpack it, use the full word.
 
 Also fine either way: established code-identifier shortenings that appear as-is in the codebase (`ctx`, `req`, `resp`, `err`, `ok`, package names). The reader sees them in the diff, no translation needed.
 
 - **No internal-tooling refs in the answer body.** Never mention `claude.md`, `CLAUDE.md`, `work claude.md`, `~/.claude`, `.claude/lazy`, the review skill by name, or any other internal-tooling artifact. The PR author doesn't know or care about our review pipeline — those refs leak our process into their diff. If the position is grounded in a rule, state the rule in plain terms and (see next bullet) link the public source. Applies to `- answer:` and `- shorter_answer:` bodies. `- context:` is display-only and can mention internal artifacts freely.
+- **Never signal that a private rulebook exists.** The knowledge bases behind a finding (the operator's `CLAUDE.md`, lazy files, team policies, internal conventions) are LOCAL and invisible to the author. Don't cite their existence with phrases like "our policy", "our convention", "our standard", "per our rules", "we require", "we only allow", "this violates policy". When a finding rests only on internal knowledge with no public doc, drop the appeal-to-authority entirely and just ask whether the choice was intended: "is that intended?" / "is the group grantee deliberate?" beats "our policy is users-only, so this needs sign-off". The observation (what the code does) is fair game; the internal rule justifying the concern is not.
 - **If the answer cites a rule / spec / standard, the shorter_answer MUST carry the same doc link.** Public doc URLs are the single most useful thing in a review comment — they let the author verify the claim without asking. Keep every URL from `- answer:` also in `- shorter_answer:`, verbatim. **URLs do not count toward any length limit** (the 50/75-char wrap rules ignore them). If the rule has no public URL (internal-only), state the position without citing the rule at all — do not name-drop internal-only rules.
 
 ### Reference examples
@@ -75,6 +78,26 @@ Better, but still bot-flavoured. Human:
 > could batch this with a GetManyJSON over the distinct ids before the loop. the old code was already doing that.
 
 What changed: dropped the magnitude detail, dropped the long subordinate clause, dropped the colon-and-list rhythm. Same point, half the words.
+
+### Be defensive on the author's choices
+
+These comments go to a human on their own PR, and you're usually missing context they have. When a finding challenges a deliberate choice they made (an unusual API call, a resolution mechanism, a design decision), phrase it as a question or a request for their reasoning, not a verdict.
+
+- **Ask, don't rule.** "could you point me to the docs for how X works?" beats "X is wrong". "is the group grantee already signed off?" beats "this violates policy". Leave them room to say "actually it works because Y" without having to first walk back your assertion.
+- **The ask + what you checked is the whole comment. Stop there.** Don't append your reasoning chain, the mechanism you think is wrong, or your guesses at the real answer. The author doesn't need your internal analysis; they need the question and the doc you looked at, so they can reply with the thing you're missing. Cut every sentence after the ask that the author didn't need to answer it.
+- **Assert only what you verified against a citable source.** If you have the doc/spec/line that proves it, state it plainly (and link it). For everything else, you're inferring, so ask.
+- **Own the uncertainty in the wording.** "i can't find X in the docs, am i missing where it's sourced?" signals you looked and might be wrong, which is true. A flat "X doesn't exist" reads as certain and ages badly when they know something you don't.
+- This is about stance, not softening every line into mush. A verified nit is still stated directly. The defensiveness is reserved for challenges to the author's judgment, where being wrong-and-confident costs the most.
+
+Worked example (challenging where a value is sourced). Over-explained:
+
+> could you point me to the docs for how the clm base url comes back on the oauth token? i'm looking [here](link) and can't find an `api_base_url` field in the token response. `oauth2.Token.Extra` only reads fields that are in the token body, so if it's sourced somewhere else (maybe `/oauth/userinfo`?) that'd change where we read it.
+
+Trimmed to just the ask + what you checked:
+
+> could you point me to the docs for how the clm base url comes back on the oauth token? i'm looking [here](link) and can't find an `api_base_url` field in the token response.
+
+What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` guess. Both are your analysis, not something the author needs in order to point you at the right doc. The link carries the "i actually looked" signal; the question carries the ask.
 
 ## Workflow
 
@@ -102,13 +125,17 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
    If any claim comes back `FALSE`, rewrite to drop or fix it before confirming. If `NUANCED`, decide: does the nuance change meaning (rewrite) or is it pedantic (leave it, mention to the user when confirming).
 
-5. **Confirm via `AskUserQuestion`.** Show the draft verbatim. Two options:
-   - "Post it" — go to step 6.
-   - "Revise" — iterate. Common asks: "shorter", "less robot", "drop the magnitude estimate", "simpler words".
+5. **Surface the draft in an editable qa pane (MANDATORY, never optional).** This applies to EVERY draft — one comment or many. Never confirm a draft inline in chat, and never open with an `AskUserQuestion` "Post it?" gate, when a pane or terminal can be opened. Write the draft(s) to the single draft file described under "qa draft pane" below (one `---`-delimited block per comment; the format is identical whether there's one block or ten) and open it with the qa helper:
 
-   The question must show the exact text that will be posted.
+   ```bash
+   ~/.claude/skills/qa/scripts/open-qa-pane.sh /tmp/add-comment-drafts-<PR>-<TS>.md
+   ```
 
-   **MANDATORY per-batch confirmation.** Earlier confirmations in the same session do NOT carry over to a new batch. A high-level instruction like "go ahead with the replies" or "post them" without the user seeing the verbatim draft text is NOT confirmation — show the drafts and ask again. Even when a plan was approved earlier with summary descriptions (e.g. "reply with `done`"), confirm the actual text once more before posting.
+   The helper splits a sibling pane off Claude's pane when `$TMUX` is set, opens a fresh `$TERMINAL` window when it isn't, reuses the pane on a repeat call for the same file, and only exits non-zero (code `3`) when NEITHER tmux nor `$TERMINAL` is available. After it opens, surface a one-line "edit `- answer:` then say 'post'" note in chat and STOP — the operator edits in their editor, drops blocks with `SKIP`, and says "post" when ready; you then re-read the file and post the survivors (step 6). Do not poll, do not re-prompt.
+
+   **Only fallback (qa helper exited `3`):** no tmux AND no `$TERMINAL`. Then, and only then, confirm with a single `AskUserQuestion` showing the verbatim body of each block, options "Post it" / "Revise". This is the ONE case where AskUserQuestion is allowed as the draft surface.
+
+   **MANDATORY per-batch confirmation.** Earlier confirmations in the same session do NOT carry over to a new batch. A high-level instruction like "go ahead with the replies" or "post them" without the user seeing the verbatim draft text is NOT confirmation — surface the drafts in the pane again and wait for a fresh "post". Even when a plan was approved earlier with summary descriptions (e.g. "reply with `done`"), the operator sees the actual text in the pane once more before anything posts.
 
 6. **Post.** Pick the right endpoint for the platform.
 
@@ -229,22 +256,22 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
 9. **Report the URL(s)** so the user can verify.
 
-## Batch mode
+## qa draft pane (the one draft surface, single or batch)
 
-When the user asks to mark a set of comments at once (e.g. "answer all of <reviewer>'s comments", "mark all as done/fixed"), the default confirmation is an editable draft file surfaced by the **qa** skill's helper (a tmux pane, or a fresh `$TERMINAL` window when not in tmux; see below). An editable file beats a wall of `AskUserQuestion` options every time: the operator can tweak wording, drop blocks, or SKIP the ones they don't want with a normal text editor instead of a modal picker.
+The editable draft file surfaced by the **qa** skill's helper is the draft surface for EVERY invocation — one comment or a whole batch. This is not a batch-only or "when tmux is available" convenience; it is the mandatory path (step 5). An editable file beats an `AskUserQuestion` picker every time: the operator can tweak wording, drop blocks, or `SKIP` the ones they don't want in a normal editor instead of a modal. The helper handles both surfaces — a sibling tmux pane when `$TMUX` is set, a fresh `$TERMINAL` window when it isn't — so "no tmux" is NOT a reason to skip the pane.
 
-Fallback shape only when neither tmux NOR `$TERMINAL` is available (the qa helper exits 3):
+`AskUserQuestion` is the fallback ONLY when the qa helper exits `3` (neither tmux NOR `$TERMINAL` available):
 
 - **N ≤ 2** → single `AskUserQuestion` showing a comment-id → reply table with the **verbatim** body for each.
-- **N > 2** → still surface the drafts, but stack them in one `AskUserQuestion` prompt with the verbatim bodies. Warn the user inline that editing isn't possible without tmux.
+- **N > 2** → still surface the drafts, but stack them in one `AskUserQuestion` prompt with the verbatim bodies. Warn the user inline that editing isn't possible without tmux or `$TERMINAL`.
 
 Either way, the user's "post" decision happens AFTER they see the verbatim bodies. Skip per-reply confirmation and fact-checking once they say go. Each successful post still records to `references/examples.md`.
 
-The batch-mode confirmation is REQUIRED, not optional. A prior plan listing reply intent in summary form (e.g. "reply 'done' to threads X/Y/Z") is not a substitute — the bodies must be shown literally. If the user said "go ahead" or "do it" without seeing the bodies, surface them and ask again.
+The confirmation is REQUIRED, not optional. A prior plan listing reply intent in summary form (e.g. "reply 'done' to threads X/Y/Z") is not a substitute — the bodies must be shown literally in the pane. If the user said "go ahead" or "do it" without seeing the bodies, surface them and wait.
 
-### Tmux-pane draft mode (default)
+### How the draft file + pane work
 
-When tmux is available (`$TMUX` set), always swap the AskUserQuestion table for an editable draft file in a sibling tmux **pane**, regardless of batch size. This is the default path.
+The qa helper opens the draft file described below in a sibling tmux **pane** (or a `$TERMINAL` window without tmux), for any number of blocks including one. Never swap in an `AskUserQuestion` picker while a pane/terminal can be opened, and never open the draft in a new tmux window.
 
 **Single draft file, one block per finding.** Every reply or new comment the skill is asked to draft in one invocation goes into ONE draft file with a `# block N` per finding. Never write one draft file per finding, and never open the draft in a separate tmux window. The operator wants to see every candidate reply on one screen so they can scan, edit, or `SKIP` each in the same editor buffer without switching windows. When a caller (`pr-code-review` post-loop, `pr-comment-fix` batch, or the operator asking to answer several threads at once) hands the skill multiple targets, the skill batches them into a single draft; if the caller hands them in one at a time, the skill still reserves the file and appends new blocks to it on the next invocation within the same session (see step 3 for the append-vs-new-file rule).
 
@@ -484,7 +511,8 @@ Everything the parser needs is in the file header + each block's bullets. Rearra
 - **Long sentences.** If you used a semicolon, split it.
 - **Over-explaining.** One sentence of "why" is enough.
 - **Too agreeable on replies.** This skill is for pushback or clarification. If you're accepting the suggestion, just make the code change.
-- **Posting before confirmation.** Always run `AskUserQuestion` first.
+- **Posting before confirmation.** Never post before the operator sees the verbatim draft. The draft always goes to the qa pane first (step 5); `AskUserQuestion` is only the no-tmux-no-`$TERMINAL` fallback.
+- **Confirming a draft inline or via an `AskUserQuestion` picker when a pane could open.** The qa pane is mandatory for one comment or many; opening a picker (or just printing the draft in chat) while tmux/`$TERMINAL` is available is wrong.
 - **Skipping the file read.** A draft that doesn't engage with the actual code looks generic.
 - **Skipping fact-check on factual drafts.** A subtly-wrong claim is worse than a longer comment.
 - **Wrong endpoint.** GitHub replies need `in_reply_to`. GitHub new line comments need `commit_id`+`path`+`line`. GitLab new line comments need the full `position` object (base_sha+head_sha+start_sha+path+line). Mixing them returns 422.
