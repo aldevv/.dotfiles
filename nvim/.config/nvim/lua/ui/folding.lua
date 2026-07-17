@@ -91,7 +91,7 @@ local function open_then(key)
     return key
   end
 end
-for _, key in ipairs({ "x", "X", "r", "s", "~" }) do
+for _, key in ipairs({ "x", "X", "r", "~" }) do
   vim.keymap.set("n", key, open_then(key), { expr = true })
 end
 
