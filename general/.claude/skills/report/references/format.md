@@ -32,15 +32,15 @@ notes that roll up into this block are defined in the sibling `diff-note-format.
 ## Variant A — Review verdict (`## Review verdict`)
 
 In order:
-1. `Review type: first-review | re-review` (re-review: append ` — reviewed only the <N> new commits since my last pass (<range>); did NOT re-review the rest`).
-2. `Recommendation: APPROVE | APPROVE WITH NOTES | HOLD (comment) | HOLD (request-changes)` + ` — <one plain clause>`. A decision, not a hedge.
-3. `Verified how: <one clause>` — what you actually ran (build/test/repro/doc-fetch) vs only read. Be honest; never imply e2e when you only read.
-4. `Comments: <...>` — per the wrapper's posting model (e.g. `<D> drafted (in <path>), 0 posted` when the skill never posts).
-5. `Findings: <nB> BLOCKER, <nMaj> MAJOR, <nMin> MINOR, …` (tally, or `none`), then a table with EXACT columns `Sev | Conf | ✓N | File:line | Finding`. `Conf` and `✓N` are BOTH required on every row. Under the table, name what the `✓N` checks were per finding, and the "why not higher" line for any sub-80% multi-validated finding (see `diff-note-format.md` §2-3).
-6. `Why: <one sentence>` — the headline finding, or "no blocking findings".
-7. `### Recommended actions` — universal rule 4. First bullet restates approve/hold as a runnable next step.
-
-Re-review with no new findings: add a line mapping each prior comment to its fix so "all resolved" is auditable.
+1. **`Review type:`** `first-review` | `re-review` — the FIRST line, on its own, with the bold label so it's unmissable. The operator must never have to guess whether the whole diff or just a delta was examined. On a re-review, append ` — reviewed only the <N> new commits since my last pass (<range>); did NOT re-review the rest of the PR`, AND you MUST also emit the `Prior comments` block (item 3). A re-review that doesn't announce itself as one and account for the prior comments is malformed.
+2. `Recommendation: APPROVE | APPROVE WITH NOTES | COMMENT | REQUEST CHANGES` + ` — <one plain clause>`. A decision, not a hedge. These name the GitHub review action YOU (the reviewer) would submit, not an instruction to the author: `COMMENT` = leave notes without approving or blocking (neutral); `REQUEST CHANGES` = block until fixed. Pick the button you'd click. On a re-review the clause must reference the prior comments (e.g. `APPROVE — all 2 prior comments resolved, nothing new`).
+   - **Re-review decision rule:** once every prior comment is addressed (`✅`, or a `💬` reply you accept), the default recommendation is **APPROVE** — the reviewer got what they asked for. Only downgrade to `COMMENT`/`REQUEST CHANGES` if something in the NEW commits since your last pass is itself a genuine BLOCKER/MAJOR must-fix. Do NOT hold on: a prior comment that's now resolved, a pre-existing issue you already knew about last pass and didn't block on, or a low-confidence/needs-live-verification concern (raise those as `COMMENT` notes, don't block). If there are no new commits at all and the comments are addressed, APPROVE.
+3. **`Prior comments (<N>):`** — RE-REVIEW ONLY and REQUIRED whenever you left comments on an earlier pass. (First-review, or a re-review where you left none: write `Prior comments: none left last pass` and skip the table.) Lead with a tally (`2 addressed, 0 open`), then a table with EXACT columns `Prior comment | Status | How addressed`, one row per comment you (the reviewer) left previously. `Status` ∈ `✅ addressed` / `🟡 partial` / `❌ not addressed` / `💬 answered-only` (author replied, no code change). `How addressed` = the commit/line that resolved it, "author replied: <gist>" when it's discussion-only, or "still open" — one short clause each. This block is the whole point of a re-review; never fold it into prose, and never omit it because the findings table looks complete. Any prior comment still unresolved (`❌`/`🟡`, or a `💬` you don't accept) MUST also appear as a current finding in item 6 — an unfixed comment you raised is a live finding, not history.
+4. `Verified how: <one clause>` — what you actually ran (build/test/repro/doc-fetch) vs only read. Be honest; never imply e2e when you only read.
+5. `Comments: <...>` — per the wrapper's posting model (e.g. `<D> drafted (in <path>), 0 posted` when the skill never posts).
+6. `Findings: <nB> BLOCKER, <nMaj> MAJOR, <nMin> MINOR, …` (tally, or `none`), then a table with EXACT columns `Sev | Conf | ✓N | File:line | Finding`. `Conf` and `✓N` are BOTH required on every row. The `Finding` cell is the crisp one-phrase defect headline from `diff-note-format.md` §2 (`GrantableTo contains a non-principal resource type`), NOT a sentence that re-explains it. Under the table, name what the `✓N` checks were per finding, and the "why not higher" line for any sub-80% multi-validated finding (see `diff-note-format.md` §2-3).
+7. `Why: <one sentence>` — the headline finding, or "no blocking findings".
+8. `### Recommended actions` — universal rule 4. First bullet restates the recommendation as a runnable next step.
 
 ---
 
@@ -59,10 +59,25 @@ summary, then the decision — operator preference):
 2. `## Summary` — 2-4 bullets: what was done and WHY, merged into one (bullets, not a prose
    paragraph). This is the only "why" in the block; there is no separate Why line. Plain and
    skimmable; the full write-up stays in the context/report file (universal rule 2).
-3. `## Ready to push` — one line: `✅ Yes` OR `⛔ No — <short blocker>`. The push/hold call at a glance;
-   the reasoning already lives in `## Summary`, so no inline why is needed on `✅ Yes`.
-   - `✅ Yes` = ≥1 new commit AND complete + e2e-verified + no unresolved blocker.
-   - `⛔ No` = no new commit this run, or a blocker the operator must resolve first (name it inline).
+3. `## Ready to push` — lead with the **ready-to-push confidence** `<N>%` (how ready the change is
+   for a PR: correctness + e2e + docs/scope; EXCLUDES CI-pipeline risk like lint-version drift,
+   metadata-regen, and `sync-test`/integration, which routinely fail in the PR and get corrected
+   there — never dock the number for them). Then the push/hold call, and, when a PR was opened this
+   run, its status. The reasoning already lives in `## Summary`.
+   - `✅ Yes — <N>%` = the change is READY for a PR and you are recommending it be pushed: ≥1 new
+     commit AND complete + e2e-verified + no unresolved blocker. Readiness is independent of whether
+     THIS skill auto-pushed. Append the push disposition: `· PR created 🚀 <url>` if the run pushed
+     (push gate fired, or explicit operator push); `· held for operator (<why>)` when ready but not
+     pushed, e.g. below the auto-push gate or a dispatch `never-push` instruction. Being below the
+     auto-push confidence gate, or held by a dispatch, does NOT downgrade this to `No`; the change is
+     still ready, it just was not auto-pushed.
+   - `⛔ No — <N>%, <short blocker>` = the change is NOT ready to push: no new commit this run, an
+     e2e blocker, or an unresolved concern that should stop a push. Rule of thumb: if your
+     `### Recommended actions` tell the operator to push it, this line is `✅ Yes`, never `⛔ No`.
+   - The rocket emoji is an explicit operator-requested exception to the global no-emoji rule; keep it
+     on the PR-created status. Whether a skill auto-pushes at a confidence threshold is the SKILL's
+     decision (e.g. fix-bug-work pushes at ≥95%), not this format's — this section only renders the
+     number and the outcome.
    - `fix-bug`-backed runs append a `Confidence: <N>%` line here (composite / per-symptom; lead with
      it if the skill's own contract says so).
 4. `## Live tenant tested` — one line: `✅ Yes` (e2e tier `live`) OR `❌ No — <tier / reason>` (`mock` /

@@ -38,6 +38,19 @@ Both are SHORT and both lead with a machine-readable marker.
   `--no-subagents` mode: independent sequential validations you ran (doc source, build/test, source
   trace, repro) — name them in the body. `✓0` only for a trivial nit.
 - Example: `[MAJOR 75% ✓4] users(search:{email}) not in the vendor's documented schema`.
+- **Headline = the defect in ONE concrete phrase, like a bug title.** Name the thing that is
+  wrong; do not narrate how you found it or hedge whether it counts. `GrantableTo contains a
+  non-principal resource type` — NOT `the entitlements are GrantableTo role and Grants() emits
+  role-principal grants, which may contradict the policy that…`. The "why it's wrong / is it
+  really a problem / confirm-with-owner" reasoning goes in the body (kept minimal) or the report,
+  never in the headline. If you can't state the defect in one phrase, you don't understand it well
+  enough to file it — keep digging, don't pad. This is the phrase the reader scans; a long or
+  hedged one makes them re-derive the point, which is the exact failure to avoid.
+- **One finding = one marked note.** A given finding carries its `[<SEVERITY> …]` marker on
+  EXACTLY ONE note, so a reader can count findings by counting markers. Never stamp the same
+  severity marker on multiple lines for one finding. If a finding genuinely spans two sites, mark
+  the primary note and leave the other as an UNMARKED pointer (`see <file>:<line>`) — or, better,
+  just leave the one note. This keeps the severity tally honest and the list scannable.
 
 ### Own-work status note → `[<STATUS>· <confidence>%]`
 - `<STATUS>` ∈ `FIXED` / `PARTIAL` / `DEFERRED` / `NEEDS-VERIFY` / `RISK`.
@@ -64,7 +77,9 @@ A single-check sub-80% note is self-explanatory and doesn't need it.
 
 ## 4. Length — keep notes short (a human reads these)
 The note is a signpost on the diff for a HUMAN, not an essay. Target: **headline + 1-3 sentences.**
-Draft the body, then cut it in half. If the explanation is longer than the code it points at, cut
+Lead the body's first sentence with the essence — what's wrong + the one-line fix — so the reader
+gets the point before any qualification. Push policy/edge-case/"confirm-with-owner" nuance to the
+last sentence or the report; never open with it. Draft the body, then cut it in half. If the explanation is longer than the code it points at, cut
 again. A note over ~5 lines is suspect; move the long-form reasoning to the report / context file
 and leave the note as the pointer. The marker + headline must be readable in the TUI list without
 expanding. Plain words over jargon. Emojis are welcome when they speed understanding (the severity

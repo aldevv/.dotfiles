@@ -79,11 +79,19 @@ SKIP (not worth a rule) if any of:
 
 ### 4. Plan the edits
 
-For each KEEP item (and every COVERED-BUT-WRONG item), pick a target. Preference order:
+For each KEEP item (and every COVERED-BUT-WRONG item), pick a target (or targets, see below). Preference order:
 
 1. **Update the closest matching lazy file in place** — usually the right choice. Append to the most relevant existing section, or add one short bullet to a "Common Mistakes" / "Gotchas" list.
 2. **Add a new top-level section to an existing lazy file** — when the item is a new sub-topic of an existing file (e.g. a new `### 404 on Revoke` section under `golang-connectors.md`'s idempotency block).
 3. **Create a brand-new lazy file** — when no existing lazy file is a natural home, or when the topic has its own trigger distinct from any current file. Justification bar: the item has a clear `**Read when**` trigger that a fresh agent can recognize (a specific file path, a command, an error string, a user phrase — see `~/.claude/lazy/trigger-authoring.md`). Register the new file in `~/work/CLAUDE.md`'s `## Detail files (load on demand)` index with that trigger. **Do NOT gate this option on "5+ connectors will touch it" or "5+ rules land at once".** A single well-triggered rule that has no home already justifies a new lazy file — a wasted lazy load is fine, a rule buried in the wrong file is not.
+
+**CRITICAL: one gap can need MORE THAN ONE home. Do not add it to one file and call it done.** A rule often governs several work-surfaces that load through DIFFERENT triggers. If it lands in only the first file, an agent working a surface covered by a different trigger never sees it, and the same mistake recurs. For every KEEP / COVERED-BUT-WRONG item:
+
+1. **List every distinct surface the rule constrains** (e.g. test fixtures, docs, source comments, config.yaml, CI workflows, error strings). One item, possibly many surfaces.
+2. **Map each surface to the lazy file whose `**Read when**` trigger fires there.** Fixtures → `testing.md`; docs → `docs.md`; HTTP config → `http-connectors.md`; CI → `pipelines.md`; and so on. When two surfaces map to two different files, the rule needs a presence in BOTH.
+3. **Full rule in the PRIMARY home** (the surface where the mistake most often originates), plus a **one-line cross-reference** in each other triggered file (`See <file> → <section>` per the `~/work/CLAUDE.md` "link, don't copy" convention). Duplicate the whole rule only when it is a single short sentence and a cross-ref would be more friction than the copy. A wrong rule fixed in one file but left stale in another is the same COVERED-BUT-WRONG bug: fix every copy.
+
+Worked shape: "no customer data in a public repo" constrains fixtures (`testing.md`), docs runbooks (`docs.md`), and source comments (any Go file). Primary home `testing.md`; a one-line cross-ref bullet in `docs.md` so a docs-only edit still surfaces it. One surface, one file → one edit; several surfaces, several files → several edits.
 
 **CRITICAL: `~/work/CLAUDE.md` is not a save target for new rules.** Do NOT append new bullets, sections, or paragraphs to `~/work/CLAUDE.md`. Every KEEP item lands in an existing lazy file or a new lazy file. Even portfolio-wide CRITICAL rules go into a lazy file — the Detail-files index in `~/work/CLAUDE.md` names the trigger, so `**Read when:** working in any baton connector` is legitimate for a rule that truly applies every turn. If the rule doesn't fit any existing lazy file's trigger, that's the signal to CREATE a new one, not to inline it in CLAUDE.md.
 
@@ -119,7 +127,7 @@ Otherwise (interactive session), show the operator one `AskUserQuestion` with th
 
 - `<short rule statement>`
 - Verdict: COVERED-AND-CORRECT / COVERED-BUT-WRONG / NOT-COVERED-KEEP / NOT-COVERED-SKIP
-- Target file:section (or "new file: ...")
+- Target file:section (or "new file: ..."). List EVERY target when the item needs more than one home (primary + each cross-ref file), not just the first.
 - Verbatim text that will land (for KEEP + WRONG)
 
 Two options:
@@ -149,7 +157,7 @@ Print a tight summary:
 - N items audited.
 - N already-covered (cited file:line).
 - N wrong-or-outdated (cited the edit per file).
-- N net-new entries (cited the file + section).
+- N net-new entries (cited every file + section each landed in; when an item needed multiple homes, list the primary AND each cross-ref file, so a partial save is visible).
 - N skipped as not-worth-a-rule (one-line reason each, so the operator can disagree).
 
 End with the `Changes made` block from the auto-new-day pattern: `Verdict: Yes | No` + one-line `Why:`.
@@ -162,6 +170,7 @@ End with the `Changes made` block from the auto-new-day pattern: `Verdict: Yes |
 - **Rule-by-attribution.** "Per luisina's review, ..." → state the rule, not the source.
 - **Adding new content to `~/work/CLAUDE.md`.** New rules land in a lazy file (existing or new). The only edit allowed on `~/work/CLAUDE.md` is a surgical rewrite of an existing wrong line (COVERED-BUT-WRONG). If a rule "must apply every turn," its lazy file trigger says so, `~/work/CLAUDE.md` itself does not accumulate content.
 - **Piling into an existing lazy file when the topic doesn't fit its trigger.** If a rule's natural trigger differs from every existing lazy file's `**Read when:**`, that's the signal to create a new lazy file, not to shoehorn the rule into the closest wrong home. Trigger fit beats file-count minimalism.
+- **One-and-done when a gap spans multiple triggers.** Adding a rule to one lazy file and stopping, when the rule governs surfaces that load through different triggers (fixtures + docs + CI, etc.). The unaddressed files leave the same mistake reachable. Map every constrained surface to its file and land the rule (full or cross-ref) in each (Step 4).
 - **Rules that restate `~/CLAUDE.md`.** Don't re-encode global writing-style or git-safety rules into work-scope files. Point to them by name.
 - **Burying the rule in a code example.** The rule must be readable as prose first; the snippet is the illustration.
 - **Forgetting the index.** A new lazy file that isn't registered in `~/work/CLAUDE.md`'s `## Detail files (load on demand)` index won't get loaded on trigger. Always register.

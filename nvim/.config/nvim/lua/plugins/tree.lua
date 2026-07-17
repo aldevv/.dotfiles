@@ -1,7 +1,7 @@
 -- nvim-tree: file explorer
 --
 -- Conventions:
---   <Tab>   toggle tree
+--   se      toggle tree, revealing the current file
 --   sE      reveal current buffer in the tree
 --
 -- Inside the tree buffer, default mappings stay (a/c/d/r/x/y/-/...) plus:
@@ -52,16 +52,16 @@ return {
   dependencies = { "nvim-tree/nvim-web-devicons" },
   keys = {
     {
-      "<Tab>",
+      "se",
       function()
         local api = require("nvim-tree.api")
         if api.tree.is_visible() then
           api.tree.close()
         else
-          api.tree.open({ path = vim.fn.getcwd(), update_root = true })
+          api.tree.find_file({ open = true, focus = true, update_root = true })
         end
       end,
-      desc = "tree: toggle (always opens at cwd)",
+      desc = "tree: toggle and reveal current file",
     },
     {
       "sE",

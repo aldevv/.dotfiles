@@ -95,9 +95,16 @@ map("n", "sfd", "<cmd>call CreateDir()<cr>", nor_s)
 map("n", "sq", "<cmd>lua require('notify').dismiss()<cr>", nor_s)
 
 -- file-explorer commands (nvim-tree; netrw is disabled in init.lua)
--- ss reveals the current buffer in the tree; sS opens at cwd.
+-- ss toggles the tree, revealing the current file; sS opens at cwd.
 -- st/sT open the tree in a new tab; sv/sV are aliases for toggle/open.
-map("n", "ss", "<cmd>silent NvimTreeFindFile<cr>", s)
+map("n", "ss", function()
+  local api = require("nvim-tree.api")
+  if api.tree.is_visible() then
+    api.tree.close()
+  else
+    api.tree.find_file({ open = true, focus = true, update_root = true })
+  end
+end, s)
 map("n", "sS", "<cmd>silent NvimTreeOpen<cr>", s)
 map("n", "st", "<cmd>tabnew<cr><cmd>silent NvimTreeFindFile<cr>", s)
 map("n", "sT", "<cmd>tabnew<cr><cmd>silent NvimTreeOpen<cr>", s)

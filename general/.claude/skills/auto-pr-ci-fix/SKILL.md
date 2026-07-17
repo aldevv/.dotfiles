@@ -48,7 +48,7 @@ Read those values once and refer back to them by name. Don't re-derive them.
    2. Commit on `Fix branch` per step 7 (subject: `fix <thing> (auto)`; stage only the files you changed).
    3. Skip step 9 (the entry already exists; do not duplicate).
    4. `git -C <Main checkout> merge --no-edit <Fix branch>`. On failure, report the exact git output and STOP; do NOT retry, do NOT `--abort` and retry.
-   5. `git -C <Main checkout> push`. If the operator has a local push guard (e.g. `remote.origin.pushurl` set to a `no-push://...` scheme, or a hook that vetoes push) AND the current tmux session name starts with `AUTO-`, bypass the guard by pushing to the fetch URL directly with `AUTO_NEW_DAY_APPROVED=1 git -C <Main checkout> push <fetch-url> HEAD:<PR branch>`. The `AUTO_NEW_DAY_APPROVED=1` env-var is the operator's documented override contract for `auto-new-day` (harmless on machines that don't use it). Do NOT bypass the guard in non-`AUTO-` sessions. On any other failure, report and STOP; do NOT `--force`.
+   5. `git -C <Main checkout> push`. If the operator has a local push guard (e.g. `remote.origin.pushurl` set to a `no-push://...` scheme, or a hook that vetoes push) AND the current tmux session name starts with `AUTO-`, bypass the guard by pushing to the fetch URL directly with `AUTO_NEW_DAY_APPROVED=1 git -C <Main checkout> push <fetch-url> HEAD:<PR branch>`. The `AUTO_NEW_DAY_APPROVED=1` env-var is the operator's documented override contract for `auto-new-day` (harmless on machines that don't use it). Do NOT bypass the guard in non-`AUTO-` sessions. On any other failure, report and STOP; do NOT `--force`. After a successful push, run the post-push sync in the **Pushing** section.
    6. **Auto-approve gate.** Read the current tmux session name (`tmux display-message -p '#S'` from inside the worktree). If it starts with `AUTO-`, the session is running autonomously and the operator has pre-approved PR/MR approval on matched-signature fixes. Approve the PR/MR now:
       - GitHub: `gh pr review <PR number extracted from URL> --approve --repo <owner>/<repo>` (optionally pass `--body "auto-approved after common-fix push"`).
       - GitLab: `glab mr approve <MR IID> --repo <path>`.
@@ -63,7 +63,7 @@ Read those values once and refer back to them by name. Don't re-derive them.
    4. **Patch the workflow file** on `Fix branch` if step 2 produced new resource IDs (or if the matched entry documents a workflow edit). Stage only the files you changed.
    5. Commit on `Fix branch` (subject: `fix <thing> (auto)`). If step 4 produced no diff (rotation-only), skip the commit and skip steps 6-7's merge/push; then jump to step 8's auto-approve gate and step 9's notice. There's nothing to merge for a rotation-only fix, and CI re-runs pick up the new secret on its own.
    6. `git -C <Main checkout> merge --no-edit <Fix branch>`. On failure, report and STOP.
-   7. `git -C <Main checkout> push`. Same guard-bypass behavior as step 3a's push: when the current tmux session name starts with `AUTO-` and a local push guard is in the way, retry with `AUTO_NEW_DAY_APPROVED=1 git -C <Main checkout> push <fetch-url> HEAD:<PR branch>`. On any other failure, report and STOP; do NOT `--force`.
+   7. `git -C <Main checkout> push`. Same guard-bypass behavior as step 3a's push: when the current tmux session name starts with `AUTO-` and a local push guard is in the way, retry with `AUTO_NEW_DAY_APPROVED=1 git -C <Main checkout> push <fetch-url> HEAD:<PR branch>`. On any other failure, report and STOP; do NOT `--force`. After a successful push, run the post-push sync in the **Pushing** section.
    8. **Auto-approve gate.** Same as step 3a's auto-approve gate: fire only when `tmux display-message -p '#S'` starts with `AUTO-`.
    9. Ring the tmux bell and print the **prominent completion notice**. Header: `AUTONOMOUS COMMON-FIX ROTATED` (rotation-only) or `AUTONOMOUS COMMON-FIX ROTATED + PUSHED` (with workflow edits). Include the matched Signature, entry title, name of the rotated secret, any recreated fixture IDs, commit sha (if any), merge/push outputs (if any), and the `APPROVED` line when the auto-approve gate fired.
    10. End your turn. Do NOT invoke `AskUserQuestion`, do NOT re-run CI.
@@ -129,9 +129,17 @@ Read those values once and refer back to them by name. Don't re-derive them.
     ```
     git -C <Main checkout> merge --no-edit <Fix branch>
     ```
-    On success, follow with `git -C <Main checkout> push`. Same guard-bypass rule as steps 3a/3b's push: when the current tmux session name starts with `AUTO-` and a local push guard blocks the plain command (e.g. `remote.origin.pushurl` set to a `no-push://...` scheme or a hook that vetoes push), retry with `AUTO_NEW_DAY_APPROVED=1 git -C <Main checkout> push <fetch-url> HEAD:<PR branch>`. The operator's explicit "yes" to this prompt covers the guard bypass in `AUTO-` sessions. Non-`AUTO-` sessions do NOT bypass. Report both outputs verbatim. On merge failure (dirty tree in main checkout, conflict, anything else): report the exact git output and STOP. Do NOT retry, do NOT `git merge --abort` and retry, do NOT push. On any other push failure: report and STOP. Do NOT `--force`. If they say no, leave the fix branch in place.
+    On success, follow with `git -C <Main checkout> push`, then the post-push sync in the **Pushing** section. When a local push guard blocks the plain command (e.g. `remote.origin.pushurl` set to a `no-push://...` scheme or a hook that vetoes push), retry with `AUTO_NEW_DAY_APPROVED=1 git -C <Main checkout> push <fetch-url> HEAD:<PR branch>`: the operator's explicit "yes" to this prompt (or a direct "push" instruction) authorizes the guard override in ANY session, not just `AUTO-` ones. Report both outputs verbatim. On merge failure (dirty tree in main checkout, conflict, anything else): report the exact git output and STOP. Do NOT retry, do NOT `git merge --abort` and retry, do NOT push. On any other push failure: report and STOP. Do NOT `--force`. If they say no, leave the fix branch in place.
 
 11. **End your turn.** Do NOT re-run CI. Do NOT loop back waiting for further input.
+
+## Pushing
+
+The operator saying "push" — the "yes" to step 10's prompt, or a direct instruction at any point — IS approval. Push right away and never re-confirm the push itself. That approval also authorizes the guard's own documented override (push through the fetch URL for a `no-push://` URL; set the named env-var opt-out like `AUTO_NEW_DAY_APPROVED=1` for a pre-push hook) in ANY session. The `AUTO-`-session gate in steps 3a/3b is separate: it governs only the fully-autonomous, no-human-in-the-loop path, where there is no explicit approval to rely on. Never `--force`; the push must be a clean fast-forward (confirm the remote head via `git ls-remote origin <PR branch>` first).
+
+After ANY successful push in this skill (steps 3a, 3b, 10), leave the local PR branch up to date and correctly tracked:
+- Fix the upstream when it points at the wrong branch (it often tracks `origin/main`): `git -C <Main checkout> branch --set-upstream-to=origin/<PR branch> <PR branch>`.
+- Confirm local == remote: `git -C <Main checkout> rev-parse HEAD` equals the SHA from `git ls-remote origin <PR branch>`.
 
 ## Hard rules
 
