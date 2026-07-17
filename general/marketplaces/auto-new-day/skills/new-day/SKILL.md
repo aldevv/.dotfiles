@@ -30,13 +30,13 @@ Profile fields:
 - `tz` — IANA timezone for the weekly-report day + the systemd timer's `OnCalendar` (empty = system local time). Read by `launch --install` and `weekly-report.sh`.
 - `gh_account` — the `gh` auth account to use (`gh auth switch -u <acct>`), or null for the current one.
 - `ticket_source` — `"github"` for this engine. (`"linear"` is reserved for a domain pack that overrides discovery.)
-- `discovery` — `{ assignee, repos[], issue_states[], pr_states[] }`. `repos` is the list of `OWNER/REPO` (or globs under `working_root`) the sweep scans. `assignee` is usually `@me`.
+- `discovery` — `{ assignee, repos[], issue_states[], pr_states[], max_pr_age_days? }`. `repos` is the list of `OWNER/REPO` (or globs under `working_root`) the sweep scans. `assignee` is usually `@me`. `max_pr_age_days` (optional, 0/absent = no cap) drops teammate-review (`inreview-others`) PRs opened more than that many days ago, UNLESS you engaged with the PR before it crossed that age (see `triage.sh` `pr-too-old`).
 - `buckets` — prose classification rules for `inreview` / `inprogress` / `inreview-others` / `ready-to-merge`. The engine reads these as the definition of each bucket.
 - `bucket_skills` — `{ bucket -> slash-command }` the engine dispatches per bucket. Default: `/auto-new-day:impl` for all dispatched buckets. `ready-to-merge` has none (plain shell). A value may also be a label-routing map (see "bucket_skills map form" under the Linear backend).
 - `review_chain` — extra skills a review window runs before the main review skill (generic `[]`).
 - `approvers` — GitHub logins whose APPROVED review moves a PR to `ready-to-merge` and clears it from the teammate-review candidate set.
 - `caps` — `{ review_prs_per_sweep }` (default 5).
-- `guards` — `{ push, pr_create, pr_comment }`, all `"blocked"` by default. Drives which guard machinery each bucket gets.
+- `guards` — `{ push, pr_create, pr_comment, merge }`, all `"blocked"` by default. Drives which guard machinery each bucket gets. `merge` also accepts `"auto-on-clean-approval"`: Step 7d then auto-merges an approved PR that passes the clean-approval check instead of parking a shell (see Step 7d). Absent or `"blocked"` keeps the never-merge default.
 
 Resolve paths + export the profile values the helper scripts read, once at the top:
 
@@ -47,12 +47,13 @@ export AUTO_NEW_DAY_STATE_DIR="${AUTO_NEW_DAY_STATE_DIR:-<profile.state_dir, ~-e
 export AUTO_NEW_DAY_WORKING_ROOT="<profile.working_root>"
 export AUTO_NEW_DAY_APPROVERS="<profile.approvers, space-joined>"          # e.g. "btipling johnallers ggreer"
 export AUTO_NEW_DAY_APPROVERS_NAME_RE="<profile.approvers_name_re or empty>"
+export AUTO_NEW_DAY_MAX_PR_AGE_DAYS="<profile.discovery.max_pr_age_days or 0>"  # 0 = no age cap
 SCRIPTS="$AUTO_NEW_DAY_SCRIPTS_DIR"
 STATE_DIR="$AUTO_NEW_DAY_STATE_DIR"
 [ -n "<profile.gh_account>" ] && gh auth switch -u "<profile.gh_account>"
 ```
 
-Every `dates/`, `done/`, `markers/`, `guards/`, `weekly/`, and `state.json` path derives from `$STATE_DIR`. `triage.sh`, `reset-ticket.sh`, and `snapshot-inrepo.sh` read `AUTO_NEW_DAY_WORKING_ROOT` + `AUTO_NEW_DAY_APPROVERS`; the launcher reads `AUTO_NEW_DAY_SLASH` / `AUTO_NEW_DAY_TZ`.
+Every `dates/`, `done/`, `markers/`, `guards/`, `weekly/`, and `state.json` path derives from `$STATE_DIR`. `triage.sh`, `reset-ticket.sh`, and `snapshot-inrepo.sh` read `AUTO_NEW_DAY_WORKING_ROOT` + `AUTO_NEW_DAY_APPROVERS` (`triage.sh` also reads `AUTO_NEW_DAY_MAX_PR_AGE_DAYS`); the launcher reads `AUTO_NEW_DAY_SLASH` / `AUTO_NEW_DAY_TZ`.
 
 ## CRITICAL: the sweep itself NEVER blocks on a question
 
@@ -159,7 +160,7 @@ For non-approved items, merge PR conversation comments + inline review-thread co
 ## Step 5. Classify (first match wins)
 
 - **inprogress (unstarted)** — an assigned issue with no linked PR. Dispatches to Step 7b.
-- **ready-to-merge (approved)** — an APPROVED review from an `approvers[]` login. Wins over everything. Plain-shell window (Step 7d), no child.
+- **ready-to-merge (approved)** — an APPROVED review from an `approvers[]` login. Wins over everything. Step 7d: parks a plain-shell window by default, or (when `guards.merge == "auto-on-clean-approval"` and the PR passes the clean-approval check) auto-merges it and opens a claude session + MERGED pager. No child skill either way.
 - **inprogress (unverified-pr)** — not approved AND the linked PR's author is not you (someone/a bot opened it on your issue). Assess-then-finish on the PR branch (Step 7b).
 - **inreview (actionable)** — not approved, your own PR, AND ≥1 of: a new human comment, a new CHANGES_REQUESTED review, or an unresolved bot thread. Dispatches to Step 7. (Escape hatch: drop comments/CRs at or before `myLatestActivityAt` — you already replied; the ball is in the reviewer's court.)
 - **quiet** — none of the above. One-line report, no dispatch.
@@ -205,7 +206,19 @@ Bucket → session → profile → skill:
 
 ## Step 7d. Approved → AUTO-ready-to-merge
 
-One plain-shell window per approved PR (deduped), parked on the PR branch with a merge-readiness summary. No child claude, the sweep NEVER merges. Reconcile away windows whose PR later merged or lost approval.
+One window per approved PR (deduped). Reconcile away windows whose PR later merged or lost approval.
+
+Default (`guards.merge` absent or `"blocked"`): a plain-shell window parked on the PR branch with a merge-readiness summary. No child claude, the sweep NEVER merges.
+
+Opt-in (`guards.merge == "auto-on-clean-approval"`): the sweep MAY merge, but ONLY when the PR passes the clean-approval check. For each approved PR (`gh pr view <url> --json reviews,comments,mergeable,mergeStateStatus,state,statusCheckRollup`):
+
+1. Approved by an `approvers[]` login (already true to be in this bucket); record the latest such APPROVED `submittedAt` as `approvedAt`.
+2. NO comment authored by any `approvers[]` login after `approvedAt` — across conversation comments, review-body comments, and inline review-thread comments. A follow-up from an approver means the ball may be back in your court; do NOT auto-merge, fall back to a parked shell and flag it.
+3. Not already merged/closed, `mergeable != CONFLICTING`, and no failing/pending required checks in `statusCheckRollup` (all green/neutral/skipped). Any red or pending check → do NOT merge, park + flag.
+
+If all three hold, merge with the repo's configured method (e.g. `gh pr merge <url> --squash`), then build the window with `${SCRIPTS}/rtm-window.sh --status merged` (a claude session cd'd to the repo on the left, a `less` pager on the right showing the ticket description under a big MERGED banner + who/when merged). If any check fails, build it with `--status parked` instead and note why in the Step 6 report. A non-approver comment after approval does NOT block the merge (only `approvers[]` follow-ups do). Record the merge (`mergedBy`, `mergedAt`) in `state.json` and archive the ticket in Step 8. For every PR merged this way, ALSO record a weekly-report line under "Worked on": `${SCRIPTS}/weekly-report.sh add-item --date <DATE> --section "Worked on" --key <pr-url> --bullet "[<repo>#<n>](<pr-url>) <title> ([<ticket>](<ticket-url>))"` (Step 9). Match the report's markdown-link bullet style and embed `<pr-url>` in the bullet so the `--key` dedup finds it on re-runs. A merged item belongs under "Worked on" like any other work you did; it is not flagged differently.
+
+`rtm-window.sh` args: `--session AUTO-ready-to-merge --window <w> --repo-dir <d> --body-file <f> --status <merged|parked> [--branch <b>] [--merged-by <login>] [--merged-at <iso>]`. The body-file is the caller-written ticket id/title/url/summary; the script prepends the banner + status line and opens the pager pane.
 
 ## Step 8. Persist state + archive
 
@@ -213,7 +226,9 @@ Write `state.json` via `${SCRIPTS}/state-write.sh` (flock-serialized): per-item 
 
 ## Step 9. Weekly report
 
-`${SCRIPTS}/weekly-report.sh upsert --date <DATE>` appends a date-keyed bullet summary of the sweep to `$STATE_DIR/weekly/<ISO-week>-report.md` (idempotent per date), and `show` surfaces it. Best-effort, never aborts the sweep.
+`${SCRIPTS}/weekly-report.sh upsert --date <DATE>` appends a date-keyed bullet summary of the sweep to `$STATE_DIR/weekly/<ISO-week>-report.md` (idempotent per date). Then ALWAYS run `${SCRIPTS}/weekly-report.sh show --if-friday` to surface it: that opens (or refreshes) the `AUTO_weekly_report` tmux session with the week file rendered in `mdp` (browser, best-effort) AND opened in the operator's viewer (neovim when present, else a `less` pager). The `--if-friday` gate makes it a no-op except on the week's report day (normally Friday; the last non-holiday weekday otherwise, computed in `tz`), so it is safe to run every sweep. Best-effort, never aborts the sweep.
+
+**Skipped items never appear in the weekly report.** Any item the operator marked skipped, a `$STATE_DIR/done/<key>.done.json` with `outcome: "skipped"` (written by `mark_done.sh`), is excluded: `weekly-report.sh generate` drops it, and no dispatch/recording path may `add-item` it. This is distinct from other `done/` records (`outcome` merged / approved / left-status), which are NOT skips and stay. A review also only earns a "Reviewed teammate PRs" line when the operator actually posted an approval or comment on it (the sweep never posts), so a drafted-but-unposted or skipped review is never recorded.
 
 ## Output discipline
 

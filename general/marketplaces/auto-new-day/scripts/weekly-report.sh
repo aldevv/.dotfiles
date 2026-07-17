@@ -107,6 +107,130 @@ print(target.isoformat())
 PY
 }
 
+# rebuild_slack <weekfile>
+# Regenerate the "## Slack summary" section at the bottom of the week file: a
+# single fenced code block (so mdp renders a copy button) holding two plain-text
+# lists with NO day headings — "Done this week:" (every "Worked on" bullet) and
+# "Code reviews:" (every "Reviewed teammate PRs" bullet), deduped, markdown links
+# flattened to their text. Idempotent: strips any prior Slack section first.
+rebuild_slack() {
+	local wf="$1"
+	[ -f "$wf" ] || return 0
+	command -v python3 >/dev/null 2>&1 || return 0
+	WR_FILE="$wf" python3 - <<'PY' 2>/dev/null || true
+import os, re
+wf = os.environ["WR_FILE"]
+lines = open(wf).read().splitlines()
+
+# Drop any existing Slack section (from its heading to EOF).
+cut = len(lines)
+for i, l in enumerate(lines):
+    if l.strip() == "## Slack summary":
+        cut = i
+        break
+body = lines[:cut]
+
+DAY = re.compile(r"^- \*\*\d{4}-\d{2}-\d{2}")   # "- **2026-07-17 (Fri)**"
+
+def flatten(s):
+    s = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", s)        # [text](url) -> text
+    return s.strip()
+
+def key_of(item, section):
+    # "Done" is ticket-scoped (one work item per ticket, so an in-progress line
+    # and its later merged line collapse to one). "Code reviews" is PR-scoped
+    # (two PRs on one ticket stay separate). Fall back to repo#n, then full text.
+    if section == "done":
+        m = re.search(r"\b[A-Z][A-Z0-9]+-\d+\b", item)   # any TRACKER-123 ticket id
+        if m:
+            return m.group(0)
+    m = re.search(r"[A-Za-z0-9._-]+#\d+", item)
+    return m.group(0) if m else item
+
+# order[section] preserves first-seen key order; seen[section][key] holds the
+# latest text for that key (a re-review or later day wins the wording).
+order = {"done": [], "reviews": []}
+seen = {"done": {}, "reviews": {}}
+section = None
+for l in body:
+    s = l.strip()
+    if s == "- **Worked on:**":
+        section = "done"; continue
+    if s == "- **Reviewed teammate PRs:**":
+        section = "reviews"; continue
+    if DAY.match(s):
+        section = None; continue
+    if s.startswith("- **") and s.endswith(":**"):   # any other subheading
+        section = None; continue
+    if section and s.startswith("- "):
+        raw = s[2:]
+        if section == "reviews":
+            # Code reviews are the PR link only, as Slack mrkdwn <url|repo#N>
+            # (no author, no description). Skip a review with no PR link.
+            m = re.search(r"\[([^\]]+)\]\((https?://[^)]+)\)", raw)
+            if m:
+                text, url = m.group(1), m.group(2)
+            else:
+                u = re.search(r"(https?://\S+)", raw)
+                if not u:
+                    continue
+                url = u.group(1)
+                t = re.search(r"[A-Za-z0-9._-]+#\d+", raw)
+                text = t.group(0) if t else url
+            item, k = f"[{text}]({url})", url
+        else:
+            # Worked-on: link the PR as a markdown link [repo#N](url) (Slack's
+            # composer converts pasted markdown links; the API-only <url|text>
+            # form does NOT render on a human paste) and keep the description; a
+            # one-off (no PR link) stays plain text.
+            m = re.search(r"\[([^\]]+)\]\((https?://[^)]+)\)", raw)
+            if m:
+                text, url = m.group(1), m.group(2)
+                rest = re.sub(r"\s{2,}", " ", flatten(raw[:m.start()] + raw[m.end():])).strip()
+                item = f"[{text}]({url}) {rest}".strip()
+            else:
+                item = flatten(raw)
+            if not item:
+                continue
+            k = key_of(item, section)
+        if k not in seen[section]:
+            order[section].append(k)
+        seen[section][k] = item
+
+done = [seen["done"][k] for k in order["done"]]
+reviews = [seen["reviews"][k] for k in order["reviews"]]
+
+# One-offs = Done items that are not pull requests (no repo#n): ad-hoc or
+# unexpected work. Listed before the PR items, and one-offs sharing a leading
+# word collapse onto one line ("<word> a" + "<word> b" -> "<word> a, b").
+oneoffs, prs = [], []
+for it in done:
+    (prs if re.search(r"[A-Za-z0-9._-]+#\d+", it) else oneoffs).append(it)
+grouped, tails = [], {}
+for it in oneoffs:
+    parts = it.split(None, 1)
+    head, tail = parts[0], (parts[1] if len(parts) > 1 else "")
+    if head not in tails:
+        tails[head] = []
+        grouped.append(head)
+    if tail:
+        tails[head].append(tail)
+oneoff_lines = [f"{h} {', '.join(tails[h])}" if tails[h] else h for h in grouped]
+done = oneoff_lines + prs
+
+out = list(body)
+while out and out[-1].strip() == "":
+    out.pop()
+out += ["", "## Slack summary", "", "```text"]
+out.append("Done this week:")
+out += [f"- {x}" for x in done] or ["- (nothing yet)"]
+out += ["", "Code reviews:"]
+out += [f"- {x}" for x in reviews] or ["- (none yet)"]
+out.append("```")
+open(wf, "w").write("\n".join(out) + "\n")
+PY
+}
+
 cmd_upsert() {
 	local DATE="" BULLETS_FILE=""
 	while [ $# -gt 0 ]; do
@@ -199,6 +323,7 @@ cmd_upsert() {
 	}
 	rm -f "$TMP"
 
+	rebuild_slack "$WF"
 	printf '%s\n' "$WF"
 }
 
@@ -346,6 +471,7 @@ with open(wf, "w") as f:
     f.write("\n".join(lines) + "\n")
 print(wf)
 PY
+	rebuild_slack "$WF"
 }
 
 cmd_show() {
@@ -407,10 +533,17 @@ cmd_show() {
 	if [ "$DO_MDP" = "1" ] && command -v mdp >/dev/null 2>&1; then
 		MDP_CALL="mdp '$WF' >/dev/null 2>&1 || true; "
 	fi
-	# Window command: render in mdp (best-effort browser), then park in a less
-	# pager (MDP_TARGET lets the lesskey M-binding re-render the original file),
-	# then drop to an interactive shell so the window stays usable.
-	local WINCMD="zsh -lc \"export MDP_TARGET='$WF'; ${MDP_CALL}less -R '$WF'; exec \${SHELL:-zsh} -i\""
+	# In-terminal viewer: neovim (the operator's editor) when present, else a less
+	# pager. MDP_TARGET is exported for the less lesskey M-binding fallback.
+	local VIEWER
+	if command -v nvim >/dev/null 2>&1; then
+		VIEWER="nvim '$WF'"
+	else
+		VIEWER="less -R '$WF'"
+	fi
+	# Window command: render in mdp (best-effort browser), open the file in the
+	# viewer, then drop to an interactive shell so the window stays usable.
+	local WINCMD="zsh -lc \"export MDP_TARGET='$WF'; ${MDP_CALL}${VIEWER}; exec \${SHELL:-zsh} -i\""
 
 	if ! tmux has-session -t "$SESSION" 2>/dev/null; then
 		tmux new-session -d -s "$SESSION" -n weekly "$WINCMD" &&
@@ -429,12 +562,134 @@ cmd_show() {
 	fi
 }
 
+# cmd_mdp / cmd_open: open a week file directly in one viewer. `mdp <date>`
+# renders it in mdp (browser); `open <date>` edits it in neovim. Date is
+# optional (defaults to today's week file).
+cmd_mdp() {
+	local WF
+	WF=$(week_file_for_date "${1:-$(date +%F)}") || die "bad date '${1:-}'"
+	[ -f "$WF" ] || die "week file not found: $WF"
+	command -v mdp >/dev/null 2>&1 || die "mdp not found on PATH"
+	mdp "$WF"
+}
+cmd_open() {
+	local WF
+	WF=$(week_file_for_date "${1:-$(date +%F)}") || die "bad date '${1:-}'"
+	[ -f "$WF" ] || die "week file not found: $WF"
+	command -v nvim >/dev/null 2>&1 || die "nvim not found on PATH"
+	exec nvim "$WF"
+}
+# cmd_generate: rebuild a week file from the durable per-day dispatch manifests
+# (`$DATES_DIR/<DATE>/dispatch/*.json` that have a sibling `*.done.json`, i.e.
+# work that actually completed). Recovery tool for a lost/corrupt week file.
+# Own-work payloads (have a `ticket`) become "Worked on" lines; `review-*`
+# payloads become "Reviewed teammate PRs" links. Best-effort: bullets use the
+# PR title, and free one-offs (non-PR work with no manifest) are NOT
+# recoverable. Rebuilds the Slack section at the end. Overwrites the week file.
+cmd_generate() {
+	local DATE="${1:-$(date +%F)}" WF
+	WF=$(week_file_for_date "$DATE") || die "bad date '$DATE'"
+	command -v python3 >/dev/null 2>&1 || die "python3 required"
+	local DOW MON DATES_DIR
+	DATES_DIR="${AUTO_NEW_DAY_STATE_DIR:-$HOME/.local/state/auto-new-day}/dates"
+	DOW=$(date -d "$DATE" +%u 2>/dev/null || echo 1)
+	MON=$(date -d "$DATE -$((DOW - 1)) days" +%Y-%m-%d)
+	WR_WF="$WF" WR_MON="$MON" WR_DATES="$DATES_DIR" python3 - <<'PY' || die "generate failed"
+import os, re, json, glob, datetime
+wf   = os.environ["WR_WF"]
+mon  = datetime.date.fromisoformat(os.environ["WR_MON"])
+root = os.environ["WR_DATES"]
+
+def repo_n(url):
+    m = re.search(r"github\.com/[^/]+/([^/]+)/pull/(\d+)", url or "")
+    return f"{m.group(1)}#{m.group(2)}" if m else None
+
+# Items the operator marked skipped (a done/<key>.done.json with
+# outcome=="skipped") never belong in the weekly report.
+done_dir = os.path.join(os.path.dirname(root), "done")
+def is_skipped(key):
+    for fn in (f"{key}.done.json", f"{key}.json"):
+        p = os.path.join(done_dir, fn)
+        if os.path.exists(p):
+            try:
+                if (json.load(open(p)) or {}).get("outcome") == "skipped":
+                    return True
+            except Exception:
+                pass
+    return False
+
+lines = [f"# Weekly report — week of {mon.isoformat()}"]
+for i in range(7):
+    d = (mon + datetime.timedelta(days=i)).isoformat()
+    dd = os.path.join(root, d, "dispatch")
+    if not os.path.isdir(dd):
+        continue
+    worked, reviews = [], []
+    for pj in sorted(glob.glob(os.path.join(dd, "*.json"))):
+        if pj.endswith(".done.json"):
+            continue
+        base = pj[:-5]
+        if not os.path.exists(base + ".done.json"):
+            continue                                  # only completed work
+        try:
+            p = json.load(open(pj))
+        except Exception:
+            continue
+        name = os.path.basename(base)
+        key = name[len("review-"):] if name.startswith("review-") else name
+        if is_skipped(key):
+            continue
+        pr = p.get("prUrl") or ""
+        rn = repo_n(pr)
+        if name.startswith("review-"):
+            if rn and pr:
+                reviews.append(f"    - [{rn}]({pr})")
+        else:
+            title = p.get("title") or p.get("prTitle") or ""
+            ticket = p.get("ticket") or ""
+            iu = p.get("issueUrl") or p.get("linearUrl") or ""
+            if rn and pr:
+                head = f"[{rn}]({pr})"
+            elif ticket and iu:
+                head = f"[{ticket}]({iu})"
+            else:
+                head = title or name
+            suffix = f" ([{ticket}]({iu}))" if ticket and iu and rn else ""
+            worked.append(f"    - {head} {title}{suffix}".rstrip())
+    if not worked and not reviews:
+        continue
+    wd = (mon + datetime.timedelta(days=i)).strftime("%a")
+    lines += ["", f"- **{d} ({wd})**"]
+    if worked:
+        lines.append("  - **Worked on:**"); lines += worked
+    if reviews:
+        lines.append("  - **Reviewed teammate PRs:**"); lines += reviews
+open(wf, "w").write("\n".join(lines) + "\n")
+print(wf)
+PY
+	rebuild_slack "$WF"
+	printf '%s\n' "$WF"
+}
+
+# cmd_path: print the week file's path (for `$(weekly-report.sh path)`). Prints
+# the resolved path whether or not the file exists yet.
+cmd_path() {
+	local WF
+	WF=$(week_file_for_date "${1:-$(date +%F)}") || die "bad date '${1:-}'"
+	printf '%s\n' "$WF"
+}
+
 SUB=${1:-}
 shift 2>/dev/null || true
 case "$SUB" in
 upsert) cmd_upsert "$@" ;;
 add-item) cmd_add_item "$@" ;;
 show) cmd_show "$@" ;;
+slack) rebuild_slack "$(week_file_for_date "${1:-$(date +%F)}")" ;;
+mdp) cmd_mdp "$@" ;;
+open) cmd_open "$@" ;;
+path) cmd_path "$@" ;;
+generate) cmd_generate "$@" ;;
 report-day) report_day_for_week "${1:-$(date +%F)}" ;;
-*) die "usage: weekly-report.sh {upsert|add-item|show|report-day} ..." ;;
+*) die "usage: weekly-report.sh {upsert|add-item|show|slack|mdp|open|path|generate|report-day} ..." ;;
 esac

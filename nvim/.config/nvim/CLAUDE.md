@@ -2,6 +2,10 @@
 
 Personal Neovim config, managed as the `nvim` Stow package in `~/.dotfiles`. Files here are symlinked into `~/.config/nvim/`.
 
+## Formatting
+
+`stylua` is the Lua formatter for this config. Run it freely, any time and as often as you want (whole tree or single files); reformatting Lua here is always welcome, no need to ask. There is no `stylua.toml`, so stylua's defaults apply.
+
 ## Load order
 
 `init.lua` is the entry point:

@@ -70,10 +70,10 @@ The block is the full Variant B set of `##` sections — `## Changes made` (a bu
 **Shape + ordering are defined once in `~/.claude/skills/report/references/format.md` → Variant A (and the marker/table in `diff-note-format.md`). Follow it.** This section adds only the auto-new-day-specific criteria (the exact recommendation thresholds below). Lead with the two lines the operator actually needs — is this the whole PR or a delta, and do you approve — in plain words. Everything else is backup detail below them.
 
 - `Review type: first-review | re-review`. For a re-review, append ` — reviewed only the <N> new commits since my last pass (<short-range>); did NOT re-review the rest of the PR`. This is line 1 so the operator never has to guess whether the whole diff or a delta was examined.
-- `Recommendation: APPROVE | HOLD (comment) | HOLD (request-changes)` followed by ` — <one plain-English clause>`. Decide it, don't hedge. Criteria:
-  - `APPROVE` — no BLOCKER/MAJOR findings AND (re-review only) every prior review comment is resolved. Say so: `APPROVE — delta resolves all N prior comments, nothing new`.
-  - `HOLD (request-changes)` — >=1 unaddressed BLOCKER or MAJOR. Name it: `HOLD (request-changes) — <finding> must be fixed first`.
-  - `HOLD (comment)` — only MINOR/NIT or open questions worth raising, nothing blocking. `HOLD (comment) — one minor + one question, your call whether to block`.
+- `Recommendation: APPROVE | COMMENT | REQUEST CHANGES` followed by ` — <one plain-English clause>`. These name the GitHub review action YOU (the reviewer) would submit, not an instruction to the author to pause. Decide it, don't hedge. Criteria:
+  - `APPROVE` — no BLOCKER/MAJOR findings AND (re-review only) every prior review comment is resolved. Maps to `gh pr review --approve`. Say so: `APPROVE — delta resolves all N prior comments, nothing new`.
+  - `REQUEST CHANGES` — >=1 unaddressed BLOCKER or MAJOR that must be fixed before merge. Maps to `gh pr review --request-changes`. Name it: `REQUEST CHANGES — <finding> must be fixed first`.
+  - `COMMENT` — nothing blocking, but you are NOT approving: only MINOR/NIT or open questions worth raising. Maps to `gh pr review --comment` (neutral, no approval). `COMMENT — one minor + one question, your call whether to block`.
 - `Verified how: <one clause>` — e.g. `static source read of the 6-file delta; build/tests NOT re-run this pass` or `built + ran unit tests + traced runtime path`. Be honest about what you did and did NOT run; never imply e2e when you only read.
 - `Comments: <D> drafted (awaiting you in <answer-draft path>), 0 posted` — `pr-code-review-work` never posts; the operator posts from the answer-draft pane. `0 posted` is always correct on the closing turn.
 - `Findings: <nB> BLOCKER, <nMaj> MAJOR, <nMin> MINOR, <nL> LOW, <nN> NIT` (the severity tally), followed by a short table with one row per finding and these EXACT columns: `Sev | Conf | ✓N | File:line | Finding`. The `Conf` and `✓N` columns are BOTH required on every row — a confidence % with no `✓N` beside it is malformed. REQUIRED, MUST NOT be dropped: `~/.dotfiles/general/.claude/rules/review.md` mandates a confidence % and `✓N` on every finding, and this block is itself a findings report.
@@ -90,7 +90,7 @@ Then a `### Recommended actions` list: 2-5 bullets, most-important first, each a
 - comment → `Post the <N> drafted comment(s) from <answer-draft path>, or approve as-is — your call.`
 If a green-gate confirmation is still owed (static read only), add a bullet: `Optional: run \`go build ./... && go test ./...\` before you approve.` If there is genuinely nothing else to do, that single first bullet stands alone.
 
-Never collapse the review verdict to just Recommendation/Comments/Why — the Review-type line, the explicit APPROVE/HOLD decision, the per-finding severity + confidence + `✓N` detail, and the Recommended actions list all belong in this block, not only in an earlier summary. Do NOT bury the recommendation under the findings table: the operator reads top-down and must see "re-review" and "approve or not" before any table.
+Never collapse the review verdict to just Recommendation/Comments/Why — the Review-type line, the explicit approve / comment / request-changes decision, the per-finding severity + confidence + `✓N` detail, and the Recommended actions list all belong in this block, not only in an earlier summary. Do NOT bury the recommendation under the findings table: the operator reads top-down and must see "re-review" and "approve or not" before any table.
 
 ## Resume note
 

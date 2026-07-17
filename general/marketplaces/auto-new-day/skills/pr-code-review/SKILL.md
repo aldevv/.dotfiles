@@ -907,6 +907,8 @@ Rules (canonical format spec lives in the shared hunk references — [`~/.claude
 
 ### Step 6b. Open Hunk with EVERY finding + every existing reviewer thread
 
+**CRITICAL: open Hunk via `Skill(report)` — do NOT hand-roll the `tmux split-window`.** The report skill opens Hunk with the fixed, correct geometry: `-h -l 70% -t "$TMUX_PANE"` (Hunk to the RIGHT). If you need to scope the diff (exclude `vendor/`, generated files, lockfiles), pass the pathspec through the report skill's args or its range — do NOT open your own `hunk diff … -v` pane. Hunk is ALWAYS the RIGHT pane (`-h`); the answer-draft / notes pager is ALWAYS BELOW (`-v`). NEVER swap them (Hunk `-v` below + pager `-h` right is the exact bug this rule prevents). If a Hunk pane already exists in the window, reuse it instead of opening a second.
+
 After all tables print, invoke the `report` skill in its **fast path** with EVERY consolidated finding attached AND every eligible existing reviewer thread from Step 1. **"Every consolidated finding"** = every row that survived Step 4 verification (VERIFIED or NUANCED≥60%), regardless of Step 5's overlap tags, regardless of severity, regardless of the operator's likely eventual disposition. The Hunk pane is the operator's read-out; the skill does not pre-filter it.
 
 The mandate is explicit:

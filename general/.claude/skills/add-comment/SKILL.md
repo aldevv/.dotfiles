@@ -125,15 +125,22 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
 
    If any claim comes back `FALSE`, rewrite to drop or fix it before confirming. If `NUANCED`, decide: does the nuance change meaning (rewrite) or is it pedantic (leave it, mention to the user when confirming).
 
-5. **Surface the draft in an editable qa pane (MANDATORY, never optional).** This applies to EVERY draft — one comment or many. Never confirm a draft inline in chat, and never open with an `AskUserQuestion` "Post it?" gate, when a pane or terminal can be opened. Write the draft(s) to the single draft file described under "qa draft pane" below (one `---`-delimited block per comment; the format is identical whether there's one block or ten) and open it with the qa helper:
+5. **Surface the draft in an editable qa pane (MANDATORY, never optional).** This applies to EVERY draft — one comment or many.
+
+   **HARD GATE — run the helper BEFORE anything else in this step.** The very first action of drafting is to write the draft file and run `open-qa-pane.sh`. You may NOT print a draft in chat, call `AskUserQuestion`, or ask the operator to confirm until the helper has run and printed `opened pane <id>` or `reused pane <id>`. There is exactly one legitimate way to reach a non-pane surface: the helper itself exits `3` (see fallback). If you catch yourself about to show a draft in chat or open an `AskUserQuestion` picker without having run the helper this turn, STOP — that is the exact bug this gate exists to prevent. Run the helper.
+
+   Write the draft(s) to the single draft file described under "qa draft pane" below (one `---`-delimited block per comment; the format is identical whether there's one block or ten), then open it:
 
    ```bash
    ~/.claude/skills/qa/scripts/open-qa-pane.sh /tmp/add-comment-drafts-<PR>-<TS>.md
    ```
 
-   The helper splits a sibling pane off Claude's pane when `$TMUX` is set, opens a fresh `$TERMINAL` window when it isn't, reuses the pane on a repeat call for the same file, and only exits non-zero (code `3`) when NEITHER tmux nor `$TERMINAL` is available. After it opens, surface a one-line "edit `- answer:` then say 'post'" note in chat and STOP — the operator edits in their editor, drops blocks with `SKIP`, and says "post" when ready; you then re-read the file and post the survivors (step 6). Do not poll, do not re-prompt.
+   Check the exit code and stdout every time:
+   - prints `opened pane <id>` or `reused pane <id>` (exit `0`) → the pane is up. Surface a one-line "edit `- answer:` then say 'post'" note in chat and STOP. The operator edits in their editor, drops blocks with `SKIP`, and says "post" when ready; you then re-read the file and post the survivors (step 6). Do NOT call `AskUserQuestion`. Do NOT poll. Do NOT re-prompt.
+   - exits `3` → no tmux AND no `$TERMINAL`. This is the ONLY case where `AskUserQuestion` is allowed as the draft surface: confirm with a single `AskUserQuestion` showing the verbatim body of each block, options "Post it" / "Revise".
+   - any other non-zero exit → the pane failed to open for an unexpected reason. Report the stderr to the operator and fix it; do NOT silently fall back to chat or `AskUserQuestion` as if it were the exit-`3` case.
 
-   **Only fallback (qa helper exited `3`):** no tmux AND no `$TERMINAL`. Then, and only then, confirm with a single `AskUserQuestion` showing the verbatim body of each block, options "Post it" / "Revise". This is the ONE case where AskUserQuestion is allowed as the draft surface.
+   **Do not substitute inline chat for the pane.** Printing the draft body in the chat response is NOT "surfacing the draft" — it bypasses the editable file the operator relies on. Even a single one-line reply goes through the pane. The only text this step puts in chat is the one-line "edit then say 'post'" pointer after the helper succeeds.
 
    **MANDATORY per-batch confirmation.** Earlier confirmations in the same session do NOT carry over to a new batch. A high-level instruction like "go ahead with the replies" or "post them" without the user seeing the verbatim draft text is NOT confirmation — surface the drafts in the pane again and wait for a fresh "post". Even when a plan was approved earlier with summary descriptions (e.g. "reply with `done`"), the operator sees the actual text in the pane once more before anything posts.
 
@@ -141,7 +148,7 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
 
    ### auto-new-day override
 
-   When the session was dispatched by the `auto-new-day` skill (a per-window `gh` write-shim is installed under `~/work/.auto-new-day/guards/<TICKET>/bin/gh`), every write call must prepend `AUTO_NEW_DAY_APPROVED=1` to bypass the block. The skill's `AskUserQuestion` confirmation IS the approval that earns the override — once the user clicks "Post it", set the env var on the post command. The shim emits a stderr audit line each time the override is used.
+   When the session was dispatched by the `auto-new-day` skill (a per-window `gh` write-shim is installed under `~/work/.auto-new-day/guards/<TICKET>/bin/gh`), every write call must prepend `AUTO_NEW_DAY_APPROVED=1` to bypass the block. The operator's "post" after seeing the drafts in the pane IS the approval that earns the override (or, in the exit-`3` fallback, their "Post it" on the `AskUserQuestion`) — once you have that go signal, set the env var on the post command. The shim emits a stderr audit line each time the override is used.
 
    ```bash
    AUTO_NEW_DAY_APPROVED=1 gh api repos/.../comments -X POST ...
@@ -237,6 +244,32 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
    The script dedups on body text within a category, so re-posting the same line just bumps its `(×N)`. Unknown categories are created at the end of `## Answers`.
 
    Run this once per posted comment, even if a single skill invocation posted several (e.g. three replies in a loop).
+
+7b. **Weekly-report self-record (work teammate-PR reviews only, best-effort).** When you post on a teammate's baton connector PR, that IS the moment a review becomes real, so record it in the connector weekly report's "Reviewed teammate PRs" section. This is the ONLY thing that populates that section (the `auto-new-day` sweep drafts reviews but never posts, so it deliberately records nothing there). Fire this after ANY successful post on a qualifying PR; it is idempotent per PR (`--key` = PR url), so several comments on one PR collapse to one line.
+
+   Run ONLY when ALL guards hold, else skip silently (this is a work-scoped extra on a global skill):
+   - platform is GitHub (`gh`), and the target is a PR;
+   - repo owner is `ConductorOne` and the repo name starts with `baton-`;
+   - the PR author is NOT you (`gh pr view <n> --repo <o>/<r> --json author --jq .author.login` != `gh api user --jq .login`) — a reply on your own PR is not a teammate review;
+   - `~/work/.auto-new-day` exists AND a `weekly-report.sh` is resolvable.
+
+   ```bash
+   ME=$(gh api user --jq .login)
+   AUTHOR=$(gh pr view "$N" --repo "$OWNER/$REPO" --json author --jq .author.login)
+   WR="${AUTO_NEW_DAY_SCRIPTS_DIR:-$HOME/marketplaces/auto-new-day/scripts}/weekly-report.sh"
+   if [ "$OWNER" = "ConductorOne" ] && [[ "$REPO" == baton-* ]] \
+      && [ "$AUTHOR" != "$ME" ] && [ -d "$HOME/work/.auto-new-day" ] && [ -x "$WR" ]; then
+     TITLE=$(gh pr view "$N" --repo "$OWNER/$REPO" --json title --jq .title)
+     AUTO_NEW_DAY_STATE_DIR="$HOME/work/.auto-new-day" "$WR" add-item \
+       --date "$(date +%F)" \
+       --section "Reviewed teammate PRs" \
+       --key "https://github.com/$OWNER/$REPO/pull/$N" \
+       --bullet "[$REPO#$N](https://github.com/$OWNER/$REPO/pull/$N) ${TITLE} (${AUTHOR})" \
+       >/dev/null 2>&1 || true
+   fi
+   ```
+
+   Keep the bullet an ENTRY only (linked PR + short what-it-is + author) — no review verdict, severity, or comment count. If any guard fails or the script errors, skip silently; never block the post on it.
 
 8. **Open in browser (first post of the session only).** If `$BROWSER` is set AND no comment has been opened this session yet, fire-and-forget the posted URL through `$BROWSER` so the user can eyeball formatting. Skip silently when `$BROWSER` is unset.
 
@@ -419,7 +452,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - **Never open the draft in a new tmux window.** The operator will not switch windows to review a batch of drafts. The pane keeps everything on one screen. (The qa helper enforces this: it only ever splits a pane.)
    - **Append, don't spawn a new draft file, on a same-session second invocation.** If a draft file from THIS session already exists (grep `/tmp/add-comment-drafts-<PR>-*` and pick the newest whose timestamp is within the last hour), append the new blocks to that file and re-run the helper on the same path — it focuses the already-open pane rather than opening a second one. The operator ends up with a single draft file that grows as findings arrive.
 
-4. Surface a one-line "edit then say 'post'" message in chat, then call `AskUserQuestion` with three options: **Post all** (post every non-SKIP block), **Cancel** (drop the batch), **Skip the bot blocks** (filter `- author:` matching `*[bot]` and post the rest).
+4. Surface a one-line "edit `- answer:`, `SKIP` the ones you don't want, then say 'post'" message in chat and STOP. Do NOT call `AskUserQuestion` — the pane IS the confirmation surface, and the operator's "post" is the go signal. (`AskUserQuestion` only appears when the helper exited `3`, i.e. no tmux and no `$TERMINAL`; see step 5 in the Workflow.) When the operator says "post", re-read the file and post every surviving block (the operator drops bot blocks themselves by `SKIP`-ing them in the file).
 
 5. On "Post", re-read the draft file. Split it on `---` lines into blocks (an empty block between two adjacent `---` counts as "the operator deleted this one"). For each block, apply the body-resolution + skip rules:
 

@@ -25,6 +25,8 @@ increment from there.
 - fixed (×2)
 - fixed. no longer seeded from public data. (×1)
 - added `codes.AlreadyExists` (×1)
+- yes, only when we can't read `ROLEGROUPS`. dropped the skip so it just fails now. (×1)
+- I cleaned those up (×1)
 
 ### Replies — pushback
 
@@ -64,6 +66,7 @@ increment from there.
 - these all surface to c1 as `codes.Unknown`, and every other gocloak error in the connector has the same problem. worth adding a `MapAPIError` helper next to `IsAlreadyExistsError` that unwraps `*gocloak.APIError` and returns the matching gRPC code (`429` and `5xx` as `codes.Unavailable`, `403` as `codes.PermissionDenied`, `400` as `codes.InvalidArgument`, etc), then wrapping every gocloak call site with `status.Error(MapAPIError(err), ...)`. (×1)
 - `parent_resource` works in `tmpl:` but isn't a declared cel variable in baton-http, so `organization_id` here (and the static role at :177) fails the connector's `Validate` with `undeclared reference to 'parent_resource'` and the sync returns 0 resources. i built the branch and ran a sync against the mock to confirm. `go build`/`go vet` won't catch this, only a sync run does. needs a cel-reachable org id, or derive `organization_id` another way. (×1)
 - both `user` and `userAccount` register as account managers, so the sdk's `getCredentialDetails` (in `baton-sdk`) picks the credential option nondeterministically (`capabilities` flips between `NO_PASSWORD` and `RANDOM_PASSWORD`). (×1)
+- `hostname` skips `quoteDB2Value` here. `url.Parse` keeps `;` in the host, so `db2://...@host;SECURITY=NONE:.../db` injects `SECURITY=NONE` as a connection keyword. wrap it like the other fields. (×1)
 
 ### Top-level PR/MR comments
 

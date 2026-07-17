@@ -54,6 +54,15 @@ Hunk always opens as a `split-window` off Claude's pane in the caller's current 
 - `tmux split-window -t "$TMUX_PANE" ...` — split Claude's pane (this is the ONLY tmux open call in the flow).
 - `tmux display-message -t "$TMUX_PANE" -p '#{...}'` — any pane-metadata read for diagnostics.
 
+## CRITICAL: Hunk opens RIGHT (`-h`), pagers open BELOW (`-v`), never swapped
+
+The split DIRECTION is fixed and is NOT a judgment call:
+
+- **Hunk** (the diff TUI) → `tmux split-window -h -l 70% -t "$TMUX_PANE"` — a pane to the RIGHT.
+- **Pagers / notes** (`less`, `mdp`, an answer-draft file) → `-v` (BELOW Claude's pane).
+
+This holds even when you hand-build the `hunk diff` invocation (adding exclude pathspecs like `':(exclude)vendor'`, a custom `<base>...pr-N` range, or `-c <dir>`): keep the split flags EXACTLY `-h -l 70% -t "$TMUX_PANE"`. Do NOT switch to `-v` because the diff "looks tall", and do NOT let a pager take `-h`. Swapping them (hunk `-v` below, pager `-h` right) is the exact bug this rule exists to prevent. If a hunk pane already exists in the window, reuse it (`hunk session reload`) instead of opening a second one.
+
 `new-window` is NOT part of this skill anymore. If the user asks for a separate window, tell them the skill only splits the current one and let them promote the pane themselves with `<prefix> !` (break pane out to its own window) after the fact.
 
 `split-window` auto-switches focus for clients viewing Claude's session; clients viewing other windows or sessions are not yanked.
@@ -113,7 +122,7 @@ If the caller hands you a ready-to-apply comment batch (e.g. `pr-code-review` in
 
 - **Round 1 — Discovery** unchanged. Skip the `gh pr view` parallel call only if the caller also provided `<RANGE>` verbatim.
 - **Round 2 — Open + apply** (single message, all parallel except the apply, which is gated on session-up):
-  - `tmux split-window -h -l 70% -t "$TMUX_PANE"` to open the Hunk TUI as a pane in Claude's window (only mode; no new-window branch)
+  - `tmux split-window -h -l 70% -t "$TMUX_PANE"` to open the Hunk TUI as a pane to the RIGHT of Claude's pane (only mode; always right unless the right is already occupied; no new-window branch)
   - poll-then-apply one-liner (below), which blocks on `hunk session list` finding the repo, then pipes the supplied JSON to `hunk session comment apply --stdin`
   - `hunk session navigate --next-comment` runs AFTER the poll-then-apply in the SAME bash subshell so it's strictly sequenced without an extra round trip
 
@@ -171,7 +180,7 @@ Once `<RANGE>` is known, single message with these in parallel:
   ```bash
   tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff --watch <RANGE>"
   ```
-  `-l 70%` sizes the new pane (hunk) to 70% of the original pane's width; the diff viewer is the focal task and benefits from horizontal real estate (split-view diff columns), so Claude shrinks to ~30% on the left rather than splitting 50/50. There is NO conditional on pane count, NO alternative `new-window` branch, and NO `target_session` / `force_new_window` opt-out. If the user asks for a "new window" or a "separate session," tell them the skill only splits — they can break the pane out afterwards with `<prefix> !` or move it to another window with `<prefix> .` if they want it standalone.
+  ALWAYS `-h` (to the RIGHT of Claude's pane), unless the right is already occupied (in the auto-new-day workflow it never is). Hunk goes right; pagers (`less`, `mdp`) go below, that split is owned by the caller skills, not this one. `-l 70%` sizes the new pane (hunk) to 70% of the original pane's width; the diff viewer is the focal task and benefits from horizontal real estate (split-view diff columns), so Claude shrinks to ~30% on the left rather than splitting 50/50. There is NO conditional on pane count, NO alternative `new-window` branch, and NO `target_session` / `force_new_window` opt-out. If the user asks for a "new window" or a "separate session," tell them the skill only splits — they can break the pane out afterwards with `<prefix> !` or move it to another window with `<prefix> .` if they want it standalone.
 - Active poll for session-up (replaces the old `sleep 2 && hunk session list`). MUST match on the absolute `repo:` path, not the basename, otherwise two repos with the same basename collide. MUST run inside the SAME bash command as any follow-up so the apply only fires after the session resolves:
   ```bash
   for i in $(seq 1 30); do

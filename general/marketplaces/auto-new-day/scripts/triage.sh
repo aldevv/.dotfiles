@@ -170,7 +170,7 @@ fi
 # Fetch gh pr view once, cache. Empty string when no PR_URL or fetch fails.
 PR_JSON=""
 if [ -n "$PR_URL" ]; then
-  PR_JSON=$(gh pr view "$PR_URL" --json state,mergedAt,closedAt,reviews,headRefOid,updatedAt 2>/dev/null || echo "")
+  PR_JSON=$(gh pr view "$PR_URL" --json state,mergedAt,closedAt,reviews,headRefOid,updatedAt,createdAt 2>/dev/null || echo "")
 fi
 
 emit_dispatch() { echo "dispatch"; exit 0; }
@@ -242,6 +242,42 @@ if [ "$BUCKET" = "inreview-others" ] && [ -n "$PR_JSON" ]; then
   fi
   if [ -n "$approver" ]; then
     emit_discard "pr-approved" "approved by $approver"
+  fi
+fi
+
+# Age cap (inreview-others only). Skip teammate PRs opened more than
+# AUTO_NEW_DAY_MAX_PR_AGE_DAYS ago (0/unset = no cap), UNLESS we engaged with
+# this PR before it crossed that age. "Engaged before the cutoff" = an earlier
+# review-manifest date OR a recorded reviewedPRs dispatch, timestamped before
+# createdAt+cap. A PR we started reviewing while fresh stays in the sweep as it
+# changes; a stale one we never touched drops out.
+MAX_PR_AGE_DAYS="${AUTO_NEW_DAY_MAX_PR_AGE_DAYS:-0}"
+if [ "$BUCKET" = "inreview-others" ] && [ -n "$PR_JSON" ] && [ "${MAX_PR_AGE_DAYS:-0}" -gt 0 ] 2>/dev/null; then
+  pr_created_at=$(echo "$PR_JSON" | jq -r '.createdAt // ""')
+  created_epoch=$(date -d "$pr_created_at" +%s 2>/dev/null || echo 0)
+  now_epoch=$(date +%s)
+  cutoff_epoch=$((created_epoch + MAX_PR_AGE_DAYS * 86400))
+  if [ "$created_epoch" -gt 0 ] && [ "$now_epoch" -ge "$cutoff_epoch" ]; then
+    engaged_before=0
+    # earliest review-manifest date dir for this PR (first time we reviewed it)
+    if [ -d "$DATES_DIR" ]; then
+      for d in $(ls -1 "$DATES_DIR" 2>/dev/null | sort); do
+        [ -f "$DATES_DIR/$d/dispatch/$MANIFEST_BASE.done.json" ] || continue
+        first_epoch=$(date -d "$d" +%s 2>/dev/null || echo 0)
+        if [ "$first_epoch" -gt 0 ] && [ "$first_epoch" -lt "$cutoff_epoch" ]; then engaged_before=1; fi
+        break
+      done
+    fi
+    # fallback: a reviewedPRs dispatch recorded before the cutoff also proves engagement
+    if [ "$engaged_before" = "0" ] && [ -f "$STATE_JSON" ]; then
+      disp_at=$(jq -r --arg u "$PR_URL" '.reviewedPRs[$u].dispatchedAt // ""' "$STATE_JSON" 2>/dev/null)
+      disp_epoch=$(date -d "$disp_at" +%s 2>/dev/null || echo 0)
+      if [ "$disp_epoch" -gt 0 ] && [ "$disp_epoch" -lt "$cutoff_epoch" ]; then engaged_before=1; fi
+    fi
+    if [ "$engaged_before" = "0" ]; then
+      age_days=$(((now_epoch - created_epoch) / 86400))
+      emit_discard "pr-too-old" "PR opened ${age_days}d ago (> ${MAX_PR_AGE_DAYS}d cap), never reviewed while fresh"
+    fi
   fi
 fi
 
