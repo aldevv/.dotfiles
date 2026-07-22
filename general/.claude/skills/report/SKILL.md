@@ -296,6 +296,17 @@ Then apply the orientation note using the same `comment apply --stdin && navigat
 
 Tell the user that no targeted notes were warranted and a top-of-diff `Feature Explanation:` note was left as the orientation.
 
+## Closing readout — REQUIRED on manual `/report` runs
+
+When the user invoked `/report` themselves (they typed it, or asked to "open hunk" / "review with hunk"), end your reply with a short readout, ALWAYS, in every path (analysis, PR-feedback, nothing-to-comment). Not needed when another skill sub-invoked report programmatically (fast path / pre-supplied comments) — those callers own their own output.
+
+The readout is two labeled lines at minimum, after the notes summary:
+
+- **Recommended action:** the single next step, in plain words (e.g. `push + open non-draft MR (closes: TICKET)`, `fix the anchor on file:line first`, `nothing — merge as-is`).
+- **Ready to push:** an honest yes/no assessment with the reason. Say **yes** ONLY if the change was verified end-to-end (ran it and observed the new behavior) per the git rules. Otherwise say **no** and name what's unverified and how to verify it (e.g. `no — Helm values pin can't render locally; CV deploy showing the new tag healthy is the proof`). Never claim "ready to push" on static checks alone.
+
+Optional third line when it helps: **Blocker:** the one thing standing between "no" and "yes" on ready-to-push. Keep the whole readout to 2-4 lines; it's a stand-up update, not a report.
+
 ## Round 4 — One-time hook-install prompt
 
 You already loaded `$HOME/.cache/hunk/state.json` in Round 1.

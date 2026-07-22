@@ -225,6 +225,15 @@ tmux list-panes -F '#{pane_index}: #{pane_current_command} #{pane_current_path}'
 
 For a new window, use `tmux list-windows` and report the window index so the user can switch (`Ctrl-b <n>` by default).
 
+### Target by window id when names/paths contain dots
+
+When a window's name or working directory contains a dot (git worktree branches like `feature/DISP-3073.2` produce a window named `DISP-3073.2:...`), `tmux -t <name>` and bare numeric `-t` mis-resolve: tmux splits the target on `.` into `window.pane`, so captures/renames/kills hit the wrong window and multiple spawns can look identical. Capture the new window id at spawn time and target everything by that id:
+
+```bash
+WID=$(tmux new-window -d -P -F '#{window_id}' -c "$dir" "claude --dangerously-skip-permissions \"\$(cat /tmp/prompt.txt)\"")
+tmux capture-pane -p -t "$WID" | tail -20   # verify by @id, never by the dotted name
+```
+
 ## Layout helpers (optional polish)
 
 After splitting, balance the panes evenly:
