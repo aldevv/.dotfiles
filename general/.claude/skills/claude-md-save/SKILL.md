@@ -237,20 +237,17 @@ Skip this step if the target is an existing file.
 - **Global scope, other topic**: place at `~/.dotfiles/general/.claude/lazy/<topic>.md`.
 - **Project scope**: place at `.claude/lazy/<topic>.md` relative to `$cwd`.
 
-Then create the file:
+Then create the file. Do NOT add a `**Load this when:**` or `**Referenced from:**` header inside the file: the trigger lives in the parent CLAUDE index (Step 6b), and repeating it in the file just makes it longer. Match the existing lazy files, which open straight into content:
 
 ```markdown
 # <Topic Title>
-
-**Load this when:** <specific trigger — observable signal, not an abstract category>.
-**Referenced from:** `<parent CLAUDE file basename>`
 
 ## <Section heading matching the entry's domain>
 
 <entry>
 ```
 
-The trigger line must satisfy the "good triggers" criteria: tied to file paths, commands, syntax, or explicit user phrases. State it in one concrete sentence (or a short bullet list if multiple distinct signals).
+The trigger goes in the index entry (Step 6b), and must satisfy the "good triggers" criteria: tied to file paths, commands, syntax, or explicit user phrases. State it in one concrete sentence (or a short bullet list if multiple distinct signals).
 
 **6b — Register the file in the parent CLAUDE file's lazy-load index.**
 

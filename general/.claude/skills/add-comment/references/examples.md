@@ -67,6 +67,7 @@ increment from there.
 - `parent_resource` works in `tmpl:` but isn't a declared cel variable in baton-http, so `organization_id` here (and the static role at :177) fails the connector's `Validate` with `undeclared reference to 'parent_resource'` and the sync returns 0 resources. i built the branch and ran a sync against the mock to confirm. `go build`/`go vet` won't catch this, only a sync run does. needs a cel-reachable org id, or derive `organization_id` another way. (×1)
 - both `user` and `userAccount` register as account managers, so the sdk's `getCredentialDetails` (in `baton-sdk`) picks the credential option nondeterministically (`capabilities` flips between `NO_PASSWORD` and `RANDOM_PASSWORD`). (×1)
 - `hostname` skips `quoteDB2Value` here. `url.Parse` keeps `;` in the host, so `db2://...@host;SECURITY=NONE:.../db` injects `SECURITY=NONE` as a connection keyword. wrap it like the other fields. (×1)
+- not sure this will work for a user in more than one org. `GET /api/1/users` looks account-wide, so the same user would dedupe to one resource and only keep the last-synced org's grants. docs: https://github.com/ConductorOne/baton-rapid7/blob/main/test/server/rapid7-insightaccount-v1.openapi.json (×1)
 
 ### Top-level PR/MR comments
 

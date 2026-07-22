@@ -52,6 +52,7 @@ qa returns: the temp file path, and (on "done") the edited contents.
 - **Never open the file in a new tmux window.** A pane keeps the caller and the draft on one screen so the operator can edit and answer in place. The helper only ever splits a pane (or, outside tmux, opens a terminal).
 - **One file per invocation, many blocks.** When a caller hands qa several items at once, they go in ONE file. When items arrive one at a time in the same session, append to the existing file and reuse the pane (step 1 + step 3 reuse).
 - **The helper is format-blind.** It takes a path and opens it. All format decisions (headers, block separators, which field is editable, what "SKIP" means) live in the caller's skill.
+- **Advisory to callers: blank-line-separate the fields the operator EDITS so they're paragraph-deletable.** qa does not impose format, but the operator edits in vim/less, so a caller should put a blank line above each field the operator will change or drop, making it its own paragraph (droppable with `dap` instead of hunting line ranges). Display-only fields the operator won't touch can pack together with no blank lines. (add-comment does this: `file`/`kind`/`comment`/`context` grouped, then a blank line before each of `shorter_answer` and `answer`.)
 
 ## Callers
 

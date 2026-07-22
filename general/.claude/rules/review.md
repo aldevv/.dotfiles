@@ -22,6 +22,10 @@ Example formats that satisfy this rule:
 
 If multiple subagents disagree, surface the disagreement and lower the confidence; don't average it silently. If a subagent could not verify because the relevant code/spec wasn't accessible, say so explicitly and mark the finding `✓0 (unverifiable)`, don't pretend it was checked.
 
+## CRITICAL: Present findings as a table
+
+Always present review/code-review issues and findings as a table in chat output (one row per finding), never as a prose list. Applies to every review, any repo. Include the confidence % and `✓N` as their own columns so each row satisfies the confidence-indicator rule above.
+
 ## Workflow
 
 1. Read the artifact under review yourself first.
