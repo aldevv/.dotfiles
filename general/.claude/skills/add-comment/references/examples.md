@@ -92,3 +92,11 @@ Calibration set. Each entry is something we drafted, the user rejected, and what
 - Don't post: `moved the base_role emit to user.grants with `item_path: "$"` + cross-resource grant_mapping in c29c960, so /members paginates once and the per-user /members/{id} reuses cache from the teams + customRoles entries. pattern's from baton-http examples/fivetran.yaml:158-170 + rapid7.yaml:62-74.`
 - Post instead: `done.`
 - Why: reviewer raised a concern, we already discussed the fix in chat with the operator, and the commit is linked on the PR. The reply only needs to close the thread. Saving the long-form rationale for the commit message or the PR description is correct; reposting it as a comment is noise.
+
+### AI-slop vocab (never use these words)
+
+Words that instantly read as machine-written. Banned in comment bodies; say what the code actually does in plain words instead.
+
+- `no-op` / `noop` → say "does nothing now" / "the pop is dead now" / "never runs". Example: don't post `the pop is a no-op now`; post `the pop does nothing now, providerId isn't in the body anymore`.
+- Also banned (mirrors the global writing-style rule): `leverage`, `robust`, `seamless(ly)`, `streamline`, `delve`, `harness` (as verb), `utilize`, `intricate`.
+- Test: would a tired engineer type this word in slack? `no-op` in casual speech, rarely. If it smells like a status-page word, replace it with the concrete thing the code does.
