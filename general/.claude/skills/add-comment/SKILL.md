@@ -53,6 +53,7 @@ Read like a tired engineer on Slack, not a memo:
 Also fine either way: established code-identifier shortenings that appear as-is in the codebase (`ctx`, `req`, `resp`, `err`, `ok`, package names). The reader sees them in the diff, no translation needed.
 
 - **No internal-tooling refs in the answer body.** Never mention `claude.md`, `CLAUDE.md`, `work claude.md`, `~/.claude`, `.claude/lazy`, the review skill by name, or any other internal-tooling artifact. The PR author doesn't know or care about our review pipeline — those refs leak our process into their diff. If the position is grounded in a rule, state the rule in plain terms and (see next bullet) link the public source. Applies to `- answer:` and `- shorter_answer:` bodies. `- context:` is display-only and can mention internal artifacts freely.
+- **No local verification-setup refs in the answer body either.** How WE checked the finding is not the author's business: never describe your local repro, e.g. "against the mock", "the mock/stub server", "the test fixture i set up", "our test rig", "when i ran it locally", "over N runs", or a generated output file you inspected. Those describe our setup, not their code, and they weaken the comment by grounding it in a private harness instead of the actual behavior. State what is true about the code and the public docs/spec, and phrase the check as a question. Assert the behavior and the contract; do not narrate how you reproduced it. A test fixture the AUTHOR added in their own diff can be named (it's their code), but still prefer the contract argument. Applies to `- answer:` and `- shorter_answer:`; `- context:` (display-only) can describe the repro freely.
 - **Never signal that a private rulebook exists.** The knowledge bases behind a finding (the operator's `CLAUDE.md`, lazy files, team policies, internal conventions) are LOCAL and invisible to the author. Don't cite their existence with phrases like "our policy", "our convention", "our standard", "per our rules", "we require", "we only allow", "this violates policy". When a finding rests only on internal knowledge with no public doc, drop the appeal-to-authority entirely and just ask whether the choice was intended: "is that intended?" / "is the group grantee deliberate?" beats "our policy is users-only, so this needs sign-off". The observation (what the code does) is fair game; the internal rule justifying the concern is not.
 - **If the answer cites a rule / spec / standard, the shorter_answer MUST carry the same doc link.** Public doc URLs are the single most useful thing in a review comment — they let the author verify the claim without asking. Keep every URL from `- answer:` also in `- shorter_answer:`, verbatim. **URLs do not count toward any length limit** (the 50/75-char wrap rules ignore them). If the rule has no public URL (internal-only), state the position without citing the rule at all — do not name-drop internal-only rules.
 
@@ -87,6 +88,9 @@ These comments go to a human on their own PR, and you're usually missing context
 - **The ask + what you checked is the whole comment. Stop there.** Don't append your reasoning chain, the mechanism you think is wrong, or your guesses at the real answer. The author doesn't need your internal analysis; they need the question and the doc you looked at, so they can reply with the thing you're missing. Cut every sentence after the ask that the author didn't need to answer it.
 - **Assert only what you verified against a citable source.** If you have the doc/spec/line that proves it, state it plainly (and link it). For everything else, you're inferring, so ask.
 - **Own the uncertainty in the wording.** "i can't find X in the docs, am i missing where it's sourced?" signals you looked and might be wrong, which is true. A flat "X doesn't exist" reads as certain and ages badly when they know something you don't.
+- **Match the claim's strength to how you verified it, in the VERB.** State flatly ONLY what a citable source or a run you actually did proves. If you reasoned it from the code/spec but did NOT exercise the real system end-to-end, the claim is an inference, so hedge it in the wording of the claim itself: "looks account-wide", "would dedupe", "not sure this will work for X", "i don't think this works when Y". Do NOT write the flat "it doesn't" / "these don't resolve" for something you only traced statically. Hedge in plain words: "not sure this will work", "don't think this works" read like a person; avoid the stiff/ai-sounding "this line holds", "does X hold", "this doesn't hold", "X is upheld". The hedge is one or two words, not a sentence. Do NOT bolt on a confessional tail ("i haven't run this against a live X, so i might be missing something") or a redundant closer ("worth a double-check before we rely on it?"): the confession also leaks how you verified (see the no-verification-setup rule), and the closer restates what the hedged verb already said. A hedged claim + the doc link is a complete comment; the tail makes a clear point worse. Cut it.
+- **A respectful ask, not a gotcha (and only when you need one).** Often the hedged claim + doc link stands on its own with no question at all. When a question IS the right close, it must not imply the author doesn't understand their own system: "is `/foo` actually X?" reads as "you clearly got your own api wrong". Prefer one that assumes they may know more than you: "have you seen this hold on a real multi-<thing> setup?" or "does it behave differently than i'm reading here?". Same information, no jab. Don't add a vague "worth a double-check?" closer, that's the redundant tail from the bullet above.
+- **Compress length, never certainty (esp. in `- shorter_answer:`).** When you shorten a hedged finding, the hedge stays. Cutting "i don't think this holds because…" down to "this doesn't hold" is the exact failure to avoid: brevity must not upgrade an inference into a verdict. Aim for the middle ground, short AND appropriately tentative, in both `- answer:` and `- shorter_answer:`.
 - This is about stance, not softening every line into mush. A verified nit is still stated directly. The defensiveness is reserved for challenges to the author's judgment, where being wrong-and-confident costs the most.
 
 Worked example (challenging where a value is sourced). Over-explained:
@@ -363,8 +367,10 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - file: <path>:<line>
    - kind: new-line (<SEVERITY> <CONF>% ✓<N>)
    - context: <what we did / decided / verified — display only>
+
    - shorter_answer: |
        <same point, cut roughly in half, wrapped at 50 cols>
+
    - answer: |
        <the proposed comment body, wrapped at 50 cols if it exceeds one line>
 
@@ -379,8 +385,10 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - kind: reply
    - comment: <what the reviewer raised — display only, verbatim or paraphrased>
    - context: <what we did about it — display only>
+
    - shorter_answer: |
        <same reply, cut roughly in half>
+
    - answer: |
        <the reply body>
 
@@ -393,8 +401,10 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
 
    - kind: top-level
    - context: <what this comment addresses — display only>
+
    - shorter_answer: |
        <same point, cut roughly in half>
+
    - answer: |
        <the comment body>
 
@@ -408,11 +418,12 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - `- kind:` → display-only, one of `new-line`, `reply`, `top-level`, optionally followed by a parenthesized severity/confidence tag for review batches (`new-line (BLOCKER 95% ✓1)`). The parser derives the actual kind from the presence rules below, not from this bullet.
    - `- comment:` → **only present on reply blocks.** Display-only. On new-line and top-level blocks, do NOT include a `- comment:` bullet — the new comment IS the reply, there's no reviewer statement to quote.
    - `- answer:` → the body that will actually be posted. **ALWAYS the last bullet in the block.** Editable. Set to `SKIP` (case-insensitive), leave empty, or delete the whole block to drop it.
-   - `- shorter_answer:` → a **considerably shorter, simpler, human-readable** alternate of `- answer:`. The goal is aggressive compression: drop side notes, drop restated symbol names once the reader can see the anchor line, drop the second half of any "or better..." fork. If the answer is 4-5 lines, aim for 1-2 lines of prose. Plain words over jargon. Half the words is a floor, not the target — go tighter than half when you can. **The parser ignores this bullet.** It exists only so the operator can eyeball two lengths side by side and copy/paste over `- answer:` if the shorter one reads better.
+   - `- shorter_answer:` → a **considerably shorter, simpler, human-readable** alternate of `- answer:`. Target the density of a Hunk-note headline: **position + one-line reason + the ask, then stop.** One or two sentences of prose, not a paragraph. Structure that lands: (1) the position, hedged to match how you verified it ("this says X, but i don't think it holds", not the flat "but it doesn't" unless you actually ran it, see "Match the claim's strength" above), (2) the single load-bearing reason, stated as a fact about the code + docs (NOT about how we tested it, see the "no local verification-setup refs" rule), (3) optionally one short, respectful ask, or none when the hedged claim + link already stands ("i'd drop this line" works; never the "is X actually Y?" jab). Everything else is cuttable: side notes, restated symbol names once the reader sees the anchor, the second half of any "or better..." fork, the magnitude/severity, the "not blocking since..." aside, the confessional "haven't tested it live" tail. If the answer is 5+ lines, the shorter_answer is 1-2. Aggressive compression is the point; half the words is a floor, go tighter. Plain words over jargon, full nouns not slang. **The parser ignores this bullet.** It exists only so the operator can eyeball two lengths and copy/paste over `- answer:` if the shorter one reads better, so it must be genuinely postable on its own, not a teaser.
+     - **Links (URLs) are free and stay** on their own trailing line (own paragraph, blank line above), verbatim, not counted against the length.
      - **Links (URLs) are always allowed and do not count against the length.** Keep the spec URL from the answer, on its own line at the end, exactly as-is. Don't strip URLs to save characters.
      - Keep the same nouns spelled out ("capabilities" not "caps", "documentation" not "docs"); do NOT trade brevity for slang or abbreviations.
      - If genuinely no shorter version is possible without losing the meaning, write `- shorter_answer: (no shorter version)` and leave `- answer:` as the only draft.
-   - `- context:` → display-only. The parser ignores changes to it. Can be multiline (same block-scalar shape as answers below).
+   - `- context:` → display-only, for the OPERATOR, never posted. It must NOT restate the `- answer:` / `- shorter_answer:` (they're right there); it adds the bit the operator needs to trust or act on the finding that the comment itself doesn't carry: the concrete thing observed, the severity, the evidence, a pointer. As short as possible, 1-2 lines, a short example if it helps understanding ("e.g. user-0001 keeps only its group membership"). If the answer already says everything, write `- context: (nothing to add)` rather than padding. It CAN name internal/local detail (mock, live run, ticket) since it never ships. Can be multiline (same block-scalar shape as answers below).
 
    **Multiline bullets (`- answer:`, `- shorter_answer:`, `- context:`).** When the body exceeds ~75 characters, format it as a YAML-style block scalar with the `|` marker, indented, wrapped at a **75-character column limit**:
 
@@ -432,7 +443,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
 
    When the body fits in ≤ 75 chars, keep it inline: `- answer: done.` — same rule for `- context:` and `- shorter_answer:`.
 
-   **Blank line between a multiline bullet and the next bullet.** After the last indented line of any `|` block scalar, insert one blank line before the next `-` bullet. This gives the operator's eye a clean break between the multiline body and the next field, so blocks stay easy to scan while editing. When two consecutive bullets are both single-line, no blank line is required (though harmless if present).
+   **Blank line before each EDITABLE bullet (`- shorter_answer:`, `- answer:`).** The operator only ever edits or deletes these two, so put a blank line above each so it's a clean paragraph to drop (`dap` in vim) or rewrite. The display-only bullets the operator won't touch (`- file:`, `- kind:`, `- comment:`, `- context:`) pack together with NO blank lines between them, a single grouped header at the top of the block. So a block reads: the display-only group, blank line, `- shorter_answer:`, blank line, `- answer:`. When parsing, a blank line BETWEEN two `-` bullets is structural whitespace (not part of any bullet's value); only blank lines INSIDE a `|` block scalar are preserved as paragraph breaks in that bullet's body.
 
    The 75-char wrap is the standard soft column limit; it keeps the draft file scannable in any tmux pane and matches the typical editor gutter. The parser strips the `|` marker and joins lines with single spaces (preserving intentional blank lines inside the body as paragraph breaks; blank lines BETWEEN bullets are structural whitespace and not part of any bullet's value). Spec URLs at the end of an answer body should sit on their own line to avoid being wrapped mid-URL — URL length does not count against the 75-char limit.
 
@@ -497,7 +508,9 @@ pr: https://github.com/conductorone/baton-example/pull/12
 - kind: reply
 - comment: grant returns 200 even on partial failure, add a guard on errors == []
 - context: addressed by 695d6a8. pkg/config/config.yaml:418 now requires members non-empty AND errors empty.
+
 - shorter_answer: (no shorter version)
+
 - answer: done.
 
 ---
@@ -506,7 +519,9 @@ pr: https://github.com/conductorone/baton-example/pull/12
 - kind: reply
 - comment: deleting the last Owner returns 400, map it
 - context: openapi documents only 204/401/403/404/409/429 for DELETE /members/{id}. live curl returned 409. kept 409, tightened the message.
+
 - shorter_answer: openapi has no 400 here. kept 409 with a wider message.
+
 - answer: |
     no 400 in the openapi. kept 409, expanded the message to cover self / last owner /
     scim.
@@ -516,9 +531,11 @@ pr: https://github.com/conductorone/baton-example/pull/12
 - file: pkg/config/config.yaml:418
 - kind: new-line
 - context: linked to the customer-outage postmortem in #ops
+
 - shorter_answer: |
     worth a one-line comment here. semantic-patch returns 200 on partial failure, easy
     to lose track of.
+
 - answer: |
     worth a one-line comment above this saying "reject when errors is non-empty,
     semantic-patch returns 200 on partial failure". easy to lose track of
