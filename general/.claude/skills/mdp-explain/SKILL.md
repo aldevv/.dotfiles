@@ -36,9 +36,10 @@ Author fresh markdown. Optimize for "understood in one skim." Rules:
 - **End with gotchas / open items** if any exist, as a short bullet list.
 - Follow the user's writing-style rules: no emojis, no em-dashes or double-hyphens as prose punctuation, none of the banned slop vocabulary.
 
-Write it to a stable tempfile so re-runs overwrite cleanly and the browser tab can be reloaded:
+Write it to a per-subject tempfile so multiple explainers coexist without clobbering each other, while re-runs of the *same* subject still overwrite cleanly and reload the same browser tab:
 
-- Default path: `/tmp/mdp-explain.md`.
+- Default path: `/tmp/mdp-explain-<slug>.md`, where `<slug>` is a short kebab-case slug of the subject (e.g. "Slack notification relay" becomes `slack-notification-relay`): lowercase, spaces to dashes, drop punctuation, keep it to a few words.
+- Need guaranteed uniqueness (same slug, but a separate doc you don't want overwritten)? Append a short random suffix: `/tmp/mdp-explain-<slug>-$(uuidgen | cut -c1-8).md` (or any short token like `x7k2`).
 - If the user clearly wants a keeper (named a destination, or it explains a specific ticket/project worth saving), write to that path instead and mention where it landed.
 
 ## Step 3: render it
