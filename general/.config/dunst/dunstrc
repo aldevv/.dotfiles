@@ -362,6 +362,10 @@
     summary = "*"
     script = ~/.config/dunst/notify-sound.sh
 
+[slack_relay]
+    appname = "Slack"
+    script = ~/.local/bin/linux-notify
+
 # Every section that isn't one of the above is interpreted as a rules to
 # override settings for certain messages.
 #
