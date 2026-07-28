@@ -167,8 +167,10 @@ Rules of thumb for the worktree path:
 
 ## When the user explicitly says "window" or "tab"
 
+**"Open it in a new window" means open a new tmux window AND run `claude --dangerously-skip-permissions` in it, never a bare shell.** The command on a `new-window` (or any spawn) defaults to claude with the flag; only drop to a plain shell or a different command when the user names one ("open a shell in a new window", "run the build in a new window"). Same default for panes and sessions.
+
 ```bash
-tmux new-window -c <dir> "<command>"
+tmux new-window -c <dir> "claude --dangerously-skip-permissions '<prompt>'"
 ```
 
 - **Don't pass `-n` by default.** This user's tmux config sets `automatic-rename-format` to `#{b:pane_current_path}:#{pane_current_command}`, so new windows automatically get a `<folder>:<program>` name (e.g. `md-preview.nvim:nvim`). The status bar splits the name on the first `:` and colorizes the halves (folder `#d5c4a1` warm-light, program `#83a598` muted blue-green). Active vs inactive is distinguished by the `#F` flag (`*` marker), not a color change. Passing `-n` *turns auto-rename off* for that window, freezing the name forever, which is usually wrong.
@@ -176,6 +178,34 @@ tmux new-window -c <dir> "<command>"
   - The shape is `<left-half>:<right-half>` with exactly one `:` (the first one) acting as the split point.
   - Pick the halves by what you want visually prominent. The status bar splits on the first `:` and renders left side in `#d5c4a1` (warm light tan — "the project / category") and right side in `#83a598` (muted blue-green — "the distinguishing detail"). Put the *grouping* on the left, the *most distinguishing signal* on the right. Examples: `md-preview.nvim:nvim` (auto-rename shape; project on left, running program on right), `hunk-c1:feature/foo` (the report skill's shape; "this is a hunk window for c1" on the left, branch as the standout on the right).
 - A new window hides the current pane; a split keeps both visible. Use only when the user explicitly says "window" or "tab".
+
+## Reviewing PRs/tickets in hunk windows (worktree per ticket)
+
+When the user asks to "open <a PR / branch / ticket> in hunk in a new window" (or to review several PRs/tickets at once), give **each ticket its own git worktree** and open one window per ticket with **claude on the LEFT and hunk on the RIGHT**. Never point two tickets at the same checkout and switch branches between them: a working tree holds one branch at a time, so a second review claude fights the first (branch flips mid-review, a stray edit lands on the wrong branch). Worktree-per-ticket is mandatory in an `AUTO-*` session, where several dispatched tickets are open at once, working on multiple tickets there means multiple worktrees, not multiple branches in one folder.
+
+Worktree layout for `~/work/<repo>` connectors: `~/worktrees/work/<repo>/<ticket-id>` (matches the existing checkouts, e.g. `cxh-2163`). The parent `~/worktrees/work/` symlinks `CLAUDE.md` and `.claude/`, so worktrees inherit work memory; still copy `.envrc` from a sibling checkout and `direnv allow` it (worktrees inherit `.git`, not working-tree files).
+
+Per-ticket recipe (branch already exists; free it from any shared checkout first so the new worktree can claim it):
+
+```bash
+BASE=~/worktrees/work/<repo>
+git worktree add "$BASE/<ticket>" <branch>      # e.g. cxh-2163  cxh-2163-...-graceful-403
+cp <sibling-checkout>/.envrc "$BASE/<ticket>/.envrc" && direnv allow "$BASE/<ticket>"
+
+# Window: claude LEFT (seeded), hunk RIGHT. split -h after the claude pane puts hunk on the right.
+tmux new-window -n "PR<n>-<ticket>" -c "$BASE/<ticket>"
+tmux send-keys -t "PR<n>-<ticket>" "claude --dangerously-skip-permissions '<one-paragraph context>. The hunk TUI in the pane to your right shows the diff origin/main..<branch>. Wait for my review instructions before changing anything.'" C-m
+tmux split-window -h -t "PR<n>-<ticket>" -c "$BASE/<ticket>"
+tmux send-keys -t "PR<n>-<ticket>" "hunk diff origin/main..<branch>" C-m
+```
+
+Rules:
+- **claude LEFT, hunk RIGHT.** Hunk sits to the right of the claude session. `split-window -h` after creating the claude pane produces that order.
+- **Always spawn with `--dangerously-skip-permissions`** (the standard invocation, see "Spawning claude"). Every spawned claude gets the flag, review companions included.
+- **Always seed the claude with context** (what the change does, that the hunk pane is to its right, and "wait for my instructions"). A bare `claude` with no prompt can start editing the worktree on its own; the seed keeps it a review companion that waits for the user.
+- **hunk reads committed refs**, so `hunk diff origin/main..<branch>` shows the PR delta from any cwd. `git fetch origin main` first when `origin/main` may be stale.
+- **Free the branch before `git worktree add`.** A branch can be checked out in only one worktree; return the shared folder to its own branch (`git checkout <its-branch>`) so the new worktree can claim the ticket branch.
+- There is no `wt` helper on PATH here; use `git worktree add` directly. Target tmux windows by their `-n` name (bare, not `$SESSION:name`) once created.
 
 ## Vocabulary map
 

@@ -84,3 +84,15 @@ again. A note over ~5 lines is suspect; move the long-form reasoning to the repo
 and leave the note as the pointer. The marker + headline must be readable in the TUI list without
 expanding. Plain words over jargon. Emojis are welcome when they speed understanding (the severity
 glyph in the marker, ✅/⛔ for a status) — never decorative, at most one per line.
+
+**When a link backs the finding, let the link carry the proof.** If the body cites a reference URL
+(a spec, doc, standard, upstream issue) that shows the finding is real, the note shrinks to
+essentially `[marker] <headline>` plus that link. Do NOT restate or quote what the link says, and
+do NOT narrate how you found it: the reader clicks the link for the evidence, so paragraphs above
+it are noise. A long note sitting next to a supporting link is the exact overrun this section
+exists to prevent: cut until only the defect and the link remain.
+
+Put the link in its OWN PARAGRAPH at the END of the body: separate it from the prose above with a
+BLANK LINE (a double newline), never trailing a sentence. Use a labelled line, e.g. `docs: <url>`
+(or `ref: <url>` / `spec: <url>`), so it is visually set off and easy to click. One reference
+paragraph, last; if there are two links, put them on consecutive lines in that same trailing block.

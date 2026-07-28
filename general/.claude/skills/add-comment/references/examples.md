@@ -27,6 +27,7 @@ increment from there.
 - added `codes.AlreadyExists` (×1)
 - yes, only when we can't read `ROLEGROUPS`. dropped the skip so it just fails now. (×1)
 - I cleaned those up (×1)
+- yep, is customer held credential, so i chose `APP_REGISTRATION`. (×1)
 
 ### Replies — pushback
 
@@ -67,6 +68,9 @@ increment from there.
 - `parent_resource` works in `tmpl:` but isn't a declared cel variable in baton-http, so `organization_id` here (and the static role at :177) fails the connector's `Validate` with `undeclared reference to 'parent_resource'` and the sync returns 0 resources. i built the branch and ran a sync against the mock to confirm. `go build`/`go vet` won't catch this, only a sync run does. needs a cel-reachable org id, or derive `organization_id` another way. (×1)
 - both `user` and `userAccount` register as account managers, so the sdk's `getCredentialDetails` (in `baton-sdk`) picks the credential option nondeterministically (`capabilities` flips between `NO_PASSWORD` and `RANDOM_PASSWORD`). (×1)
 - `hostname` skips `quoteDB2Value` here. `url.Parse` keeps `;` in the host, so `db2://...@host;SECURITY=NONE:.../db` injects `SECURITY=NONE` as a connection keyword. wrap it like the other fields. (×1)
+- not sure this will work for a user in more than one org. `GET /api/1/users` looks account-wide, so the same user would dedupe to one resource and only keep the last-synced org's grants. docs: https://github.com/ConductorOne/baton-rapid7/blob/main/test/server/rapid7-insightaccount-v1.openapi.json (×1)
+- should `userName` allow more than 8-16 alphanumerics? the docs say it needs to match the email address, so it could contain any character an email can. https://developer.paypal.com/braintree/articles/control-panel/users-roles/scim/scim-integration (×1)
+- right now it lists every workspace again for each membership and key, with no caching, so a sync makes a lot of extra api calls on bigger orgs. better to switch to the v2 syncer and keep the workspace ids in the session store: save them in `workspaceBuilder.List` and read them in `Grants`. (×2)
 
 ### Top-level PR/MR comments
 
@@ -92,3 +96,11 @@ Calibration set. Each entry is something we drafted, the user rejected, and what
 - Don't post: `moved the base_role emit to user.grants with `item_path: "$"` + cross-resource grant_mapping in c29c960, so /members paginates once and the per-user /members/{id} reuses cache from the teams + customRoles entries. pattern's from baton-http examples/fivetran.yaml:158-170 + rapid7.yaml:62-74.`
 - Post instead: `done.`
 - Why: reviewer raised a concern, we already discussed the fix in chat with the operator, and the commit is linked on the PR. The reply only needs to close the thread. Saving the long-form rationale for the commit message or the PR description is correct; reposting it as a comment is noise.
+
+### AI-slop vocab (never use these words)
+
+Words that instantly read as machine-written. Banned in comment bodies; say what the code actually does in plain words instead.
+
+- `no-op` / `noop` → say "does nothing now" / "the pop is dead now" / "never runs". Example: don't post `the pop is a no-op now`; post `the pop does nothing now, providerId isn't in the body anymore`.
+- Also banned (mirrors the global writing-style rule): `leverage`, `robust`, `seamless(ly)`, `streamline`, `delve`, `harness` (as verb), `utilize`, `intricate`.
+- Test: would a tired engineer type this word in slack? `no-op` in casual speech, rarely. If it smells like a status-page word, replace it with the concrete thing the code does.

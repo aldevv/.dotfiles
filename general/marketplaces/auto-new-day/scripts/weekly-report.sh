@@ -231,6 +231,25 @@ open(wf, "w").write("\n".join(out) + "\n")
 PY
 }
 
+# strip_slack <weekfile>
+# Remove the "## Slack summary" section (from its heading to EOF) in place, so a
+# newly-appended day lands in the BODY, not below the Slack block. rebuild_slack
+# always re-appends the section as the LAST thing in the file and treats
+# everything from "## Slack summary" onward as the stale section to drop — so a
+# day appended after it gets silently discarded on the next rebuild. Callers that
+# append a day (upsert, add-item) MUST strip first, then let rebuild_slack re-add
+# the section last. Assumes the section is last (rebuild_slack's own invariant).
+strip_slack() {
+	local wf="$1" t
+	[ -f "$wf" ] || return 0
+	t=$(mktemp) || return 0
+	if awk '/^## Slack summary$/ { exit } { print }' "$wf" >"$t" 2>/dev/null; then
+		mv "$t" "$wf" 2>/dev/null || rm -f "$t"
+	else
+		rm -f "$t"
+	fi
+}
+
 cmd_upsert() {
 	local DATE="" BULLETS_FILE=""
 	while [ $# -gt 0 ]; do
@@ -283,6 +302,10 @@ cmd_upsert() {
 	if [ ! -f "$WF" ]; then
 		printf '# Weekly report — week of %s\n' "$MON_START" >"$WF"
 	fi
+
+	# Drop the trailing Slack section so the new day appends into the body, not
+	# below it; rebuild_slack re-adds the section last at the end of this call.
+	strip_slack "$WF"
 
 	# Each day is a top-level bullet; the day's entries are nested sub-bullets.
 	local HEADING="- **$DATE (${WEEKDAY})**"
@@ -361,6 +384,10 @@ cmd_add_item() {
 	WEEKDAY=$(date -d "$DATE" +%a 2>/dev/null || echo "")
 	DOW=$(date -d "$DATE" +%u 2>/dev/null || echo 1)
 	MON_START=$(date -d "$DATE -$((DOW - 1)) days" +%Y-%m-%d 2>/dev/null || echo "$DATE")
+
+	# Same invariant as upsert: drop the trailing Slack section before inserting a
+	# day/subheading so it stays in the body; rebuild_slack re-adds it last below.
+	strip_slack "$WF"
 
 	WR_FILE="$WF" WR_DATE="$DATE" WR_WEEKDAY="$WEEKDAY" WR_MON="$MON_START" \
 		WR_SECTION="$SECTION" WR_KEY="$KEY" WR_BULLET="$BULLET" \
