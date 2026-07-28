@@ -88,3 +88,6 @@ Conformance > taste inside the codebase. Surface a harmful convention; don't for
 
 ## Rule 11 - Fail loud
 "Completed" is wrong if anything was skipped silently. "Tests pass" is wrong if any were skipped. Surface uncertainty.
+
+## Rule 12 - A rejected or interrupted call may still have run
+Rejection does not guarantee nothing happened; a rejected multi-command script can have already executed its first statements. Re-check any precondition a following test or decision depends on, rather than assuming the prior state survived.
