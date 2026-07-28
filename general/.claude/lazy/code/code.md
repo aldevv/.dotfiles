@@ -57,6 +57,8 @@ In Go, bare names (`found`, `ok`, `valid`) are idiomatic for unexported fields a
 
 Doesn't apply to truthiness checks on non-bool values: `if missing_meta:` is fine when `missing_meta` is a list.
 
+Keep a predicate/helper name to what it tests, not its parameters. `isApiError(err, status)`, not `isAPIErrorWithStatus`. The argument list already carries the qualifiers; a name that restates them is the naming equivalent of a comment restating the next line. Match the surrounding code's naming length and register.
+
 ## Function signature quality: more than 3 parameters
 
 4+ parameters is a signal to reconsider the signature: callers lose track of argument order, and same-type swaps compile silently. Use whatever the language's named-parameter idiom is (struct, dataclass, options object, record, builder).

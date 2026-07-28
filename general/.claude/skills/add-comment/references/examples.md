@@ -27,6 +27,7 @@ increment from there.
 - added `codes.AlreadyExists` (×1)
 - yes, only when we can't read `ROLEGROUPS`. dropped the skip so it just fails now. (×1)
 - I cleaned those up (×1)
+- yep, is customer held credential, so i chose `APP_REGISTRATION`. (×1)
 
 ### Replies — pushback
 
@@ -68,6 +69,8 @@ increment from there.
 - both `user` and `userAccount` register as account managers, so the sdk's `getCredentialDetails` (in `baton-sdk`) picks the credential option nondeterministically (`capabilities` flips between `NO_PASSWORD` and `RANDOM_PASSWORD`). (×1)
 - `hostname` skips `quoteDB2Value` here. `url.Parse` keeps `;` in the host, so `db2://...@host;SECURITY=NONE:.../db` injects `SECURITY=NONE` as a connection keyword. wrap it like the other fields. (×1)
 - not sure this will work for a user in more than one org. `GET /api/1/users` looks account-wide, so the same user would dedupe to one resource and only keep the last-synced org's grants. docs: https://github.com/ConductorOne/baton-rapid7/blob/main/test/server/rapid7-insightaccount-v1.openapi.json (×1)
+- should `userName` allow more than 8-16 alphanumerics? the docs say it needs to match the email address, so it could contain any character an email can. https://developer.paypal.com/braintree/articles/control-panel/users-roles/scim/scim-integration (×1)
+- right now it lists every workspace again for each membership and key, with no caching, so a sync makes a lot of extra api calls on bigger orgs. better to switch to the v2 syncer and keep the workspace ids in the session store: save them in `workspaceBuilder.List` and read them in `Grants`. (×2)
 
 ### Top-level PR/MR comments
 

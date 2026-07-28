@@ -113,6 +113,12 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
 
    Pick the platform from the URL: github.com → gh, gitlab.* → glab. Ask if unclear.
 
+   **Then check the target is still open BEFORE drafting anything.** A comment on an already-merged PR/MR is pointless (nobody's going to act on it), so guard first and don't waste draft work:
+   - GitHub: `gh pr view <N> --repo <owner>/<repo> --json state,mergedAt`. If `state` is `MERGED` or `mergedAt` is non-null → STOP. Tell the operator the PR is already merged, name it (`<owner>/<repo>#<N>`), and do NOT draft, do NOT open the qa pane, do NOT post.
+   - GitLab: `glab mr view <IID> --output json | jq -r .state`. If it's `merged` → STOP the same way.
+   - A CLOSED-but-unmerged PR/MR is usually also not worth a comment; say so and ask the operator before proceeding rather than stopping outright.
+   - This is an early stop so no draft work is wasted. If a run is long-lived, re-checking merge state right before the post (step 6) is fine too, but the early guard is the one that matters.
+
 2. **Read the code.** For a reply, fetch the original with `gh api repos/OWNER/REPO/pulls/comments/COMMENT_ID` (GitHub) or `glab api projects/PROJECT_ID/merge_requests/MR_IID/notes/NOTE_ID` (GitLab) and read the file. For a new line comment, just read the file at the target line. Don't draft blind.
 
 3. **Draft** in the voice above. Skim [`references/examples.md`](references/examples.md) for prior posts — reuse phrasings that fit, and pick a different shape if a candidate line already has a high `(×N)` count. If a sentence sounds like a memo, rewrite it.
@@ -561,6 +567,7 @@ Everything the parser needs is in the file header + each block's bullets. Rearra
 - **Long sentences.** If you used a semicolon, split it.
 - **Over-explaining.** One sentence of "why" is enough.
 - **Too agreeable on replies.** This skill is for pushback or clarification. If you're accepting the suggestion, just make the code change.
+- **Drafting on an already-merged PR/MR.** Check merge state at step 1 (`gh pr view --json state,mergedAt` / `glab mr view --output json | jq -r .state`) before drafting. If it's merged, stop and tell the operator; a comment after merge is pointless.
 - **Posting before confirmation.** Never post before the operator sees the verbatim draft. The draft always goes to the qa pane first (step 5); `AskUserQuestion` is only the no-tmux-no-`$TERMINAL` fallback.
 - **Confirming a draft inline or via an `AskUserQuestion` picker when a pane could open.** The qa pane is mandatory for one comment or many; opening a picker (or just printing the draft in chat) while tmux/`$TERMINAL` is available is wrong.
 - **Skipping the file read.** A draft that doesn't engage with the actual code looks generic.

@@ -230,7 +230,17 @@ Write `state.json` via `${SCRIPTS}/state-write.sh` (flock-serialized): per-item 
 
 ## Step 9. Weekly report
 
-`${SCRIPTS}/weekly-report.sh upsert --date <DATE>` appends a date-keyed bullet summary of the sweep to `$STATE_DIR/weekly/<ISO-week>-report.md` (idempotent per date). Then ALWAYS run `${SCRIPTS}/weekly-report.sh show --if-friday` to surface it: that opens (or refreshes) the `AUTO_weekly_report` tmux session with the week file rendered in `mdp` (browser, best-effort) AND opened in the operator's viewer (neovim when present, else a `less` pager). The `--if-friday` gate makes it a no-op except on the week's report day (normally Friday; the last non-holiday weekday otherwise, computed in `tz`), so it is safe to run every sweep. Best-effort, never aborts the sweep.
+`upsert` does NOT auto-summarize — it reads the day's bullets from stdin (or `--bullets-file`), and with none it records only a `- (no dispatchable work this sweep)` placeholder. So YOU compose a short markdown bullet list of THIS sweep (own-work dispatched, in-progress dispatched, teammate reviews dispatched, quiet, notable skips/warnings — one `- ` bullet per line, high-level, no file paths) and PIPE it in:
+
+```bash
+printf '%s\n' \
+  "- Own In-Review: CXH-2089 (snowflake#139) -> fix-bug-work; CXH-1990 quiet." \
+  "- In-Progress: CXP-817/818 (floqast, covered by PR #10), CXH-2092 (okta devices)." \
+  "- Reviews dispatched: baton-claude-developer-platform#7, baton-github#179." \
+  | "${SCRIPTS}/weekly-report.sh" upsert --date <DATE>
+```
+
+This writes the day-keyed narrative section (idempotent per date — a re-run REPLACES that day). It is separate from the structured `## Slack summary` block, which is built only from `add-item` "Worked on" / "Reviewed teammate PRs" lines (auto-merges in Step 7d, posted reviews) — dispatched-but-in-flight work belongs in the narrative bullets here, not the Slack summary. Then ALWAYS run `${SCRIPTS}/weekly-report.sh show --if-friday` to surface it: that opens (or refreshes) the `AUTO_weekly_report` tmux session with the week file rendered in `mdp` (browser, best-effort) AND opened in the operator's viewer (neovim when present, else a `less` pager). The `--if-friday` gate makes it a no-op except on the week's report day (normally Friday; the last non-holiday weekday otherwise, computed in `tz`), so it is safe to run every sweep. Best-effort, never aborts the sweep.
 
 **Skipped items never appear in the weekly report.** Any item the operator marked skipped, a `$STATE_DIR/done/<key>.done.json` with `outcome: "skipped"` (written by `mark_done.sh`), is excluded: `weekly-report.sh generate` drops it, and no dispatch/recording path may `add-item` it. This is distinct from other `done/` records (`outcome` merged / approved / left-status), which are NOT skips and stay. A review also only earns a "Reviewed teammate PRs" line when the operator actually posted an approval or comment on it (the sweep never posts), so a drafted-but-unposted or skipped review is never recorded.
 
