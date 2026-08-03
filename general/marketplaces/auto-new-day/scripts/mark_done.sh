@@ -33,6 +33,9 @@ REPO_DIR=""
 OUTCOME=""
 REASON=""
 FOREVER=0
+if [ -z "${AUTO_NEW_DAY_STATE_DIR:-}" ]; then
+  echo "mark_done.sh: WARNING: \$AUTO_NEW_DAY_STATE_DIR is unset, falling back to $HOME/.local/state/auto-new-day. If this is a work-profile ticket, that fallback is the WRONG dir and --forever will write a record triage.sh will never see. Export AUTO_NEW_DAY_STATE_DIR before calling this manually outside a dispatched session." >&2
+fi
 STATE_DIR="${AUTO_NEW_DAY_STATE_DIR:-$HOME/.local/state/auto-new-day}"
 DATES_DIR="$STATE_DIR/dates"
 STATE_JSON="$STATE_DIR/state.json"
@@ -182,8 +185,11 @@ mkdir -p "$(dirname "$LOG_FILE")"
 {
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] mark-done bucket=$BUCKET key=$KEY outcome=${OUTCOME:-} reason=${REASON:-} \
 forever=$FOREVER removed_marker=$removed_marker removed_state=$removed_state removed_manifest=$removed_manifest \
-forever_written=$forever_written"
+forever_written=$forever_written state_dir=$STATE_DIR"
 } >> "$LOG_FILE"
 
-# Print summary to stdout for the caller.
-echo "mark-done ok: bucket=$BUCKET key=$KEY removed_marker=$removed_marker removed_state=$removed_state removed_manifest=$removed_manifest forever=$FOREVER"
+# Print summary to stdout for the caller. state_dir is always shown so a wrong
+# AUTO_NEW_DAY_STATE_DIR (falling back to the generic default) is visible instead
+# of silently writing a record triage.sh will never check.
+echo "mark-done ok: bucket=$BUCKET key=$KEY removed_marker=$removed_marker removed_state=$removed_state removed_manifest=$removed_manifest forever=$FOREVER state_dir=$STATE_DIR"
+[ "$FOREVER" = "1" ] && echo "mark-done forever record: $DONE_DIR/$KEY.done.json"

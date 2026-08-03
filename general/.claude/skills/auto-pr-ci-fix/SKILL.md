@@ -49,24 +49,19 @@ Read those values once and refer back to them by name. Don't re-derive them.
    3. Skip step 9 (the entry already exists; do not duplicate).
    4. `git -C <Main checkout> merge --no-edit <Fix branch>`. On failure, report the exact git output and STOP; do NOT retry, do NOT `--abort` and retry.
    5. `git -C <Main checkout> push`. If the operator has a local push guard (e.g. `remote.origin.pushurl` set to a `no-push://...` scheme, or a hook that vetoes push) AND the current tmux session name starts with `AUTO-`, bypass the guard by pushing to the fetch URL directly with `AUTO_NEW_DAY_APPROVED=1 git -C <Main checkout> push <fetch-url> HEAD:<PR branch>`. The `AUTO_NEW_DAY_APPROVED=1` env-var is the operator's documented override contract for `auto-new-day` (harmless on machines that don't use it). Do NOT bypass the guard in non-`AUTO-` sessions. On any other failure, report and STOP; do NOT `--force`. After a successful push, run the post-push sync in the **Pushing** section.
-   6. **Auto-approve gate.** Read the current tmux session name (`tmux display-message -p '#S'` from inside the worktree). If it starts with `AUTO-`, the session is running autonomously and the operator has pre-approved PR/MR approval on matched-signature fixes. Approve the PR/MR now:
-      - GitHub: `gh pr review <PR number extracted from URL> --approve --repo <owner>/<repo>` (optionally pass `--body "auto-approved after common-fix push"`).
-      - GitLab: `glab mr approve <MR IID> --repo <path>`.
-      On approval failure, report and continue to step 7 anyway; do NOT retry, do NOT fall back to a different reviewer command. Skip silently when the session name does NOT start with `AUTO-` (regular operator sessions keep approval manual), or when tmux is not running / the command fails to return a session name. Do NOT approve outside this gate under any circumstances.
-   7. Ring the tmux bell (`printf '\a'`) and print a **prominent completion notice** the operator cannot miss. Include: a visible header `AUTONOMOUS COMMON-FIX PUSHED`, the matched Signature verbatim, the entry title from `common-fixes.md`, the new commit sha, the merge/push outputs, and (when the auto-approve gate fired) an `APPROVED` line naming the reviewer command used. Format the header on its own line, all caps, so it stands out in the tmux scrollback.
-   8. End your turn. Do NOT invoke `AskUserQuestion`, do NOT re-run CI.
+   6. Produce the **Completion output** (see the section below).
+   7. End your turn. Do NOT invoke `AskUserQuestion`, do NOT re-run CI.
 
    **3b. Autonomous rotation branch (matched 5a signature only).** Reached ONLY when step 3 already matched an existing 5a entry in `common-fixes.md`; novel 5a failures always go through the operator-owned report path in step 5a. After matching:
    1. **Verify local creds.** Read `Main checkout/.envrc` (walk up if missing). Identify the credential the workflow's `secrets.*` reference maps to. Hit the exact URL that returned 401/403 in the failed log with those local creds. Response MUST be 2xx AND MUST NOT contain the matched Signature substring in the body. If the verification fails, ABORT the autonomous branch and fall through to step 5a's report path; do NOT rotate.
    2. **Recreate fixtures if the entry / `CLAUDE.local.md` documents them.** Run the documented create commands, capture the new resource IDs. On any non-2xx from these creates, ABORT to the report path.
    3. **Rotate the repo secret** with the verified local value. GitHub: `gh secret set <NAME> --repo <owner>/<repo> --body "<value from .envrc>"`. GitLab: `glab variable set <NAME> --repo <path> --value "<value>"`. Rotate ONLY the specific secret named in the workflow's `secrets.*` reference; never bulk-rotate. On failure, report and STOP; do NOT retry.
    4. **Patch the workflow file** on `Fix branch` if step 2 produced new resource IDs (or if the matched entry documents a workflow edit). Stage only the files you changed.
-   5. Commit on `Fix branch` (subject: `fix <thing> (auto)`). If step 4 produced no diff (rotation-only), skip the commit and skip steps 6-7's merge/push; then jump to step 8's auto-approve gate and step 9's notice. There's nothing to merge for a rotation-only fix, and CI re-runs pick up the new secret on its own.
+   5. Commit on `Fix branch` (subject: `fix <thing> (auto)`). If step 4 produced no diff (rotation-only), skip the commit and skip steps 6-7's merge/push; then jump straight to step 8's notice. There's nothing to merge for a rotation-only fix, and CI re-runs pick up the new secret on its own.
    6. `git -C <Main checkout> merge --no-edit <Fix branch>`. On failure, report and STOP.
    7. `git -C <Main checkout> push`. Same guard-bypass behavior as step 3a's push: when the current tmux session name starts with `AUTO-` and a local push guard is in the way, retry with `AUTO_NEW_DAY_APPROVED=1 git -C <Main checkout> push <fetch-url> HEAD:<PR branch>`. On any other failure, report and STOP; do NOT `--force`. After a successful push, run the post-push sync in the **Pushing** section.
-   8. **Auto-approve gate.** Same as step 3a's auto-approve gate: fire only when `tmux display-message -p '#S'` starts with `AUTO-`.
-   9. Ring the tmux bell and print the **prominent completion notice**. Header: `AUTONOMOUS COMMON-FIX ROTATED` (rotation-only) or `AUTONOMOUS COMMON-FIX ROTATED + PUSHED` (with workflow edits). Include the matched Signature, entry title, name of the rotated secret, any recreated fixture IDs, commit sha (if any), merge/push outputs (if any), and the `APPROVED` line when the auto-approve gate fired.
-   10. End your turn. Do NOT invoke `AskUserQuestion`, do NOT re-run CI.
+   8. Produce the **Completion output** (see the section below). If a secret was rotated or a fixture recreated, that detail belongs in the one-line summary or a table row so the operator can eyeball it.
+   9. End your turn. Do NOT invoke `AskUserQuestion`, do NOT re-run CI.
 
 4. **Diagnose the root cause.** Apply the SMALLEST possible fix. No refactors, no architecture changes, no unrelated files. If you find a category below, follow it; otherwise treat it as a code-level failure and apply a tight fix.
 
@@ -141,9 +136,18 @@ After ANY successful push in this skill (steps 3a, 3b, 10), leave the local PR b
 - Fix the upstream when it points at the wrong branch (it often tracks `origin/main`): `git -C <Main checkout> branch --set-upstream-to=origin/<PR branch> <PR branch>`.
 - Confirm local == remote: `git -C <Main checkout> rev-parse HEAD` equals the SHA from `git ls-remote origin <PR branch>`.
 
+## Completion output
+
+When an autonomous run finishes (steps 3a/3b success), ring the tmux bell (`printf '\a'`) and output ONE of these, nothing more:
+
+- **Recommended-actions table** when the operator still has something to do (a rotated secret or recreated fixture needs their eyes, a hardcoded ID needs verifying, a config change needs applying elsewhere). One line of what you did, then a short markdown table ordered most-important first, columns `Action` | `Command / detail`. Keep it to the genuinely actionable rows; do not pad it.
+- **One line + close** when nothing is left for the operator: a single sentence stating what you did (commit sha, branch), then `Recommend closing this tmux window.` No header block, no table.
+
+Never list "approve the PR/MR" as an action: this skill only ever runs on the operator's own PR/MR (the `pr-watch` author guard fails closed otherwise), and you cannot approve your own. Waiting for the CI re-run to go green is not an action worth a table on its own; fold it into the one-line-and-close form.
+
 ## Hard rules
 
-- Never open a new PR or MR. Never change reviewers, labels, or assignees. PR/MR approval is allowed only via step 3a's or 3b's auto-approve gate (matched signature, current tmux session name starts with `AUTO-`), never anywhere else in this skill.
+- Never open a new PR or MR. Never change reviewers, labels, or assignees. Never approve the PR/MR: this skill only runs on the operator's own PR/MR (the `pr-watch` author guard exits "not my PR" otherwise), so approval is both impossible and pointless.
 - Repo secret rotation is allowed only via step 3b's autonomous branch, and only when both (a) the failure matches an existing 5a entry in `common-fixes.md` and (b) the credential-verification precondition on the failing endpoint has passed. Novel 5a failures stay operator-owned per step 5a.
 - Never switch branches in the main checkout. Never rebase, never force-push, never amend.
 - The only merge you may perform is a single `git merge --no-edit <Fix branch>` invocation, either in step 3a (matched 5c signature, pre-approved) or in step 10 after the user says yes. The only push is the single `git push` from `Main checkout` immediately after that merge succeeds. Exactly one merge+push per run, never both branches.

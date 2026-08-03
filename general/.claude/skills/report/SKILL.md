@@ -116,6 +116,10 @@ The three note categories are additive: orientation + per-reviewer + complex-flo
 
 If detection picks up a context (e.g. dispatch JSON exists) but the payload turns out to be empty (`feedback: []`) or missing required fields, fall back to the analysis path and surface to the user that the payload was malformed.
 
+**Chat-visible table, in addition to the Hunk notes.** The Hunk notes above live inside the TUI; the operator's chat transcript should show the same attribution without opening Hunk. Right after applying the batch, print the shared **Addressed-feedback table** (`references/format.md` → "Addressed-feedback table") to chat: one row per `pr_feedback[]` entry, same set as the Hunk notes (don't add or drop rows between the two). This is what the operator sees most — lead with it, before the Closing readout.
+
+**Skip this when another skill sub-invoked report** (it owns its own closing block and will print this same table itself, per `format.md` Variant B item 2 — printing it here too would duplicate it). Print it yourself only on a manual `/report` invocation (the same condition that gates the Closing readout below).
+
 ### Fast path: pre-supplied comments
 
 If the caller hands you a ready-to-apply comment batch (e.g. `pr-code-review` invokes `Skill(report)` with the JSON inline, or you're handed `comments_json=<path>` in `$ARGUMENTS`), the workflow collapses to TWO rounds:
@@ -298,7 +302,7 @@ Tell the user that no targeted notes were warranted and a top-of-diff `Feature E
 
 ## Closing readout — REQUIRED on manual `/report` runs
 
-When the user invoked `/report` themselves (they typed it, or asked to "open hunk" / "review with hunk"), end your reply with a short readout, ALWAYS, in every path (analysis, PR-feedback, nothing-to-comment). Not needed when another skill sub-invoked report programmatically (fast path / pre-supplied comments) — those callers own their own output.
+When the user invoked `/report` themselves (they typed it, or asked to "open hunk" / "review with hunk"), end your reply with a short readout, ALWAYS, in every path (analysis, PR-feedback, nothing-to-comment). Not needed when another skill sub-invoked report programmatically (fast path / pre-supplied comments) — those callers own their own output. On a manual PR-feedback run, the readout comes AFTER the Addressed-feedback table (above) — the table is what the operator scans first.
 
 The readout is two labeled lines at minimum, after the notes summary:
 

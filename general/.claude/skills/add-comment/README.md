@@ -30,15 +30,18 @@ For a batch (several comments at once) the confirm step is an editable draft fil
 | Step | Owner |
 |------|-------|
 | Route comments, draft bodies, fact-check | **add-comment** |
+| Base voice pass on every draft (brevity, plain words, no AI-slop) | **humanize** |
 | Compose the draft file (block format, `- answer:` / `- thread_id:` bullets) | **add-comment** |
 | Write it to `/tmp/add-comment-drafts-*.md` | **add-comment** |
 | Open the pane / terminal, reuse it on repeat calls | **qa** (`open-qa-pane.sh`) |
 | Re-read the edited file, parse blocks, post, clean up | **add-comment** |
+| Voice-training corpus (`references/examples.md`), record on every post | **humanize** |
 
 The whole handoff to qa is one line: `~/.claude/skills/qa/scripts/open-qa-pane.sh <path>`. qa is format-blind; add-comment owns the block format.
 
 ## Notes
 
+- Drafts run through the **`humanize`** skill for the base voice pass (brevity, plain words, no AI-slop), then this skill layers on PR/MR-specific rules (backticks, doc links, no internal-tooling refs).
 - Nothing posts without your per-comment confirmation. A prior "go ahead" does not carry over to a new batch, you always see the verbatim body first.
-- Posted comments are appended to `references/examples.md` as voice training, with a `(×N)` count so overused phrasings stay visible.
+- Posted comments are appended to humanize's `references/examples.md` as voice training, with a `(×N)` count so overused phrasings stay visible.
 - Not for: long formal responses, regular in-file code comments, or accepting a suggestion (just make the change).

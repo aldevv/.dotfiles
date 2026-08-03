@@ -116,6 +116,8 @@ Note: the comment is quoted 1:1 (full, unedited — the operator recognizes thei
 
 When there's also a complex-flow / feature-explanation note to attach (the existing "explain complex flows" behavior), include BOTH: one Feature Explanation orientation note at the top of the diff plus one note per addressed reviewer thread. The reviewer-thread notes attach at their own anchor lines.
 
+These same threads also get a chat-visible table (`format.md` → "Addressed-feedback table"), so the operator sees the attribution without opening Hunk. See `SKILL.md` → "Chat-visible table" for who prints it (report itself on a manual run, the calling skill's closing block on a sub-invoked run).
+
 ### Be unambiguous about who you're talking to
 
 A Hunk note is read by the reviewer (and possibly the PR author). It's NOT a code comment, NOT a TODO for future-you, and NOT an instruction the reviewer can act on. So avoid bare imperatives like "don't unify these" or "remember to X". The reviewer can't tell whether you're telling them, the PR author, or some hypothetical future maintainer, and they can't act on any of those.

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Replay the tmux-resurrect snapshot taken by tmux-close-window (prefix+X)
+# right before the kill. Restore is idempotent: it only recreates panes and
+# windows missing from the current server, so this brings back just the
+# killed window (layout, running program, and scrollback included) without
+# touching anything else.
+
+set -euo pipefail
+
+RESURRECT_DIR="$HOME/.config/tmux/plugins/tmux-resurrect"
+"$RESURRECT_DIR/scripts/restore.sh"

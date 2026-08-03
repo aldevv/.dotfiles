@@ -160,9 +160,8 @@ Log command: ${log_cmd}
 EOF
 
   echo "[ci] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"
-  if tmux new-window -t "${TARGET_SESSION}:" -n "${window_name}" -c "${WT_PATH}" "claude --dangerously-skip-permissions $(printf '%q' "$prompt")"; then
+  if prelude_spawn_tmux_window "${TARGET_SESSION}" "${window_name}" "${WT_PATH}" \
+       "claude --dangerously-skip-permissions $(printf '%q' "$prompt")" "ci"; then
     echo "[ci] fixer launched"
-  else
-    echo "[ci] tmux new-window failed (rc=$?)"
   fi
 }
