@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Snapshot via tmux-resurrect in the background so tmux-undo-close-window
+# (prefix+T) can still restore, without blocking the window close on it.
+
+set -euo pipefail
+
+RESURRECT_DIR="$HOME/.config/tmux/plugins/tmux-resurrect"
+nohup "$RESURRECT_DIR/scripts/save.sh" quiet >/dev/null 2>&1 &
+disown
+
+tmux kill-window

@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+# Rebuild tmux sessions/windows/panes from the last tmux-resurrect snapshot
+# that still reflects a real layout, then resume every `claude` pane's actual
+# prior conversation via `claude --continue`. tmux-resurrect's default
+# process allowlist (vim/less/man/...) never includes `claude`, so it won't
+# relaunch those panes on its own; replaying the original invocation would
+# also just start a fresh conversation instead of picking up where it died.
+#
+# Use after anything kills the tmux server mid-session (a reboot, or the
+# server just dying outright) - auto-new-day dispatch windows or any other
+# layout. Assumes the default tmux socket/resurrect paths.
+#
+# tmux-continuum autosaves every 5 minutes regardless of how few panes exist,
+# so picking "the newest snapshot file" breaks once anything (this script's
+# own placeholder session, a stray new window) creates a session after the
+# death but before this runs: that gets autosaved as a busy-looking but
+# actually-empty snapshot. Skip newest-first past any snapshot with too few
+# panes to be a real dispatch layout, rather than reasoning about boot time
+# (most tmux deaths here happen without a reboot at all).
+MIN_REAL_PANE_COUNT=10
+
+RESURRECT_DIR="$HOME/.local/share/tmux/resurrect"
+RESTORE_SCRIPT="$HOME/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh"
+SOCKET="/tmp/tmux-$(id -u)/default"
+
+if [[ ! -d "$RESURRECT_DIR" ]]; then
+	echo "auto-new-day-restore: no resurrect dir at $RESURRECT_DIR" >&2
+	exit 1
+fi
+
+snapshot=""
+for f in $(ls -t "$RESURRECT_DIR"/tmux_resurrect_*.txt 2>/dev/null); do
+	pane_count="$(grep -c '^pane' "$f" 2>/dev/null || echo 0)"
+	if ((pane_count >= MIN_REAL_PANE_COUNT)); then
+		snapshot="$f"
+		break
+	fi
+done
+
+if [[ -z "$snapshot" ]]; then
+	echo "auto-new-day-restore: no snapshot with >= $MIN_REAL_PANE_COUNT panes found; nothing to restore" >&2
+	exit 1
+fi
+
+ts="$(basename "$snapshot" .txt | sed 's/^tmux_resurrect_//')"
+
+echo "Restoring from $(basename "$snapshot") ($pane_count panes)"
+ln -sf "$(basename "$snapshot")" "$RESURRECT_DIR/last"
+
+booted_placeholder=0
+if ! tmux list-sessions >/dev/null 2>&1; then
+	tmux new-session -d -s _resurrect_boot
+	booted_placeholder=1
+fi
+
+TMUX="$SOCKET,0,0" bash "$RESTORE_SCRIPT" >/dev/null 2>&1 || true
+
+if ((booted_placeholder)); then
+	tmux kill-session -t _resurrect_boot 2>/dev/null || true
+fi
+
+relaunched=0
+skipped=0
+declare -A seen_dirs
+while IFS=$'\t' read -r session window pane dir; do
+	dir="${dir#:}"
+	target="${session}:${window}.${pane}"
+	current_cmd="$(tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || echo "")"
+	# claude --continue resumes "the most recent conversation in the current
+	# directory": a second pane on the same dir would just reload whatever the
+	# first pane already grabbed (or, if something even newer used that same
+	# dir in the meantime, a wrong unrelated session). Only resume once per dir.
+	if [[ -n "${seen_dirs[$dir]:-}" ]] || [[ "$current_cmd" == "claude" ]]; then
+		skipped=$((skipped + 1))
+		continue
+	fi
+	seen_dirs[$dir]=1
+	tmux send-keys -t "$target" "claude --dangerously-skip-permissions --continue" C-m
+	relaunched=$((relaunched + 1))
+done < <(awk -F'\t' '$1=="pane" && $10=="claude" { print $2"\t"$3"\t"$6"\t"$8 }' "$snapshot")
+
+# Same allowlist gap for the hunk diff-viewer panes (pane_command "node", or any
+# full_command containing "hunk"). The saved full_command is ps-width-truncated,
+# so the exact diff range can't always be read back; prefer the auto-new-day
+# dispatch manifest (ground truth) and fall back to a range built from the repo's
+# currently checked-out branch when no manifest exists yet.
+date_dir="${ts:0:4}-${ts:4:2}-${ts:6:2}"
+dispatch_dir="$HOME/work/.auto-new-day/dates/$date_dir/dispatch"
+
+hunk_relaunched=0
+hunk_skipped=0
+while IFS=$'\t' read -r session window pane dir winname; do
+	dir="${dir#:}"
+	winname="${winname#:}"
+	target="${session}:${window}.${pane}"
+	current_cmd="$(tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || echo "")"
+	if [[ "$current_cmd" == "node" ]]; then
+		hunk_skipped=$((hunk_skipped + 1))
+		continue
+	fi
+
+	if [[ "$winname" =~ ^(CXH-[0-9]+) ]]; then
+		manifest="$dispatch_dir/${BASH_REMATCH[1]}.done.json"
+	else
+		manifest="$dispatch_dir/review-${winname}.done.json"
+	fi
+
+	range=""
+	if [[ -f "$manifest" ]] && command -v jq >/dev/null 2>&1; then
+		range="$(jq -r '.hunkArgs.diffRange // empty' "$manifest" 2>/dev/null)"
+	fi
+	if [[ -z "$range" ]]; then
+		branch="$(git -C "$dir" branch --show-current 2>/dev/null)"
+		if [[ -z "$branch" ]]; then
+			range="origin/main --exclude-untracked"
+		elif [[ "$winname" =~ ^CXH-[0-9]+ ]] && git -C "$dir" rev-parse --verify "origin/${branch}" >/dev/null 2>&1; then
+			range="origin/${branch}..HEAD"
+		else
+			range="origin/main...${branch}"
+		fi
+	fi
+
+	tmux send-keys -t "$target" "hunk diff --watch $range" C-m
+	hunk_relaunched=$((hunk_relaunched + 1))
+done < <(awk -F'\t' 'NR==FNR { if ($1=="window") { n=$4; sub(/^:/,"",n); win[$2 SUBSEP $3]=n }; next }
+	$1=="pane" && ($10=="node" || $11 ~ /hunk/) { print $2"\t"$3"\t"$6"\t"$8"\t"win[$2 SUBSEP $3] }' "$snapshot" "$snapshot")
+
+# Same allowlist gap again for nvim: tmux-resurrect's default list only matches
+# a bare "nvim " prefix, but these panes launch it through a version manager
+# (e.g. bob), so the saved full_command is an absolute path and never matches.
+nvim_relaunched=0
+nvim_skipped=0
+while IFS=$'\t' read -r session window pane dir full_cmd; do
+	dir="${dir#:}"
+	full_cmd="${full_cmd#:}"
+	target="${session}:${window}.${pane}"
+	current_cmd="$(tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || echo "")"
+	if [[ "$current_cmd" == "nvim" ]]; then
+		nvim_skipped=$((nvim_skipped + 1))
+		continue
+	fi
+	file_arg="${full_cmd#*nvim }"
+	tmux send-keys -t "$target" "nvim $file_arg" C-m
+	nvim_relaunched=$((nvim_relaunched + 1))
+done < <(awk -F'\t' '$1=="pane" && ($10=="nvim" || $11 ~ /nvim /) { print $2"\t"$3"\t"$6"\t"$8"\t"$11 }' "$snapshot")
+
+sleep 2
+echo "Restored $(tmux list-sessions 2>/dev/null | wc -l) sessions, resumed $relaunched claude pane(s) (skipped $skipped), reopened $hunk_relaunched hunk pane(s) (skipped $hunk_skipped), reopened $nvim_relaunched nvim pane(s) (skipped $nvim_skipped)."

@@ -33,22 +33,12 @@ Pick from the URL: `github.com` → `gh`, `gitlab.*` → `glab`. PR `#N` is gh; 
 
 ## Voice (non-negotiable)
 
-Read like a tired engineer on Slack, not a memo:
+Read like a tired engineer on Slack, not a memo. Base voice (brevity, plain words, simple grammar, lowercase, no greetings, no em dashes, no formal hedges, contractions, no AI-slop vocab, no unusual noun shortenings) lives in the **`humanize`** skill, every draft runs through it (Workflow step 3). What's below is specific to PR/MR review comments, on top of that base:
 
-- **As short as possible.** Replies are ideally one word ("done", "fixed", "yep"). Aim for the fewest words that close the thread. If you wrote more than one sentence, ask whether each one is doing work that the reader actually needs. Never reference commit shas. Never restate what changed. The reviewer can see the diff.
-- **Once the point or question is out, STOP.** The comment ends at the ask ("is that intended?") or the position. Everything after is noise: a trailing qualifier ("just want to check...", "just making sure", "asking because..."), a restatement of the same point in other words, or a list of every other place it also applies. Cut all of it. If a second instance genuinely needs raising, it's its own one-line comment, not a tail glued onto this one. Shorter is better every time the shorter version still lands.
-- **Plain words.** No fancy vocab. Say "matters", not "is load-bearing". Say "before the loop", not "prior to iteration".
-- **Simple grammar.** Short sentences. No semicolons. No nested "which" clauses. One idea per sentence.
-- **Lowercase.** Even product names (snowflake, not Snowflake).
-- **No greetings.** No "hey", "hi", "thanks", "thanks for the look".
-- **No em dashes** or double-hyphens (`--`). Use a period or comma.
-- **No formal hedges.** Skip "happy to revisit", "let me know if", "open to other approaches", "appreciate the feedback".
 - **No bullets, no headings, no code blocks** unless you really need to quote a snippet.
 - **Position first.** Then the reason. Then maybe one clarification. Stop.
-- **Contractions.** i'd, doesn't, isn't.
 - **Backticks for every code identifier.** Function names, type names, package names, method names, variable names, error codes, gRPC codes, HTTP status codes, JSON field names, config keys, CLI flags, file paths — wrap in backticks. GitHub / GitLab render backtick spans as monospace, which visually separates code from prose and makes the comment easier to scan. Concrete: write `` `MapAPIError` `` not `MapAPIError`, `` `IsAlreadyExistsError` `` not `IsAlreadyExistsError`, `` `codes.Unknown` `` not `codes.Unknown`, `` `*gocloak.APIError` `` not `*gocloak.APIError`, `` `pkg/config/config.yaml:418` `` not `pkg/config/config.yaml:418`. Exceptions: don't backtick prose that names a concept generically ("the users endpoint", "the auth flow", "the pagination cursor"); backticks are for THIS SPECIFIC identifier the reader can grep for. Regular English words never get backticks.
 - **Name the library for symbols the author doesn't own.** When the comment references a function, type, or field that lives in a dependency, an sdk, or vendored code (not the author's diff), say where it lives — "`getCredentialDetails` in `baton-sdk`", "the sdk's `accountManagers` map", "`gocloak.APIError` from the gocloak client". Otherwise the author goes looking for it in their own code and can't find it. Symbols the author defined in this repo need no qualifier.
-- **No unusual noun shortenings.** A human reads this. Do NOT use uncommon slang like `caps` (for capabilities) or `impl` (for implementation) — spell them out. Widely-recognized industry shortenings ARE fine because every developer already reads them without translation: `docs`, `auth`, `env`, `repo`, `config`, `sync`, `spec`, `api`, `oauth`, `scim`, `url`. The dividing line: if a new hire would need a second to unpack it, use the full word.
 
 Also fine either way: established code-identifier shortenings that appear as-is in the codebase (`ctx`, `req`, `resp`, `err`, `ok`, package names). The reader sees them in the diff, no translation needed.
 
@@ -59,14 +49,15 @@ Also fine either way: established code-identifier shortenings that appear as-is 
 
 ### Reference examples
 
-Real comments posted via this skill (deduped, with use counts) live at
-[`references/examples.md`](references/examples.md). Read that file before
-drafting — it's the canonical voice training set, and the `(×N)` counts make
-overused phrasings visible so you avoid parroting them.
+Real comments posted via this skill (deduped, with use counts) live in the
+**`humanize`** skill at `~/.claude/skills/humanize/references/examples.md`
+(this skill owns drafting, humanize owns the voice corpus). Read that file
+before drafting, it's the canonical voice training set, and the `(×N)`
+counts make overused phrasings visible so you avoid parroting them.
 
 The list grows automatically: every successful post is recorded by step 7
-below. Same text in the same category bumps `(×N)`; new text appends a new
-bullet.
+below via humanize's `record_example.py`. Same text in the same category
+bumps `(×N)`; new text appends a new bullet.
 
 ### Bad vs good
 
@@ -121,7 +112,9 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
 
 2. **Read the code.** For a reply, fetch the original with `gh api repos/OWNER/REPO/pulls/comments/COMMENT_ID` (GitHub) or `glab api projects/PROJECT_ID/merge_requests/MR_IID/notes/NOTE_ID` (GitLab) and read the file. For a new line comment, just read the file at the target line. Don't draft blind.
 
-3. **Draft** in the voice above. Skim [`references/examples.md`](references/examples.md) for prior posts — reuse phrasings that fit, and pick a different shape if a candidate line already has a high `(×N)` count. If a sentence sounds like a memo, rewrite it.
+   For a reply, also capture the original commenter's login (`.user.login` on GitHub, `.author.username` on GitLab) — it goes in the block's `- reviewer:` bullet (see block shape below) so the operator can tell who they're answering without cross-referencing the thread id.
+
+3. **Draft**, then run the draft through the **`humanize`** skill for the base voice pass (brevity, plain words, simple grammar, no AI-slop, no em dashes). Layer the PR/MR-specific rules above (backticks, position-first, library naming) on top, humanize doesn't know about those. Skim humanize's [`references/examples.md`](../humanize/references/examples.md) for prior posts — reuse phrasings that fit, and pick a different shape if a candidate line already has a high `(×N)` count.
 
 4. **(Optional) Fact-check with subagents.** Run this only when the draft makes specific claims — names a function, cites a line, asserts behaviour, says "the old code did X", quotes a number. Skip for opinion replies ("i'd keep this", "agree, that's cleaner").
 
@@ -234,10 +227,10 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
      -F body="<the approved draft>"
    ```
 
-7. **Record the example.** After every successful post, append the chosen text to [`references/examples.md`](references/examples.md) so future runs can see it:
+7. **Record the example.** After every successful post, append the chosen text to humanize's [`references/examples.md`](../humanize/references/examples.md) so future runs can see it:
 
    ```bash
-   python3 ~/.claude/skills/add-comment/scripts/record_example.py \
+   python3 ~/.claude/skills/humanize/scripts/record_example.py \
      --category "<heading>" \
      --body "<exact posted text>"
    ```
@@ -308,7 +301,7 @@ The editable draft file surfaced by the **qa** skill's helper is the draft surfa
 - **N ≤ 2** → single `AskUserQuestion` showing a comment-id → reply table with the **verbatim** body for each.
 - **N > 2** → still surface the drafts, but stack them in one `AskUserQuestion` prompt with the verbatim bodies. Warn the user inline that editing isn't possible without tmux or `$TERMINAL`.
 
-Either way, the user's "post" decision happens AFTER they see the verbatim bodies. Skip per-reply confirmation and fact-checking once they say go. Each successful post still records to `references/examples.md`.
+Either way, the user's "post" decision happens AFTER they see the verbatim bodies. Skip per-reply confirmation and fact-checking once they say go. Each successful post still records to humanize's `references/examples.md`.
 
 The confirmation is REQUIRED, not optional. A prior plan listing reply intent in summary form (e.g. "reply 'done' to threads X/Y/Z") is not a substitute — the bodies must be shown literally in the pane. If the user said "go ahead" or "do it" without seeing the bodies, surface them and wait.
 
@@ -388,6 +381,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    ---
 
    - thread_id: <comment id or discussion id>
+   - reviewer: <original commenter's login — who we're replying to>
    - kind: reply
    - comment: <what the reviewer raised — display only, verbatim or paraphrased>
    - context: <what we did about it — display only>
@@ -421,6 +415,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - `- file:` → presence signals "new line comment". Accept `path:line` or two separate bullets `- path:` + `- line:`. The commit id is resolved at post time from the PR head SHA (`gh api repos/<owner>/<repo>/pulls/<N> --jq .head.sha`), so no `- commit:` bullet is needed.
    - `- side:` → `RIGHT` (post-change) or `LEFT` (pre-change). Optional; defaults to `RIGHT`.
    - `- thread_id:` → presence signals "reply to existing thread".
+   - `- reviewer:` → **only present on reply blocks.** Display-only. The login of whoever left the original comment (`.user.login` on GitHub, `.author.username` on GitLab) — lets the operator tell who they're answering without cross-referencing the thread id. Omit on new-line and top-level blocks (there's no prior commenter to name).
    - `- kind:` → display-only, one of `new-line`, `reply`, `top-level`, optionally followed by a parenthesized severity/confidence tag for review batches (`new-line (BLOCKER 95% ✓1)`). The parser derives the actual kind from the presence rules below, not from this bullet.
    - `- comment:` → **only present on reply blocks.** Display-only. On new-line and top-level blocks, do NOT include a `- comment:` bullet — the new comment IS the reply, there's no reviewer statement to quote.
    - `- answer:` → the body that will actually be posted. **ALWAYS the last bullet in the block.** Editable. Set to `SKIP` (case-insensitive), leave empty, or delete the whole block to drop it.
@@ -482,7 +477,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - Block is empty (no bullets between the surrounding `---` lines).
    - BOTH `- answer:` AND `- shorter_answer:` are missing/empty/`SKIP`/`(no shorter version)`. (If only one is present and valid, it wins per the priority above.)
 
-   For every block that survives, determine the post kind from the bullets present (see step 2's "Kind detection" rule): `- thread_id:` → reply; else `- file:` → new-line; else → top-level. Then POST via the matching endpoint from step 6. Record each posted body to `references/examples.md` as usual (record the resolved body — the one that actually posted, not both).
+   For every block that survives, determine the post kind from the bullets present (see step 2's "Kind detection" rule): `- thread_id:` → reply; else `- file:` → new-line; else → top-level. Then POST via the matching endpoint from step 6. Record each posted body to humanize's `references/examples.md` as usual (record the resolved body — the one that actually posted, not both).
 
    The draft file is the source of truth. There is no sidecar to fall back to; deleting a block IS the gesture for "don't post this one," deleting only `- answer:` IS the gesture for "post the shorter one," and the parser respects both without further prompting.
 
@@ -511,6 +506,7 @@ pr: https://github.com/conductorone/baton-example/pull/12
 ---
 
 - thread_id: 3494400256
+- reviewer: bjorn-c1
 - kind: reply
 - comment: grant returns 200 even on partial failure, add a guard on errors == []
 - context: addressed by 695d6a8. pkg/config/config.yaml:418 now requires members non-empty AND errors empty.
@@ -522,6 +518,7 @@ pr: https://github.com/conductorone/baton-example/pull/12
 ---
 
 - thread_id: 3494400267
+- reviewer: bjorn-c1
 - kind: reply
 - comment: deleting the last Owner returns 400, map it
 - context: openapi documents only 204/401/403/404/409/429 for DELETE /members/{id}. live curl returned 409. kept 409, tightened the message.
@@ -554,18 +551,16 @@ Things to notice:
 1. `# author:` and `# pr:` appear ONCE in the header, not per-block. Author is the PR/MR author's login.
 2. There is no `- commit:` bullet on new-line blocks — the parser resolves the head SHA from the PR at post time.
 3. The `- comment:` bullet only appears on **reply** blocks (what the reviewer said). New-line and top-level blocks omit it.
-4. `- answer:` is always the LAST bullet in every block.
-5. Answers longer than ~50 chars use the YAML `|` block-scalar form, indented, wrapped at a 50-char column limit. Short answers stay inline (`- answer: done.`).
-6. `shorter_answer` stays in the same voice (lowercase, plain words, contractions), just tighter. Keep full nouns. "capabilities" not "caps", "documentation" not "docs", "openapi" is fine because it's the schema-file name the reader will recognize.
+4. The `- reviewer:` bullet only appears on **reply** blocks too — it's the login of the person who left the original comment, so the operator knows who they're answering without looking up the thread id. New-line and top-level blocks have no prior commenter, so they omit it.
+5. `- answer:` is always the LAST bullet in every block.
+6. Answers longer than ~50 chars use the YAML `|` block-scalar form, indented, wrapped at a 50-char column limit. Short answers stay inline (`- answer: done.`).
+7. `shorter_answer` stays in the same voice (lowercase, plain words, contractions), just tighter. Keep full nouns. "capabilities" not "caps", "documentation" not "docs", "openapi" is fine because it's the schema-file name the reader will recognize.
 
 Everything the parser needs is in the file header + each block's bullets. Rearranging blocks is fine (each block is self-describing). If a block is missing required bullets for its kind (e.g. `- file:` present but no `- answer:` at all), the parser aborts on that block with a clear error and skips it — other blocks still post.
 
 ## Common failure modes
 
-- **Sounding like an LLM.** Em dashes, "I'd be happy to", "Let me know if", any greeting → rewrite.
-- **Big words.** "load-bearing", "non-trivial", "in steady state", "geographically" — replace with plain ones.
-- **Long sentences.** If you used a semicolon, split it.
-- **Over-explaining.** One sentence of "why" is enough.
+- **Sounding like an LLM (em dashes, big words, long sentences, over-explaining).** This is `humanize`'s job, if a draft still reads this way after step 3, the humanize pass got skipped or didn't take.
 - **Too agreeable on replies.** This skill is for pushback or clarification. If you're accepting the suggestion, just make the code change.
 - **Drafting on an already-merged PR/MR.** Check merge state at step 1 (`gh pr view --json state,mergedAt` / `glab mr view --output json | jq -r .state`) before drafting. If it's merged, stop and tell the operator; a comment after merge is pointless.
 - **Posting before confirmation.** Never post before the operator sees the verbatim draft. The draft always goes to the qa pane first (step 5); `AskUserQuestion` is only the no-tmux-no-`$TERMINAL` fallback.
