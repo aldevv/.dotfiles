@@ -7,3 +7,7 @@
 [submodule "wiki/.local/share/wiki"]
 	path = wiki/.local/share/wiki
 	url = git@personal:aldevv/wiki.git
+[submodule "common"]
+	path = common
+	url = git@personal:aldevv/.dotfiles-common.git
+	update = none
