@@ -30,10 +30,23 @@ Author fresh markdown. Optimize for "understood in one skim." Rules:
 
 - **Lead with one line**: what this is / what we are trying to do, in plain words.
 - **Diagrams first.** Prefer a `mermaid` block (`flowchart`, `sequenceDiagram`, or `stateDiagram`) over paragraphs whenever a relationship, flow, or before/after can be drawn. Aim for at least one diagram; two is fine. Keep each diagram small (a handful of nodes).
-- **Short.** Bullets over prose. Cut every sentence that does not change what the reader does next. If a section is longer than its diagram, trim the section.
+- **Short on commentary, not on specifics.** Cut every sentence that does not change what the reader does next. But an exact command, path, group name, ARN, snippet, or the name of the person/channel to ask *is* what changes their next action, so it always earns its place. Trim narration, never the actionable detail. Length follows necessity.
 - **Informal.** Talk like a teammate on Slack. Analogies are welcome ("a bouncer that checks ID"). No jargon without a plain gloss.
 - **A little code is fine.** The reader is an engineer. When a single line or a small code block (a command, a config snippet, a key function call) says it faster than prose, include it. Keep it to the smallest snippet that lands the point; don't paste whole files.
-- **End with gotchas / open items** if any exist, as a short bullet list.
+- **Show your source for any load-bearing claim.** Cite the thing that proves it: `file.py:32`, a ticket key, a commit, a README heading, a config key. A reader who doubts one line should be able to check it without asking. Tables are good for "N examples of the same pattern".
+- **Separate verified from inferred.** If you tested or read it, say so plainly. If you guessed, label the guess and say how to confirm it. Never let an inference read as established fact.
+- **End with gotchas / open items** if any exist, as a short bullet list. Silent failure modes (a setting that shadows another, a green check that proves nothing) belong here.
+
+**If the subject is a todo / action list**, each item answers four things or it isn't done:
+
+1. **What to do**, as a verb, not a topic.
+2. **Where / who**: the repo, file, channel, group, or person. Named, not "the platform team".
+3. **The exact artifact**, when there is one: the command to run, the block to paste, the message to send. Ready to copy, no assembly.
+4. **What's actually blocking it**, and whether it blocks anything else.
+
+Do not write an item you have not pinned down. Go read the repo, the README, the CODEOWNERS, or the commit history first, then write it. "Ask platform" is a placeholder, not an instruction.
+
+**If the user comes back asking for more detail**, treat it as a defect in items 1-4 above, not a request for more prose. Find the specifics you skipped and go get them.
 - Follow the user's writing-style rules: no emojis, no em-dashes or double-hyphens as prose punctuation, none of the banned slop vocabulary.
 
 Write it to a per-subject tempfile so multiple explainers coexist without clobbering each other, while re-runs of the *same* subject still overwrite cleanly and reload the same browser tab:

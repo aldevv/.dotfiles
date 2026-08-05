@@ -1,6 +1,6 @@
 ---
 name: sync-dotfiles
-description: "Fast dotfiles sync — pulls/pushes the parent repo only and skips submodules entirely (they're almost never updated, so syncing them every run is wasted time). At least once every 30 days, or when any submodule is uninitialized (`-` prefix), this skill delegates to `sync-dotfiles-full` so submodules stay current. Resolves merge conflicts (keep both non-conflicting changes; keep newest/incoming for logic conflicts), restows packages with newly-added files, and pushes a machine-tagged commit. After the git sync, applies `~/.claude/my-settings.json` as a managed overlay onto `~/.claude/settings.json` (Step 5b): added/changed entries flow in, removed entries are stripped from settings (only when the live value still matches what was previously applied, so manual edits in settings.json are preserved). Metadata (id and os) is in ~/.machine_metadata; full-sync state is tracked in ~/.cache/sync-dotfiles/last-full-sync; the my-settings overlay state is at ~/.cache/sync-dotfiles/my-settings-applied.json."
+description: "Fast dotfiles sync — pulls/pushes the parent repo only and skips submodules entirely (they're almost never updated, so syncing them every run is wasted time). At least once every 30 days, or when any required submodule is uninitialized (`-` prefix; submodules declared optional via `update = none` in `.gitmodules` are exempt and stay uninitialized), this skill delegates to `sync-dotfiles-full` so submodules stay current. Resolves merge conflicts (keep both non-conflicting changes; keep newest/incoming for logic conflicts), restows packages with newly-added files, and pushes a machine-tagged commit. After the git sync, applies `~/.claude/my-settings.json` as a managed overlay onto `~/.claude/settings.json` (Step 5b): added/changed entries flow in, removed entries are stripped from settings (only when the live value still matches what was previously applied, so manual edits in settings.json are preserved). Metadata (id and os) is in ~/.machine_metadata; full-sync state is tracked in ~/.cache/sync-dotfiles/last-full-sync; the my-settings overlay state is at ~/.cache/sync-dotfiles/my-settings-applied.json."
 ---
 
 > **Thinking budget: none on the happy path — just execute.** The happy path is two deterministic tool-call rounds. Don't reason about strategy, don't evaluate alternatives, don't re-derive the flow — run the steps verbatim.
@@ -12,7 +12,7 @@ Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve
 **Delegation contract**: at Step 1 this skill checks several conditions. If any of them fires, it stops and follows `~/.claude/skills/sync-dotfiles-full/SKILL.md` instead:
 
 1. `~/.cache/sync-dotfiles/last-full-sync` is missing or older than 30 days (= a full sync is overdue).
-2. Any submodule has a `-` prefix (= not initialized, fast path can't safely operate without it).
+2. Any **required** submodule has a `-` prefix (= not initialized, fast path can't safely operate without it). Submodules declared **optional** in `.gitmodules` (`submodule.<name>.update = none`) are exempt: uninitialized is their intended state on a machine that opted out, so delegating would drag the full skill in on every single run and re-clone what the user deliberately declined. `scripts/optional-submodules.sh` prints the optional paths.
 3. Any submodule with a reachable remote has a `+` prefix (= pointer drift, the parent's recorded SHA disagrees with the submodule HEAD). Drifted-but-unreachable submodules are skipped: a leftover wip commit from a previous failed sync can't be pushed from this machine anyway, and the next sync on a reachable machine resolves it.
 4. Any initialized submodule whose remote is reachable on this machine has a dirty worktree (`git status --porcelain` non-empty) or unpushed commits (`@{u}..HEAD` non-empty). The fast skill never enters submodules, so these go un-synced and the user thinks "I edited the wiki, why didn't it push?" — this trigger catches that. Submodules whose remote is NOT reachable (missing SSH alias, offline, etc.) are skipped: their local edits stay local until the next sync on a machine that can push them.
 
@@ -119,11 +119,26 @@ if [ -n "$sub_report" ]; then
   echo "$sub_report"
 fi
 
+# Optional submodules (update = none in .gitmodules) are opt-in, so being
+# uninitialized is their intended state on a machine that declined them. Left
+# in the set below they'd trigger DELEGATE on every run and the full skill
+# would clone what the user opted out of.
+optional_paths=$("$HOME/.claude/skills/sync-dotfiles/scripts/optional-submodules.sh" 2>/dev/null || true)
+if [ -n "$optional_paths" ]; then
+  echo "optional submodules (uninitialized is fine):"
+  echo "$optional_paths" | sed 's/^/  /'
+fi
+
 # Uninitialized → DELEGATE. Only the full skill can clone, regardless of
 # whether THIS machine can reach the remote (the user might have aliases set
 # up that the foreach probe can't see in our subshell environment).
-if echo "$sub_status" | grep -q '^-'; then
+uninit=$(echo "$sub_status" | awk '/^-/ {print $2}')
+if [ -n "$uninit" ] && [ -n "$optional_paths" ]; then
+  uninit=$(echo "$uninit" | grep -vxF -f <(echo "$optional_paths") || true)
+fi
+if [ -n "$uninit" ]; then
   echo "submodule uninitialized -> DELEGATE"
+  echo "$uninit"
 fi
 
 # Pointer drift → DELEGATE only when the drifted submodule is reachable.
