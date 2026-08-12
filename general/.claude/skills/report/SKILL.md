@@ -170,10 +170,24 @@ Resolve `<RANGE>` from `$ARGUMENTS`:
 | `HEAD~1`, `origin/master..HEAD`, etc. | pass through verbatim |
 | a range naming a LOCAL base branch (`main..feature`, `main...HEAD`) | rewrite the local base to its remote-tracking ref (`origin/main...HEAD`) after fetching — never diff against a local base that may be stale |
 | `--pr N` / `pr N` / bare numeric `N` | `origin/<base>...<head>` from `gh pr view` |
+| updating an existing, already-pushed PR/MR with new local changes (fixing review comments, applying a review's own findings) | `origin/<branch>` — the PR's OWN remote-tracking ref, single target (see "Re-reviewing your own fix pass" below) |
 | (working-tree review, no commits) | no range; use `hunk diff` / `git diff` with no args |
 | (staged review) | `hunk diff --staged` / `git diff --staged` |
 
 Two-dot (`origin/<branch>..HEAD`) vs three-dot (`origin/<base>...HEAD`) is the caller's choice, not something to override: two-dot shows only the commits on HEAD past the pushed branch head (a minimal delta of new work); three-dot shows the whole PR the way GitHub/GitLab render it. When a caller passes an explicit range, honor it verbatim after the local→remote rewrite above. Note the tradeoff only if asked: in a two-dot delta, a line a new commit replaced shows as `-` even where the web PR shows it as `+`.
+
+### Re-reviewing your own fix pass on an existing PR
+
+When the task is "fix what this PR's reviewers flagged" or "run a review, then fix the findings" on a PR that's already open and already has a remote head pushed, the diff you open Hunk on for that fix pass is local vs. the PR's OWN branch, not local vs. the repo's default branch:
+
+```bash
+git fetch origin <branch> --quiet
+tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff origin/<branch>"
+```
+
+Single target (`hunk diff origin/<branch>`, not a two-dot or three-dot range) is deliberate: it diffs the working tree against that ref, so it picks up uncommitted fixes too, not just committed-and-unpushed ones. If you commit before opening Hunk, `origin/<branch>...HEAD` also works, but don't require a commit first — a reviewer asking "did you actually fix it" wants to see the fix the moment it lands on disk.
+
+Using `origin/<default>...HEAD` (the full-PR range) here re-shows the entire PR, including everything already reviewed and merged in earlier rounds — exactly the noise the operator is trying to avoid when they're iterating on a fix, not reviewing from scratch. If you already have a Hunk session open on the full-PR range from an earlier review pass in the same session, `hunk session reload <session-id> -- diff origin/<branch>` re-scopes it instead of opening a second pane. Reloading clears any live comments the session was carrying, so re-apply the still-relevant ones (typically `[FIXED · N%]` status notes, per `references/diff-note-format.md`) against the new, narrower diff afterward — some anchors may need to move a few lines if the reload puts a finding's line outside the newly-shown hunk's context window.
 
 ## Round 2 — Open Hunk + read diff (parallel)
 

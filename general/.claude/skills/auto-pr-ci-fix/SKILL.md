@@ -92,6 +92,8 @@ Read those values once and refer back to them by name. Don't re-derive them.
 
 9. **Update the common-fixes log if this was novel.** Only when step 3 found no matching entry AND you resolved a real failure in step 5 (either category 5a with an actionable rotate step OR category 5c with a code fix). Skip when: the failure was a step 5b flake (no fix to record), step 3 already matched, or the fix was too repo-specific to help another project.
 
+   **Recurrence test for a `5c code` entry (apply before logging, not after):** the trigger must come from something OUTSIDE the commit you just fixed, a vendor behavior change, a shared SDK/dependency bump, a linter/tool rule, or a pattern repeated across many repos of the same kind (a broad `Repo hint`). Check `git log` on the failing file(s): if the regression was introduced by an earlier commit on THIS SAME PR/branch, still unmerged, and your fix corrects that commit's own code, this is ordinary WIP iteration, not a recurring failure class, skip logging it. A `Signature` built from an error string this codebase's own source emits (not a vendor/tool string) only ever matches if that exact bespoke code regresses again; that alone doesn't disqualify an entry when the underlying failure class recurs across many repos and the Fix generalizes past one repo's exact wording, but combined with "I just fixed the only place that string comes from, on my own branch, today," there is nothing left to recur that git history and the test suite don't already guard against.
+
    If `~/.claude/skills/auto-pr-ci-fix/references/common-fixes.md` does not exist, create it (including the parent `references/` dir if needed) with this exact header, then append the entry after the marker:
 
    ~~~markdown
@@ -112,6 +114,13 @@ Read those values once and refer back to them by name. Don't re-derive them.
    ```
 
    Match rules: `Signature` is a case-sensitive substring grep against the fetched failed logs; no regex, no fuzzy match. A signature that only fires in one repo must carry a `Repo hint` naming that repo; use `any` when portable. When two entries could match, prefer the newer (later) one.
+
+   Novel-entry rules for step 9:
+
+   - Skip flakes. Step 5b resolves without a fix; there is nothing to record.
+   - Skip repo-specific quirks that would never help another project (e.g. "the test data in this one JSON fixture was wrong"). Record when the pattern is reusable: an error string a vendor emits, a known-stale secret name, a lint rule that catches the same shape of mistake often.
+   - Recurrence test for a `5c code` entry: the trigger must come from something outside the commit you just fixed, a vendor behavior change, a shared SDK/dependency bump, a linter/tool rule, or a pattern repeated across many repos of the same kind. Check `git log` on the failing file(s): if the regression was introduced by an earlier commit on this same still-unmerged PR/branch and your fix corrects that commit's own code, this is ordinary WIP iteration, skip logging it. An error string this codebase's own source emits (not a vendor/tool string) is a weak signal on its own, but combined with "I just fixed the only place that string comes from, on my own branch, today," there is nothing left to recur that git history and tests don't already guard against.
+   - If the same category-5a rotation keeps recurring for the same vendor, that is signal to escalate to the operator (add a Notes line pointing at the ticket), not to add a fifth near-duplicate entry.
 
    ## Entries
 
