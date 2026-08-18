@@ -83,9 +83,9 @@ SKIP (not worth a rule) if any of:
 
 For each KEEP item (and every COVERED-BUT-WRONG item), pick a target (or targets, see below) WITHIN the chosen scope. Preference order:
 
-1. **Update the closest matching lazy file in place** — the right choice only when an existing file at the CORRECT SCOPE already has a fitting trigger. Do not reach for a shared-scope file just because it is the closest existing one; scope-correctness beats proximity. Append to the most relevant existing section, or add one short bullet to a "Common Mistakes" / "Gotchas" list.
+1. **Update the closest matching lazy file in place** — the right choice only when an existing file at the CORRECT SCOPE already has a fitting trigger. Do not reach for a shared-scope file just because it is the closest existing one; scope-correctness beats proximity. Append to the most relevant existing section, or add one short bullet to a "Common Mistakes" / "Gotchas" list. **Trigger match beats topical proximity.** A file named after a TOOL or FEATURE (`linear.md`, `golang-connectors.md`) is not a natural home for a cross-cutting JUDGMENT-CALL rule (when to stop implementing and escalate, when to reject a request, when a behavior needs a design decision) just because the example that surfaced it happened to involve that tool. Test it: would this rule's `**Read when**` fire regardless of which tool/connector is involved? If yes, and no existing file's trigger already names that judgment call, it fails test 1 even when one file sits right next to the topic — move to test 2 or 3.
 2. **Add a new top-level section to an existing lazy file** — when the item is a new sub-topic of an existing file at the correct scope (e.g. a new `### 404 on Revoke` section under `golang-connectors.md`'s idempotency block).
-3. **Create a brand-new lazy file** — when no existing lazy file AT THE CORRECT SCOPE is a natural home, or when the topic has its own trigger distinct from any current file. This is the default for a repo-scoped rule when the repo has no matching lazy file yet. Justification bar: the item has a clear `**Read when**` trigger that a fresh agent can recognize (a specific file path, a command, an error string, a user phrase — see `~/.claude/lazy/trigger-authoring.md`). Register the new file in the governing CLAUDE.md for its scope (repo-local `<repo>/CLAUDE.md` for repo-scoped rules, `~/work/CLAUDE.md` for workspace-scoped) under a `## Detail files (load on demand)` index with that trigger. **Do NOT gate this option on "5+ connectors will touch it" or "5+ rules land at once".** A single well-triggered rule that has no home already justifies a new lazy file — a wasted lazy load is fine, a rule buried in the wrong file (or wrong scope) is not.
+3. **Create a brand-new lazy file** — when no existing lazy file AT THE CORRECT SCOPE is a natural home, or when the topic has its own trigger distinct from any current file. This is the default for a repo-scoped rule when the repo has no matching lazy file yet. Justification bar: the item has a clear `**Read when**` trigger that a fresh agent can recognize (a specific file path, a command, an error string, a user phrase — see `~/.claude/lazy/trigger-authoring.md`). Register the new file in the governing CLAUDE.md for its scope (repo-local `<repo>/CLAUDE.md` for repo-scoped rules, `~/work/CLAUDE.md` for workspace-scoped) under a `## Detail files (load on demand)` index with that trigger. **Do NOT gate this option on "5+ connectors will touch it" or "5+ rules land at once".** A single well-triggered rule that has no home already justifies a new lazy file — a wasted lazy load is fine, a rule buried in the wrong file (or wrong scope) is not. **Two or more audited items sharing a theme that no existing file's trigger names** (e.g. several "stop and escalate instead of implementing" lessons landing in one audit) is a strong signal for a new file, even when a topically-adjacent file exists — see the trigger-match test in option 1.
 
 **CRITICAL: one gap can need MORE THAN ONE home. Do not add it to one file and call it done.** A rule often governs several work-surfaces that load through DIFFERENT triggers. If it lands in only the first file, an agent working a surface covered by a different trigger never sees it, and the same mistake recurs. For every KEEP / COVERED-BUT-WRONG item:
 
@@ -121,22 +121,21 @@ Style directives:
 
 For COVERED-BUT-WRONG edits, prefer rewriting the wrong line in place rather than appending a new contradicting rule. If the wrong rule has authority (e.g. a documented example shows the anti-pattern), fix the example too.
 
-### 5. Confirm before editing
+### 5. Apply by default, don't ask
 
-**CRITICAL: never ask when dispatched under an `AUTO-` tmux session.** If the current tmux session name starts with `AUTO-` (auto-new-day dispatch: `AUTO-inreview`, `AUTO-inprogress`, `AUTO-inreview-others`, `AUTO-ready-to-merge`), OR `$AUTO_NEW_DAY_DATE_DIR` is set, SKIP the `AskUserQuestion` entirely and auto-apply every KEEP + WRONG edit. These sessions run unattended; a question blocks the dispatch forever. Detect with `tmux display-message -p '#S' 2>/dev/null` and bail on the prompt when it matches `^AUTO-`. Record the auto-applied set in the Step 7 report instead of asking.
+**Default: apply every KEEP + WRONG edit without asking.** Invoking this skill IS the authorization. The operator asked for rules to be saved; making them confirm the save again is friction they already paid for. This holds in interactive sessions too, not just `AUTO-` dispatch. Report what landed in Step 7 and let them correct it there, editing a saved rule is cheap and they can see the diff.
 
-Otherwise (interactive session), show the operator one `AskUserQuestion` with the planned set. The question lists per item:
+Creating a new lazy file is NOT on its own a reason to ask. Pick the filename and trigger, state them in the report, move on.
 
-- `<short rule statement>`
-- Verdict: COVERED-AND-CORRECT / COVERED-BUT-WRONG / NOT-COVERED-KEEP / NOT-COVERED-SKIP
-- Target file:section (or "new file: ..."). List EVERY target when the item needs more than one home (primary + each cross-ref file), not just the first.
-- Verbatim text that will land (for KEEP + WRONG)
+**Ask only when the audit surfaced a genuine judgment call the operator owns**, narrow set:
 
-Two options:
-- **Apply all KEEP + WRONG edits.**
-- **Revise** (operator names which items to drop, retarget, or rewrite).
+- Two targets are defensible and the choice changes whether the rule fires at all (not merely which file it sits in), and the audit can't break the tie.
+- The lesson contradicts a rule the operator wrote deliberately, so applying it would overrule a decision rather than fill a gap.
+- An item might not be a rule at all (arguably a one-off), and saving it would add noise the operator has to live with every load.
 
-If creating a new lazy file is in the plan, surface the proposed filename + `**Read when**` trigger explicitly and ask for sign-off on those alone (separate question or inline).
+When one of those fires, ask ONE `AskUserQuestion` covering just the contested items and apply the rest regardless. Never block the whole batch on one uncertain entry.
+
+**Never ask when dispatched under an `AUTO-` tmux session** (`AUTO-inreview`, `AUTO-inprogress`, `AUTO-inreview-others`, `AUTO-ready-to-merge`), or when `$AUTO_NEW_DAY_DATE_DIR` is set. These run unattended and a question blocks the dispatch forever. Detect with `tmux display-message -p '#S' 2>/dev/null` and match `^AUTO-`. In that mode even the narrow judgment-call cases above get auto-applied; note them in the report as needing review.
 
 ### 6. Apply edits
 
@@ -144,7 +143,7 @@ If creating a new lazy file is in the plan, surface the proposed filename + `**R
 
 Invoke `claude-md-save` once per NOT-COVERED-KEEP item with the trimmed rule text from Step 4. This applies to bullets, new sub-sections, new worked-cases, and new lazy files alike — anything that ADDS content. `claude-md-save` owns symlink resolution, section-picking, `CLAUDE.local.md` fallback, lazy-index registration in the parent CLAUDE file, `.git/info/exclude` writes, and the work/global/project scope decision. Duplicating any of that here rots the moment `claude-md-save` gains a step.
 
-`claude-md-save` re-runs its own target decision; when its choice differs from the target the operator approved in Step 5, surface the divergence in the Step 7 report so the operator can decide whether to move the entry. For the common case (scope=work + a rule that grep-audits into a specific lazy file), both skills land on the same target.
+`claude-md-save` re-runs its own target decision; when its choice differs from the target the audit picked in Step 4, surface the divergence in the Step 7 report so the operator can decide whether to move the entry. For the common case (scope=work + a rule that grep-audits into a specific lazy file), both skills land on the same target.
 
 **Only exception** — COVERED-BUT-WRONG edits use surgical `Edit` calls, because `claude-md-save` is append-only and cannot rewrite an existing line in place. Anchor the `old_string` on the wrong text and swap it. Do not use this exception for anything else.
 
@@ -190,7 +189,7 @@ Audit result:
 - `baton-<connector>:` error prefix → COVERED-BUT-WRONG (`~/work/CLAUDE.md:344` had `<connector>-connector:`). Target: fix the line.
 - `status.Error(codes.InvalidArgument, ...)` on arg validation → NOT-COVERED-KEEP (portfolio; every action has arg validation). Target: append to the new `actions.md` section + Common Mistakes.
 
-5 edits, no new lazy file. Operator approves; skill applies; reports.
+5 edits, no new lazy file. Skill applies all five without asking, then reports.
 
 ## Sibling skills
 

@@ -16,6 +16,10 @@ Refactoring style follows Martin Fowler's book Refactoring.
 
 When refactoring existing code: write a passing test first, make the change, confirm the test still passes. Never refactor and fix a bug in the same commit.
 
+## Fix scope: check sibling call sites
+
+When a fix addresses one call site of a bug pattern, grep the same package/module for sibling call sites with the identical shape before calling the fix complete. The same defect often repeats across parallel methods that call the same underlying helper the same way.
+
 ## Readability is priority #1
 
 Apply clean-code practices only when they make the code easier to read, not as ends in themselves. Code is read and maintained by humans far more often than it is written; optimize every line for the next reader, not for the fewest keystrokes now.

@@ -1,6 +1,6 @@
 ---
 name: sync-dotfiles-full
-description: "Full dotfiles sync including all submodules. Pulls remote changes for the parent repo and every submodule, resolves conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), restows packages with new files, then pushes a machine-tagged commit. After the git sync, applies `~/.claude/my-settings.json` as a managed overlay onto `~/.claude/settings.json` (Step 7b) using the same script as the fast skill — added/changed entries flow in, removed entries are stripped when the live value still matches what was previously applied. Records the run timestamp in ~/.cache/sync-dotfiles/last-full-sync so the fast `sync-dotfiles` skill can tell when a monthly full sync is due. Trigger when the user runs /sync-dotfiles-full, asks for a full sync, or has not run a full sync in 30+ days. Metadata (id and os) is stored in ~/.machine_metadata — auto-created from hostname + /etc/os-release if missing."
+description: "Full dotfiles sync including all initialized submodules. Pulls remote changes for the parent repo and every submodule, clones any that are missing except those declared optional in `.gitmodules` (`update = none`), which stay uninitialized until the user opts in with `git submodule update --init --checkout <path>`. Resolves conflicts (keep both non-conflicting changes; keep the newest/incoming for logic conflicts), restows packages with new files, then pushes a machine-tagged commit. After the git sync, applies `~/.claude/my-settings.json` as a managed overlay onto `~/.claude/settings.json` (Step 7b) using the same script as the fast skill — added/changed entries flow in, removed entries are stripped when the live value still matches what was previously applied. Records the run timestamp in ~/.cache/sync-dotfiles/last-full-sync so the fast `sync-dotfiles` skill can tell when a monthly full sync is due. Trigger when the user runs /sync-dotfiles-full, asks for a full sync, or has not run a full sync in 30+ days. Metadata (id and os) is stored in ~/.machine_metadata — auto-created from hostname + /etc/os-release if missing."
 ---
 
 Full sync of `~/.dotfiles` and **all** its submodules: pull remote changes, resolve conflicts, restow packages with new files, push a machine-tagged commit, then record the timestamp so the fast `sync-dotfiles` skill knows when the next full sync is due.
@@ -31,6 +31,8 @@ export $(grep -v '^#' ~/.machine_metadata | xargs) 2>/dev/null && echo "id=$id o
 "$HOME/.claude/skills/sync-dotfiles/scripts/ensure-personal-alias.sh" 2>&1 || true
 echo "--- submodules ---"
 cd ~/.dotfiles && git submodule status
+echo "--- optional (opt-in, never auto-cloned) ---"
+"$HOME/.claude/skills/sync-dotfiles/scripts/optional-submodules.sh" 2>/dev/null || true
 ```
 
 If `$id` or `$os` is empty after this (e.g. unwritable HOME), stop and report.
@@ -40,11 +42,18 @@ Submodule prefix legend:
 - `+` = pointer stale (pointer needs updating after sync)
 - ` ` = in sync
 
+**Optional submodules are declared in `.gitmodules` with `submodule.<name>.update = none`.** They are opt-in: `git submodule update` and `git clone --recurse-submodules` both print `Skipping submodule '<path>'`, and even `--init` will not populate one (it takes `--init --checkout`). Treat the optional list from the call above as a filter over everything below:
+
+- **Uninitialized (`-`) and optional** → leave alone. Do not clone it in Step 2 and do not give it a Step 3 call. The user declined it on this machine; cloning it here would silently undo that.
+- **Already initialized and optional** → treat it exactly like a required submodule for the rest of the run. Once a machine has opted in, it gets synced like anything else.
+
 ---
 
 ## Step 2 — Initialize any uncloned submodules **[PARALLEL if multiple]**
 
 **Skip this step entirely if no submodules have a `-` prefix** — it's the common case and pure waste otherwise. The SSH alias check below is the single biggest time-sink in the skill (≥3s timeout) and only matters here.
+
+**Subtract the optional paths from the `-` set first.** If every `-` submodule is optional, this step is a no-change skip too: there is nothing to clone, and running the alias probe anyway just burns the ≥3s timeout for nothing.
 
 If any `-` was reported, run the SSH alias check:
 
@@ -52,7 +61,7 @@ If any `-` was reported, run the SSH alias check:
 ssh -T git@personal -o ConnectTimeout=3 2>&1 | grep -q "successfully authenticated" && echo "ssh=ok" || echo "ssh=fallback"
 ```
 
-For each submodule with a `-` prefix, initialize it (all at once in parallel):
+For each **non-optional** submodule with a `-` prefix, initialize it (all at once in parallel):
 
 ```bash
 # personal alias works:
@@ -67,7 +76,7 @@ git -c "url.git@github.com:aldevv/<repo>.git.insteadOf=git@personal:aldevv/<repo
 
 ## Step 3 — Sync all submodules + parent in parallel **[PARALLEL]**
 
-Run **one bash call per repo** (each submodule **and** the parent) in a single message. Each call is a self-contained pipeline that:
+Run **one bash call per repo** (each **initialized** submodule **and** the parent) in a single message. An optional submodule that is still uninitialized has no working tree to sync, so it gets no call. Each call is a self-contained pipeline that:
 
 1. ensures we're on a branch,
 2. checks for local changes,
@@ -139,6 +148,8 @@ After all parallel calls finish, stage updated submodule pointers in the parent 
 ```bash
 cd ~/.dotfiles && git add <path1> <path2> <path3>
 ```
+
+List only the submodules that actually got a Step 3 call. Never pass the path of an uninitialized optional submodule: its working tree is an empty directory, and staging it can record a bogus pointer change against a submodule this machine never checked out.
 
 ---
 

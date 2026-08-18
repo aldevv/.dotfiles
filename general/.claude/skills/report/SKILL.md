@@ -117,6 +117,10 @@ The three note categories are additive: orientation + per-reviewer + complex-flo
 
 If detection picks up a context (e.g. dispatch JSON exists) but the payload turns out to be empty (`feedback: []`) or missing required fields, fall back to the analysis path and surface to the user that the payload was malformed.
 
+**Chat-visible table, in addition to the Hunk notes.** The Hunk notes above live inside the TUI; the operator's chat transcript should show the same attribution without opening Hunk. Right after applying the batch, print the shared **Addressed-feedback table** (`references/format.md` → "Addressed-feedback table") to chat: one row per `pr_feedback[]` entry, same set as the Hunk notes (don't add or drop rows between the two). This is what the operator sees most — lead with it, before the Closing readout.
+
+**Skip this when another skill sub-invoked report** (it owns its own closing block and will print this same table itself, per `format.md` Variant B item 2 — printing it here too would duplicate it). Print it yourself only on a manual `/report` invocation (the same condition that gates the Closing readout below).
+
 ### Fast path: pre-supplied comments
 
 If the caller hands you a ready-to-apply comment batch (e.g. `pr-code-review` invokes `Skill(report)` with the JSON inline, or you're handed `comments_json=<path>` in `$ARGUMENTS`), the workflow collapses to TWO rounds:
@@ -167,10 +171,24 @@ Resolve `<RANGE>` from `$ARGUMENTS`:
 | `HEAD~1`, `origin/master..HEAD`, etc. | pass through verbatim |
 | a range naming a LOCAL base branch (`main..feature`, `main...HEAD`) | rewrite the local base to its remote-tracking ref (`origin/main...HEAD`) after fetching — never diff against a local base that may be stale |
 | `--pr N` / `pr N` / bare numeric `N` | `origin/<base>...<head>` from `gh pr view` |
+| updating an existing, already-pushed PR/MR with new local changes (fixing review comments, applying a review's own findings) | `origin/<branch>` — the PR's OWN remote-tracking ref, single target (see "Re-reviewing your own fix pass" below) |
 | (working-tree review, no commits) | no range; use `hunk diff` / `git diff` with no args |
 | (staged review) | `hunk diff --staged` / `git diff --staged` |
 
 Two-dot (`origin/<branch>..HEAD`) vs three-dot (`origin/<base>...HEAD`) is the caller's choice, not something to override: two-dot shows only the commits on HEAD past the pushed branch head (a minimal delta of new work); three-dot shows the whole PR the way GitHub/GitLab render it. When a caller passes an explicit range, honor it verbatim after the local→remote rewrite above. Note the tradeoff only if asked: in a two-dot delta, a line a new commit replaced shows as `-` even where the web PR shows it as `+`.
+
+### Re-reviewing your own fix pass on an existing PR
+
+When the task is "fix what this PR's reviewers flagged" or "run a review, then fix the findings" on a PR that's already open and already has a remote head pushed, the diff you open Hunk on for that fix pass is local vs. the PR's OWN branch, not local vs. the repo's default branch:
+
+```bash
+git fetch origin <branch> --quiet
+tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff origin/<branch>"
+```
+
+Single target (`hunk diff origin/<branch>`, not a two-dot or three-dot range) is deliberate: it diffs the working tree against that ref, so it picks up uncommitted fixes too, not just committed-and-unpushed ones. If you commit before opening Hunk, `origin/<branch>...HEAD` also works, but don't require a commit first — a reviewer asking "did you actually fix it" wants to see the fix the moment it lands on disk.
+
+Using `origin/<default>...HEAD` (the full-PR range) here re-shows the entire PR, including everything already reviewed and merged in earlier rounds — exactly the noise the operator is trying to avoid when they're iterating on a fix, not reviewing from scratch. If you already have a Hunk session open on the full-PR range from an earlier review pass in the same session, `hunk session reload <session-id> -- diff origin/<branch>` re-scopes it instead of opening a second pane. Reloading clears any live comments the session was carrying, so re-apply the still-relevant ones (typically `[FIXED · N%]` status notes, per `references/diff-note-format.md`) against the new, narrower diff afterward — some anchors may need to move a few lines if the reload puts a finding's line outside the newly-shown hunk's context window.
 
 ## Round 2 — Open Hunk + read diff (parallel)
 
@@ -299,7 +317,7 @@ Tell the user that no targeted notes were warranted and a top-of-diff `Feature E
 
 ## Closing readout — REQUIRED on manual `/report` runs
 
-When the user invoked `/report` themselves (they typed it, or asked to "open hunk" / "review with hunk"), end your reply with a short readout, ALWAYS, in every path (analysis, PR-feedback, nothing-to-comment). Not needed when another skill sub-invoked report programmatically (fast path / pre-supplied comments) — those callers own their own output.
+When the user invoked `/report` themselves (they typed it, or asked to "open hunk" / "review with hunk"), end your reply with a short readout, ALWAYS, in every path (analysis, PR-feedback, nothing-to-comment). Not needed when another skill sub-invoked report programmatically (fast path / pre-supplied comments) — those callers own their own output. On a manual PR-feedback run, the readout comes AFTER the Addressed-feedback table (above) — the table is what the operator scans first.
 
 The readout is two labeled lines at minimum, after the notes summary:
 

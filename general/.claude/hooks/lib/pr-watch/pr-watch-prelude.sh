@@ -332,6 +332,31 @@ prelude_trust_worktree() {
   )
 }
 
+# Spawn a tmux window running CMD in SESSION, recreating SESSION if it was closed.
+# tmux -t does prefix/fnmatch matching, so a gone session silently resolves to a
+# prefix-sibling (AUTO-inreview -> AUTO-inreview-others); we match the session list
+# exactly and use the '=' exact target. Args: session window cwd cmd label.
+prelude_spawn_tmux_window() {
+  local session=$1 window=$2 cwd=$3 cmd=$4 label=${5:-}
+  local pfx=""
+  [ -n "$label" ] && pfx="[$label] "
+
+  if tmux list-sessions -F '#S' 2>/dev/null | grep -Fxq "$session"; then
+    if tmux new-window -t "=${session}:" -n "$window" -c "$cwd" "$cmd"; then
+      return 0
+    fi
+    echo "${pfx}tmux new-window failed (rc=$?)"
+    return 1
+  fi
+
+  echo "${pfx}session '${session}' was closed — recreating it"
+  if tmux new-session -d -s "$session" -n "$window" -c "$cwd" "$cmd"; then
+    return 0
+  fi
+  echo "${pfx}tmux new-session failed (rc=$?)"
+  return 1
+}
+
 # Check the PR/MR is OPEN (not merged or closed). Requires PLATFORM set.
 # For gitlab, also requires HOST, PROJ_PATH_ENC, MR_IID.
 prelude_pr_is_open() {

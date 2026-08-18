@@ -38,6 +38,10 @@ A helper is gated when output only fires if a condition is explicitly set: a `DE
 
 **Generic state machine or middleware chain:** if a request or event passes through several handlers and exits wrong, add a small `debugChain(label string, state any)` helper (gated by `DEBUG=1`) that prints label plus a JSON or pretty-printed snapshot of state. Call it at the entry and exit of each handler. You'll see exactly which hop corrupted the value without sprinkling ad-hoc prints everywhere.
 
+## Don't trust a "clean" git status after a surprise build failure
+
+If a build or test fails right after touching a working tree, and `git status`/`git diff` claim nothing changed, that "clean" result can be stale: git trusted cached stat info instead of re-hashing content (racy git). Force a re-hash before believing it: `find <dir> -type f -exec touch {} +`, then re-run `git status --short`.
+
 ## The checklist
 
 - Every non-trivial internal type gets a `String()` / `__repr__` / `Display` method or a free `FooString(x Foo) string` function. Nil-safe. Called from tests and print statements alike.

@@ -29,13 +29,53 @@ notes that roll up into this block are defined in the sibling `diff-note-format.
 
 ---
 
+## Addressed-feedback table (shared, both variants)
+
+Whenever a closing block reports on comments that existed BEFORE this run, a human reviewer's PR
+comment, a bot's suggestion, or your own prior automated-review pass, and this run's diff addresses
+(or fails to address) them, render them with this exact table. One home for the shape; Variant A
+item 3 and Variant B item 2 both point here instead of keeping their own copy.
+
+Columns, in order: **`Addressed | Reviewer | Comment | Fix | Verified | e2e`**
+
+- **Addressed** — `✅ today` when a commit landed IN THIS RUN resolves the comment (signals there's
+  a fresh commit the operator needs to push), plain `✅` when it was already resolved before this run
+  (an earlier commit already pushed, or the item never needed code — a reply/explanation is enough),
+  or `❌` when still open. This column exists so the operator can scan straight down it and know
+  whether anything here is waiting on a push. Never conflate "addressed" with "posted a GitHub
+  reply" — those are independent; `✅`/`✅ today` tracks the underlying fix, not whether a reply went
+  out.
+- **Reviewer** — the commenter's name or login (`FeliLucero1`, `github-actions[bot]`, `luisina-santos`),
+  or `you` for a comment you (the automated reviewer) left on an earlier pass. Never blank; the table
+  exists to attribute each fix to whoever asked for it.
+- **Comment** — the comment, quoted VERBATIM. No paraphrase. Truncate with `…` only when the raw
+  comment is long enough to break the table's readability; the full text still lives in the Hunk note
+  (`diff-note-format.md`) or the PR thread itself, so nothing is lost by shortening it here.
+- **Fix** — one clause, led by a status glyph: `✅ <what changed>` (fixed), `🟡 <what changed / what's
+  left>` (partial), `❌ not fixed — <why>` (open), or `💬 <gist of the reply>` (answered, no code
+  change). A `❌`/`🟡` row (or a `💬` you don't accept as resolving it) MUST also appear as a current
+  finding in the findings table (Variant A item 6) — an unresolved comment is a live finding, not
+  just history.
+- **Verified** — `<confidence>% ✓N`, the same convention as every other finding
+  (`~/.dotfiles/general/.claude/rules/review.md`): N = independent checks that confirmed the fix is
+  correct (a second read, build/lint, a second agent's pass, a live/mock run). `✓0` is an honest
+  "only I checked this," not a failure — never inflate N to avoid writing it.
+- **e2e** — `live` / `mock` / `unit-test` / `none`: the highest tier actually run for THIS fix
+  specifically, not for the run as a whole. Write `none` when nothing beyond a code read or a static
+  check backed this particular fix, even if some other part of the change was tested live.
+
+One row per comment being tracked; never merge two into one row, and never drop a row because the
+fix looks trivial. The table is the attribution record, not a filtered highlight reel.
+
+---
+
 ## Variant A — Review verdict (`## Review verdict`)
 
 In order:
 1. **`Review type:`** `first-review` | `re-review` — the FIRST line, on its own, with the bold label so it's unmissable. The operator must never have to guess whether the whole diff or just a delta was examined. On a re-review, append ` — reviewed only the <N> new commits since my last pass (<range>); did NOT re-review the rest of the PR`, AND you MUST also emit the `Prior comments` block (item 3). A re-review that doesn't announce itself as one and account for the prior comments is malformed.
 2. `Recommendation: APPROVE | APPROVE WITH NOTES | COMMENT | REQUEST CHANGES` + ` — <one plain clause>`. A decision, not a hedge. These name the GitHub review action YOU (the reviewer) would submit, not an instruction to the author: `COMMENT` = leave notes without approving or blocking (neutral); `REQUEST CHANGES` = block until fixed. Pick the button you'd click. On a re-review the clause must reference the prior comments (e.g. `APPROVE — all 2 prior comments resolved, nothing new`).
    - **Re-review decision rule:** once every prior comment is addressed (`✅`, or a `💬` reply you accept), the default recommendation is **APPROVE** — the reviewer got what they asked for. Only downgrade to `COMMENT`/`REQUEST CHANGES` if something in the NEW commits since your last pass is itself a genuine BLOCKER/MAJOR must-fix. Do NOT hold on: a prior comment that's now resolved, a pre-existing issue you already knew about last pass and didn't block on, or a low-confidence/needs-live-verification concern (raise those as `COMMENT` notes, don't block). If there are no new commits at all and the comments are addressed, APPROVE.
-3. **`Prior comments (<N>):`** — RE-REVIEW ONLY and REQUIRED whenever you left comments on an earlier pass. (First-review, or a re-review where you left none: write `Prior comments: none left last pass` and skip the table.) Lead with a tally (`2 addressed, 0 open`), then a table with EXACT columns `Prior comment | Status | How addressed`, one row per comment you (the reviewer) left previously. `Status` ∈ `✅ addressed` / `🟡 partial` / `❌ not addressed` / `💬 answered-only` (author replied, no code change). `How addressed` = the commit/line that resolved it, "author replied: <gist>" when it's discussion-only, or "still open" — one short clause each. This block is the whole point of a re-review; never fold it into prose, and never omit it because the findings table looks complete. Any prior comment still unresolved (`❌`/`🟡`, or a `💬` you don't accept) MUST also appear as a current finding in item 6 — an unfixed comment you raised is a live finding, not history.
+3. **`Prior comments (<N>):`** — RE-REVIEW ONLY and REQUIRED whenever you left comments on an earlier pass, OR other reviewers left comments on the PR that a re-review can check for resolution (both count — this isn't limited to your own prior findings). (First-review, or a re-review where none exist: write `Prior comments: none left last pass` and skip the table.) Lead with a tally (`2 addressed, 0 open`), then the shared **Addressed-feedback table** (above) — one row per comment, `Reviewer` naming who left it (`you` for your own prior pass, the actual login for anyone else). This block is the whole point of a re-review; never fold it into prose, and never omit it because the findings table looks complete. Any row whose `Fix` reads `❌`/`🟡` (or a `💬` you don't accept) MUST also appear as a current finding in item 6 — an unfixed comment is a live finding, not history.
 4. `Verified how: <one clause>` — what you actually ran (build/test/repro/doc-fetch) vs only read. Be honest; never imply e2e when you only read.
 5. `Comments: <...>` — per the wrapper's posting model (e.g. `<D> drafted (in <path>), 0 posted` when the skill never posts).
 6. `Findings: <nB> BLOCKER, <nMaj> MAJOR, <nMin> MINOR, …` (tally, or `none`), then a table with EXACT columns `Sev | Conf | ✓N | File:line | Finding`. `Conf` and `✓N` are BOTH required on every row. The `Finding` cell is the crisp one-phrase defect headline from `diff-note-format.md` §2 (`GrantableTo contains a non-principal resource type`), NOT a sentence that re-explains it. Under the table, name what the `✓N` checks were per finding, and the "why not higher" line for any sub-80% multi-validated finding (see `diff-note-format.md` §2-3).
@@ -56,10 +96,22 @@ summary, then the decision — operator preference):
    (e.g. `- no code changes this run (resumed from prior manifest)`). NEVER emit the `## Changes
    made` header with nothing under it — it is a section with its own bullets, not the block title.
    Every run has at least one bullet here (a real change, or the no-change bullet).
-2. `## Summary` — 2-4 bullets: what was done and WHY, merged into one (bullets, not a prose
+2. `## Reviewer feedback addressed` — REQUIRED whenever this run was given a `pr_feedback` payload
+   (or equivalent: a dispatch JSON `feedback[]` array, an explicit PR-comment fix request) with one
+   or more entries, in EVERY invocation mode (manual and dispatch alike) — not gated on
+   `$AUTO_NEW_DAY_DATE_DIR`. Omit the section entirely when there was no reviewer feedback to
+   address this run. This is the section operators scan first: the shared **Addressed-feedback
+   table** (above), one row per comment this run addressed. Print it here even if `/report` already
+   showed the same table earlier in the same response (right after opening Hunk) — the closing block
+   must be self-contained (universal rule 3), so don't make the operator scroll up to find it.
+3. `## Summary` — 2-4 bullets: what was done and WHY, merged into one (bullets, not a prose
    paragraph). This is the only "why" in the block; there is no separate Why line. Plain and
    skimmable; the full write-up stays in the context/report file (universal rule 2).
-3. `## Ready to push` — lead with the **ready-to-push confidence** `<N>%` (how ready the change is
+4. `## Ready to push` — **zero commits this run → `N/A — no code changes this run`, no `<N>%` and no
+   Yes/No glyph.** "Ready to push" is a question about a diff; with nothing to push, Yes and No are
+   both category errors, not just the wrong answer. Reserve the Yes/No verdict below for runs that
+   landed ≥1 commit.
+   Otherwise, lead with the **ready-to-push confidence** `<N>%` (how ready the change is
    for a PR: correctness + e2e + docs/scope; EXCLUDES CI-pipeline risk like lint-version drift,
    metadata-regen, and `sync-test`/integration, which routinely fail in the PR and get corrected
    there — never dock the number for them). Then the push/hold call, and, when a PR was opened this
@@ -80,14 +132,14 @@ summary, then the decision — operator preference):
      number and the outcome.
    - `fix-bug`-backed runs append a `Confidence: <N>%` line here (composite / per-symptom; lead with
      it if the skill's own contract says so).
-4. `## Live tenant tested` — one line: `✅ Yes` (e2e tier `live`) OR `❌ No — <tier / reason>` (`mock` /
+5. `## Live tenant tested` — one line: `✅ Yes` (e2e tier `live`) OR `❌ No — <tier / reason>` (`mock` /
    `unit-test` / `blocked`; `❌ No — no code changes this run` when nothing changed). Keep the required
    `e2e: <tier> — <observation>` line if the skill mandates one.
-5. `## Lazy-gaps` — one line, ONLY when the run invoked the `lazy-gaps` skill (the own-work dispatch
+6. `## Lazy-gaps` — one line, ONLY when the run invoked the `lazy-gaps` skill (the own-work dispatch
    flows do). State whether gaps were found and addressed: `N rule(s) added (<file>, <file>); M
    covered, K skipped`, or `none — all findings already covered`, or `not run — <reason>`. Omit this
    section entirely for skills that never run lazy-gaps (e.g. the standalone report skill).
-6. `### Recommended actions` — universal rule 4. When `Ready to push: ⛔ No`, the FIRST bullet is the
+7. `### Recommended actions` — universal rule 4. When `Ready to push: ⛔ No`, the FIRST bullet is the
    exact decision/step the operator must take to unblock (e.g. `you: decide X vs Y — options in
    <context path>`). When `✅ Yes`, the first bullet is the push step (`you: push \`<sha>\` — nothing
    else owed`).

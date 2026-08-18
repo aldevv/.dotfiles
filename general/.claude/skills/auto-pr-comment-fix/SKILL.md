@@ -46,9 +46,9 @@ The exact policy text is in the context block — defer to it if it disagrees wi
 
 1. **Confirm the worktree.** `pwd` should match `Worktree`. `git rev-parse --abbrev-ref HEAD` should print `Fix branch`. If either disagrees, STOP and tell the user.
 
-2. **Read the review body** (inline in the context block, also saved to `Review body file`). Identify each distinct finding. Read the cited code locations in the worktree before doing anything else.
+2. **Read the review body** (inline in the context block, also saved to `Review body file`). Identify each distinct finding. **Drop any finding whose own text explicitly labels itself `non-blocking`, `nit`, or `nit:`** (e.g. "Low confidence, non-blocking.") — these never reach investigation, `AskUserQuestion`, or a fix. Note each dropped finding in the closing summary as skipped (self-declared non-blocking/nit), not as a phantom. Read the cited code locations for the remaining findings in the worktree before doing anything else.
 
-3. **VERIFY EVERY FINDING BEFORE TOUCHING CODE.** The investigation is mandatory, not optional, even for findings that "look obvious". Skipping it is the failure mode this skill exists to prevent. Treat each finding as a *claim*, not a fact. Run investigations in parallel across findings (one tool message with multiple calls) whenever they're independent.
+3. **VERIFY EVERY SURVIVING FINDING BEFORE TOUCHING CODE.** The investigation is mandatory, not optional, even for findings that "look obvious". Skipping it is the failure mode this skill exists to prevent. Treat each finding as a *claim*, not a fact. Run investigations in parallel across findings (one tool message with multiple calls) whenever they're independent.
 
    For each finding, pick the right investigation mode based on scope:
 
@@ -70,6 +70,7 @@ The exact policy text is in the context block — defer to it if it disagrees wi
 6. **Commit on `Fix branch`.** Separate small commits per finding is fine, or one cohesive commit. Stage only files you actually changed. NEVER `git add -A` or `git add .`.
 
 7. **Ring the tmux bell** (`printf '\a'`) and print a short summary:
+   - which findings were SKIPPED as self-declared non-blocking/nit (never investigated)
    - which findings you investigated and how (which used `/investigate`, which used 3 / 6 / 12 `Explore` agents and why)
    - which findings were DISQUALIFIED as phantoms (with the evidence that refuted them)
    - which SURVIVING findings were CLEAR vs. AMBIGUOUS
@@ -104,10 +105,12 @@ After a successful push, leave the local PR branch up to date and correctly trac
 ## Hard rules
 
 - NEVER fix a finding you haven't investigated. Step 3 is mandatory.
+- NEVER investigate, ask about, or apply a finding whose own text is explicitly labeled `non-blocking` or `nit`/`nit:` — drop it at step 2 and list it as skipped in the closing summary.
 - Treat every finding as a claim, not a fact. If the investigation refutes it, say so explicitly in the summary instead of "fixing" a phantom.
 - Push only when option (a) was selected in step 8, or when the operator separately tells you to push. The operator saying "push" IS approval — do not re-confirm the push. Never auto-push as a default wrap-up. See the **Pushing** section for guard-override and post-push branch-sync handling.
 - One pass only. After the merge prompt, end your turn.
 - Never switch branches, never force-push, never rebase, never amend, never `git add -A`.
+- Never approve the PR/MR and never change reviewers, labels, or assignees: this skill only runs on the operator's own PR/MR (the `pr-watch` author guard exits "not my PR" otherwise), so approval is both impossible and pointless.
 - The only merge is the single `git merge --no-edit <Fix branch>` invocation in step 8, only if the user said yes.
 - Never skip hooks (`--no-verify`) or bypass signing. Setting a guard's own named env-var opt-out (e.g. `AUTO_NEW_DAY_APPROVED=1`) after the operator approved the push is not skipping the hook — the hook still runs and accepts it.
 - Never touch `vendor/` or generated files unless that IS the fix.

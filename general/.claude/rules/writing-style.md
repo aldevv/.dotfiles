@@ -14,3 +14,7 @@ These rules apply to text I produce, never to text I read, quote, or review. Nev
 **Default to brief, casual, plain.** Short phrase beats a paragraph when both carry the same meaning. Simple words over fancy ones. Match the register of a teammate sending a Slack message, not a press release. If a sentence can be cut to a clause without losing information, cut it.
 
 **README.md is for humans.** It's the project intro for a new reader (engineer, recruiter, drive-by browser), not Claude-facing memory, runbook, or agent-routing material. Lead with what the project is and how to start using it; keep the tone casual and short.
+
+## CRITICAL: Humanize drafted comments and replies
+
+Before showing or posting any drafted comment/reply on an external system (a PR, an MR, a GitHub/GitLab issue thread, a Linear/Jira ticket comment, a Slack message), run it through the `humanize` skill. `add-comment` already wires this in at its own drafting step; anywhere else a comment or reply is drafted by hand, invoke `humanize` explicitly before it's shown or posted. Does not apply to full chat replies, docs, or long-form writing, those follow the rules above, not humanize's slack-voice compression.
