@@ -16,7 +16,7 @@ increment from there.
 - done. (×32)
 - good catch, will fix. (×1)
 - fixed. (×6)
-- done (×2)
+- done (×5)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
@@ -29,6 +29,7 @@ increment from there.
 - I cleaned those up (×1)
 - yep, is customer held credential, so i chose `APP_REGISTRATION`. (×1)
 - added a comment (×1)
+- done, moved the token calc inside `ListGroupMembersPage`. (×1)
 
 ### Replies — pushback
 
@@ -40,6 +41,8 @@ increment from there.
 - new success_condition catches it. so it works as is (×1)
 - not a blocker, goja has no web crypto. (×1)
 - keeping math.random. goja has no web crypto. (×1)
+- i think is ok to keep it, rapid7 caps insightaccount at 50 calls/min account-wide, and the response headers only warn us after we've already queued more requests. https://docs.rapid7.com/insight/api-overview/#rate-limiting (×1)
+- looked closer at this and you're right, deleting it. the sdk's retry loop already retries `codes.Unavailable` with unlimited attempts by default and backs off using the real `*v2.RateLimitDescription` (reset time, remaining count) instead of guessing, so the client-side pacer wasn't buying us anything for correctness. removed `uhttp.WithRateLimiter` and the `options`/`WithRateLimit` plumbing around it. (×1)
 
 ### New line comments — feedback
 

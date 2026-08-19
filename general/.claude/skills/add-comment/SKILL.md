@@ -27,6 +27,14 @@ Three flavors. Pick exactly one:
 
 Hard rule: if the draft references a file, function, variable, or specific code behaviour, it MUST be a line comment, not a top-level comment. Top-level is the fallback only when the comment is genuinely MR-wide.
 
+## Direct-dictation shortcut: `post <exact text>`
+
+When the operator's instruction already names the literal reply body (`post "done"`, `just say "done"`, `reply with "lgtm"`), that dictation is both the draft and the approval at once. Skip drafting, `humanize`, fact-check, and the qa pane, post the exact text (unmodified, no elaboration, no added context) to the target thread/line right away.
+
+Applies ONLY when the operator names the exact string to post. Open-ended asks ("reply confirming we fixed it", "answer them") still go through the full draft-and-pane workflow, they haven't dictated the words.
+
+Still record the posted body via `record_example.py` (step 7) and still resolve the thread per the caller's own rule. Only the draft/pane steps are skipped.
+
 ## Tool
 
 Pick from the URL: `github.com` → `gh`, `gitlab.*` → `glab`. PR `#N` is gh; MR `!N` or any gitlab.* URL is glab. Ask if unclear.

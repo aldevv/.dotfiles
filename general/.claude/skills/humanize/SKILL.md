@@ -32,6 +32,20 @@ Read like a tired engineer typing a reply, not a memo.
 - **Backticks for code identifiers**, when the message references one: function/type/package/method/variable names, error codes, gRPC codes, HTTP statuses, JSON fields, config keys, CLI flags, file paths. Don't backtick a generic noun phrase ("the auth flow").
 - **Lowercase, for casual contexts** (PR/MR comments, chat replies). Keep normal sentence case for a status update, a ticket comment addressed to a wider audience, or anywhere the surrounding thread is already capitalized, match the room.
 
+## Confirming a fix that's already applied
+
+When the point of the reply is "yes, that's handled" (a fix that landed, a guard already in place, a suggestion already followed), default to a single word: "done", "fixed", "already there". The reviewer sees the code at the anchor line, restating what it does is the diff's job, not the reply's.
+
+Bad (restates what the anchor already shows):
+
+> already guarded here, breaks the loop once `i >= len(tokens)`.
+
+Good:
+
+> done.
+
+Only add detail past "done" when the reviewer genuinely can't see it from the anchor: the fix landed in a different file, there's a follow-up still owed, or it isn't actually done and you're explaining why not.
+
 ## Bad vs good
 
 Robot:

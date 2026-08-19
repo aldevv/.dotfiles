@@ -25,6 +25,7 @@ Round 1 already loads it (`cat "$(hunk skill path)"`). Treat that read as mandat
 ## Files
 
 - `scripts/hunk-pre-pr.sh` — the PreToolUse hook this skill optionally installs. Read it directly when you need to know what runs: `cat "$HOME/.claude/skills/report/scripts/hunk-pre-pr.sh"`.
+- `scripts/report-path.sh` — resolves where the written report goes (status segment in `AUTO-` sessions, `report-<N>.md` numbering, folder migration between stages). Shared with `find-bug` / `find-bug-work`. See "Written report on disk".
 - `references/review-guidance.md` — comment scope (what to flag, what to skip) plus tone rules and a worked example. Read at Round 3 before deciding what to apply.
 - `references/examples.md` — curated good / bad concrete Hunk notes the operator has explicitly labeled in prior sessions. Read at Round 3 alongside `review-guidance.md` so you can pattern-match on shape before applying. Also the file to update when the operator labels a note good or bad in the current session — see "Operator feedback → examples.md" below.
 - `references/hook-install.md` — the prompt + commands + settings.json target shape for Round 4. Read at Round 4 only when the state file is missing.
@@ -170,10 +171,24 @@ Resolve `<RANGE>` from `$ARGUMENTS`:
 | `HEAD~1`, `origin/master..HEAD`, etc. | pass through verbatim |
 | a range naming a LOCAL base branch (`main..feature`, `main...HEAD`) | rewrite the local base to its remote-tracking ref (`origin/main...HEAD`) after fetching — never diff against a local base that may be stale |
 | `--pr N` / `pr N` / bare numeric `N` | `origin/<base>...<head>` from `gh pr view` |
+| updating an existing, already-pushed PR/MR with new local changes (fixing review comments, applying a review's own findings) | `origin/<branch>` — the PR's OWN remote-tracking ref, single target (see "Re-reviewing your own fix pass" below) |
 | (working-tree review, no commits) | no range; use `hunk diff` / `git diff` with no args |
 | (staged review) | `hunk diff --staged` / `git diff --staged` |
 
 Two-dot (`origin/<branch>..HEAD`) vs three-dot (`origin/<base>...HEAD`) is the caller's choice, not something to override: two-dot shows only the commits on HEAD past the pushed branch head (a minimal delta of new work); three-dot shows the whole PR the way GitHub/GitLab render it. When a caller passes an explicit range, honor it verbatim after the local→remote rewrite above. Note the tradeoff only if asked: in a two-dot delta, a line a new commit replaced shows as `-` even where the web PR shows it as `+`.
+
+### Re-reviewing your own fix pass on an existing PR
+
+When the task is "fix what this PR's reviewers flagged" or "run a review, then fix the findings" on a PR that's already open and already has a remote head pushed, the diff you open Hunk on for that fix pass is local vs. the PR's OWN branch, not local vs. the repo's default branch:
+
+```bash
+git fetch origin <branch> --quiet
+tmux split-window -h -l 70% -t "$TMUX_PANE" "cd <REPO_ROOT> && hunk diff origin/<branch>"
+```
+
+Single target (`hunk diff origin/<branch>`, not a two-dot or three-dot range) is deliberate: it diffs the working tree against that ref, so it picks up uncommitted fixes too, not just committed-and-unpushed ones. If you commit before opening Hunk, `origin/<branch>...HEAD` also works, but don't require a commit first — a reviewer asking "did you actually fix it" wants to see the fix the moment it lands on disk.
+
+Using `origin/<default>...HEAD` (the full-PR range) here re-shows the entire PR, including everything already reviewed and merged in earlier rounds — exactly the noise the operator is trying to avoid when they're iterating on a fix, not reviewing from scratch. If you already have a Hunk session open on the full-PR range from an earlier review pass in the same session, `hunk session reload <session-id> -- diff origin/<branch>` re-scopes it instead of opening a second pane. Reloading clears any live comments the session was carrying, so re-apply the still-relevant ones (typically `[FIXED · N%]` status notes, per `references/diff-note-format.md`) against the new, narrower diff afterward — some anchors may need to move a few lines if the reload puts a finding's line outside the newly-shown hunk's context window.
 
 ## Round 2 — Open Hunk + read diff (parallel)
 
@@ -310,6 +325,45 @@ The readout is two labeled lines at minimum, after the notes summary:
 - **Ready to push:** an honest yes/no assessment with the reason. Say **yes** ONLY if the change was verified end-to-end (ran it and observed the new behavior) per the git rules. Otherwise say **no** and name what's unverified and how to verify it (e.g. `no — Helm values pin can't render locally; CV deploy showing the new tag healthy is the proof`). Never claim "ready to push" on static checks alone.
 
 Optional third line when it helps: **Blocker:** the one thing standing between "no" and "yes" on ready-to-push. Keep the whole readout to 2-4 lines; it's a stand-up update, not a report.
+
+## Written report on disk — REQUIRED in every path
+
+Hunk notes live in the TUI and the closing readout lives in chat, so once the pane closes there's nothing left to point at. Every run also writes a markdown report to disk. This matters most in an `AUTO-` dispatch session, where no human is reading chat at all and the file is the only output that survives.
+
+Resolve the path with the shared script rather than composing it by hand — `find-bug` and `find-bug-work` use the same one, so all three agree on layout:
+
+```bash
+REPORT=$("$HOME/.claude/skills/report/scripts/report-path.sh" "<TICKET>-<slug>")
+```
+
+It creates the folder and prints the file to write. What it decides for you:
+
+- **Numbering.** `report-1.md`, `report-2.md`, … always the next unused number, so a second run on the same ticket the same day never overwrites the first. Never write a bare `report.md`.
+- **Status segment.** In an `AUTO-inprogress` / `AUTO-inreview` / `AUTO-inreview-others` / `AUTO-ready-to-merge` session the path gains that status as a segment: `$HOME/reports/<date>/inreview/<TICKET>-<slug>/report-2.md`. Operator sessions get no segment: `$HOME/reports/<date>/<TICKET>-<slug>/report-1.md`.
+- **Migration.** A ticket keeps one folder per day. When the stage advances, the script moves the existing folder into the new status and continues the numbering there, so the tree reads as a board and a ticket's history stays together.
+
+Derive `<TICKET>-<slug>` from the branch (`cxh-1980-fix-grant` → `CXH-1980-fix-grant`) or the PR title. With no ticket, use `no-ticket-<slug>`.
+
+Contents mirror what you already produced, so this costs one Write and no extra analysis:
+
+```markdown
+# <TICKET> — <one-line headline>
+<RANGE> · <branch> · <PR link if any> · <UTC timestamp>
+
+## What changed
+## Notes left in Hunk
+- `file:line` — <summary>
+## Recommended action
+## Ready to push
+```
+
+`$HOME/reports/` sits outside every repo deliberately: these are session artifacts and must never be committed. Never write one into a repo working tree.
+
+### Report-only mode — no Hunk pane
+
+This section stands alone. A caller that wants the written artifact and nothing else (`find-bug`, `find-bug-work`, any investigation write-up) runs just this: resolve the path, write the file, done. Skip Rounds 1-4, skip the `tmux split-window`, skip the closing readout.
+
+In report-only mode the `tmux` + `hunk` preconditions at the top of this skill do NOT apply — there's no pane to open, so neither binary is needed. There's usually no diff either, so the template's "Notes left in Hunk" section becomes whatever the caller's findings are. Callers writing an investigation report typically also drop a `summary.md` next to it; that's their call, not this skill's.
 
 ## Round 4 — One-time hook-install prompt
 
