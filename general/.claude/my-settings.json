@@ -44,6 +44,15 @@
             "command": "$HOME/.claude/hooks/pre-mr.sh"
           }
         ]
+      },
+      {
+        "matcher": "^(Bash|mcp__.*[Ss]lack.*)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/slack-write-block.sh"
+          }
+        ]
       }
     ],
     "PreCompact": [
