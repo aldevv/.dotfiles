@@ -122,7 +122,15 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
 
    For a reply, also capture the original commenter's login (`.user.login` on GitHub, `.author.username` on GitLab) — it goes in the block's `- reviewer:` bullet (see block shape below) so the operator can tell who they're answering without cross-referencing the thread id.
 
-3. **Draft**, then run the draft through the **`humanize`** skill for the base voice pass (brevity, plain words, simple grammar, no AI-slop, no em dashes). Layer the PR/MR-specific rules above (backticks, position-first, library naming) on top, humanize doesn't know about those. Skim humanize's [`references/examples.md`](../humanize/references/examples.md) for prior posts — reuse phrasings that fit, and pick a different shape if a candidate line already has a high `(×N)` count.
+   Also capture the posted date of the comment being replied to (`.created_at` on GitHub, `.created_at` on GitLab) for the block's `- posted:` bullet. Take the date only (`YYYY-MM-DD`), and append ` (today)` when it equals the current date (`date +%F`) so the operator can tell at a glance whether the thread is fresh or old. For a re-upped thread (the reviewer commented again after an earlier reply), use the date of the reviewer's most recent comment in the thread, not the root, since that latest comment is what the reply actually answers.
+
+3. **Draft**, then invoke the **`humanize`** skill (via the Skill tool, don't just keep its rules in mind) for the base voice pass (brevity, plain words, simple grammar, no AI-slop, no em dashes). Layer the PR/MR-specific rules above (backticks, position-first, library naming) on top, humanize doesn't know about those. Skim humanize's [`references/examples.md`](../humanize/references/examples.md) for prior posts, reuse phrasings that fit, and pick a different shape if a candidate line already has a high `(×N)` count.
+
+   **Reply confirming an already-applied fix: default to "done." or "fixed.", full stop. The operator picks the plain version 9 times out of 10, so that's the bar, not the exception.** This is the single most common way this skill over-writes. "Landed in a different file" is NOT by itself a reason to write more: the PR's Files Changed tab already shows every touched file, so the reviewer can see a test or a docs edit landed without the comment spelling out which file or what it says. Reserve extra detail for when the reviewer would otherwise have to guess at behavior or reasoning they can't get from the diff: a follow-up is owed, it isn't actually done, or the fix chose between two real options the reviewer would want to know about. When in doubt, ship the plain version.
+
+   **When a longer `- answer:` genuinely earns its length, `- shorter_answer:` is still "done."/"fixed.", never `(no shorter version)`.** The plain form is virtually always postable on its own; the operator can swap to it with one edit. Only write `(no shorter version)` when losing the extra sentence would lose real information the reviewer needs (a follow-up ticket number, a genuine behavior tradeoff) and even "done." would be misleading.
+
+   **If every block in a batch reduces to a plain "done."/"fixed.", skip the qa pane and post directly.** Opening a pane, waiting for a "post" the operator has to type, just to confirm three "fixed."s is the exact overhead this shortcut exists to avoid (it's the same logic as the direct-dictation shortcut above, extended to the case where the SKILL, not the operator, arrived at the trivial text). Still resolve threads per the caller's convention and still record each posted body in step 7. If even one block in the batch needs real content beyond "done"/"fixed", open the pane for the whole batch as usual — don't split into "post these trivial ones now, pane the rest," that's more overhead, not less.
 
 4. **(Optional) Fact-check with subagents.** Run this only when the draft makes specific claims — names a function, cites a line, asserts behaviour, says "the old code did X", quotes a number. Skip for opinion replies ("i'd keep this", "agree, that's cleaner").
 
@@ -389,8 +397,9 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    ---
 
    - thread_id: <comment id or discussion id>
-   - reviewer: <original commenter's login — who we're replying to>
    - kind: reply
+   - reviewer: <original commenter's login — who we're replying to>
+   - posted: <YYYY-MM-DD of the comment being replied to, plus " (today)" when it matches the current date — display only>
    - comment: <what the reviewer raised — display only, verbatim or paraphrased>
    - context: <what we did about it — display only>
 
@@ -424,6 +433,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - `- side:` → `RIGHT` (post-change) or `LEFT` (pre-change). Optional; defaults to `RIGHT`.
    - `- thread_id:` → presence signals "reply to existing thread".
    - `- reviewer:` → **only present on reply blocks.** Display-only. The login of whoever left the original comment (`.user.login` on GitHub, `.author.username` on GitLab) — lets the operator tell who they're answering without cross-referencing the thread id. Omit on new-line and top-level blocks (there's no prior commenter to name).
+   - `- posted:` → **only present on reply blocks.** Display-only, parser ignores it. The `YYYY-MM-DD` the replied-to comment was posted, with ` (today)` appended when it matches the current date, so the operator can tell a fresh thread from an old one at a glance. Use the reviewer's most recent comment in the thread for a re-upped thread. Omit on new-line and top-level blocks.
    - `- kind:` → display-only, one of `new-line`, `reply`, `top-level`, optionally followed by a parenthesized severity/confidence tag for review batches (`new-line (BLOCKER 95% ✓1)`). The parser derives the actual kind from the presence rules below, not from this bullet.
    - `- comment:` → **only present on reply blocks.** Display-only. On new-line and top-level blocks, do NOT include a `- comment:` bullet — the new comment IS the reply, there's no reviewer statement to quote.
    - `- answer:` → the body that will actually be posted. **ALWAYS the last bullet in the block.** Editable. Set to `SKIP` (case-insensitive), leave empty, or delete the whole block to drop it.
@@ -514,8 +524,9 @@ pr: https://github.com/conductorone/baton-example/pull/12
 ---
 
 - thread_id: 3494400256
-- reviewer: bjorn-c1
 - kind: reply
+- reviewer: bjorn-c1
+- posted: 2026-03-12
 - comment: grant returns 200 even on partial failure, add a guard on errors == []
 - context: addressed by 695d6a8. pkg/config/config.yaml:418 now requires members non-empty AND errors empty.
 
@@ -526,8 +537,9 @@ pr: https://github.com/conductorone/baton-example/pull/12
 ---
 
 - thread_id: 3494400267
-- reviewer: bjorn-c1
 - kind: reply
+- reviewer: bjorn-c1
+- posted: 2026-03-14 (today)
 - comment: deleting the last Owner returns 400, map it
 - context: openapi documents only 204/401/403/404/409/429 for DELETE /members/{id}. live curl returned 409. kept 409, tightened the message.
 
@@ -560,6 +572,7 @@ Things to notice:
 2. There is no `- commit:` bullet on new-line blocks — the parser resolves the head SHA from the PR at post time.
 3. The `- comment:` bullet only appears on **reply** blocks (what the reviewer said). New-line and top-level blocks omit it.
 4. The `- reviewer:` bullet only appears on **reply** blocks too — it's the login of the person who left the original comment, so the operator knows who they're answering without looking up the thread id. New-line and top-level blocks have no prior commenter, so they omit it.
+5. The `- posted:` bullet (reply blocks only) is the date the replied-to comment landed, `YYYY-MM-DD`, with ` (today)` appended when it's the current date, so the operator can spot a fresh thread versus an old one at a glance.
 5. `- answer:` is always the LAST bullet in every block.
 6. Answers longer than ~50 chars use the YAML `|` block-scalar form, indented, wrapped at a 50-char column limit. Short answers stay inline (`- answer: done.`).
 7. `shorter_answer` stays in the same voice (lowercase, plain words, contractions), just tighter. Keep full nouns. "capabilities" not "caps", "documentation" not "docs", "openapi" is fine because it's the schema-file name the reader will recognize.

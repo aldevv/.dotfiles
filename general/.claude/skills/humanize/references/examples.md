@@ -13,10 +13,10 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×32)
+- done. (×33)
 - good catch, will fix. (×1)
-- fixed. (×6)
-- done (×4)
+- fixed. (×10)
+- done (×6)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
@@ -42,6 +42,8 @@ increment from there.
 - keeping math.random. goja has no web crypto. (×1)
 - i think is ok to keep it, rapid7 caps insightaccount at 50 calls/min account-wide, and the response headers only warn us after we've already queued more requests. https://docs.rapid7.com/insight/api-overview/#rate-limiting (×1)
 - looked closer at this and you're right, deleting it. the sdk's retry loop already retries `codes.Unavailable` with unlimited attempts by default and backs off using the real `*v2.RateLimitDescription` (reset time, remaining count) instead of guessing, so the client-side pacer wasn't buying us anything for correctness. removed `uhttp.WithRateLimiter` and the `options`/`WithRateLimit` plumbing around it. (×1)
+- won't work here. `FieldsMutuallyExclusive` needs fields that aren't required, and it only checks the current group. it'd miss leftover oauth creds under workspace-token. (×1)
+- I don't think it works in service mode, the group in `Grant`/`Revoke` is rebuilt from just its `ResourceId` there, so a `directoryId` on the profile is empty. `Id.Resource` is the only field we still get on that path, and encoding the directory there re-keys every existing group grant. (×1)
 
 ### New line comments — feedback
 
@@ -88,6 +90,11 @@ increment from there.
 - expand-columns is a string slice, same as skip-database above. could show comma-separated here: `"mydb.mytable,otherdb.othertable"`. (×1)
 - `optionalStringField` at line 501-504 already does `strings.TrimSpace(raw)`, so the outer `strings.TrimSpace(...)` here is redundant. can drop it: `if mapped := optionalStringField(profileMap, "email"); mapped != "" {`. (×1)
 - let's not log `user_id`, it's user data. `role` is enough here. and this can be `Debug` instead of `Warn`. (×1)
+
+### Replies — clarifying / asking back
+
+- deployment names are unique per databricks cloud, so no collision risk. also pre-existing, not new in this PR. (×1)
+- if a workspace's in both lists, exclude wins. (×1)
 
 ## Anti-patterns — what NOT to post
 

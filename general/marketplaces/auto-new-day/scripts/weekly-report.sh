@@ -179,17 +179,19 @@ for l in body:
                 text = t.group(0) if t else url
             item, k = f"[{text}]({url})", url
         else:
-            # Worked-on: link the PR as a markdown link [repo#N](url) (Slack's
-            # composer converts pasted markdown links; the API-only <url|text>
-            # form does NOT render on a human paste) and keep the description; a
-            # one-off (no PR link) stays plain text.
-            m = re.search(r"\[([^\]]+)\]\((https?://[^)]+)\)", raw)
-            if m:
-                text, url = m.group(1), m.group(2)
-                rest = re.sub(r"\s{2,}", " ", flatten(raw[:m.start()] + raw[m.end():])).strip()
+            # Worked-on: if the bullet names a PR ([repo#N](url)), hoist that as
+            # the leading markdown link (Slack renders pasted markdown links) and
+            # keep the rest of the description, including the trailing ticket
+            # link. A bullet with no PR (only a ticket link, or plain text) is
+            # kept as written so its ticket stays trailing and it reads like the
+            # PR lines instead of hoisting the lone ticket to the front.
+            prm = re.search(r"\[([^\]]*#\d+)\]\((https?://[^)]+)\)", raw)
+            if prm:
+                text, url = prm.group(1), prm.group(2)
+                rest = re.sub(r"\s{2,}", " ", (raw[:prm.start()] + raw[prm.end():])).strip()
                 item = f"[{text}]({url}) {rest}".strip()
             else:
-                item = flatten(raw)
+                item = re.sub(r"\s{2,}", " ", raw).strip()
             if not item:
                 continue
             k = key_of(item, section)

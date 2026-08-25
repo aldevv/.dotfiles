@@ -65,7 +65,7 @@ The exact policy text is in the context block — defer to it if it disagrees wi
    - (a) **CLEAR** — the fix is obvious, low-risk, and doesn't require a judgment call.
    - (b) **AMBIGUOUS** — multiple reasonable fixes, design tradeoff, or insufficient context.
 
-5. **Apply per the Apply policy** on surviving findings. Build/test locally (Go: `go build ./... && go test ./... -count=1`; Node/Python/etc.: the project's standard commands).
+5. **Apply per the Apply policy** on surviving findings. Build/test/lint locally (Go: `go build ./... && go test ./... -count=1 && golangci-lint run ./...` when the repo has a golangci-lint config; Node/Python/etc.: the project's standard build/test/lint commands). `go build`/`go test` passing does not mean lint is clean, run lint too so your own edits don't introduce a new failure (e.g. a line-length limit) that only shows up in CI.
 
 6. **Commit on `Fix branch`.** Separate small commits per finding is fine, or one cohesive commit. Stage only files you actually changed. NEVER `git add -A` or `git add .`.
 

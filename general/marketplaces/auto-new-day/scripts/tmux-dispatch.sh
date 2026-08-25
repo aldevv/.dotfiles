@@ -56,11 +56,12 @@ die() { echo "failed: $*"; exit 1; }
 [ -n "$BOOTSTRAP_CMD" ]    || die "missing <bootstrap-cmd>"
 [ -n "$SLASH_INVOCATION" ] || die "missing <slash-invocation>"
 
-# session existence + per-window dedupe
+# `=name` forces an exact match. Without it, tmux treats the target as a
+# prefix, so "AUTO-inreview" silently resolves to "AUTO-inreview-others".
 session_exists=0
-tmux has-session -t "$SESSION" 2>/dev/null && session_exists=1
+tmux has-session -t "=$SESSION" 2>/dev/null && session_exists=1
 
-if [ "$session_exists" = 1 ] && tmux list-windows -t "$SESSION" -F '#{window_name}' | grep -qx "$WIN_NAME"; then
+if [ "$session_exists" = 1 ] && tmux list-windows -t "=$SESSION" -F '#{window_name}' | grep -qx "$WIN_NAME"; then
   echo "skipped"
   exit 0
 fi
@@ -70,7 +71,7 @@ if [ "$session_exists" = 0 ]; then
   tmux new-session -d -s "$SESSION" -n "$WIN_NAME" -c "$CWD" "$BOOTSTRAP_CMD" \
     || die "tmux new-session $SESSION:$WIN_NAME"
 else
-  tmux new-window -t "${SESSION}:" -n "$WIN_NAME" -c "$CWD" "$BOOTSTRAP_CMD" \
+  tmux new-window -t "=${SESSION}:" -n "$WIN_NAME" -c "$CWD" "$BOOTSTRAP_CMD" \
     || die "tmux new-window $SESSION:$WIN_NAME"
 fi
 
@@ -80,7 +81,7 @@ fi
 # so an existing window's log is never touched here.
 if [ -n "$LOG_PATH" ]; then
   mkdir -p "$(dirname "$LOG_PATH")"
-  tmux pipe-pane -o -t "${SESSION}:${WIN_NAME}" "cat > '$LOG_PATH'" \
+  tmux pipe-pane -o -t "=${SESSION}:${WIN_NAME}" "cat > '$LOG_PATH'" \
     || die "tmux pipe-pane $SESSION:$WIN_NAME -> $LOG_PATH"
 fi
 
@@ -90,7 +91,7 @@ sleep 0.3
 # Launch the slash command. The invocation must already be fully quoted by
 # the caller — passing it through send-keys verbatim avoids the bracketed-
 # paste race that a two-step type-then-Enter sequence introduces.
-tmux send-keys -t "${SESSION}:${WIN_NAME}" "$SLASH_INVOCATION" C-m \
+tmux send-keys -t "=${SESSION}:${WIN_NAME}" "$SLASH_INVOCATION" C-m \
   || die "tmux send-keys $SESSION:$WIN_NAME"
 
 echo "spawned"

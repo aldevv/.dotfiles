@@ -84,7 +84,7 @@ Read those values once and refer back to them by name. Don't re-derive them.
 
    c. **Genuine code-level failure** (compile error, test assertion, lint error introduced by this PR, missing import, type mismatch, etc.). Apply the smallest fix. One file if possible. No unrelated edits.
 
-6. **Build and test locally** (only for category 5c). Use the project's standard commands: Go = `go build ./... && go test ./... -count=1`; Node = `npm test` or `pnpm test`; Python = `pytest`. If the project has a Makefile / `bin/` target / `.envrc` alias for build+test, prefer that.
+6. **Build, test, and lint locally** (only for category 5c). Use the project's standard commands: Go = `go build ./... && go test ./... -count=1 && golangci-lint run ./...` when the repo has a golangci-lint config; Node = `npm test` (+ its lint script); Python = `pytest` (+ its lint tool). If the project has a Makefile / `bin/` target / `.envrc` alias for build+test+lint, prefer that. Run lint even when the original failure was a compile/test error, not just when it was a lint error, since your own fix can introduce a new lint failure that build/test won't catch.
 
 7. **Commit on `Fix branch`** with a short imperative message (`fix <thing>`). Stage only the files you actually changed. NEVER `git add -A` or `git add .`.
 
