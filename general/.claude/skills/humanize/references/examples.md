@@ -16,7 +16,7 @@ increment from there.
 - done. (×33)
 - good catch, will fix. (×1)
 - fixed. (×10)
-- done (×6)
+- done (×7)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
@@ -28,6 +28,7 @@ increment from there.
 - yes, only when we can't read `ROLEGROUPS`. dropped the skip so it just fails now. (×1)
 - I cleaned those up (×1)
 - yep, is customer held credential, so i chose `APP_REGISTRATION`. (×1)
+- added a comment (×1)
 - done, moved the token calc inside `ListGroupMembersPage`. (×1)
 
 ### Replies — pushback

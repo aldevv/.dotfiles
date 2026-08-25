@@ -25,6 +25,7 @@ Round 1 already loads it (`cat "$(hunk skill path)"`). Treat that read as mandat
 ## Files
 
 - `scripts/hunk-pre-pr.sh` — the PreToolUse hook this skill optionally installs. Read it directly when you need to know what runs: `cat "$HOME/.claude/skills/report/scripts/hunk-pre-pr.sh"`.
+- `scripts/report-path.sh` — resolves where the written report goes (status segment in `AUTO-` sessions, `report-<N>.md` numbering, folder migration between stages). Shared with `find-bug` / `find-bug-work`. See "Written report on disk".
 - `references/review-guidance.md` — comment scope (what to flag, what to skip) plus tone rules and a worked example. Read at Round 3 before deciding what to apply.
 - `references/examples.md` — curated good / bad concrete Hunk notes the operator has explicitly labeled in prior sessions. Read at Round 3 alongside `review-guidance.md` so you can pattern-match on shape before applying. Also the file to update when the operator labels a note good or bad in the current session — see "Operator feedback → examples.md" below.
 - `references/hook-install.md` — the prompt + commands + settings.json target shape for Round 4. Read at Round 4 only when the state file is missing.
@@ -324,6 +325,45 @@ The readout is two labeled lines at minimum, after the notes summary:
 - **Ready to push:** an honest yes/no assessment with the reason. Say **yes** ONLY if the change was verified end-to-end (ran it and observed the new behavior) per the git rules. Otherwise say **no** and name what's unverified and how to verify it (e.g. `no — Helm values pin can't render locally; CV deploy showing the new tag healthy is the proof`). Never claim "ready to push" on static checks alone.
 
 Optional third line when it helps: **Blocker:** the one thing standing between "no" and "yes" on ready-to-push. Keep the whole readout to 2-4 lines; it's a stand-up update, not a report.
+
+## Written report on disk — REQUIRED in every path
+
+Hunk notes live in the TUI and the closing readout lives in chat, so once the pane closes there's nothing left to point at. Every run also writes a markdown report to disk. This matters most in an `AUTO-` dispatch session, where no human is reading chat at all and the file is the only output that survives.
+
+Resolve the path with the shared script rather than composing it by hand — `find-bug` and `find-bug-work` use the same one, so all three agree on layout:
+
+```bash
+REPORT=$("$HOME/.claude/skills/report/scripts/report-path.sh" "<TICKET>-<slug>")
+```
+
+It creates the folder and prints the file to write. What it decides for you:
+
+- **Numbering.** `report-1.md`, `report-2.md`, … always the next unused number, so a second run on the same ticket the same day never overwrites the first. Never write a bare `report.md`.
+- **Status segment.** In an `AUTO-inprogress` / `AUTO-inreview` / `AUTO-inreview-others` / `AUTO-ready-to-merge` session the path gains that status as a segment: `$HOME/reports/<date>/inreview/<TICKET>-<slug>/report-2.md`. Operator sessions get no segment: `$HOME/reports/<date>/<TICKET>-<slug>/report-1.md`.
+- **Migration.** A ticket keeps one folder per day. When the stage advances, the script moves the existing folder into the new status and continues the numbering there, so the tree reads as a board and a ticket's history stays together.
+
+Derive `<TICKET>-<slug>` from the branch (`cxh-1980-fix-grant` → `CXH-1980-fix-grant`) or the PR title. With no ticket, use `no-ticket-<slug>`.
+
+Contents mirror what you already produced, so this costs one Write and no extra analysis:
+
+```markdown
+# <TICKET> — <one-line headline>
+<RANGE> · <branch> · <PR link if any> · <UTC timestamp>
+
+## What changed
+## Notes left in Hunk
+- `file:line` — <summary>
+## Recommended action
+## Ready to push
+```
+
+`$HOME/reports/` sits outside every repo deliberately: these are session artifacts and must never be committed. Never write one into a repo working tree.
+
+### Report-only mode — no Hunk pane
+
+This section stands alone. A caller that wants the written artifact and nothing else (`find-bug`, `find-bug-work`, any investigation write-up) runs just this: resolve the path, write the file, done. Skip Rounds 1-4, skip the `tmux split-window`, skip the closing readout.
+
+In report-only mode the `tmux` + `hunk` preconditions at the top of this skill do NOT apply — there's no pane to open, so neither binary is needed. There's usually no diff either, so the template's "Notes left in Hunk" section becomes whatever the caller's findings are. Callers writing an investigation report typically also drop a `summary.md` next to it; that's their call, not this skill's.
 
 ## Round 4 — One-time hook-install prompt
 
