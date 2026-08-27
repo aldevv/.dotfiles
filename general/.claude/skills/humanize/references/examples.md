@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×32)
+- done. (×33)
 - good catch, will fix. (×1)
 - fixed. (×6)
 - done (×5)
@@ -83,6 +83,7 @@ increment from there.
 - that meraki api key in the deleted .claude/settings.json from dc05c3e is still in git history. rotate it on the draftkings tenant before merge. (×1)
 - I don't think this is a blocker, and this would add pagination to the delete/provisioning operations, which would have side effects. I think we should keep it as is. (×1)
 - closing as won't fix. the owner grant already fails cleanly with a 400, not worth a breaking change. moving owner to `base_role_owner` changes its id and forces a one-time remove+add on every tenant. (×1)
+- @jili2 @cbolivarzapata done with the feedback, mind taking another look? (×1)
 
 ### New line comments — nit
 
