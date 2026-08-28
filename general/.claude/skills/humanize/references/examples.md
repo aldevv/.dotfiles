@@ -13,9 +13,9 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×33)
+- done. (×34)
 - good catch, will fix. (×1)
-- fixed. (×10)
+- fixed. (×11)
 - done (×7)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
@@ -30,6 +30,8 @@ increment from there.
 - yep, is customer held credential, so i chose `APP_REGISTRATION`. (×1)
 - added a comment (×1)
 - done, moved the token calc inside `ListGroupMembersPage`. (×1)
+- done. switched it to `confluent.svg`, traced from the official mark (the apple-touch png) since confluent doesn't publish a square svg. (×1)
+- done. stripped the xml decl, doctype and potrace metadata; square viewBox only now. (×1)
 
 ### Replies — pushback
 
