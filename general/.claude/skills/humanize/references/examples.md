@@ -13,10 +13,10 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×34)
+- done. (×40)
 - good catch, will fix. (×1)
-- fixed. (×11)
-- done (×7)
+- fixed. (×12)
+- done (×11)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
@@ -32,6 +32,9 @@ increment from there.
 - done, moved the token calc inside `ListGroupMembersPage`. (×1)
 - done. switched it to `confluent.svg`, traced from the official mark (the apple-touch png) since confluent doesn't publish a square svg. (×1)
 - done. stripped the xml decl, doctype and potrace metadata; square viewBox only now. (×1)
+- you're right. done (×1)
+- routed `resolveConnectScheme` through the shared `IsNativeDSN` instead of a TODO, so the three detectors agree and a native dsn resolves to `db2` there now. (×1)
+- done, folded `IsNativeDSN` and `DSNDatabase` into one `ParseNativeDSN` pass. (×1)
 
 ### Replies — pushback
 
@@ -47,6 +50,7 @@ increment from there.
 - looked closer at this and you're right, deleting it. the sdk's retry loop already retries `codes.Unavailable` with unlimited attempts by default and backs off using the real `*v2.RateLimitDescription` (reset time, remaining count) instead of guessing, so the client-side pacer wasn't buying us anything for correctness. removed `uhttp.WithRateLimiter` and the `options`/`WithRateLimit` plumbing around it. (×1)
 - won't work here. `FieldsMutuallyExclusive` needs fields that aren't required, and it only checks the current group. it'd miss leftover oauth creds under workspace-token. (×1)
 - I don't think it works in service mode, the group in `Grant`/`Revoke` is rebuilt from just its `ResourceId` there, so a `directoryId` on the profile is empty. `Id.Resource` is the only field we still get on that path, and encoding the directory there re-keys every existing group grant. (×1)
+- keeping `Warn` for visibility. (×1)
 
 ### New line comments — feedback
 
@@ -79,6 +83,8 @@ increment from there.
 - not sure this will work for a user in more than one org. `GET /api/1/users` looks account-wide, so the same user would dedupe to one resource and only keep the last-synced org's grants. docs: https://github.com/ConductorOne/baton-rapid7/blob/main/test/server/rapid7-insightaccount-v1.openapi.json (×1)
 - should `userName` allow more than 8-16 alphanumerics? the docs say it needs to match the email address, so it could contain any character an email can. https://developer.paypal.com/braintree/articles/control-panel/users-roles/scim/scim-integration (×1)
 - right now it lists every workspace again for each membership and key, with no caching, so a sync makes a lot of extra api calls on bigger orgs. better to switch to the v2 syncer and keep the workspace ids in the session store: save them in `workspaceBuilder.List` and read them in `Grants`. (×2)
+- `CreateAccount` only sends `email`/`firstName`/`lastName`/`memberType`, but the account schema also offers `userKind` and `sendInvite`. `userKind` is a real create-member field, so setting it to `guest`/`embed` gets silently dropped, and `sendInvite` isn't a create-member param at all. could we wire `userKind` (and `isGuest`) in, or drop those two from the schema so it's not offering inputs that do nothing? https://help.sigmacomputing.com/reference/createmember (×1)
+- `*assignedUser.LastUpdated` is deref'd with no nil check (same at :509). https://github.com/okta/okta-sdk-golang/blob/v2.20.0/okta/appUser.go#L39 (×1)
 
 ### Top-level PR/MR comments
 
@@ -99,6 +105,8 @@ increment from there.
 
 - deployment names are unique per databricks cloud, so no collision risk. also pre-existing, not new in this PR. (×1)
 - if a workspace's in both lists, exclude wins. (×1)
+- i split it in two. oauth now errors on a failed account check instead of just warning, so it won't silently drop data. for workspace-token i kept the warn but added what you asked for: a config help-text note that it skips account-level data (use oauth for that), plus the docs warning. (×1)
+- the already absent case returns `204`, not a 404, so `RemoveUserFromGroup` is already idempotent. (×1)
 
 ## Anti-patterns — what NOT to post
 
