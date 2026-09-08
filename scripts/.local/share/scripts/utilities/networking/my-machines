@@ -1,0 +1,53 @@
+#!/bin/bash
+# List the local (LAN) IP of each of my machines: elite, titan, mac.
+# Matched by MAC via the ARP table, not by name: mDNS is unreliable on this
+# Wi-Fi (the AP drops inter-client multicast) and elite/mac expose nothing else
+# to fingerprint. Wi-Fi MAC randomization is stable per-SSID, so these anchors
+# hold across DHCP changes; the host running the script reports its own IP.
+
+# name -> canonical LAN MAC
+macs="elite 7c:21:4a:11:9c:5c
+titan 28:d0:43:8e:b2:b2
+mac de:1d:82:c5:7f:55"
+
+# IPv4 this host uses to reach the LAN, interface-agnostic
+self_ip() {
+	ip route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i <= NF; i++) if ($i == "src") {print $(i + 1); exit}}'
+}
+
+# ping every address so the neighbor (ARP) table lists everyone currently up
+sweep() {
+	local ip prefix
+	prefix=$(self_ip | sed 's/\.[0-9]*$//')
+	[ -n "$prefix" ] || return
+	for ip in $(seq 1 254); do ping -c1 -W1 "$prefix.$ip" >/dev/null 2>&1 & done
+	wait
+}
+
+# $1=MAC -> the live IP using it. A MAC can appear on several IPs (stale ARP
+# entries linger after a DHCP move), so re-ping each and keep the one that answers.
+ip_for_mac() {
+	local cand
+	for cand in $(ip neigh show | grep -i "$1" | grep -Ev 'FAILED|INCOMPLETE' | awk '{print $1}'); do
+		ping -c1 -W1 "$cand" >/dev/null 2>&1 && {
+			echo "$cand"
+			return
+		}
+	done
+}
+
+# $1=name $2=ip
+print_row() {
+	printf '%-7s %s\n' "$1" "${2:-not found}"
+}
+
+own_macs=$(ip -br link 2>/dev/null | awk '{print tolower($3)}')
+
+sweep
+echo "$macs" | while read -r name mac; do
+	if echo "$own_macs" | grep -qi "$mac"; then
+		print_row "$name" "$(self_ip)"
+	else
+		print_row "$name" "$(ip_for_mac "$mac")"
+	fi
+done

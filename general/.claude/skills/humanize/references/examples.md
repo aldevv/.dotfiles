@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×40)
+- done. (×42)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×11)
@@ -35,6 +35,7 @@ increment from there.
 - you're right. done (×1)
 - routed `resolveConnectScheme` through the shared `IsNativeDSN` instead of a TODO, so the three detectors agree and a native dsn resolves to `db2` there now. (×1)
 - done, folded `IsNativeDSN` and `DSNDatabase` into one `ParseNativeDSN` pass. (×1)
+- will narrow the title to db2 and link the oracle follow-up. (×1)
 
 ### Replies — pushback
 
@@ -51,6 +52,9 @@ increment from there.
 - won't work here. `FieldsMutuallyExclusive` needs fields that aren't required, and it only checks the current group. it'd miss leftover oauth creds under workspace-token. (×1)
 - I don't think it works in service mode, the group in `Grant`/`Revoke` is rebuilt from just its `ResourceId` there, so a `directoryId` on the profile is empty. `Id.Resource` is the only field we still get on that path, and encoding the directory there re-keys every existing group grant. (×1)
 - keeping `Warn` for visibility. (×1)
+- intentional, db2 is the only engine i've verified this on. filed the oracle follow-up as CXH-2435. (×1)
+- kept the behavior, added a comment that it leans on the db2 `validation_queries` contract and shouldn't be generalized. (×1)
+- intended db2 case, keeping it. the test name and the new code comment spell out the trade-off. (×1)
 
 ### New line comments — feedback
 

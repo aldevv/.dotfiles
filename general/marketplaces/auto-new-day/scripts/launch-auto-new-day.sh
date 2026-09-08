@@ -344,21 +344,50 @@ fi
 #    The short sleeps avoid races where send-keys fires before readline (or
 #    claude's input loop) is ready and the leading keystrokes get eaten.
 log "creating tmux session $SESSION; piping pane to $SWEEP_LOG"
-tmux new-session -d -s "$SESSION" -c "${AUTO_NEW_DAY_WORKING_ROOT:-$PWD}" -n sweep \
-  || fail "tmux new-session $SESSION failed"
-tmux set-option -t "$SESSION" remain-on-exit on >/dev/null 2>&1 || true
-tmux pipe-pane -t "${SESSION}:sweep" -o "cat >> '$SWEEP_LOG'" \
+# Capture the pane id up front and target it directly. A pane id ("%N") never
+# moves, unlike the "$SESSION:sweep" name target used before, which can go
+# briefly unresolvable while a fresh server settles.
+SWEEP_PANE=$(tmux new-session -d -P -F '#{pane_id}' -s "$SESSION" -c "${AUTO_NEW_DAY_WORKING_ROOT:-$PWD}" -n sweep 2>&1) \
+  || fail "tmux new-session $SESSION failed: $SWEEP_PANE"
+tmux set-option -t "$SWEEP_PANE" remain-on-exit on >/dev/null 2>&1 || true
+tmux pipe-pane -t "$SWEEP_PANE" -o "cat >> '$SWEEP_LOG'" \
   || fail "tmux pipe-pane to $SWEEP_LOG failed"
-sleep 0.3
+
+# Step 6 kills the last session, and the morning timer often fires with no tmux
+# server running at all, so this new-session usually boots a FRESH server that
+# re-sources tmux.conf (tpm, theme, if-shell host probes). While the server
+# settles, a client command can block or the target can be briefly unresolvable,
+# so the old fixed-cadence loop could burn all 40 retries before the server ever
+# answered and then fail opaquely. Wait on a wall-clock deadline instead, and
+# keep tmux's stderr so a real failure reports WHY.
+#
+# send-keys returns 0 even for a DEAD pane (tmux 3.7b), so a launch is only
+# counted once the pane is confirmed alive (#{pane_dead}=0); if its shell exits
+# on startup we fail loudly instead of reporting a dead pane as launched.
+#
 # Verified on claude v2.1.140: passing the slash command as a positional argv
-# (`claude "/slash ..."`) launches claude with the prompt pre-filled, claude
-# runs the slash command, and STAYS INTERACTIVE afterwards (older notes about
-# argv being "one-shot" were wrong for current versions). This avoids the
-# bracketed-paste race in two-step send-keys (where the first Enter closes
-# the paste without submitting). Using send-keys to type the launch command
-# is still required so the shell-fallthrough on claude-exit works.
-tmux send-keys -t "${SESSION}:sweep" "claude --dangerously-skip-permissions \"$SLASH_CMD\"" C-m \
-  || fail "tmux send-keys (claude + slash argv) to $SESSION:sweep failed"
+# (`claude "/slash ..."`) launches claude with the prompt pre-filled, runs the
+# slash command, and STAYS INTERACTIVE afterwards. send-keys (not a positional
+# exec) is still required so the shell-fallthrough on claude-exit works.
+launched=0
+last_err=""
+deadline=$((SECONDS + 45))
+while [ "$SECONDS" -lt "$deadline" ]; do
+  case "$(tmux display-message -p -t "$SWEEP_PANE" '#{pane_dead}' 2>/dev/null)" in
+    0)
+      # server responsive, pane alive: let the shell start its line editor so
+      # the leading keystrokes aren't eaten, then type the launch command
+      sleep 0.3
+      last_err=$(tmux send-keys -t "$SWEEP_PANE" "claude --dangerously-skip-permissions \"$SLASH_CMD\"" C-m 2>&1) \
+        && { launched=1; break; }
+      ;;
+    1) fail "sweep pane $SWEEP_PANE died before claude could start (its shell exited on launch)" ;;
+    *) : ;; # server still booting or pane not resolvable yet; keep waiting
+  esac
+  sleep 0.25
+done
+[ "$launched" = "1" ] \
+  || fail "could not launch claude in $SESSION ($SWEEP_PANE) within deadline; last tmux error: ${last_err:-<server never became responsive>}"
 
 # 9. Attach via the terminal. kitty takes the command as positional args;
 #    everything else (st, alacritty, foot, wezterm, xterm) takes -e. Don't
