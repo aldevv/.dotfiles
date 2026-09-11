@@ -23,6 +23,7 @@ INSTALL=0
 SHOW_TIME=0
 SET_TIME=""
 FORCE=0
+RESUME=0
 DATE_PHRASE=""
 # Case-insensitive: lowercase the env var before matching.
 case "$(printf '%s' "${AUTO_NEW_DAY_DRY_RUN:-}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')" in
@@ -36,6 +37,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run|-n)  DRY_RUN=1 ;;
     --force|-f)    FORCE=1 ;;
+    --resume)      RESUME=1 ;;
     --install)     INSTALL=1 ;;
     --show-time)   SHOW_TIME=1 ;;
     --date)
@@ -53,7 +55,7 @@ while [ $# -gt 0 ]; do
       ;;
     -h|--help)
       cat <<'EOF'
-Usage: launch-auto-new-day.sh [--dry-run | --force | --install | --show-time | --set-time HH:MM | --date <date> | <date> [<date>...]]
+Usage: launch-auto-new-day.sh [--dry-run | --force | --resume | --install | --show-time | --set-time HH:MM | --date <date> | <date> [<date>...]]
 
 Without flags: opens $TERMINAL (fallback kitty) attached to a fresh tmux
 session running the /auto-new-day sweep.
@@ -81,6 +83,17 @@ session running the /auto-new-day sweep.
   - no Linear MCP calls, no gh PR fetches; re-spawns any windows from the
     saved plan that aren't already in their tmux session
   - mutually exclusive with --install / --show-time / --set-time
+
+--resume:
+  - restore-after-reboot shortcut: replays the MOST RECENT saved dispatch
+    plan (auto-picks the newest dates/<DATE>-create.md) so you don't have to
+    remember which day it was. Same no-discovery replay as --date, just with
+    the date resolved for you.
+  - re-spawns only the dispatched worker windows from that plan that aren't
+    already running; AUTO-followup / AUTO-ready-to-merge windows are rebuilt
+    by the next real sweep, not by resume.
+  - composes with --force; mutually exclusive with --date / --install /
+    --show-time / --set-time
 
 --install:
   - installs the user systemd unit files from references/systemd/
@@ -115,6 +128,18 @@ if [ ${#DATE_TOKENS[@]} -gt 0 ]; then
 fi
 
 log() { printf '%s %s\n' "$(date -Iseconds)" "$*" >&2; }
+
+# --resume: resolve the newest saved plan into a concrete date, then reuse the
+# exact --date replay path below. Fail loud here (before spawning a terminal)
+# when nothing is saved or the operator combined it with an explicit --date.
+if [ "$RESUME" = "1" ]; then
+  if [ -n "$DATE_PHRASE" ]; then
+    echo "ERROR: --resume and --date are mutually exclusive" >&2
+    exit 1
+  fi
+  DATE_PHRASE=$("$(dirname "$0")/resolve-resume-date.sh") || exit 1
+  log "resume: newest saved plan is $DATE_PHRASE"
+fi
 
 # --- install mode (setup, then exit) ---
 if [ "$INSTALL" = "1" ]; then

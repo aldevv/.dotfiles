@@ -1,7 +1,7 @@
 ---
 name: new-day
 description: Morning triage engine. Discovers the work assigned to you on GitHub (issues + PRs across a configured repo list), classifies each item into four buckets, and fans the actionable ones out to tmux windows where a child claude does the work, commits locally, and NEVER pushes or opens a PR. You read the results later. Buckets, approvers, repos, and the dispatched skill all come from a dispatch profile (no domain knowledge is hardcoded). Triggers on "/auto-new-day", "run my morning triage", "check my in-review PRs", "check my assigned issues", "any new comments on my PRs", "did anyone approve my PRs", "do my morning reviews". Do NOT trigger for a single named PR (use a direct review), or to pick from a team backlog. This is the generic engine; a domain pack (e.g. auto-new-day-work) can supply its own profile + skills on top.
-argument-hint: '[<date> | --date <date> | --show [<date>] | --reset <ITEM> | --dry-run | --force | --fast]'
+argument-hint: '[<date> | --date <date> | --resume | --show [<date>] | --reset <ITEM> | --dry-run | --force | --fast]'
 ---
 
 # auto-new-day (engine)
@@ -32,7 +32,7 @@ Profile fields:
 - `ticket_source` — `"github"` for this engine. (`"linear"` is reserved for a domain pack that overrides discovery.)
 - `discovery` — `{ assignee, repos[], issue_states[], pr_states[], max_pr_age_days? }`. `repos` is the list of `OWNER/REPO` (or globs under `working_root`) the sweep scans. `assignee` is usually `@me`. `max_pr_age_days` (optional, 0/absent = no cap) drops teammate-review (`inreview-others`) PRs opened more than that many days ago, UNLESS you engaged with the PR before it crossed that age (see `triage.sh` `pr-too-old`).
 - `buckets` — prose classification rules for `inreview` / `inprogress` / `inreview-others` / `ready-to-merge`. The engine reads these as the definition of each bucket.
-- `bucket_skills` — `{ bucket -> slash-command }` the engine dispatches per bucket. Default: `/auto-new-day:impl` for all dispatched buckets. `ready-to-merge` has none (plain shell). A value may also be a label-routing map (see "bucket_skills map form" under the Linear backend).
+- `bucket_skills` — `{ bucket -> slash-command }` the engine dispatches per bucket. Default: `/auto-new-day:impl` for all dispatched buckets. `ready-to-merge` has none by default (plain shell / auto-merge); set `bucket_skills["ready-to-merge"]` to a skill (e.g. `/my-prs`) to instead open ONE claude session running that skill for all approved PRs (skill mode, Step 7d). A value may also be a label-routing map (see "bucket_skills map form" under the Linear backend).
 - `review_chain` — extra skills a review window runs before the main review skill (generic `[]`).
 - `approvers` — GitHub logins whose APPROVED review moves a PR to `ready-to-merge` and clears it from the teammate-review candidate set.
 - `caps` — `{ review_prs_per_sweep }` (default 5).
@@ -92,7 +92,7 @@ These catch an honest-but-forgetful child, not an adversarial one (inline `--no-
 
 ## Dispatched skills
 
-Every dispatched window runs `bucket_skills[<bucket>]` from the profile. The generic default is `/auto-new-day:impl` for `inreview` / `inprogress` / `inreview-others`. A domain pack overrides these (e.g. a connector pack maps `inprogress` bug-labeled items to its own bug skill). `ready-to-merge` runs no child; it is the operator's own shell parked on the branch.
+Every dispatched window runs `bucket_skills[<bucket>]` from the profile. The generic default is `/auto-new-day:impl` for `inreview` / `inprogress` / `inreview-others`. A domain pack overrides these (e.g. a connector pack maps `inprogress` bug-labeled items to its own bug skill). `ready-to-merge` runs no child by default (the operator's own parked shell / the auto-merge path); when `bucket_skills["ready-to-merge"]` is set it opens ONE claude session running that skill (Step 7d skill mode).
 
 ## Modes (parse once, at the top)
 
@@ -102,10 +102,11 @@ Alongside profile + path resolution, parse the argument tail once and cache bool
 - `--force` / `-f`: bypass the marker dedupe check so items re-dispatch even if a marker says they were handled; also forwarded to the child so its resume fast-path is bypassed.
 - `--fast`: children run their normal parallel-subagent fan-outs. Default (no `--fast`) injects `--no-subagents` + `NO_SUBAGENTS=1` so unattended runs cost one pass of tokens, not N.
 - `--date <date>` or a bare date phrase (`today`, `yesterday`, `june 16`, `2026-06-16`): replay a saved day's plan from `dates/<DATE>-create.md`, re-spawning any windows not already running. No discovery, no `gh`. Resolve with `${SCRIPTS}/resolve-date.sh`.
+- `--resume`: restore-after-reboot shortcut. Resolve the newest saved plan with `${SCRIPTS}/resolve-resume-date.sh` (it prints the latest `dates/<DATE>-create.md` date, ignoring dry-run copies), then run the `--date <that>` replay path exactly. Use it when a reboot killed the tmux sessions and you don't want to look up which day the last sweep was. If the helper exits non-zero (no saved plan), print its one-line message and stop; no discovery. Only the dispatched worker windows come back this way (they live in create.md); `AUTO-followup` / `AUTO-ready-to-merge` windows are rebuilt by the next real sweep, not by resume.
 - `--show [<date>]`: read-only. Print that day's persisted report plus a per-window outcome overlay (done / blocked / in-flight / lost read from `dates/<DATE>/dispatch/`). No spawn, no state writes.
 - `--reset <ITEM>`: shell out to `${SCRIPTS}/reset-ticket.sh <ITEM>` to wipe every dedupe artifact for one item, then exit (no sweep).
 
-Mutual exclusion: `--date` / `--show` / `--reset` are mutually exclusive with each other; `--dry-run` and `--force` compose with `--date`. Bail with a one-line `ERROR:` on an illegal combination.
+Mutual exclusion: `--date` / `--resume` / `--show` / `--reset` are mutually exclusive with each other; `--dry-run` and `--force` compose with `--date` / `--resume`. Bail with a one-line `ERROR:` on an illegal combination.
 
 ## Preconditions
 
@@ -173,7 +174,7 @@ For non-approved items, merge PR conversation comments + inline review-thread co
 ## Step 5. Classify (first match wins)
 
 - **inprogress (unstarted)** — an assigned issue with no linked PR. Dispatches to Step 7b.
-- **ready-to-merge (approved)** — an APPROVED review from an `approvers[]` login. Wins over everything. Step 7d: parks a plain-shell window by default, or (when `guards.merge == "auto-on-clean-approval"` and the PR passes the clean-approval check) auto-merges it and opens a claude session + MERGED pager. No child skill either way.
+- **ready-to-merge (approved)** — an APPROVED review from an `approvers[]` login. Wins over everything. Step 7d: in skill mode (`bucket_skills["ready-to-merge"]` set) all approved PRs share ONE claude session running that skill; otherwise it parks a plain-shell window by default, or (when `guards.merge == "auto-on-clean-approval"` and the PR passes the clean-approval check) auto-merges it and opens a claude session + MERGED pager.
 - **inprogress (unverified-pr)** — not approved AND the linked PR's author is not you (someone/a bot opened it on your issue). Assess-then-finish on the PR branch (Step 7b).
 - **inreview (actionable)** — not approved, your own PR, AND ≥1 of: a new human comment, a new CHANGES_REQUESTED review, or an unresolved bot thread. Dispatches to Step 7. (Escape hatch: drop comments/CRs at or before `myLatestActivityAt` — you already replied; the ball is in the reviewer's court.)
 - **quiet** — none of the above. One-line report, no dispatch.
@@ -228,6 +229,22 @@ Bucket → session → profile → skill:
 
 ## Step 7d. Approved → AUTO-ready-to-merge
 
+Two mutually-exclusive modes. If `bucket_skills["ready-to-merge"]` is set, use **skill mode** and skip the per-PR mode entirely; otherwise use the per-PR **auto-merge / parked-shell** mode.
+
+### Skill mode (`bucket_skills["ready-to-merge"]` set)
+
+Open ONE `AUTO-ready-to-merge` claude session running that skill, and stop: no auto-merge, no per-PR parked/merged windows, `guards.merge` is ignored. The skill (e.g. `/my-prs`) is the operator's own merge cockpit — it lists every approved/ready PR and the operator merges (and, for the connector pack, cuts releases) from there interactively. Build it once per sweep:
+
+```
+${SCRIPTS}/rtm-window.sh --session AUTO-ready-to-merge --window ready-to-merge \
+  --repo-dir <working_root> --status skill --skill "<bucket_skills['ready-to-merge']>" \
+  --body-file <f> --out-dir <date-dir>
+```
+
+`<f>` is a short caller-written list of this sweep's approved PRs (one `[repo#N](url) — <ticket> <title>` bullet each) shown in the right pager for context. The session is UNGUARDED (no push-block / gh shim) because the operator acts in it directly. Do NOT auto-merge and do NOT record merges/`state.json`/weekly lines in this step — the skill's own run owns the merge and its "Worked on" bookkeeping when the operator acts. If there are no approved PRs this sweep, open nothing (and kill a stale same-day `ready-to-merge` window). One session covers all approved PRs, so there is no per-PR dedupe.
+
+### Auto-merge / parked-shell mode (no `bucket_skills["ready-to-merge"]`)
+
 One window per approved PR (deduped). Reconcile away windows whose PR later merged or lost approval.
 
 Default (`guards.merge` absent or `"blocked"`): a plain-shell window parked on the PR branch with a merge-readiness summary. No child claude, the sweep NEVER merges.
@@ -240,7 +257,7 @@ Opt-in (`guards.merge == "auto-on-clean-approval"`): the sweep MAY merge, but ON
 
 If all three hold, merge with the repo's configured method (e.g. `gh pr merge <url> --squash`), then build the window with `${SCRIPTS}/rtm-window.sh --status merged` (a claude session cd'd to the repo on the left, a `less` pager on the right showing the ticket description under a big MERGED banner + who/when merged). If any check fails, build it with `--status parked` instead and note why in the Step 6 report. A non-approver comment after approval does NOT block the merge (only `approvers[]` follow-ups do). Record the merge (`mergedBy`, `mergedAt`) in `state.json` and archive the ticket in Step 8. For every PR merged this way, ALSO record a weekly-report line under "Worked on": `${SCRIPTS}/weekly-report.sh add-item --date <DATE> --section "Worked on" --key <pr-url> --bullet "[<repo>#<n>](<pr-url>) <title> ([<ticket>](<ticket-url>))"` (Step 9). Match the report's markdown-link bullet style and embed `<pr-url>` in the bullet so the `--key` dedup finds it on re-runs. A merged item belongs under "Worked on" like any other work you did; it is not flagged differently.
 
-`rtm-window.sh` args: `--session AUTO-ready-to-merge --window <w> --repo-dir <d> --body-file <f> --status <merged|parked> [--branch <b>] [--merged-by <login>] [--merged-at <iso>]`. The body-file is the caller-written ticket id/title/url/summary; the script prepends the banner + status line and opens the pager pane.
+`rtm-window.sh` args: `--session AUTO-ready-to-merge --window <w> --repo-dir <d> --body-file <f> --status <merged|parked|skill> [--branch <b>] [--merged-by <login>] [--merged-at <iso>] [--skill "<slash>"]`. The body-file is the caller-written ticket id/title/url/summary; the script prepends the banner + status line and opens the pager pane.
 
 ## Step 8. Persist state + archive
 
@@ -283,3 +300,5 @@ tmux attach -t AUTO-inreview-others
 tmux attach -t AUTO-ready-to-merge
 tmux attach -t AUTO-followup          # own-work items already worked by a prior sweep: state + recommended actions
 ```
+
+A new day's sweep never overrides the prior day's sessions. When it dispatches, `tmux-dispatch.sh` / `rtm-window.sh` first archive any same-named session left from an earlier calendar day, renaming it with its creation date (`AUTO-inreview` → `AUTO-inreview-2026-09-08`), then create a fresh one for today. So `AUTO-<bucket>` is always today's; older runs are parked under `AUTO-<bucket>-<date>` (`tmux ls` to find them). Same-day re-runs and date-replays are untouched, they keep adding to the live session as before.

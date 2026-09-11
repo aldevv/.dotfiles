@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×42)
+- done. (×46)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×11)
@@ -36,6 +36,13 @@ increment from there.
 - routed `resolveConnectScheme` through the shared `IsNativeDSN` instead of a TODO, so the three detectors agree and a native dsn resolves to `db2` there now. (×1)
 - done, folded `IsNativeDSN` and `DSNDatabase` into one `ParseNativeDSN` pass. (×1)
 - will narrow the title to db2 and link the oracle follow-up. (×1)
+- done. oracle opt-in is the follow-up in #152. (×1)
+- done. placeholder values carrying `;`/`{`/`}`/`=` get rejected now so they can't inject keywords. a whole-dsn-in-one-var still works. (×1)
+- yeah. when i rebase #152 i'll thread both `operation` and `signalIdempotency` through together so the prefix fix doesn't get dropped. (×1)
+- fixed. the role and principal operands use `|identifier` now, and the validation queries drop `UPPER()` so they match the exact quoted names. same in `docs/oracle.md`. (×1)
+- added a `|keyword` renderer (letters, digits, single spaces only), so `CREATE SESSION` renders intact and injection is rejected. example uses it now. (×1)
+- fixed. the opt-in now needs at least one validation query, vars-checks them, and requires `no_transaction: true` on ddl engines. (×1)
+- fixed. db2 stays default-on by engine (unchanged from #151), only oracle needs the opt-in now. (×1)
 
 ### Replies — pushback
 
@@ -111,6 +118,10 @@ increment from there.
 - if a workspace's in both lists, exclude wins. (×1)
 - i split it in two. oauth now errors on a failed account check instead of just warning, so it won't silently drop data. for workspace-token i kept the warn but added what you asked for: a config help-text note that it skips account-level data (use oauth for that), plus the docs warning. (×1)
 - the already absent case returns `204`, not a 404, so `RemoveUserFromGroup` is already idempotent. (×1)
+- yeah, this branch is what introduced `autherror.go` (the `name` param for multi-db), and #149 adds the db2 detection on top. didn't want to duplicate `db2.IsAuthError` here and ship a conflicting change, so whoever lands second rebases `autherror.go` onto the other. final file ends up with both the db-name context and the db2 branch. (×1)
+- yeah, still there. low priority like you said. the combo is still rejected, just after a wasted admin connect and discovery run. (×1)
+- the `..._Oracle` full-path grant/revoke tests are already on the branch, so oracle gets end-to-end coverage too. admin entitlements opt in and use `|keyword` now. (×1)
+- intentional, not a missed classification. a code-less 404 here cannot be told apart from a routing or directory failure, so we fail loud rather than report a revoke that never happened as already-revoked. (×1)
 
 ## Anti-patterns — what NOT to post
 

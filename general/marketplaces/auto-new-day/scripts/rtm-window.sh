@@ -16,14 +16,23 @@
 #               --review-diff is given, a Hunk pane below it on those local changes.
 #               Use for an own-work item already worked by a prior sweep (skip/resume)
 #               so the operator sees what to do, in a window not chat.
+#   skill    -> left pane: an UNGUARDED claude session cd'd to --repo-dir running the
+#               --skill slash command (e.g. "/my-prs"); right pane: a pager under a
+#               "READY TO MERGE" banner listing the approved PRs (the --body-file).
+#               No write guards: this is the operator's own session, so it may merge
+#               or cut releases on command. Used for the ready-to-merge bucket when
+#               the profile sets bucket_skills["ready-to-merge"] — ONE session for
+#               all approved PRs, replacing the per-PR merged/parked windows and the
+#               auto-merge path.
 #
 # The pager body is read from --body-file (ticket id/title/url/description, caller
 # supplies it). This script only prepends the banner + a status line and opens it.
 #
 # Usage:
 #   rtm-window.sh --session <s> --window <w> --repo-dir <d> --body-file <f> \
-#                 --status <merged|parked> [--branch <b>] [--merged-by <login>] \
-#                 [--merged-at <iso>] [--out-dir <dir>]
+#                 --status <merged|parked|followup|skill> [--branch <b>] \
+#                 [--merged-by <login>] [--merged-at <iso>] [--out-dir <dir>] \
+#                 [--skill "<slash-invocation>"]
 #
 # Dedupes by window name (replaces an existing same-named window so a re-run
 # reflects current state). Exits 0 on success, 1 on bad args / tmux failure.
@@ -31,7 +40,7 @@
 set -u
 
 SESSION="" WINDOW="" REPO_DIR="" BODY_FILE="" STATUS="" BRANCH=""
-MERGED_BY="" MERGED_AT="" OUT_DIR="" REVIEW_DIFF=""
+MERGED_BY="" MERGED_AT="" OUT_DIR="" REVIEW_DIFF="" SKILL=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --session)     SESSION="${2:-}";     shift 2 ;;
@@ -44,12 +53,14 @@ while [ $# -gt 0 ]; do
     --merged-at)   MERGED_AT="${2:-}";   shift 2 ;;
     --out-dir)     OUT_DIR="${2:-}";     shift 2 ;;
     --review-diff) REVIEW_DIFF="${2:-}"; shift 2 ;;
+    --skill)       SKILL="${2:-}";       shift 2 ;;
     *) echo "rtm-window.sh: unknown arg: $1" >&2; exit 1 ;;
   esac
 done
 for v in SESSION WINDOW REPO_DIR BODY_FILE STATUS; do
   [ -n "${!v}" ] || { echo "rtm-window.sh: --${v,,} required" >&2; exit 1; }
 done
+[ "$STATUS" = "skill" ] && [ -z "$SKILL" ] && { echo "rtm-window.sh: --skill required when --status skill" >&2; exit 1; }
 [ -f "$BODY_FILE" ] || { echo "rtm-window.sh: body-file not found: $BODY_FILE" >&2; exit 1; }
 command -v tmux >/dev/null 2>&1 || { echo "rtm-window.sh: tmux missing" >&2; exit 1; }
 
@@ -102,6 +113,11 @@ BANNER
     echo "  Already worked in a prior sweep. Nothing was re-dispatched."
     echo "  Read the current state + recommended actions below, then act."
     [ -n "$BRANCH" ] && echo "  branch: $BRANCH"
+  elif [ "$STATUS" = "skill" ]; then
+    banner_ready
+    echo
+    echo "  Approved by an approver. The sweep did NOT merge."
+    echo "  A claude session running $SKILL is in the left pane — merge from there."
   else
     banner_ready
     echo
@@ -113,6 +129,14 @@ BANNER
   echo
   cat "$BODY_FILE"
 } > "$PAGER_FILE"
+
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Archive a prior-day session of this name (rename it with its creation date
+# postfix) so a new calendar day starts fresh instead of piling onto yesterday's
+# windows. No-op for a same-day session, so the same-named-window replace below
+# still targets today's live session.
+"$SCRIPTS_DIR/archive-prior-session.sh" "$SESSION" >/dev/null 2>&1 || true
 
 # Replace any existing same-named window so a re-run reflects current state.
 if tmux has-session -t "$SESSION" 2>/dev/null \
@@ -133,6 +157,11 @@ elif [ "$STATUS" = "followup" ]; then
   [ -n "$BRANCH" ] && CO="git checkout '$BRANCH' 2>/dev/null; "
   SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions. Any local changes are under review in the Hunk pane to your right. Summarize the state and recommended actions for me in a few lines, then WAIT. Do NOT run git push, gh pr create, or gh pr merge until I explicitly tell you to."
   LEFT="cd '$REPO_DIR'; ${CO}clear; exec claude --dangerously-skip-permissions '$SEED'"
+elif [ "$STATUS" = "skill" ]; then
+  # An UNGUARDED claude session running the skill (e.g. /my-prs). No push/gh shim:
+  # the operator merges + cuts releases from here on command. --skill is the full
+  # slash invocation; tmux runs it directly as claude's initial prompt.
+  LEFT="cd '$REPO_DIR'; clear; exec claude --dangerously-skip-permissions '$SKILL'"
 else
   CO=""
   [ -n "$BRANCH" ] && CO="git checkout '$BRANCH' 2>/dev/null; "
