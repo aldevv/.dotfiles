@@ -163,13 +163,17 @@ if [ -z "$HEAD_SHA" ]; then
   exit 0
 fi
 SHORT_SHA=$(printf '%s' "$HEAD_SHA" | cut -c1-8)
+# WIN_SHA is the short hash for the tmux window name only; the fix branch and
+# worktree keep the 8-char SHORT_SHA (prelude_create_fix_worktree derives its own).
+WIN_SHA=$(printf '%s' "$HEAD_SHA" | cut -c1-5)
 
 # Recursion guard: any active fixer window for this head sha means the prior
-# watcher already handled it.
+# watcher already handled it. Window names are AUTO-<KIND>-FIX#<sha5>-...-<repo>
+# (see the lib files); this matches the suffixless CI window for this sha+repo.
 if command -v tmux >/dev/null 2>&1 && \
    tmux list-windows -a -F '#W' 2>/dev/null \
-     | grep -E "^AUTO-(CI|COMMENT)-FIX:${REPO_BASENAME}#${SHORT_SHA}\$" >/dev/null; then
-  echo "fixer window for ${REPO_BASENAME}#${SHORT_SHA} already exists -- exiting (recursion guard)"
+     | grep -E "^AUTO-(CI|COMMENT)-FIX#${WIN_SHA}-${REPO_BASENAME}\$" >/dev/null; then
+  echo "fixer window for ${WIN_SHA}-${REPO_BASENAME} already exists -- exiting (recursion guard)"
   exit 0
 fi
 
@@ -224,7 +228,7 @@ NOTIFY_URGENCY="low" \
 NOTIFY_BG="#f9a825" \
   "$HOME/.claude/hooks/notify.sh" custom || true
 
-export REPO_DIR REPO_BASENAME URL PLATFORM HEAD_SHA SHORT_SHA BRANCH PR_BRANCH \
+export REPO_DIR REPO_BASENAME URL PLATFORM HEAD_SHA SHORT_SHA WIN_SHA BRANCH PR_BRANCH \
        TARGET_SESSION LOG LOG_DIR
 
 # --- Run both pipelines in parallel ---

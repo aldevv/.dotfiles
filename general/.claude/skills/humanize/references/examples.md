@@ -13,10 +13,10 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×33)
+- done. (×46)
 - good catch, will fix. (×1)
-- fixed. (×10)
-- done (×7)
+- fixed. (×12)
+- done (×11)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
@@ -30,6 +30,19 @@ increment from there.
 - yep, is customer held credential, so i chose `APP_REGISTRATION`. (×1)
 - added a comment (×1)
 - done, moved the token calc inside `ListGroupMembersPage`. (×1)
+- done. switched it to `confluent.svg`, traced from the official mark (the apple-touch png) since confluent doesn't publish a square svg. (×1)
+- done. stripped the xml decl, doctype and potrace metadata; square viewBox only now. (×1)
+- you're right. done (×1)
+- routed `resolveConnectScheme` through the shared `IsNativeDSN` instead of a TODO, so the three detectors agree and a native dsn resolves to `db2` there now. (×1)
+- done, folded `IsNativeDSN` and `DSNDatabase` into one `ParseNativeDSN` pass. (×1)
+- will narrow the title to db2 and link the oracle follow-up. (×1)
+- done. oracle opt-in is the follow-up in #152. (×1)
+- done. placeholder values carrying `;`/`{`/`}`/`=` get rejected now so they can't inject keywords. a whole-dsn-in-one-var still works. (×1)
+- yeah. when i rebase #152 i'll thread both `operation` and `signalIdempotency` through together so the prefix fix doesn't get dropped. (×1)
+- fixed. the role and principal operands use `|identifier` now, and the validation queries drop `UPPER()` so they match the exact quoted names. same in `docs/oracle.md`. (×1)
+- added a `|keyword` renderer (letters, digits, single spaces only), so `CREATE SESSION` renders intact and injection is rejected. example uses it now. (×1)
+- fixed. the opt-in now needs at least one validation query, vars-checks them, and requires `no_transaction: true` on ddl engines. (×1)
+- fixed. db2 stays default-on by engine (unchanged from #151), only oracle needs the opt-in now. (×1)
 
 ### Replies — pushback
 
@@ -46,6 +59,10 @@ increment from there.
 - won't work here. `FieldsMutuallyExclusive` needs fields that aren't required, and it only checks the current group. it'd miss leftover oauth creds under workspace-token. (×1)
 - I don't think it works in service mode, the group in `Grant`/`Revoke` is rebuilt from just its `ResourceId` there, so a `directoryId` on the profile is empty. `Id.Resource` is the only field we still get on that path, and encoding the directory there re-keys every existing group grant. (×1)
 - i added it. `DISTINCT` + `WITHIN GROUP` doesn't compile against `RESULT_SCAN`, but i dropped `DISTINCT` and it works. (×1)
+- keeping `Warn` for visibility. (×1)
+- intentional, db2 is the only engine i've verified this on. filed the oracle follow-up as CXH-2435. (×1)
+- kept the behavior, added a comment that it leans on the db2 `validation_queries` contract and shouldn't be generalized. (×1)
+- intended db2 case, keeping it. the test name and the new code comment spell out the trade-off. (×1)
 
 ### New line comments — feedback
 
@@ -78,6 +95,8 @@ increment from there.
 - not sure this will work for a user in more than one org. `GET /api/1/users` looks account-wide, so the same user would dedupe to one resource and only keep the last-synced org's grants. docs: https://github.com/ConductorOne/baton-rapid7/blob/main/test/server/rapid7-insightaccount-v1.openapi.json (×1)
 - should `userName` allow more than 8-16 alphanumerics? the docs say it needs to match the email address, so it could contain any character an email can. https://developer.paypal.com/braintree/articles/control-panel/users-roles/scim/scim-integration (×1)
 - right now it lists every workspace again for each membership and key, with no caching, so a sync makes a lot of extra api calls on bigger orgs. better to switch to the v2 syncer and keep the workspace ids in the session store: save them in `workspaceBuilder.List` and read them in `Grants`. (×2)
+- `CreateAccount` only sends `email`/`firstName`/`lastName`/`memberType`, but the account schema also offers `userKind` and `sendInvite`. `userKind` is a real create-member field, so setting it to `guest`/`embed` gets silently dropped, and `sendInvite` isn't a create-member param at all. could we wire `userKind` (and `isGuest`) in, or drop those two from the schema so it's not offering inputs that do nothing? https://help.sigmacomputing.com/reference/createmember (×1)
+- `*assignedUser.LastUpdated` is deref'd with no nil check (same at :509). https://github.com/okta/okta-sdk-golang/blob/v2.20.0/okta/appUser.go#L39 (×1)
 
 ### Top-level PR/MR comments
 
@@ -98,6 +117,12 @@ increment from there.
 
 - deployment names are unique per databricks cloud, so no collision risk. also pre-existing, not new in this PR. (×1)
 - if a workspace's in both lists, exclude wins. (×1)
+- i split it in two. oauth now errors on a failed account check instead of just warning, so it won't silently drop data. for workspace-token i kept the warn but added what you asked for: a config help-text note that it skips account-level data (use oauth for that), plus the docs warning. (×1)
+- the already absent case returns `204`, not a 404, so `RemoveUserFromGroup` is already idempotent. (×1)
+- yeah, this branch is what introduced `autherror.go` (the `name` param for multi-db), and #149 adds the db2 detection on top. didn't want to duplicate `db2.IsAuthError` here and ship a conflicting change, so whoever lands second rebases `autherror.go` onto the other. final file ends up with both the db-name context and the db2 branch. (×1)
+- yeah, still there. low priority like you said. the combo is still rejected, just after a wasted admin connect and discovery run. (×1)
+- the `..._Oracle` full-path grant/revoke tests are already on the branch, so oracle gets end-to-end coverage too. admin entitlements opt in and use `|keyword` now. (×1)
+- intentional, not a missed classification. a code-less 404 here cannot be told apart from a routing or directory failure, so we fail loud rather than report a revoke that never happened as already-revoked. (×1)
 
 ## Anti-patterns — what NOT to post
 

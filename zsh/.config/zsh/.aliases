@@ -1055,7 +1055,7 @@ alias rcrm='rclone delete'
 # deletes files and directories
 alias rcrmd='rclone purge'
 alias rcmu='rclone mount --daemon'
-alias rcmg='rclone mount --daemon gd: $REMOTES/gd'
+alias rcmg='rclone mount --daemon alejandrobernal.fx-google-drive: $REMOTES/gd'
 
 
 alias rick="curl -s -L http://bit.ly/10hA8iC | bash" # killall aplay

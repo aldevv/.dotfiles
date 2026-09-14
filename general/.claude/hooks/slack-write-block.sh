@@ -29,7 +29,7 @@ fi
 # Future-proofing: a native Slack MCP server's tools would show up as
 # mcp__<server>__<toolName>. Default-deny unless the tool name looks read-only.
 if [[ "$tool_name" == mcp__* ]] && grep -qi 'slack' <<<"$tool_name"; then
-  if ! grep -qiE 'search|list|info|history|repl(y|ies)|lookup' <<<"$tool_name"; then
+  if ! grep -qiE 'search|list_channel|list_user|info|history|repl(y|ies)|lookup|read|get_reactions' <<<"$tool_name"; then
     deny
   fi
 fi

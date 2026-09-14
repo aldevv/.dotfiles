@@ -8,6 +8,12 @@ When I ask you to review something (a PR, a diff, a chunk of code, a design doc,
 
 When in doubt, verify. The cost of a wasted subagent call is minutes; the cost of a wrong assertion is your credibility for the rest of the session.
 
+## CRITICAL: Behavioral claims need reproduction, not source-reading
+
+For a claim about how a system BEHAVES at runtime (an error message, a retry, a serialization, timing, a runtime quirk), verification means reproducing it end-to-end and observing the actual output. Reading or tracing the source is not verification: several agents can read the same code and confidently agree on the wrong answer, so N subagents that all source-traced and none ran the code is N guesses, not a check. Their agreement is not evidence.
+
+Before you tell a teammate (or me) they're wrong about a behavior, reproduce their exact case first: build the real artifact at the version actually in use (the pinned dependency, not `main`/HEAD), trigger the exact path, and look at what it actually produces. One real run outranks any amount of static analysis and settles the disagreement. Only assert they're wrong after it fails to reproduce; if you genuinely can't run it, call the claim unverified rather than rebutting it from source.
+
 ## CRITICAL: Confidence indicator on every finding
 
 Every review finding (whether posted in chat, drafted as a comment, or written into a report) must carry two things:

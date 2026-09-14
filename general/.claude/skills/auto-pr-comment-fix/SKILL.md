@@ -44,7 +44,9 @@ The exact policy text is in the context block — defer to it if it disagrees wi
 
 ## Workflow
 
-1. **Confirm the worktree.** `pwd` should match `Worktree`. `git rev-parse --abbrev-ref HEAD` should print `Fix branch`. If either disagrees, STOP and tell the user.
+1. **Preflight: worktree, then PR still open.**
+   - `pwd` should match `Worktree`; `git rev-parse --abbrev-ref HEAD` should print `Fix branch`. If either disagrees, STOP and tell the user.
+   - Confirm the PR is still open before doing any work. There can be a lag between the hook trigger and this skill starting, so the PR may already be merged or closed by now. Check it: GitHub `gh pr view <URL> --json state,mergedAt`; GitLab `glab mr view <URL>` (read the state). If it is MERGED or CLOSED, STOP: do not investigate, fix, merge, or push. Merging the fix branch into the now-merged local `PR branch` and pushing will not update the merged PR. Tell the user the PR is already merged/closed, and offer to open a fresh follow-up PR off the default branch if the fix still matters.
 
 2. **Read the review body** (inline in the context block, also saved to `Review body file`). Identify each distinct finding. **Drop any finding whose own text explicitly labels itself `non-blocking`, `nit`, or `nit:`** (e.g. "Low confidence, non-blocking.") — these never reach investigation, `AskUserQuestion`, or a fix. Note each dropped finding in the closing summary as skipped (self-declared non-blocking/nit), not as a phantom. Read the cited code locations for the remaining findings in the worktree before doing anything else.
 

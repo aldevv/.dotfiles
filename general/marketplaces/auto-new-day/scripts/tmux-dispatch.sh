@@ -56,6 +56,14 @@ die() { echo "failed: $*"; exit 1; }
 [ -n "$BOOTSTRAP_CMD" ]    || die "missing <bootstrap-cmd>"
 [ -n "$SLASH_INVOCATION" ] || die "missing <slash-invocation>"
 
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Archive a prior-day session of this name (rename it with its creation date
+# postfix) so a new calendar day starts fresh instead of piling onto yesterday's
+# windows. No-op for a same-day session, so within-sweep windows and same-day
+# re-runs still dedupe against the live session below.
+"$SCRIPTS_DIR/archive-prior-session.sh" "$SESSION" >/dev/null 2>&1 || true
+
 # `=name` forces an exact match. Without it, tmux treats the target as a
 # prefix, so "AUTO-inreview" silently resolves to "AUTO-inreview-others".
 session_exists=0

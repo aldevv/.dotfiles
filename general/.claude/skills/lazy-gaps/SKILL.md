@@ -103,14 +103,20 @@ The ONLY exception is a COVERED-BUT-WRONG edit that surgically rewrites an exist
 
 ### CRITICAL: as small as possible while still clear
 
-Every entry has a hard size budget. Draft, then cut.
+Every entry has a HARD size budget, enforced, not aspirational. Default to the SHORTEST entry that still stands alone; when in doubt, err too terse. Draft, then cut, then count.
 
 - **Bullet in an existing list**: 1 sentence, max 2 lines. No snippet.
-- **New sub-section in an existing lazy file**: 3-6 lines of prose, plus at most ONE minimal snippet (5-10 lines, only the load-bearing shape). Anything explainable in prose stays as prose.
+- **New sub-section in an existing lazy file**: 6 lines of prose is the CEILING, not the target, aim for 3-4. Plus at most ONE minimal snippet (5-10 lines, only the load-bearing shape). Anything explainable in prose stays as prose.
 - **Worked case / new pattern**: 12-20 lines TOTAL including snippet. If the draft is longer, cut the snippet to the smallest shape that shows the pattern (drop repeated fields, drop non-load-bearing lines), or split into two sub-sections when they're independently useful.
 - **New lazy file**: when no existing file's trigger fits, or when the topic has its own distinct load moment. See Step 4 for the trigger-fit bar. A single well-triggered rule is enough justification.
 
-**Mandatory trim pass.** After drafting each entry, delete every sentence that doesn't change what a reader will DO. Ban: repetition ("as noted above..."), meta-narration ("added because..."), context prose that could live in the commit message, ceremony phrases ("worth noting that", "it should be pointed out"). If cutting a sentence loses information the reader must have, keep it; otherwise it's tax.
+**Mandatory count + trim pass (do NOT skip).** After drafting each entry, COUNT its prose lines. Over the budget above → you MUST cut until it fits; the only alternative is stating in the Step 7 report the specific reason every surviving line is load-bearing (rare, and the burden is on you to justify it, not on the reader to tolerate it). Density counts too: one paragraph cramming 5+ clauses is over budget even inside the line count. Enforce ONE fact per sentence and DELETE, on sight:
+- mechanism / internals the rule doesn't need ("it calls X which calls Y", "returns a plain `*http.Client`" when the point is just "no code is attached"),
+- why-it-happens narration and any clause a grep of the named symbol would answer,
+- repetition ("as noted above..."), meta-narration ("added because..."), commit-message context, ceremony ("worth noting that", "it should be pointed out"),
+- restated framing / analogies ("the same trap as ...") that don't tell the reader what to DO.
+
+Keep a sentence ONLY if losing it changes what the reader does. Everything else is tax. If the trimmed rule still needs the mechanism to be actionable, that is the rare load-bearing case, keep the one clause and say so in the report.
 
 Style directives:
 
@@ -165,7 +171,7 @@ End with the `Changes made` block from the auto-new-day pattern: `Verdict: Yes |
 
 ## Anti-patterns
 
-- **Oversize entries.** Worked-case sections that spill past 20 lines, snippets that reproduce a whole config block when 6 lines show the shape, prose that repeats what the snippet shows. Cut the snippet, cut the prose.
+- **Oversize entries.** A sub-section past its 6-line ceiling, a dense paragraph cramming 5+ clauses (over budget even within the line count), a worked case past 20 lines, a snippet reproducing a whole config block when 6 lines show the shape, prose that repeats the snippet or explains mechanism/internals the rule doesn't need. Count the lines, cut to the shortest entry that still stands alone.
 - **Bypassing `claude-md-save`** for NOT-COVERED-KEEP adds. The only Edit-tool exception is COVERED-BUT-WRONG (rewrite in place). Anything that ADDS content goes through the save skill.
 - **Padded rules.** "It is generally considered best practice to..." → delete and write "use X."
 - **Rule-by-attribution.** "Per luisina's review, ..." → state the rule, not the source.

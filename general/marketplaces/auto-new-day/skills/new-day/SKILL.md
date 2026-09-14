@@ -1,7 +1,7 @@
 ---
 name: new-day
 description: Morning triage engine. Discovers the work assigned to you on GitHub (issues + PRs across a configured repo list), classifies each item into four buckets, and fans the actionable ones out to tmux windows where a child claude does the work, commits locally, and NEVER pushes or opens a PR. You read the results later. Buckets, approvers, repos, and the dispatched skill all come from a dispatch profile (no domain knowledge is hardcoded). Triggers on "/auto-new-day", "run my morning triage", "check my in-review PRs", "check my assigned issues", "any new comments on my PRs", "did anyone approve my PRs", "do my morning reviews". Do NOT trigger for a single named PR (use a direct review), or to pick from a team backlog. This is the generic engine; a domain pack (e.g. auto-new-day-work) can supply its own profile + skills on top.
-argument-hint: '[<date> | --date <date> | --show [<date>] | --reset <ITEM> | --dry-run | --force | --fast]'
+argument-hint: '[<date> | --date <date> | --resume | --show [<date>] | --reset <ITEM> | --dry-run | --force | --fast]'
 ---
 
 # auto-new-day (engine)
@@ -32,7 +32,7 @@ Profile fields:
 - `ticket_source` — `"github"` for this engine. (`"linear"` is reserved for a domain pack that overrides discovery.)
 - `discovery` — `{ assignee, repos[], issue_states[], pr_states[], max_pr_age_days? }`. `repos` is the list of `OWNER/REPO` (or globs under `working_root`) the sweep scans. `assignee` is usually `@me`. `max_pr_age_days` (optional, 0/absent = no cap) drops teammate-review (`inreview-others`) PRs opened more than that many days ago, UNLESS you engaged with the PR before it crossed that age (see `triage.sh` `pr-too-old`).
 - `buckets` — prose classification rules for `inreview` / `inprogress` / `inreview-others` / `ready-to-merge`. The engine reads these as the definition of each bucket.
-- `bucket_skills` — `{ bucket -> slash-command }` the engine dispatches per bucket. Default: `/auto-new-day:impl` for all dispatched buckets. `ready-to-merge` has none (plain shell). A value may also be a label-routing map (see "bucket_skills map form" under the Linear backend).
+- `bucket_skills` — `{ bucket -> slash-command }` the engine dispatches per bucket. Default: `/auto-new-day:impl` for all dispatched buckets. `ready-to-merge` has none by default (plain shell / auto-merge); set `bucket_skills["ready-to-merge"]` to a skill (e.g. `/my-prs`) to instead open ONE claude session running that skill for all approved PRs (skill mode, Step 7d). A value may also be a label-routing map (see "bucket_skills map form" under the Linear backend).
 - `review_chain` — extra skills a review window runs before the main review skill (generic `[]`).
 - `approvers` — GitHub logins whose APPROVED review moves a PR to `ready-to-merge` and clears it from the teammate-review candidate set.
 - `caps` — `{ review_prs_per_sweep }` (default 5).
@@ -59,6 +59,19 @@ Every `dates/`, `done/`, `markers/`, `guards/`, `weekly/`, and `state.json` path
 
 The sweep runs unattended on a morning timer. NEVER call `AskUserQuestion` or any interactive prompt anywhere in the sweep. When a judgment call comes up (stale marker vs new feedback, dirty checkout, resume-vs-fresh), make the best defensible guess, act, and record it in the Step 6 report with a `⚠️` so the operator can override after the fact. "When in doubt, best-guess and flag it" is the rule; "when in doubt, ask" is forbidden. This binds even when run by hand.
 
+## CRITICAL: the sweep NEVER (re)assigns; Todo → In-Progress only via profile opt-in
+
+The reassign ban is absolute. Promoting `Todo` is forbidden by default and is lifted ONLY by an explicit profile opt-in (`discovery.todo_fallback`), under tight limits.
+
+FORBIDDEN, no exceptions, no profile flag, no domain-pack override:
+
+- **NEVER assign or reassign a ticket** to the operator or anyone else. The operator owns their own assignments; the sweep only ever reads `assignee`. No flag lifts this.
+- **NEVER change status by default.** With no `todo_fallback` opt-in, NEVER promote a `Todo` / `Backlog` / any non-started ticket into a started status. No backlog-fill, no "keep the sweep busy" promotion. An empty in-progress bucket dispatches nothing.
+
+**Single exception — `discovery.todo_fallback` (opt-in, Linear backend only).** When the active profile sets `discovery.todo_fallback: "top-one"` AND the In-Progress bucket is genuinely empty after discovery, the sweep MAY promote exactly ONE `Todo` ticket already assigned to the operator into `In Progress` and dispatch it (see Step 2b). Every limit is mandatory: (a) In-Progress must be empty, never alongside existing in-progress work; (b) exactly one ticket, the highest-priority `Todo` (tie-break most-recently-updated `updatedAt`); (c) `Todo` only, never `Backlog` / `Triage` / any other status; (d) already assigned to the operator, the reassign ban above still holds and the sweep never sets `assignee`; (e) team-scoped to `discovery.team`. Absent the flag, the default (dispatch nothing) holds for every backend.
+
+The sweep discovers work already assigned to the operator; it never assigns. Aside from the `todo_fallback` promotion above (one `save_issue` status change, within limits (a)-(e)), the only ticket-tracker writes the sweep makes are `list_diffs`/`list_comments` reads plus the Step 7d approved-PR archive bookkeeping in the sweep's own `state.json`/`done/` (never the tracker). Any OTHER `save_issue` / status-change / assignee-change call anywhere in the sweep is a bug.
+
 ## CRITICAL: local-only contract (binds every dispatched child)
 
 Enforced by BOTH prompt text AND mechanical guards set up in the window bootstrap.
@@ -79,7 +92,7 @@ These catch an honest-but-forgetful child, not an adversarial one (inline `--no-
 
 ## Dispatched skills
 
-Every dispatched window runs `bucket_skills[<bucket>]` from the profile. The generic default is `/auto-new-day:impl` for `inreview` / `inprogress` / `inreview-others`. A domain pack overrides these (e.g. a connector pack maps `inprogress` bug-labeled items to its own bug skill). `ready-to-merge` runs no child; it is the operator's own shell parked on the branch.
+Every dispatched window runs `bucket_skills[<bucket>]` from the profile. The generic default is `/auto-new-day:impl` for `inreview` / `inprogress` / `inreview-others`. A domain pack overrides these (e.g. a connector pack maps `inprogress` bug-labeled items to its own bug skill). `ready-to-merge` runs no child by default (the operator's own parked shell / the auto-merge path); when `bucket_skills["ready-to-merge"]` is set it opens ONE claude session running that skill (Step 7d skill mode).
 
 ## Modes (parse once, at the top)
 
@@ -89,10 +102,11 @@ Alongside profile + path resolution, parse the argument tail once and cache bool
 - `--force` / `-f`: bypass the marker dedupe check so items re-dispatch even if a marker says they were handled; also forwarded to the child so its resume fast-path is bypassed.
 - `--fast`: children run their normal parallel-subagent fan-outs. Default (no `--fast`) injects `--no-subagents` + `NO_SUBAGENTS=1` so unattended runs cost one pass of tokens, not N.
 - `--date <date>` or a bare date phrase (`today`, `yesterday`, `june 16`, `2026-06-16`): replay a saved day's plan from `dates/<DATE>-create.md`, re-spawning any windows not already running. No discovery, no `gh`. Resolve with `${SCRIPTS}/resolve-date.sh`.
+- `--resume`: restore-after-reboot shortcut. Resolve the newest saved plan with `${SCRIPTS}/resolve-resume-date.sh` (it prints the latest `dates/<DATE>-create.md` date, ignoring dry-run copies), then run the `--date <that>` replay path exactly. Use it when a reboot killed the tmux sessions and you don't want to look up which day the last sweep was. If the helper exits non-zero (no saved plan), print its one-line message and stop; no discovery. Only the dispatched worker windows come back this way (they live in create.md); `AUTO-followup` / `AUTO-ready-to-merge` windows are rebuilt by the next real sweep, not by resume.
 - `--show [<date>]`: read-only. Print that day's persisted report plus a per-window outcome overlay (done / blocked / in-flight / lost read from `dates/<DATE>/dispatch/`). No spawn, no state writes.
 - `--reset <ITEM>`: shell out to `${SCRIPTS}/reset-ticket.sh <ITEM>` to wipe every dedupe artifact for one item, then exit (no sweep).
 
-Mutual exclusion: `--date` / `--show` / `--reset` are mutually exclusive with each other; `--dry-run` and `--force` compose with `--date`. Bail with a one-line `ERROR:` on an illegal combination.
+Mutual exclusion: `--date` / `--resume` / `--show` / `--reset` are mutually exclusive with each other; `--dry-run` and `--force` compose with `--date` / `--resume`. Bail with a one-line `ERROR:` on an illegal combination.
 
 ## Preconditions
 
@@ -138,7 +152,7 @@ Over `discovery.repos` (or every repo matched under `working_root`):
 
 Tag each with its source. A PR you authored is a candidate for `inreview` / `ready-to-merge`. To decide whether an assigned issue already has a PR, resolve its linked PR via GraphQL `issue.closedByPullRequestsReferences` (fallback: `gh pr list --search "<issue-url> in:body"`): no linked PR means `inprogress` unstarted; a linked PR authored by someone else means `inprogress` unverified. This linkage is best-effort, GitHub only links PRs that close or reference the issue, so a related-but-unlinked PR can misclassify as unstarted; flag it in the report.
 
-There is no "promote a Todo into In Progress" fallback: plain GitHub issues have no portable status column, so a genuinely empty morning simply dispatches nothing to `inprogress` (a tracker-backed domain pack can add its own backlog promotion).
+On the GitHub backend there is no "promote a Todo into In Progress" fallback: a genuinely empty morning simply dispatches nothing to `inprogress` (GitHub issues have no started/unstarted status model to promote through). The `discovery.todo_fallback` opt-in is a Linear-backend feature only (Step 2b); on any backend, moving a ticket without that opt-in, or assigning it to the operator ever, is forbidden (see "CRITICAL: the sweep NEVER (re)assigns; Todo → In-Progress only via profile opt-in").
 
 ## Step 2c. Teammate PRs needing your review (`inreview-others`)
 
@@ -160,7 +174,7 @@ For non-approved items, merge PR conversation comments + inline review-thread co
 ## Step 5. Classify (first match wins)
 
 - **inprogress (unstarted)** — an assigned issue with no linked PR. Dispatches to Step 7b.
-- **ready-to-merge (approved)** — an APPROVED review from an `approvers[]` login. Wins over everything. Step 7d: parks a plain-shell window by default, or (when `guards.merge == "auto-on-clean-approval"` and the PR passes the clean-approval check) auto-merges it and opens a claude session + MERGED pager. No child skill either way.
+- **ready-to-merge (approved)** — an APPROVED review from an `approvers[]` login. Wins over everything. Step 7d: in skill mode (`bucket_skills["ready-to-merge"]` set) all approved PRs share ONE claude session running that skill; otherwise it parks a plain-shell window by default, or (when `guards.merge == "auto-on-clean-approval"` and the PR passes the clean-approval check) auto-merges it and opens a claude session + MERGED pager.
 - **inprogress (unverified-pr)** — not approved AND the linked PR's author is not you (someone/a bot opened it on your issue). Assess-then-finish on the PR branch (Step 7b).
 - **inreview (actionable)** — not approved, your own PR, AND ≥1 of: a new human comment, a new CHANGES_REQUESTED review, or an unresolved bot thread. Dispatches to Step 7. (Escape hatch: drop comments/CRs at or before `myLatestActivityAt` — you already replied; the ball is in the reviewer's court.)
 - **quiet** — none of the above. One-line report, no dispatch.
@@ -169,11 +183,13 @@ A domain pack can refine `inprogress` into sub-workflows by label (via `bucket_s
 
 ## Linear backend (`ticket_source: "linear"`)
 
-When the active profile sets `ticket_source: "linear"` (the connector work profile), Steps 1-5 discover + classify via Linear (`mcp__plugin_linear_linear__*`) instead of `gh`, reproducing the original connector sweep exactly. Everything from Step 6 on (report, dispatch, guards, marker/resume, state, weekly) is unchanged. Extra `discovery` fields for this backend: `team` (e.g. "Connector Horizon") and `inprogress_all_teams` (bool, default false; when true the own in-progress discovery ignores `team` and scans the whole workspace, so any in-progress ticket assigned to you is picked up regardless of team, review discovery stays team-scoped).
+When the active profile sets `ticket_source: "linear"` (the connector work profile), Steps 1-5 discover + classify via Linear (`mcp__plugin_linear_linear__*`) instead of `gh`, reproducing the original connector sweep exactly. Everything from Step 6 on (report, dispatch, guards, marker/resume, state, weekly) is unchanged. Extra `discovery` fields for this backend: `team` (e.g. "Connector Horizon"); `inprogress_all_teams` (bool, default false; when true the own in-progress discovery ignores `team` and scans the whole workspace, so any in-progress ticket assigned to you is picked up regardless of team, review discovery stays team-scoped); and `todo_fallback` (default absent/`"none"`; `"top-one"` opts into the empty-In-Progress Todo promotion described in Step 2b, subject to the limits in "CRITICAL: the sweep NEVER (re)assigns; Todo → In-Progress only via profile opt-in").
 
 - **Step 1 (identity).** Current user via `list_users`, matched by the operator's email; cache `me.id`. Approvers: the `approvers[]` GitHub logins clear a PR (a connector's code still lives on GitHub, so approval is still read from `gh pr view` reviews); an optional `approvers_name_re` enables the Linear-name fallback.
 - **Step 2 (my work).** `list_issue_statuses` on `team`; keep review statuses (name contains "review") and in-progress statuses (contains "progress", plus `Doing`/`Started`). **Review** discovery is team-scoped: `list_issues` with `team` + `assignee=me.id` + the review statuses. **In-progress** discovery: when `discovery.inprogress_all_teams` is true, run `list_issues` with `assignee=me.id` + each in-progress status name and NO `team` (workspace-wide, so an in-progress ticket assigned to you on ANY team is picked up); otherwise scope it to `team` like the review query. Either way, **paginate until `hasNextPage == false`**, dedupe by id, tag `stage` + `team`. Capture `identifier,url,title,updatedAt,labels[],stage,team`. **Re-verify `assignee.id == me.id`** per result (the MCP filter is flaky); drop mismatches. A cross-team in-progress ticket dispatches to `bucket_skills.inprogress` (label-routed) exactly like a `team` one; its repo is `working_root/<repo from the ticket/PR>`, cloned if absent.
-- **Step 2b (Todo fallback).** If zero in-progress tickets survive, promote ONE `Todo` ticket (drop urgent/high, then shortest title, fewest labels, oldest) via `save_issue(state=In Progress)` and treat it as a fresh unstarted-impl candidate. Skipped in dry-run (it writes).
+- **Step 2b (empty in-progress).** If zero in-progress tickets survive:
+  - **Default (no `discovery.todo_fallback`).** Dispatch nothing to `inprogress`. Do NOT promote a `Todo`/`Backlog` ticket and do NOT `save_issue`/assign, that is forbidden (see "CRITICAL: the sweep NEVER (re)assigns; Todo → In-Progress only via profile opt-in"). A genuinely empty in-progress morning is a valid outcome; report it and move on.
+  - **`discovery.todo_fallback: "top-one"`.** Promote exactly ONE `Todo` ticket into `In Progress`, then classify + dispatch it like any in-progress item. Steps: (1) `list_issues` with `team` + `assignee=me.id` + status `Todo` (the `unstarted` status), paginate to `hasNextPage == false`, and re-verify `assignee.id == me.id` per result (drop mismatches); (2) if none, dispatch nothing and report; (3) else pick the single highest-priority ticket, where Linear `priority.value` orders Urgent(1) > High(2) > Medium(3) > Low(4) > No-priority(0) (so rank by `value == 0 ? 5 : value`, ascending), tie-break by newest `updatedAt`; (4) `save_issue` to set its status to the team's `In Progress` status id, then **re-read the issue and confirm the status actually changed** (a `save_issue` success line is not proof, per the connector-write caveat); (5) compute its `workflow` from labels and dispatch through the normal `inprogress` path (`bucket_skills.inprogress` label routing) exactly as if it had been discovered in progress. Never promote more than one; never touch `Backlog`/`Triage`; never set `assignee`. Record the promotion in the Step 6 report with a `⚠️` (the sweep changed tracker state) and note the ticket + why (In-Progress was empty).
 - **Step 2c (teammate PRs).** `list_issues` team + in-review statuses, filter `assignee.id != me.id` (drop bot assignees), resolve each linked PR via `list_diffs`, then the same `gh pr view` approval/engagement checks and `caps.review_prs_per_sweep` cap as the GitHub backend.
 - **Step 3 (PR resolve).** Per ticket, `list_diffs` → most-recent open PR (+ head branch + repo dir). Approval, changes-requested, foreign-commits, and bot-thread detection all use `gh` exactly as the GitHub backend.
 - **Step 4 (new activity).** Merge Linear comments (`list_comments`, newer than `lastCheckedAt`) with the PR conversation + inline review comments. `isSelf` matches the operator's gh logins (PR) / email (Linear).
@@ -213,6 +229,22 @@ Bucket → session → profile → skill:
 
 ## Step 7d. Approved → AUTO-ready-to-merge
 
+Two mutually-exclusive modes. If `bucket_skills["ready-to-merge"]` is set, use **skill mode** and skip the per-PR mode entirely; otherwise use the per-PR **auto-merge / parked-shell** mode.
+
+### Skill mode (`bucket_skills["ready-to-merge"]` set)
+
+Open ONE `AUTO-ready-to-merge` claude session running that skill, and stop: no auto-merge, no per-PR parked/merged windows, `guards.merge` is ignored. The skill (e.g. `/my-prs`) is the operator's own merge cockpit — it lists every approved/ready PR and the operator merges (and, for the connector pack, cuts releases) from there interactively. Build it once per sweep:
+
+```
+${SCRIPTS}/rtm-window.sh --session AUTO-ready-to-merge --window ready-to-merge \
+  --repo-dir <working_root> --status skill --skill "<bucket_skills['ready-to-merge']>" \
+  --body-file <f> --out-dir <date-dir>
+```
+
+`<f>` is a short caller-written list of this sweep's approved PRs (one `[repo#N](url) — <ticket> <title>` bullet each) shown in the right pager for context. The session is UNGUARDED (no push-block / gh shim) because the operator acts in it directly. Do NOT auto-merge and do NOT record merges/`state.json`/weekly lines in this step — the skill's own run owns the merge and its "Worked on" bookkeeping when the operator acts. If there are no approved PRs this sweep, open nothing (and kill a stale same-day `ready-to-merge` window). One session covers all approved PRs, so there is no per-PR dedupe.
+
+### Auto-merge / parked-shell mode (no `bucket_skills["ready-to-merge"]`)
+
 One window per approved PR (deduped). Reconcile away windows whose PR later merged or lost approval.
 
 Default (`guards.merge` absent or `"blocked"`): a plain-shell window parked on the PR branch with a merge-readiness summary. No child claude, the sweep NEVER merges.
@@ -225,7 +257,7 @@ Opt-in (`guards.merge == "auto-on-clean-approval"`): the sweep MAY merge, but ON
 
 If all three hold, merge with the repo's configured method (e.g. `gh pr merge <url> --squash`), then build the window with `${SCRIPTS}/rtm-window.sh --status merged` (a claude session cd'd to the repo on the left, a `less` pager on the right showing the ticket description under a big MERGED banner + who/when merged). If any check fails, build it with `--status parked` instead and note why in the Step 6 report. A non-approver comment after approval does NOT block the merge (only `approvers[]` follow-ups do). Record the merge (`mergedBy`, `mergedAt`) in `state.json` and archive the ticket in Step 8. For every PR merged this way, ALSO record a weekly-report line under "Worked on": `${SCRIPTS}/weekly-report.sh add-item --date <DATE> --section "Worked on" --key <pr-url> --bullet "[<repo>#<n>](<pr-url>) <title> ([<ticket>](<ticket-url>))"` (Step 9). Match the report's markdown-link bullet style and embed `<pr-url>` in the bullet so the `--key` dedup finds it on re-runs. A merged item belongs under "Worked on" like any other work you did; it is not flagged differently.
 
-`rtm-window.sh` args: `--session AUTO-ready-to-merge --window <w> --repo-dir <d> --body-file <f> --status <merged|parked> [--branch <b>] [--merged-by <login>] [--merged-at <iso>]`. The body-file is the caller-written ticket id/title/url/summary; the script prepends the banner + status line and opens the pager pane.
+`rtm-window.sh` args: `--session AUTO-ready-to-merge --window <w> --repo-dir <d> --body-file <f> --status <merged|parked|skill> [--branch <b>] [--merged-by <login>] [--merged-at <iso>] [--skill "<slash>"]`. The body-file is the caller-written ticket id/title/url/summary; the script prepends the banner + status line and opens the pager pane.
 
 ## Step 8. Persist state + archive
 
@@ -247,6 +279,16 @@ This writes the day-keyed narrative section (idempotent per date — a re-run RE
 
 **Skipped items never appear in the weekly report.** Any item the operator marked skipped, a `$STATE_DIR/done/<key>.done.json` with `outcome: "skipped"` (written by `mark_done.sh`), is excluded: `weekly-report.sh generate` drops it, and no dispatch/recording path may `add-item` it. This is distinct from other `done/` records (`outcome` merged / approved / left-status), which are NOT skips and stay. A review also only earns a "Reviewed teammate PRs" line when the operator actually posted an approval or comment on it (the sweep never posts), so a drafted-but-unposted or skipped review is never recorded.
 
+### Step 9b. Weekly own-work inference (report day only)
+
+The sweep records what IT dispatched, which misses work the operator did outside the sweep (PRs merged mid-day, tickets hand-moved to Validation/Done). On the week's report day ONLY (the same day `show --if-friday` will actually surface the report; on any other day skip this whole step), infer the operator's own completed work for the week from the ticket source and their PR authorship, and fold it into the "Worked on" lines BEFORE calling `show`. This is what makes the report self-populate without the operator listing their week by hand.
+
+Compute the week's Monday in `tz` as `<MON>` (the `date -d "<TODAY> -$(( $(date +%u) - 1 )) days" +%F` the helpers already use). Then:
+
+1. **Authored PRs (primary signal, works on every backend).** `gh search prs --author=@me --merged --merged-at=">=<MON>"` and `gh search prs --author=@me --state=open` (keep the open ones whose `updatedAt >= <MON>`), across the org. Each connector PR title carries its `CXH-NNNN`; parse it out. For each PR, `add-item --section "Worked on" --key <pr-url> --bullet "[<repo>#<n>](<pr-url>) <title-minus-ticket> (<CXH-NNNN>, merged|open)"`. The `--key <pr-url>` dedups against the Step 7d auto-merge recorder and against re-runs, so the same PR never doubles. Group multiple PRs on one connector into a single bullet when it reads cleaner (one `--key` per group, e.g. the connector name), but never drop a PR.
+2. **Do NOT infer own-work from a Linear branch-name prefix.** A ticket's `gitBranchName` prefix (e.g. `alejandrobernal/...`) is NOT proof the operator did the work: Linear stamps that prefix at creation and it survives reassignment, so tickets the operator only *reviewed* (or that were briefly theirs) still carry it. Using it as the signal produces false positives (e.g. claiming a whole Meraki batch the operator merely reviewed). **PR authorship (item 1) is the only reliable own-work signal.** If a finished ticket genuinely has no operator-authored PR (bundled into a sibling PR, or a docs/config-only status move), only record it as "Worked on" when you can positively confirm the operator did it — the operator authored the sibling PR that carries it, or they say so — never from the branch prefix or the assignee field alone. When you cannot confirm, leave it out (a teammate PR the operator reviewed belongs under "Reviewed teammate PRs", not "Worked on").
+3. Idempotent + additive: this step only ever `add-item`s (never rewrites the narrative), and every `--key` is stable, so running it on every sweep would be harmless; gating it to the report day is purely to save the `gh`/Linear calls. The narrative day-sections from Step 9 stay the record of what the SWEEP did; Step 9b is the record of what the OPERATOR shipped.
+
 ## Output discipline
 
 The sweep's own chat output is the report (Step 6) plus the spawn results. No narration between steps beyond one-line status. The operator reads the report and attaches the sessions they care about:
@@ -258,3 +300,5 @@ tmux attach -t AUTO-inreview-others
 tmux attach -t AUTO-ready-to-merge
 tmux attach -t AUTO-followup          # own-work items already worked by a prior sweep: state + recommended actions
 ```
+
+A new day's sweep never overrides the prior day's sessions. When it dispatches, `tmux-dispatch.sh` / `rtm-window.sh` first archive any same-named session left from an earlier calendar day, renaming it with its creation date (`AUTO-inreview` → `AUTO-inreview-2026-09-08`), then create a fresh one for today. So `AUTO-<bucket>` is always today's; older runs are parked under `AUTO-<bucket>-<date>` (`tmux ls` to find them). Same-day re-runs and date-replays are untouched, they keep adding to the live session as before.
