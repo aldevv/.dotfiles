@@ -112,6 +112,9 @@ alias fcp="git forgit cherry_pick"
 
 
 alias ec="easycancha"
+alias show-id="$HOME/.claude/skills/show-id/scripts/show-id.sh"
+alias show-summary="$HOME/.claude/skills/show-id/scripts/show-summary.sh"
+alias show-sessions="$HOME/.claude/skills/show-id/scripts/show-sessions.sh"
 
 # kubernetes
 alias watch='watch ' # so it catches aliases

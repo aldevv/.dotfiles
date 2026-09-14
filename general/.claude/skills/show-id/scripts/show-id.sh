@@ -1,26 +1,28 @@
 #!/usr/bin/env bash
 #
-# Print the current Claude Code session (conversation) id.
+# Print the current Claude Code session id, OR — when run from a plain
+# interactive terminal with no live session in this directory — open an fzf
+# picker of past conversations and print the chosen one's id.
 #
-# There is no env var for the session id during an interactive run, but the
-# active conversation is the transcript being appended to right now, so the
-# newest .jsonl in this cwd's project dir is the current session. Its filename
-# (minus .jsonl) is the id.
+# "Current" works because the active conversation is the transcript being
+# appended to right now, so the newest .jsonl in this cwd's project dir is it.
 set -euo pipefail
 
-# honor CLAUDE_CONFIG_DIR override; default ~/.claude
-cfg="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+. "$(dirname "$self")/lib.sh"
 
-# Claude Code slugs the cwd by turning every non-alphanumeric char into '-'
-slug=$(pwd | sed 's/[^a-zA-Z0-9]/-/g')
-dir="$cfg/projects/$slug"
+maybe_preview "$@"
 
-# newest transcript = current session
-newest=$(ls -t "$dir"/*.jsonl 2>/dev/null | head -1 || true)
-if [[ -z "$newest" ]]; then
-	echo "show-id: no session transcript found for $(pwd)" >&2
-	echo "show-id: checked $dir (are you inside a Claude Code session here?)" >&2
+# Compute interactivity here, in the top-level shell, so it reflects the real
+# stdout (a terminal vs a pipe) rather than resolve_id's captured stdout.
+interactive=0
+[ -t 1 ] && interactive=1
+
+id=$(resolve_id "$interactive") || {
+	echo "show-id: no conversations found for $(pwd)" >&2
+	echo "show-id: checked $dir (are you inside a Claude Code project dir?)" >&2
 	exit 1
-fi
+}
+[ -n "$id" ] || exit 0 # picker cancelled
 
-basename "$newest" .jsonl
+printf '%s\n' "$id"

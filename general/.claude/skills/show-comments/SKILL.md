@@ -48,10 +48,14 @@ gh api graphql -f query='
       (.comments.nodes[0].body | gsub("[\n\r]+";" ") | .[0:100]) ] | @tsv'
 ```
 
-Reviews (state + body) and conversation comments:
+Reviews (state + timestamp + head-anchor + body) and conversation comments. `submitted_at` lets Step 5 find each reviewer's LATEST verdict (earlier ones are superseded); `commit_id` is kept only as a parenthetical in the Note, not the status:
 ```bash
+HEAD=$(gh pr view N --json headRefOid -q .headRefOid)
 gh api repos/OWNER/REPO/pulls/N/reviews \
-  | jq -r '.[] | [.user.login, .state, (.body|gsub("[\n\r]+";" ")|.[0:80])] | @tsv'
+  | jq -r --arg head "$HEAD" '.[] | [.user.login, .state, .submitted_at,
+      ((.commit_id // "-")[0:8]),
+      (if (.commit_id // "") == $head then "head" else "old" end),
+      (.body|gsub("[\n\r]+";" ")|.[0:80])] | @tsv'
 gh api repos/OWNER/REPO/issues/N/comments \
   | jq -r '.[] | [.user.login, (.body|gsub("[\n\r]+";" ")|.[0:100])] | @tsv'
 ```
@@ -72,6 +76,8 @@ Bot if the login ends with `[bot]` or matches a known bot (`github-actions`, `li
 ## Step 4 — Severity (best-effort)
 Bot inline comments often lead with a glyph/word: 🔴/`Blocking`/`Bug` → high, 🟠 → med-high, 🟡/`Suggestion`/`Nit` → low. Map the leading token to a `Sev` cell; use `-` when none. Never invent a severity a human didn't state.
 
+For Table B rows, derive `Sev` from the row kind: a **review** maps from its state — `CHANGES_REQUESTED` → high, `COMMENTED`/`DISMISSED` → `-` (informational), `APPROVED` → ✅; a **conversation comment** uses the same leading-glyph rule as inline threads, else `-`.
+
 ## Step 5 — Render two tables
 Table A (inline threads), one row per thread. **Order resolved threads first, then open**; within each group keep the order returned.
 
@@ -83,9 +89,16 @@ Table A (inline threads), one row per thread. **Order resolved threads first, th
 
 Table B (reviews + conversation):
 
-`Author | Type | Note`
+`Author | Type | Sev | Status | Note`
 
 - `Type` ∈ `review (APPROVED|CHANGES_REQUESTED|COMMENTED|DISMISSED)` or `comment`.
+- `Sev` per Step 4 (review state → severity; comment → leading glyph else `-`).
+- `Status` says **done vs not done** — whether the row still needs action — NOT which commit it sits on. For a **review**, first find each reviewer's LATEST review by `submitted_at`; only that one is operative, every earlier review from the same reviewer is superseded. Then:
+  - `⚠️ not done` — the reviewer's latest review is `CHANGES_REQUESTED` (a live block; this is what still drives `reviewDecision`).
+  - `✅ done` — the reviewer's latest is `APPROVED`, OR this review was superseded by a newer one from the same reviewer (its findings no longer gate), OR `DISMISSED`.
+  - `-` — a `COMMENTED` review that is the latest (informational, nothing to resolve).
+  Put the short commit sha (`head`/`old`) in the Note as a parenthetical if useful, e.g. `(on old head 1d18d04)`; keep it out of the Status cell so a superseded block never reads as live. A **conversation comment** has no resolution state, so its `Status` is `-`.
+- Tag bots per Step 3 in the `Author` cell.
 
 ## Step 6 — Summary line
 One line after the tables: total threads, `N open` (of which how many human), review decision if any (`gh pr view --json reviewDecision,mergeable`), and whether any human has commented at all. If everything is bot and resolved, say so plainly.
