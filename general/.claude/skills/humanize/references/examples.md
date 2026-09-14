@@ -45,6 +45,7 @@ increment from there.
 - looked closer at this and you're right, deleting it. the sdk's retry loop already retries `codes.Unavailable` with unlimited attempts by default and backs off using the real `*v2.RateLimitDescription` (reset time, remaining count) instead of guessing, so the client-side pacer wasn't buying us anything for correctness. removed `uhttp.WithRateLimiter` and the `options`/`WithRateLimit` plumbing around it. (×1)
 - won't work here. `FieldsMutuallyExclusive` needs fields that aren't required, and it only checks the current group. it'd miss leftover oauth creds under workspace-token. (×1)
 - I don't think it works in service mode, the group in `Grant`/`Revoke` is rebuilt from just its `ResourceId` there, so a `directoryId` on the profile is empty. `Id.Resource` is the only field we still get on that path, and encoding the directory there re-keys every existing group grant. (×1)
+- i added it. `DISTINCT` + `WITHIN GROUP` doesn't compile against `RESULT_SCAN`, but i dropped `DISTINCT` and it works. (×1)
 
 ### New line comments — feedback
 
