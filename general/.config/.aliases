@@ -110,6 +110,9 @@ alias fR="git forgit reset_head"
 alias frf="git forgit reflog"
 alias fcp="git forgit cherry_pick" 
 
+
+alias ec="easycancha"
+
 # kubernetes
 alias watch='watch ' # so it catches aliases
 alias kx='kubectx'
