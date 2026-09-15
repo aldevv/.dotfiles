@@ -318,8 +318,6 @@ alias \
 	smk='sudo make' \
 	smkc='sudo make clean' \
 	smki='sudo make install' \
-	ec='echo' \
-	et='entr' \
 	mime='xdg-mime query filetype' \
 	chx='sudo chmod +x' \
 	xmod='xmodmap "$HOME/.config/.Xmodmap"' \
