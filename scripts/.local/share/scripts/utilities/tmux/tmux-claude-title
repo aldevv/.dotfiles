@@ -106,15 +106,20 @@ fi
     mkdir "$lockdir" 2>/dev/null || exit 0
     trap 'rmdir "$lockdir" 2>/dev/null' EXIT
 
-    prompt="Summarize this work session as 2 or 3 lowercase words joined with '-' (e.g. 'reopen-request-bug'). Keep each word separate with a hyphen; never merge words into one run-on token. Prefer 2 words. Skip filler words (the, for, a, to, of, and, is, has). Output ONLY the token, no quotes, no period, no trailing words, no explanation. Title: $cleaned"
+    # Title goes in the user prompt, not the system prompt, so every call shares
+    # one cached system prompt instead of paying full cache-creation cost each
+    # time. --tools/--strict-mcp-config/--disable-slash-commands drop the unused
+    # Claude Code toolset from that prompt; MAX_THINKING_TOKENS=0 skips thinking.
+    system_prompt="Summarize the given work-session title as 2 or 3 lowercase words joined with '-' (e.g. 'reopen-request-bug'). Keep each word separate with a hyphen; never merge words into one run-on token. Prefer 2 words. Skip filler words (the, for, a, to, of, and, is, has). Output ONLY the token, no quotes, no period, no trailing words, no explanation."
+    claude_flags=(--model haiku --system-prompt "$system_prompt" --tools none --strict-mcp-config --disable-slash-commands)
     # Ask for JSON when logging so token counts return with the summary;
     # otherwise plain text. jq parses the JSON, so fall back without it.
     if [ "$usage_log" = true ] && command -v jq >/dev/null 2>&1; then
-        json=$("${timeout_cmd[@]}" claude -p "$prompt" --output-format json 2>/dev/null)
+        json=$(MAX_THINKING_TOKENS=0 "${timeout_cmd[@]}" claude -p "$cleaned" "${claude_flags[@]}" --output-format json 2>/dev/null)
         text=$(printf %s "$json" | jq -r '.result // empty' 2>/dev/null)
     else
         json=""
-        text=$("${timeout_cmd[@]}" claude -p "$prompt" 2>/dev/null)
+        text=$(MAX_THINKING_TOKENS=0 "${timeout_cmd[@]}" claude -p "$cleaned" "${claude_flags[@]}" 2>/dev/null)
     fi
     out=$(printf %s "$text" \
         | head -n1 \
