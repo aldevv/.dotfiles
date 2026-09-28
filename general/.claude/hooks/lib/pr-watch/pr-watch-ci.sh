@@ -134,7 +134,7 @@ log: $LOG" \
   fi
   prelude_trust_worktree "$WT_PATH"
 
-  local window_name="AUTO-CI-FIX:${REPO_BASENAME}#${SHORT_SHA}"
+  local window_name="AUTO-CI-FIX#${WIN_SHA}-${REPO_BASENAME}"
   local log_cmd
   case "$PLATFORM" in
     github) log_cmd="gh run view <id> --log-failed | tail -200" ;;

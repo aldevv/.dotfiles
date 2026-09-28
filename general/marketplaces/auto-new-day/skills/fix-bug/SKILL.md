@@ -163,13 +163,18 @@ Before spawning anything, the orchestrator collects the bug context and presents
 
 1. **Read the reference.** If it's a URL: `WebFetch` (or the relevant MCP tool, e.g. `linear:get_issue` for `linear.app/*/issue/*`). If it's a file path: `Read`. If it's free text: extract symptoms, expected vs actual behavior, affected component, repro steps.
 2. **Locate the offending code.** Grep / glob / Read the most likely files. Cap at ~5 minutes of read-only investigation — the agents will go deep, the orchestrator just needs to know where to point them.
-3. **Summarize for the operator** in 5-10 sentences:
+3. **Check whether this is already fixed.** Before spawning a single agent, verify the symptom still reproduces against the current default branch:
+   - Grep the suspected function/file on the current default branch (not a stale local checkout) for the fix the ticket describes — a prior PR may have already changed this exact code.
+   - `gh pr list --state merged --search "<2-4 keywords from the symptom>" --limit 10` in the target repo, and skim titles for the same file/function.
+   - If the ticket names a related/duplicate/linked ticket (Linear `relatedTo` / `duplicateOf`, a linked GitHub issue), check whether THAT one already shipped a fix — two tickets can report the same customer symptom independently and get worked on separately.
+   - If a merged PR already fixes the described symptom: STOP. Do not spawn agents. Tell the operator which PR/commit already fixes it and what (if anything) is still missing — most commonly a regression test, since a bot-authored quick-fix PR often skips one. This is a duplicate-work stop, not a bug; the sibling `impl-work` skill applies the same check at planning time (its "existing-work check").
+4. **Summarize for the operator** in 5-10 sentences:
    - One-line symptom.
    - Scope: which component, which scale (single user, all users, specific tenants).
    - Suspected files / functions (file:line).
    - Open hypotheses (≥ 2; if only one, this might not need the skill).
    - What the operator should expect: "I'll spawn N agents to investigate distinct angles; expected wall-clock ~5-15 min."
-4. **Get a go-ahead.** If counts are non-default, the reference is unusual, or the bug looks like it might not need the full flow, ask before continuing.
+5. **Get a go-ahead.** If counts are non-default, the reference is unusual, or the bug looks like it might not need the full flow, ask before continuing.
 
 Output of Phase 0: a short briefing message to the operator. Do NOT write files yet — the synthesizer in Phase 2 owns the plan artifact.
 

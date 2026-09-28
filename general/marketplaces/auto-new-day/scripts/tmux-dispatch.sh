@@ -56,11 +56,20 @@ die() { echo "failed: $*"; exit 1; }
 [ -n "$BOOTSTRAP_CMD" ]    || die "missing <bootstrap-cmd>"
 [ -n "$SLASH_INVOCATION" ] || die "missing <slash-invocation>"
 
-# session existence + per-window dedupe
-session_exists=0
-tmux has-session -t "$SESSION" 2>/dev/null && session_exists=1
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [ "$session_exists" = 1 ] && tmux list-windows -t "$SESSION" -F '#{window_name}' | grep -qx "$WIN_NAME"; then
+# Archive a prior-day session of this name (rename it with its creation date
+# postfix) so a new calendar day starts fresh instead of piling onto yesterday's
+# windows. No-op for a same-day session, so within-sweep windows and same-day
+# re-runs still dedupe against the live session below.
+"$SCRIPTS_DIR/archive-prior-session.sh" "$SESSION" >/dev/null 2>&1 || true
+
+# `=name` forces an exact match. Without it, tmux treats the target as a
+# prefix, so "AUTO-inreview" silently resolves to "AUTO-inreview-others".
+session_exists=0
+tmux has-session -t "=$SESSION" 2>/dev/null && session_exists=1
+
+if [ "$session_exists" = 1 ] && tmux list-windows -t "=$SESSION" -F '#{window_name}' | grep -qx "$WIN_NAME"; then
   echo "skipped"
   exit 0
 fi
@@ -70,7 +79,7 @@ if [ "$session_exists" = 0 ]; then
   tmux new-session -d -s "$SESSION" -n "$WIN_NAME" -c "$CWD" "$BOOTSTRAP_CMD" \
     || die "tmux new-session $SESSION:$WIN_NAME"
 else
-  tmux new-window -t "${SESSION}:" -n "$WIN_NAME" -c "$CWD" "$BOOTSTRAP_CMD" \
+  tmux new-window -t "=${SESSION}:" -n "$WIN_NAME" -c "$CWD" "$BOOTSTRAP_CMD" \
     || die "tmux new-window $SESSION:$WIN_NAME"
 fi
 
@@ -80,7 +89,7 @@ fi
 # so an existing window's log is never touched here.
 if [ -n "$LOG_PATH" ]; then
   mkdir -p "$(dirname "$LOG_PATH")"
-  tmux pipe-pane -o -t "${SESSION}:${WIN_NAME}" "cat > '$LOG_PATH'" \
+  tmux pipe-pane -o -t "=${SESSION}:${WIN_NAME}" "cat > '$LOG_PATH'" \
     || die "tmux pipe-pane $SESSION:$WIN_NAME -> $LOG_PATH"
 fi
 
@@ -90,7 +99,7 @@ sleep 0.3
 # Launch the slash command. The invocation must already be fully quoted by
 # the caller — passing it through send-keys verbatim avoids the bracketed-
 # paste race that a two-step type-then-Enter sequence introduces.
-tmux send-keys -t "${SESSION}:${WIN_NAME}" "$SLASH_INVOCATION" C-m \
+tmux send-keys -t "=${SESSION}:${WIN_NAME}" "$SLASH_INVOCATION" C-m \
   || die "tmux send-keys $SESSION:$WIN_NAME"
 
 echo "spawned"

@@ -197,7 +197,7 @@ log: $LOG" \
 
   comment_hash=$(printf '%s' "$review_body" | sha256sum 2>/dev/null | cut -c1-8)
   comment_hash=${comment_hash:-nohash}
-  window_name="AUTO-COMMENT-FIX:${REPO_BASENAME}#${SHORT_SHA}-${comment_hash}"
+  window_name="AUTO-COMMENT-FIX#${WIN_SHA}-${comment_hash}-${REPO_BASENAME}"
   if tmux list-windows -a -F '#W' 2>/dev/null | grep -Fxq "$window_name"; then
     echo "[comments] window '$window_name' already exists (same comment hash) -- skip spawn"
     return 0

@@ -65,6 +65,21 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - running any `claude plugin …` command (install / marketplace add|update|remove / enable), or asked where a plugin/skill lives or how to edit/apply a plugin change
   - the user mentions `~/marketplaces`, "the marketplace", or the auto-new-day morning sweep / its systemd timer
 
+- [`~/.claude/lazy/rclone-remotes.md`](.claude/lazy/rclone-remotes.md). **Read when** any of:
+  - running any `rclone` command, or about to upload / download / sync / mount files to or from a Google Drive
+  - the user asks to upload something to their Google Drive / Drive / gdrive / a gmail account
+  - editing `~/.config/rclone/rclone.conf`, or the `rcmg` / other `rc*` rclone aliases in `~/.config/zsh/.aliases`
+  - the user names a remote (`alejandrobernal.fx-google-drive`, `unal-google-drive`) or hits an rclone auth error (`invalid_grant`, token expired) needing a reconnect
+
+- [`~/.claude/lazy/dotfiles-encryption.md`](.claude/lazy/dotfiles-encryption.md). **Read when** any of:
+  - running `git secret`, `dotpass`, `dotpassfile`, or `dotpassrm`, or about to commit / push a `*.scr` file
+  - a plaintext secret under `~/.dotfiles/personal` changed (e.g. `.config/rclone/rclone.conf`, `.local/share/.pass/*`) and needs re-encrypting and pushing
+  - the user says "encrypt the config and push", "update the secret in dotfiles", or mentions `.scr` / git-secret / `SECRETS_EXTENSION`
+  - restoring secrets on a new machine (`git secret reveal`)
+
+## CRITICAL: Editing a `~/work` repo from a foreign cwd
+The lazy-scan hook only walks ancestors of the current cwd, so when a session started elsewhere (e.g. a `~/worktrees/` checkout) sends you to edit files under `~/work/**`, that tree's `CLAUDE.md` lazy index never enters context and its triggers never fire. Before the first Write/Edit under `~/work/**`, read `~/work/CLAUDE.md` and load any lazy file in its "Detail files" index whose Read-when matches the task. Skipping this once reintroduced a bug a documented convention there explicitly warns against.
+
 ## Machine connection notes
 Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
 

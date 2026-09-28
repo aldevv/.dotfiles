@@ -49,7 +49,9 @@ NOW=$(date +%s)
 TODAY=$(date +%Y%m%d)
 
 for session in AUTO-inreview AUTO-inprogress AUTO-inreview-others; do
-  tmux has-session -t "$session" 2>/dev/null || continue
+  # `=name` forces an exact match; otherwise "AUTO-inreview" also matches
+  # "AUTO-inreview-others" and every window gets processed twice.
+  tmux has-session -t "=$session" 2>/dev/null || continue
 
   while IFS= read -r win; do
     # Skip windows already renamed by an earlier GC pass.
@@ -75,13 +77,13 @@ for session in AUTO-inreview AUTO-inprogress AUTO-inreview-others; do
     if [ "$DRY_RUN" = 1 ]; then
       echo "would-archive ${session}:${win} -> ${new_name}  (log idle ${idle_hours}h)"
     else
-      if tmux rename-window -t "${session}:${win}" "$new_name" 2>/dev/null; then
+      if tmux rename-window -t "=${session}:${win}" "$new_name" 2>/dev/null; then
         echo "archived ${session}:${win} -> ${new_name}  (log idle ${idle_hours}h)"
       else
         echo "failed   ${session}:${win} -> ${new_name}  (rename returned non-zero)"
       fi
     fi
-  done < <(tmux list-windows -t "$session" -F '#{window_name}' 2>/dev/null || true)
+  done < <(tmux list-windows -t "=$session" -F '#{window_name}' 2>/dev/null || true)
 done
 
 exit 0

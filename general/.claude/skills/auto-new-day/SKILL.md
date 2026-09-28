@@ -1,7 +1,7 @@
 ---
 name: auto-new-day
 description: Bare-name launcher for the morning-triage engine. Preserves the typed `/auto-new-day` invocation now that the engine lives in a plugin (plugin skills are only reachable as `/auto-new-day:new-day`, which breaks muscle memory). Triggers on "/auto-new-day", "run my morning triage", "do my morning reviews", "check my in-review PRs", "check my assigned issues". All this skill does is hand off to the plugin engine, forwarding any arguments. Do NOT put engine logic here; it lives in the `auto-new-day` plugin's `new-day` skill.
-argument-hint: '[<date> | --date <date> | --show [<date>] | --reset <ITEM> | --dry-run | --force | --fast]'
+argument-hint: '[<date> | --date <date> | --resume | --show [<date>] | --reset <ITEM> | --dry-run | --force | --fast]'
 ---
 
 # auto-new-day (launcher)

@@ -31,7 +31,9 @@ Read those values once and refer back to them by name. Don't re-derive them.
 
 ## Workflow
 
-1. **Confirm the worktree.** `pwd` should match `Worktree`. `git rev-parse --abbrev-ref HEAD` should print `Fix branch`. If either disagrees, STOP and tell the user, do not start fixing in the wrong place.
+1. **Preflight: worktree, then PR still open.**
+   - `pwd` should match `Worktree`; `git rev-parse --abbrev-ref HEAD` should print `Fix branch`. If either disagrees, STOP and tell the user, do not start fixing in the wrong place.
+   - Confirm the PR is still open before doing any work. There can be a lag between the hook trigger and this skill starting, so the PR may already be merged or closed by now. Check it: GitHub `gh pr view <URL> --json state,mergedAt`; GitLab `glab mr view <URL>` (read the state). If it is MERGED or CLOSED, STOP: do not diagnose, fix, merge, or push, including the autonomous branches in steps 3a/3b. A CI fix cannot update an already-merged PR, and merging the fix branch into the now-merged local `PR branch` and pushing is pointless. Tell the user the PR is already merged/closed.
 
 2. **Read the common-fixes log FIRST, before any diagnosis.** The log lives at `~/.claude/skills/auto-pr-ci-fix/references/common-fixes.md` and is gitignored (operator-local memory). If the file exists, load it into working memory now so every Signature is in mind before you look at any logs. If the file is missing, skip silently and keep going.
 
@@ -84,7 +86,7 @@ Read those values once and refer back to them by name. Don't re-derive them.
 
    c. **Genuine code-level failure** (compile error, test assertion, lint error introduced by this PR, missing import, type mismatch, etc.). Apply the smallest fix. One file if possible. No unrelated edits.
 
-6. **Build and test locally** (only for category 5c). Use the project's standard commands: Go = `go build ./... && go test ./... -count=1`; Node = `npm test` or `pnpm test`; Python = `pytest`. If the project has a Makefile / `bin/` target / `.envrc` alias for build+test, prefer that.
+6. **Build, test, and lint locally** (only for category 5c). Use the project's standard commands: Go = `go build ./... && go test ./... -count=1 && golangci-lint run ./...` when the repo has a golangci-lint config; Node = `npm test` (+ its lint script); Python = `pytest` (+ its lint tool). If the project has a Makefile / `bin/` target / `.envrc` alias for build+test+lint, prefer that. Run lint even when the original failure was a compile/test error, not just when it was a lint error, since your own fix can introduce a new lint failure that build/test won't catch.
 
 7. **Commit on `Fix branch`** with a short imperative message (`fix <thing>`). Stage only the files you actually changed. NEVER `git add -A` or `git add .`.
 

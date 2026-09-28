@@ -318,8 +318,6 @@ alias \
 	smk='sudo make' \
 	smkc='sudo make clean' \
 	smki='sudo make install' \
-	ec='echo' \
-	et='entr' \
 	mime='xdg-mime query filetype' \
 	chx='sudo chmod +x' \
 	xmod='xmodmap "$HOME/.config/.Xmodmap"' \
@@ -1055,7 +1053,7 @@ alias rcrm='rclone delete'
 # deletes files and directories
 alias rcrmd='rclone purge'
 alias rcmu='rclone mount --daemon'
-alias rcmg='rclone mount --daemon gd: $REMOTES/gd'
+alias rcmg='rclone mount --daemon alejandrobernal.fx-google-drive: $REMOTES/gd'
 
 
 alias rick="curl -s -L http://bit.ly/10hA8iC | bash" # killall aplay

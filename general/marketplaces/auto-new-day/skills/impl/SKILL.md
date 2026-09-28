@@ -34,6 +34,7 @@ Read it: `gh issue view <url> --json title,body,labels,comments` or `gh pr view 
 - Read the issue/PR body and acceptance criteria. Read the surrounding code the ask touches. Match the repo's existing conventions.
 - For a review-feedback PR: for each human comment and CHANGES_REQUESTED point, decide the concrete fix. For each unresolved bot finding, first judge real-vs-false-positive; fix the real ones, and note the false positives in your summary (do not post anything).
 - For an assess-a-foreign-PR: build + test it, check it against the issue's acceptance criteria, and list what is missing before you touch anything.
+- **Before writing any code, check whether the ask is already done on the current default branch.** Grep the touched function/file for the requested change, and run `gh pr list --state merged --search "<keywords>" --limit 10` in this repo. A second ticket can report the same symptom independently and land on a different team; if a merged PR already covers it, stop and write the blocked note (Step 4's `.blocked.md`, or tell the operator interactively) naming that PR instead of implementing a duplicate. Re-run this check on a resumed PR too — a stale branch you're now fixing conflicts on may be stale precisely because someone else's fix already merged; check what merged there before treating the conflict as routine.
 
 ## Step 3. Do the work
 

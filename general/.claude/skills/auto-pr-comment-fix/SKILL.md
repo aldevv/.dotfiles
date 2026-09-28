@@ -44,7 +44,9 @@ The exact policy text is in the context block — defer to it if it disagrees wi
 
 ## Workflow
 
-1. **Confirm the worktree.** `pwd` should match `Worktree`. `git rev-parse --abbrev-ref HEAD` should print `Fix branch`. If either disagrees, STOP and tell the user.
+1. **Preflight: worktree, then PR still open.**
+   - `pwd` should match `Worktree`; `git rev-parse --abbrev-ref HEAD` should print `Fix branch`. If either disagrees, STOP and tell the user.
+   - Confirm the PR is still open before doing any work. There can be a lag between the hook trigger and this skill starting, so the PR may already be merged or closed by now. Check it: GitHub `gh pr view <URL> --json state,mergedAt`; GitLab `glab mr view <URL>` (read the state). If it is MERGED or CLOSED, STOP: do not investigate, fix, merge, or push. Merging the fix branch into the now-merged local `PR branch` and pushing will not update the merged PR. Tell the user the PR is already merged/closed, and offer to open a fresh follow-up PR off the default branch if the fix still matters.
 
 2. **Read the review body** (inline in the context block, also saved to `Review body file`). Identify each distinct finding. **Drop any finding whose own text explicitly labels itself `non-blocking`, `nit`, or `nit:`** (e.g. "Low confidence, non-blocking.") — these never reach investigation, `AskUserQuestion`, or a fix. Note each dropped finding in the closing summary as skipped (self-declared non-blocking/nit), not as a phantom. Read the cited code locations for the remaining findings in the worktree before doing anything else.
 
@@ -65,7 +67,7 @@ The exact policy text is in the context block — defer to it if it disagrees wi
    - (a) **CLEAR** — the fix is obvious, low-risk, and doesn't require a judgment call.
    - (b) **AMBIGUOUS** — multiple reasonable fixes, design tradeoff, or insufficient context.
 
-5. **Apply per the Apply policy** on surviving findings. Build/test locally (Go: `go build ./... && go test ./... -count=1`; Node/Python/etc.: the project's standard commands).
+5. **Apply per the Apply policy** on surviving findings. Build/test/lint locally (Go: `go build ./... && go test ./... -count=1 && golangci-lint run ./...` when the repo has a golangci-lint config; Node/Python/etc.: the project's standard build/test/lint commands). `go build`/`go test` passing does not mean lint is clean, run lint too so your own edits don't introduce a new failure (e.g. a line-length limit) that only shows up in CI.
 
 6. **Commit on `Fix branch`.** Separate small commits per finding is fine, or one cohesive commit. Stage only files you actually changed. NEVER `git add -A` or `git add .`.
 

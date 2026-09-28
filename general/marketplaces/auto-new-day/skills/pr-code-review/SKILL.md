@@ -332,6 +332,15 @@ If unsure, lean toward REFACTOR. The cost of missing a logic bug in a refactor i
 
 In REFACTOR mode, the finding bar is: "would this break, or has this already broken, something that worked pre-PR?" If the answer is no, drop it.
 
+## Step 1d. Check whether the PR is now redundant
+
+Before sizing the fleet, check one thing a full review can't tell you from the diff alone: has this exact change already landed on the base branch under a different PR? This matters most when `/tmp/pr-<N>.meta.json`'s `mergeable` state (fetch it if Step 1 didn't already: `gh pr view <N> --json mergeable`) is `CONFLICTING` — a conflict on the exact lines this PR touches is the single strongest signal that someone else's fix collided with this one.
+
+- If `mergeable == CONFLICTING`: read the base branch's current version of the conflicting file(s) (`git show origin/<base>:<path>`) and compare it to what this PR is trying to do. If the base branch already implements the same behavior change (even with different wording/shape), this PR is likely a duplicate that just hasn't been rebased.
+- Regardless of conflict state: `gh pr list --state merged --search "<2-4 keywords from the PR title/description>" --limit 10` in the target repo. A merged PR touching the same file/function with a similar description is worth surfacing even when there's no textual conflict (e.g. the duplicate merged before this PR's last push, and a rebase would make the redundancy vanish silently along with the original author's test coverage).
+- If a duplicate is found: surface it as the FIRST thing in the review output (a BLOCKER-tier note, not buried in the six-angle findings), naming the other PR/commit and what (if anything) in THIS PR isn't covered by it (a regression test is the common gap). Ask the operator whether to still run the full agent fan-out (e.g. because this PR's test coverage is worth keeping) or stop here — don't spend 12 agents reviewing a diff that's about to be closed as a dupe.
+- If no duplicate is found, proceed to Step 2 as normal. This check is a few seconds of `gh`/`git`, not worth its own agent.
+
 ## Step 2. Decide the agent count and effort per agent
 
 **The coordinator (you) picks both COUNT (1-12) and EFFORT (low/medium/high) per PR based on actual scope, importance, and complexity.** PRs in the same batch CAN get different counts and effort tiers — size each one independently. State the chosen count, the chosen effort, and a one-sentence rationale in chat before fanning out ("PR #123: 4 agents, medium effort — touches user provisioning across 3 files, no new external API.").
