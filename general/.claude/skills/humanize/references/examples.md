@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×46)
+- done. (×50)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×11)
@@ -43,6 +43,12 @@ increment from there.
 - added a `|keyword` renderer (letters, digits, single spaces only), so `CREATE SESSION` renders intact and injection is rejected. example uses it now. (×1)
 - fixed. the opt-in now needs at least one validation query, vars-checks them, and requires `no_transaction: true` on ddl engines. (×1)
 - fixed. db2 stays default-on by engine (unchanged from #151), only oracle needs the opt-in now. (×1)
+- ok (×1)
+- documented it. (×1)
+- good catch. it's bounded though: `signInFatal` has a 5 min TTL (`signInFatalTTL`), so even when `Cleanup` never runs the terminal cache self-expires and a since-fixed credential recovers on the next sync. the TTL exists for exactly this case. (×1)
+- done, switched to `dotc1z.NewStore` which reads pebble `C1Z3` too. good catch. (×1)
+- done, the zstd path is gone now, reads through the sdk store. (×1)
+- is true, the early catch ran before `wrapOfficialClientError` so it came back `codes.Unknown`. routed both 409 sites through the wrapper now so they carry `codes.AlreadyExists` (×1)
 
 ### Replies — pushback
 
@@ -63,6 +69,8 @@ increment from there.
 - intentional, db2 is the only engine i've verified this on. filed the oracle follow-up as CXH-2435. (×1)
 - kept the behavior, added a comment that it leans on the db2 `validation_queries` contract and shouldn't be generalized. (×1)
 - intended db2 case, keeping it. the test name and the new code comment spell out the trade-off. (×1)
+- added `limit`/`offset`. loud-failing the bare-array branch would change behavior. (×1)
+- false positive i think. the generator only uses `dirname(entry)` to find `specs/`, it never opens the entry file. `specs/` is at the repo root in a standalone repo so the dir has to be `$PWD`. adding `src/` points it at `$PWD/src/specs/source` which doesn't exist. (×1)
 
 ### New line comments — feedback
 
@@ -113,6 +121,10 @@ increment from there.
 - `optionalStringField` at line 501-504 already does `strings.TrimSpace(raw)`, so the outer `strings.TrimSpace(...)` here is redundant. can drop it: `if mapped := optionalStringField(profileMap, "email"); mapped != "" {`. (×1)
 - let's not log `user_id`, it's user data. `role` is enough here. and this can be `Debug` instead of `Warn`. (×1)
 
+### Answers
+
+- This was a misconfiguration on our side. NiceDCV was flagged as disabled on your Megastation, so the dashboard stopped offering it. That's fixed. Refresh the dashboard and it should be back in the connect options. (×1)
+
 ### Replies — clarifying / asking back
 
 - deployment names are unique per databricks cloud, so no collision risk. also pre-existing, not new in this PR. (×1)
@@ -123,6 +135,8 @@ increment from there.
 - yeah, still there. low priority like you said. the combo is still rejected, just after a wasted admin connect and discovery run. (×1)
 - the `..._Oracle` full-path grant/revoke tests are already on the branch, so oracle gets end-to-end coverage too. admin entitlements opt in and use `|keyword` now. (×1)
 - intentional, not a missed classification. a code-less 404 here cannot be told apart from a routing or directory failure, so we fail loud rather than report a revoke that never happened as already-revoked. (×1)
+- confirmed: a null or missing `Data` yields an empty set, not an error. (×1)
+- audited all seven against the openapi. only `listManagedSystems` uses the container, and only when `limit` is sent. the rest are bare arrays, `ManagedAccounts` included. no sibling shares it. (×1)
 
 ## Anti-patterns — what NOT to post
 

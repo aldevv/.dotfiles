@@ -32,6 +32,8 @@ If multiple subagents disagree, surface the disagreement and lower the confidenc
 
 Always present review/code-review issues and findings as a table in chat output (one row per finding), never as a prose list. Applies to every review, any repo. Include the confidence % and `✓N` as their own columns so each row satisfies the confidence-indicator rule above.
 
+Every such table MUST also carry a **Status** column showing done vs not done (`✅ done` / `⚠️ not done` / `🔄 pending` / `deferred`), so I can tell at a glance which items are resolved. Add a **Severity** column too whenever a severity is available (a reviewer/bot glyph like 🔴/🟠/🟡, a stated Blocking/Major/Minor/Nit, or a review state); use `-` for rows with none, and never invent a severity a human didn't state. Applies to any table of findings, PR/MR comments, issues, or work items, not just formal reviews.
+
 ## Workflow
 
 1. Read the artifact under review yourself first.

@@ -323,12 +323,12 @@ trap 'rm -f "$LOCK_FILE" 2>/dev/null || true' EXIT
 # 6. Safe kill of the previous AUTO-new-day session. If yesterday's session
 #    still has non-sweep windows (a manual mid-day re-run, or an ad-hoc
 #    window the operator opened in it), DON'T destroy them; rename the
-#    session aside so the user can `tmux attach -t AUTO-new-day-prev-<date>`
+#    session aside so the user can `tmux attach -t AUTO-new-day-prev-<weekday>`
 #    later. Today's sweep then gets a clean session.
 if tmux has-session -t "$SESSION" 2>/dev/null; then
   non_sweep=$(tmux list-windows -t "$SESSION" -F '#{window_name}' 2>/dev/null | grep -vxE 'sweep|placeholder' | wc -l | tr -d ' ')
   if [ "${non_sweep:-0}" -gt 0 ]; then
-    archive="${SESSION}-prev-$(date +%F-%H%M)"
+    archive="${SESSION}-prev-$(date +%A-%H%M | tr 'A-Z' 'a-z')"
     log "previous $SESSION has $non_sweep non-sweep window(s); renaming to $archive"
     tmux rename-session -t "$SESSION" "$archive" || true
   else

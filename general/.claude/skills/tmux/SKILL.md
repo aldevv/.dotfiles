@@ -42,6 +42,16 @@ claude --dangerously-skip-permissions "<prompt>"
 
 That single line is the whole pattern. It works the same for `split-window`, `new-window`, `new-session`, and worktree windows: the trailing command on any of those spawns is just that. Skip the flag only when the user explicitly says the new session should be interactive.
 
+**The flag is not optional and has no "obvious from context" exemptions.** Every `claude` invocation in this file carries it, including the ones inside `send-keys`, worktree spawns, and quoting examples. If you are about to write a spawn command with a bare `claude`, you are writing a bug. This holds whether the spawn is a side job, a review companion, or a window the user asked to sit in themselves.
+
+Resuming an existing conversation takes the flag the same way:
+
+```bash
+claude --resume <session-id> --dangerously-skip-permissions
+```
+
+Session ids come from `~/.claude/projects/<escaped-cwd>/<session-id>.jsonl`; resume from a cwd that matches that project directory or the id will not resolve.
+
 For prompts longer than a sentence or that contain awkward quoting, pre-write the prompt to a file and pipe it:
 
 ```bash
@@ -99,12 +109,12 @@ Examples:
 ```bash
 # User: "create a new session to review the baton-sdk PR" while current session is hunk.
 tmux new-session -d -s baton-pr -c /home/kanon/work/baton-sdk
-tmux send-keys -t baton-pr "gh pr checkout 1234 && claude 'review this branch'" Enter
+tmux send-keys -t baton-pr "gh pr checkout 1234 && claude --dangerously-skip-permissions 'review this branch'" Enter
 tmux switch-client -t baton-pr
 
 # User: "create a new session to do the test cleanup" while inside the hunk repo.
 # Same repo → window, not session.
-tmux new-window -c /home/kanon/repos/github.com/modem-dev/hunk "claude 'clean up the flaky pty tests'"
+tmux new-window -c /home/kanon/repos/github.com/modem-dev/hunk "claude --dangerously-skip-permissions 'clean up the flaky pty tests'"
 ```
 
 Pick decisively; do not ask the user to confirm window vs session. If the cwd is something generic like `$HOME` and the task name doesn't tell you which repo, default to a new **window** (cheaper to throw away than a session).
@@ -150,7 +160,7 @@ WORKTREE=$(worktree root)/pr-270-conflict-fix
 #    Use `-d` (detached) so the user stays focused on this conversation; without it,
 #    tmux steals focus to the new window and the user loses their place mid-task.
 tmux new-window -d -c "$WORKTREE" \
-  "claude 'resolve the merge conflicts on PR 270 against main, then run typecheck and tests'"
+  "claude --dangerously-skip-permissions 'resolve the merge conflicts on PR 270 against main, then run typecheck and tests'"
 
 # 4. Continue the original task (issue #463) in the current pane.
 ```
@@ -226,11 +236,11 @@ The trailing arg to `tmux split-window` / `new-window` is a single shell command
 
 - Wrap the whole command in double quotes; put the claude prompt in single quotes inside.
 - If the prompt itself contains single quotes, escape them or use `$'...'` ANSI-C quoting.
-- Avoid newlines in the prompt — they break the tmux arg parsing. Use a single long line, or pre-write the prompt to a file and `claude < /tmp/prompt.txt`.
+- Avoid newlines in the prompt — they break the tmux arg parsing. Use a single long line, or pre-write the prompt to a file and `claude --dangerously-skip-permissions < /tmp/prompt.txt`.
 
 ```bash
-tmux split-window -h -c /tmp "claude 'a prompt without single quotes'"
-tmux split-window -h -c /tmp "claude \"prompt with 'inner quotes' is fine\""
+tmux split-window -h -c /tmp "claude --dangerously-skip-permissions 'a prompt without single quotes'"
+tmux split-window -h -c /tmp "claude --dangerously-skip-permissions \"prompt with 'inner quotes' is fine\""
 ```
 
 ## Safety check before splitting
@@ -308,6 +318,7 @@ Only fall back to a private socket (`tmux -L <name> ...`) when you genuinely can
 ## Common mistakes to avoid
 
 - Defaulting to `new-window` when the user said "pane" or "panel". **Always default to `split-window`.**
+- Spawning a bare `claude` without `--dangerously-skip-permissions`. The new instance then blocks on its first tool call in a window nobody is watching, and the user finds it stalled minutes later. Applies to `send-keys` spawns and `--resume` too.
 - Forgetting `-c <dir>` — the new pane inherits the tmux session's cwd, not the current pane's, which is often wrong.
-- Quoting the entire `claude '<prompt>'` invocation with single quotes on the outside, then embedding single quotes — shell breaks. Keep outer quotes double, inner single.
+- Quoting the entire `claude --dangerously-skip-permissions '<prompt>'` invocation with single quotes on the outside, then embedding single quotes — shell breaks. Keep outer quotes double, inner single.
 - Running `tmux split-window` from a non-tmux shell. Always check `$TMUX` if unsure.
