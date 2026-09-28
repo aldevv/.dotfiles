@@ -7,12 +7,13 @@ description: >
   resolves, or changes ticket state. Triggers on "/my-prs", "show my prs",
   "my in-review tickets and their PRs", "are my PRs merged", "which of my PRs are
   approved", "who approved my PRs", "my PR approval status", "status of my open
-  PRs". Optional arg: a Linear team name to scope to (defaults to the auto-new-day
-  profile's team, else scans every team assigned to you). Preconditions: the Linear
+  PRs". Scans every in-review ticket assigned to you across ALL teams by default,
+  so a ticket that moved teams is never dropped. Optional arg: a Linear team name
+  to narrow the display to one team. Preconditions: the Linear
   MCP, `gh` authed to the account that can see the PRs, and `jq`. To read one PR's
   comments use `show-comments`; to review a PR use `pr-code-review`; to dispatch
   work on these tickets use `auto-new-day`. This skill only reports status.
-argument-hint: "[linear-team-name]  (optional; defaults to the auto-new-day profile team, else all your teams)"
+argument-hint: "[linear-team-name]  (optional; default scans all your teams, pass one to narrow the display)"
 ---
 
 # my-prs
@@ -25,11 +26,10 @@ One table: your in-review Linear tickets, the GitHub PR(s) linked to each, and w
 
 ## Step 0 — Preconditions + config
 - Linear MCP tools (`mcp__plugin_linear_linear__*`) reachable, `gh` authenticated, `jq` on `$PATH`. Bail with a one-line error if any is missing.
-- If `~/.config/auto-new-day/profile.json` exists, read two optional values from it (they make the output richer, both are best-effort):
-  - `.discovery.team` -> default team scope when `$ARGUMENTS` gives none.
+- If `~/.config/auto-new-day/profile.json` exists, read one optional value from it (best-effort):
   - `.approvers_team` (e.g. `ConductorOne/connector-approvers`) -> used in Step 4 to tag which approvers are official approvers vs anyone else.
 
-  No profile is fine: scope defaults to every team you're assigned in, and the approver/other tag is skipped.
+  The profile team does NOT scope this skill: the scan is always workspace-wide by assignee (Step 2), so a ticket that migrated teams stays visible. No profile is fine; the approver/other tag is just skipped.
 
 ## Step 1 — Resolve your Linear identity
 Resolve your Linear user id once and cache it. The MCP's `assignee` filter is flaky, so you need the id to re-verify results:
@@ -37,11 +37,12 @@ Resolve your Linear user id once and cache it. The MCP's `assignee` filter is fl
 - Otherwise `list_users` and match your work email (`git config user.email`); keep `me.id`. If the email match finds nothing, say so and stop rather than guessing a user.
 
 ## Step 2 — Find your in-review tickets
-- When a team is resolved (from `$ARGUMENTS`, else the profile team): `list_issue_statuses` for it and keep the statuses whose name contains "review" (case-insensitive), then `list_issues` with `assignee = me.id` + those status names, scoped to the team.
-- When NO team is resolved: don't iterate every team's statuses. `list_issues` with `assignee = me.id` workspace-wide and keep the ones whose status is a review status (status `type == "started"` with a name containing "review", or just name contains "review"). This is one query, not one-per-team.
-- Either way, **paginate until `hasNextPage == false`** and dedupe by id.
+**Always query workspace-wide by assignee — never scope the query to one team.** A ticket that gets renumbered and moved to another team (e.g. CXH-2467 → CXF-297 on a different team) is still yours and still in review; a team-scoped query silently drops it. The scan is by assignee, so cross-team tickets stay visible.
+- `list_issues` with `assignee = me.id` and NO team, keeping only review statuses: a started status whose name contains "review" (case-insensitive). Prefer `state: "In Review"` to narrow server-side when your teams use that standard name; otherwise fetch your assigned issues and filter in-code by the name-contains-"review" rule. This is one query, not one-per-team.
+- **Paginate until `hasNextPage == false`** and dedupe by id.
 - **Re-verify `assignee.id == me.id` on every result** and drop mismatches (the server-side filter misses sometimes).
 - Capture `identifier`, `url`, `title`, `team`, `state/status` per ticket. If none survive, say "no in-review tickets assigned to you" and stop.
+- **Optional narrowing (opt-in only):** if `$ARGUMENTS` names a team, filter the workspace-wide results down to that team *after* the scan. The profile team is NOT used to scope the query — it never narrows by default, so an off-team ticket is never hidden unless the operator explicitly asks for one team.
 
 ## Step 3 — Resolve the GitHub PR(s) per ticket
 - For each ticket, `list_diffs` (Linear attachments) and pull out the GitHub PR URL(s). A ticket can have zero, one, or several.
@@ -88,15 +89,23 @@ One row per PR (or per PR-less ticket), grouped so a ticket's rows sit together.
 
 `Ticket | Title | PR | Merged | Approved | Approved by`
 
-- `Ticket`: `[CXH-1234](ticket-url)`.
+- `Ticket`: `[CXH-1234](ticket-url)`. When your results span more than one team, append the team in parens (`[CXF-297](url) (Connector Flux)`) so a ticket that lives on a different team than the rest is obvious at a glance.
 - `Title`: short, truncate to ~50 chars.
 - `PR`: `[repo#N](pr-url)`, or `(none yet)`.
-- `Merged`: ✅ when merged, ❌ when not (or `unavailable` on a failed lookup).
-- `Approved`: `yes` when the approver list is non-empty, else `no`. When `reviewDecision == CHANGES_REQUESTED`, show `changes requested` instead of a bare `no`. When the approved-with-an-ask check (Step 4) found the approver left a request at/after approving, show `yes (check: <approver> asked for more)` so an approval that is not actually merge-ready stands out.
+- `Merged`: `yes` when merged, `no` when not (or `unavailable` on a failed lookup).
+- `Approved`: `✅` when the approver list is non-empty, else `no`. When `reviewDecision == CHANGES_REQUESTED`, show `changes requested` instead of a bare `no`. When the approved-with-an-ask check (Step 4) found the approver left a request at/after approving, show `✅ (check: <approver> asked for more)` so an approval that is not actually merge-ready stands out.
 - `Approved by`: comma-separated approver logins (with the `(non-approver)` tag from Step 4 when applicable), or `-`.
 
 ## Step 6 — Summary line
 One line under the table: total tickets, how many PRs, how many merged, how many approved-but-not-merged (ready to merge), how many still need an approval, and any tickets with no PR yet. Call out the ones waiting on you to merge vs waiting on a reviewer.
+
+## Step 6b — Recommended actions table
+Close with a small `Recommended actions` table, one row per PR that still needs something, so the next move on each is obvious at a glance. Keep it as small as possible: drop any PR that needs nothing from you (merged, or approved-and-clean waiting only on a reviewer with no ask back to you), and if every PR is done render a single line `Nothing to do.` instead of an empty table.
+
+`PR | Next action`
+
+- `PR`: `[repo#N](pr-url)`.
+- `Next action`: the shortest concrete verb phrase for the ball that's in your court, e.g. `address github-actions changes`, `address <reviewer>'s ask, then merge`, `ping <reviewer> for review`, `merge` (approved + clean + you own the merge), `open a PR`. One phrase, no prose.
 
 ## Step 7 — "create a new release" (operator command)
 When the operator says **"create a new release"** for a merged/approved connector PR shown in the table, run this three-part workflow (this is the one write path in this skill, gated on that explicit phrase):
