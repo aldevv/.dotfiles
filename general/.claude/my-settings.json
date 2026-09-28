@@ -111,6 +111,16 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.config/tmux/plugins/tmux-resurrect-claude/scripts/session_registry_hook.sh"
+          }
+        ]
+      }
     ]
   }
 }
