@@ -53,7 +53,10 @@ if ! tmux list-sessions >/dev/null 2>&1; then
 	booted_placeholder=1
 fi
 
-TMUX="$SOCKET,0,0" bash "$RESTORE_SCRIPT" >/dev/null 2>&1 || true
+# tmux-resume-claude-panes (@resurrect-hook-post-restore-all) also relaunches
+# claude panes with --continue; skip it here since this script does its own
+# --continue relaunch below with dispatch-aware skip logic.
+AUTO_NEW_DAY_RESTORE_ACTIVE=1 TMUX="$SOCKET,0,0" bash "$RESTORE_SCRIPT" >/dev/null 2>&1 || true
 
 if ((booted_placeholder)); then
 	tmux kill-session -t _resurrect_boot 2>/dev/null || true
@@ -70,14 +73,18 @@ while IFS=$'\t' read -r session window pane dir; do
 	# directory": a second pane on the same dir would just reload whatever the
 	# first pane already grabbed (or, if something even newer used that same
 	# dir in the meantime, a wrong unrelated session). Only resume once per dir.
-	if [[ -n "${seen_dirs[$dir]:-}" ]] || [[ "$current_cmd" == "claude" ]]; then
+	# pane_current_command is "claude" on Linux, but on macOS tmux resolves the
+	# real binary path (~/.local/bin/claude -> .../versions/<X.Y.Z>) and reports
+	# the version string instead - same quirk tmux.conf's automatic-rename-format
+	# already branches on, so match the same version-number pattern here.
+	if [[ -n "${seen_dirs[$dir]:-}" ]] || [[ "$current_cmd" == "claude" ]] || [[ "$current_cmd" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 		skipped=$((skipped + 1))
 		continue
 	fi
 	seen_dirs[$dir]=1
 	tmux send-keys -t "$target" "claude --dangerously-skip-permissions --continue" C-m
 	relaunched=$((relaunched + 1))
-done < <(awk -F'\t' '$1=="pane" && $10=="claude" { print $2"\t"$3"\t"$6"\t"$8 }' "$snapshot")
+done < <(awk -F'\t' '$1=="pane" && $11 ~ /^:claude( |$)/ { print $2"\t"$3"\t"$6"\t"$8 }' "$snapshot")
 
 # Same allowlist gap for the hunk diff-viewer panes (pane_command "node", or any
 # full_command containing "hunk"). The saved full_command is ps-width-truncated,
