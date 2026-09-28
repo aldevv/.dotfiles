@@ -65,6 +65,11 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - running any `claude plugin …` command (install / marketplace add|update|remove / enable), or asked where a plugin/skill lives or how to edit/apply a plugin change
   - the user mentions `~/marketplaces`, "the marketplace", or the auto-new-day morning sweep / its systemd timer
 
+- [`~/.claude/lazy/tmux.md`](.claude/lazy/tmux.md). **Read when** any of:
+  - editing `tmux.conf` or any script under `.local/share/scripts/utilities/tmux/`
+  - about to test a tmux config/script change (window naming, hooks, key bindings) before committing it
+  - diagnosing a tmux window/pane naming, title, or automatic-rename issue
+
 - [`~/.claude/lazy/rclone-remotes.md`](.claude/lazy/rclone-remotes.md). **Read when** any of:
   - running any `rclone` command, or about to upload / download / sync / mount files to or from a Google Drive
   - the user asks to upload something to their Google Drive / Drive / gdrive / a gmail account
