@@ -88,6 +88,12 @@ The lazy-scan hook only walks ancestors of the current cwd, so when a session st
 ## Machine connection notes
 Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
 
+### Running on the phone
+If `hostname` prints `localhost` and `uname -r` contains `android`, this session is on my Android phone: proot Debian inside the `dev.aldevv.claudecode` app (ignore the stale `/etc/hostname`).
+- No `pm`/`am`/Docker. Reach Android with `adb connect 127.0.0.1:5555` (already authorized), then `export ANDROID_SERIAL=127.0.0.1:5555`.
+- Install apps with `adb install --user 0 --no-incremental`; MIUI may pop an install prompt I must accept on screen.
+- `/sdcard` is mounted. `GOROOT` is exported as `/usr/local/go`; override it when using a Go installed elsewhere.
+
 ## CRITICAL: Editing this file
 **Before adding any rule, command, or note to this file, grep the whole file for the topic first.** Past sessions have introduced duplicates by adding a new entry without checking what was already documented. If a section already covers it, edit that section in place. Never create a parallel copy. When a rule must be visible from multiple contexts, link with `See ## Section Name` rather than copying.
 
