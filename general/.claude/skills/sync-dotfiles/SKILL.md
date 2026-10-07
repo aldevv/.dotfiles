@@ -16,6 +16,8 @@ Sync the **parent** dotfiles repo at `~/.dotfiles`: pull remote changes, resolve
 3. Any submodule with a reachable remote has a `+` prefix (= pointer drift, the parent's recorded SHA disagrees with the submodule HEAD). Drifted-but-unreachable submodules are skipped: a leftover wip commit from a previous failed sync can't be pushed from this machine anyway, and the next sync on a reachable machine resolves it.
 4. Any initialized submodule whose remote is reachable on this machine has a dirty worktree (`git status --porcelain` non-empty) or unpushed commits (`@{u}..HEAD` non-empty). The fast skill never enters submodules, so these go un-synced and the user thinks "I edited the wiki, why didn't it push?" — this trigger catches that. Submodules whose remote is NOT reachable (missing SSH alias, offline, etc.) are skipped: their local edits stay local until the next sync on a machine that can push them.
 
+**Phone exception** (`id=phone` in `~/.machine_metadata`, see `~/.claude/lazy/phone.md`): checks 1 and 2 never delegate there. The phone has no SSH key and deliberately skips the `epic`/`personal`/`wiki` submodules, so a full sync can't run; the fast path syncs the parent only.
+
 A fifth check **stops** the skill (no delegation) and asks the user for manual cleanup: **stow-link mismatch**. If a submodule's stow target (`$HOME/<path-with-leading-package-stripped>`) is a real directory with its own `.git` instead of a stow symlink to the submodule, the user has a standalone clone shadowing where the symlink should be. Their edits go into the standalone, never into the submodule; no amount of syncing fixes the divergence. The full skill doesn't fix this either, so STOP and report rather than delegating.
 
 **Fast-path shape**: in the common case (no merge conflicts, no newly-added files), this skill runs **three tool-call rounds total** — Step 1 (3 parallel reads, including a prefetch), Step 2 (one bundled script that merges, amends, and pushes), and Step 5b (apply the my-settings.json overlay). Steps 3–5 only fire on the rare conflict / restow branches. Step 5b is a separate round rather than inlined into Step 2 so it runs identically on the common and rare paths and so its exit codes don't tangle with Step 2's routing codes (7/8/9).
@@ -48,7 +50,9 @@ last=$(cat ~/.cache/sync-dotfiles/last-full-sync 2>/dev/null || echo 0)
 now=$(date +%s)
 age=$(( now - last ))
 threshold=$(( 30*24*60*60 ))
-if [ "$last" -eq 0 ]; then
+if [ "$id" = "phone" ]; then
+  echo "full-sync: skipped on phone -> fast path OK"
+elif [ "$last" -eq 0 ]; then
   echo "full-sync: never recorded -> DELEGATE"
 elif [ "$age" -ge "$threshold" ]; then
   echo "full-sync: $((age/86400)) days old (>=30) -> DELEGATE"
@@ -136,7 +140,10 @@ uninit=$(echo "$sub_status" | awk '/^-/ {print $2}')
 if [ -n "$uninit" ] && [ -n "$optional_paths" ]; then
   uninit=$(echo "$uninit" | grep -vxF -f <(echo "$optional_paths") || true)
 fi
-if [ -n "$uninit" ]; then
+if [ -n "$uninit" ] && grep -qx 'id=phone' ~/.machine_metadata; then
+  echo "submodules uninitialized on phone (expected, skipped):"
+  echo "$uninit"
+elif [ -n "$uninit" ]; then
   echo "submodule uninitialized -> DELEGATE"
   echo "$uninit"
 fi

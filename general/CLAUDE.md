@@ -82,17 +82,17 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - the user says "encrypt the config and push", "update the secret in dotfiles", or mentions `.scr` / git-secret / `SECRETS_EXTENSION`
   - restoring secrets on a new machine (`git secret reveal`)
 
+- [`~/.claude/lazy/phone.md`](.claude/lazy/phone.md). **Read when** any of:
+  - the environment's OS Version / `uname -r` contains `android`, or `hostname` prints `localhost`, or `~/.machine_metadata` has `id=phone`
+  - about to run `adb`, `pm`, `am`, `docker`, or install an APK
+  - a command fails with `command not found` for a tool expected on a normal Linux box, or `GOROOT` errors
+  - the user mentions "my phone", "termux", or "on the phone"
+
 ## CRITICAL: Editing a `~/work` repo from a foreign cwd
 The lazy-scan hook only walks ancestors of the current cwd, so when a session started elsewhere (e.g. a `~/worktrees/` checkout) sends you to edit files under `~/work/**`, that tree's `CLAUDE.md` lazy index never enters context and its triggers never fire. Before the first Write/Edit under `~/work/**`, read `~/work/CLAUDE.md` and load any lazy file in its "Detail files" index whose Read-when matches the task. Skipping this once reintroduced a bug a documented convention there explicitly warns against.
 
 ## Machine connection notes
 Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
-
-### Running on the phone
-If `hostname` prints `localhost` and `uname -r` contains `android`, this session is on my Android phone: proot Debian inside the `dev.aldevv.claudecode` app (ignore the stale `/etc/hostname`).
-- No `pm`/`am`/Docker. Reach Android with `adb connect 127.0.0.1:5555` (already authorized), then `export ANDROID_SERIAL=127.0.0.1:5555`.
-- Install apps with `adb install --user 0 --no-incremental`; MIUI may pop an install prompt I must accept on screen.
-- `/sdcard` is mounted. `GOROOT` is exported as `/usr/local/go`; override it when using a Go installed elsewhere.
 
 ## CRITICAL: Editing this file
 **Before adding any rule, command, or note to this file, grep the whole file for the topic first.** Past sessions have introduced duplicates by adding a new entry without checking what was already documented. If a section already covers it, edit that section in place. Never create a parallel copy. When a rule must be visible from multiple contexts, link with `See ## Section Name` rather than copying.
