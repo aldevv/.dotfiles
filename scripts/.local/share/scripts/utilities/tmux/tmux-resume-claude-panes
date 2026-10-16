@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# tmux-resurrect post-restore-all hook: relaunch every restored `claude` pane
+# with `claude --continue` so it picks back up the prior conversation instead
+# of starting fresh. Wired in tmux.conf as @resurrect-hook-post-restore-all,
+# so it runs after both the manual restore key and tmux-continuum's
+# auto-restore-on-startup.
+#
+# auto-new-day-restore covers the same relaunch for its own dispatch-sweep
+# layout (pane-count gate, hunk/nvim companions) and guards against
+# double-firing by setting this env var before it runs the resurrect restore
+# script itself.
+if [[ -n "${AUTO_NEW_DAY_RESTORE_ACTIVE:-}" ]]; then
+	exit 0
+fi
+
+# Identify target panes from the resurrect snapshot's saved full-command
+# field, not a live pane_current_command poll: this hook fires right after
+# resurrect's process-restore step sends the raw launch command via
+# send-keys, while the pane is still mid-launch (pane_current_command reads
+# "zsh" or a transient "grep" before settling on "claude"). The snapshot
+# tells us which panes SHOULD end up running claude regardless of timing.
+resurrect_dir="$(tmux show-option -gqv "@resurrect-dir")"
+if [[ -z "$resurrect_dir" ]]; then
+	if [[ -d "$HOME/.tmux/resurrect" ]]; then
+		resurrect_dir="$HOME/.tmux/resurrect"
+	else
+		resurrect_dir="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect"
+	fi
+fi
+snapshot="$resurrect_dir/last"
+[[ -f "$snapshot" ]] || exit 0
+
+# On macOS, pane_current_command resolves the claude binary's real path
+# segment (a semver string like "2.1.283") instead of "claude"
+# (~/.local/bin/claude -> ~/.local/share/claude/versions/<X.Y.Z>), the same
+# quirk tmux.conf's automatic-rename-format already branches on. On Linux
+# it's the literal "claude". Match both so an already-resumed pane is
+# recognized and not respawned a second time.
+is_claude_pane() {
+	local cmd="$1"
+	[[ "$cmd" == "claude" ]] || [[ "$cmd" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+wait_for_claude_pane() {
+	local target="$1"
+	local tries=40
+	while ((tries-- > 0)); do
+		local cmd
+		cmd="$(tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || echo "")"
+		is_claude_pane "$cmd" && return 0
+		sleep 0.25
+	done
+	return 1
+}
+
+while IFS=$'\t' read -r session window pane; do
+	target="${session}:${window}.${pane}"
+	wait_for_claude_pane "$target" || continue
+	# respawn-pane -k replaces the pane's process outright: typing --continue
+	# via send-keys instead would land as a chat message once claude is already
+	# running, since resurrect's own relaunch already has it open by then.
+	tmux respawn-pane -k -t "$target" "claude --dangerously-skip-permissions --continue"
+done < <(awk -F'\t' '$1=="pane" && $11 ~ /^:claude( |$)/ { print $2"\t"$3"\t"$6 }' "$snapshot")

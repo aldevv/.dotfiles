@@ -165,7 +165,7 @@ Invoke `claude-md-save` once per NOT-COVERED-KEEP item with the trimmed rule tex
 
 After every edit (delegated or direct), confirm the file still parses: the lazy-index entry exists if a new file was added, the `**Read when**` trigger is grammatical, no broken markdown fences.
 
-Do NOT commit. The operator owns the commit.
+Do NOT commit. `$HOME/work/.claude/` is not a git repo, so work-scope edits are live once written; never tell the operator to commit them. Only repo-local lazy files (inside a real git checkout) have a commit for the operator to own.
 
 ### 7. Report
 

@@ -1,89 +1,86 @@
 #!/usr/bin/env bash
-# Garbage-collect stale windows in the three AUTO-* dispatch tmux sessions
-# (AUTO-inreview, AUTO-inprogress, AUTO-inreview-others).
-# A window is "stale" when its per-window log file (under
-# ~/.cache/auto-new-day-sweep/children/) hasn't been written to in N hours
-# (default: 168, i.e. one week). That means the child claude finished or
-# crashed long ago and the pane is now just a quiet shell waiting forever.
+# Close every AUTO-* tmux window created before today, so the sweep never stacks
+# more than one day of windows. Before closing, each window's Claude conversations
+# are logged (session id, cwd, transcript, resume command) to
+# $AUTO_NEW_DAY_STATE_DIR/closed-windows.md so nothing is lost.
 #
-# Action: ARCHIVE-RENAME rather than kill. Renames `<original>` to
-# `<original>-stale-<YYYYMMDD>` so the window stays attachable. The next
-# sweep will see it under the renamed name and is free to archive-rename a
-# second time, but it won't re-spawn dispatch into a window that's been
-# renamed (dispatch dedupe is by `<original>` name, not the renamed one).
-# After two GC passes the operator can `tmux kill-window` manually if they
-# no longer care.
+# A window's creation time is its oldest pane process start (tmux 3.7 has no
+# window_created format). Windows whose Claude is still "busy" are kept, as is the
+# session holding the calling pane (the sweep itself).
 #
-# Usage:
-#   gc-stale-windows.sh [--hours N] [--log-dir DIR] [--dry-run]
-#
-# Defaults:
-#   --hours    168   (one week)
-#   --log-dir  $HOME/.cache/auto-new-day-sweep/children
-#   --dry-run  off (prints what it would do without renaming)
-#
-# Output (one line per window inspected, real-run only):
-#   archived  AUTO-inreview:CXH-1234-baton-foo -> CXH-1234-baton-foo-stale-20260630  (log idle 31h)
-#   skipped   AUTO-inprogress:CXH-5555-newconnector  (log idle 4h, fresh)
-#   no-log    AUTO-inreview-others:baton-bar-17  (no log; cannot decide; left alone)
-#
+# Usage: gc-stale-windows.sh [--dry-run]
+# Output: one line per window: closed | kept-busy | would-close
 # Exit 0 always (best-effort cleanup; never aborts the sweep).
 
 set -u
 
-HOURS=168
-LOG_DIR="$HOME/.cache/auto-new-day-sweep/children"
 DRY_RUN=0
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --hours)    shift; HOURS=${1:-168} ;;
-    --log-dir)  shift; LOG_DIR=${1:-$LOG_DIR} ;;
-    --dry-run)  DRY_RUN=1 ;;
-    *) echo "gc-stale-windows.sh: unknown arg: $1" >&2; exit 0 ;;
-  esac
-  shift
-done
+[ "${1:-}" = "--dry-run" ] && DRY_RUN=1
 
-THRESHOLD=$(( HOURS * 3600 ))
+STATE_DIR="${AUTO_NEW_DAY_STATE_DIR:-$HOME/.local/state/auto-new-day}"
+LOG="$STATE_DIR/closed-windows.md"
+SESSIONS_DIR="$HOME/.claude/sessions"
+TODAY=$(date +%F)
 NOW=$(date +%s)
-TODAY=$(date +%Y%m%d)
+SELF_SESSION=""
+[ -n "${TMUX_PANE:-}" ] && SELF_SESSION=$(tmux display-message -p -t "$TMUX_PANE" '#{session_name}' 2>/dev/null)
 
-for session in AUTO-inreview AUTO-inprogress AUTO-inreview-others; do
-  # `=name` forces an exact match; otherwise "AUTO-inreview" also matches
-  # "AUTO-inreview-others" and every window gets processed twice.
-  tmux has-session -t "=$session" 2>/dev/null || continue
+day_of() { date -d "@$1" +%F 2>/dev/null || date -r "$1" +%F 2>/dev/null; }
 
-  while IFS= read -r win; do
-    # Skip windows already renamed by an earlier GC pass.
-    case "$win" in *-stale-*) continue ;; esac
+# Echo "<sessionId> <status> <cwd>" for the live Claude attached to a tmux pane id.
+claude_in_pane() {
+  local pane=$1 f pid
+  for f in "$SESSIONS_DIR"/*.json; do
+    [ -f "$f" ] || continue
+    jq -e --arg p ".$pane" '(.tmux // "") | endswith($p)' "$f" >/dev/null 2>&1 || continue
+    pid=$(jq -r '.pid' "$f")
+    kill -0 "$pid" 2>/dev/null || continue
+    jq -r '"\(.sessionId) \(.status // "unknown") \(.cwd)"' "$f"
+  done
+}
 
-    log_path="$LOG_DIR/${session}-${win}.log"
-    if [ ! -f "$log_path" ]; then
-      echo "no-log   ${session}:${win}  (no log; cannot decide; left alone)"
-      continue
-    fi
+while IFS=$'\t' read -r session win win_id session_created; do
+  case "$session" in AUTO-*) ;; *) continue ;; esac
+  [ "$session" = "$SELF_SESSION" ] && continue
 
-    log_mtime=$(stat -c %Y "$log_path" 2>/dev/null || stat -f %m "$log_path" 2>/dev/null)
-    [ -n "$log_mtime" ] || { echo "no-log   ${session}:${win}  (stat failed)"; continue; }
+  oldest=0
+  while read -r pane_pid; do
+    age=$(ps -o etimes= -p "$pane_pid" 2>/dev/null | tr -d ' ')
+    [ -n "$age" ] && [ "$age" -gt "$oldest" ] && oldest=$age
+  done < <(tmux list-panes -t "$win_id" -F '#{pane_pid}' 2>/dev/null)
+  created=$(( oldest > 0 ? NOW - oldest : session_created ))
+  created_day=$(day_of "$created")
+  [[ "$created_day" < "$TODAY" ]] || continue
 
-    idle=$(( NOW - log_mtime ))
-    idle_hours=$(( idle / 3600 ))
-    if [ "$idle" -lt "$THRESHOLD" ]; then
-      echo "skipped  ${session}:${win}  (log idle ${idle_hours}h, fresh)"
-      continue
-    fi
+  convs=()
+  is_busy=0
+  while read -r pane; do
+    while read -r sid status cwd; do
+      [ -n "$sid" ] || continue
+      [ "$status" = "busy" ] && is_busy=1
+      transcript=$(ls "$HOME"/.claude/projects/*/"$sid".jsonl 2>/dev/null | head -1)
+      convs+=("  - claude \`$sid\` in \`$cwd\`: resume with \`cd $cwd && claude --resume $sid\`; transcript \`${transcript:-not found}\`")
+    done < <(claude_in_pane "$pane")
+  done < <(tmux list-panes -t "$win_id" -F '#{pane_id}' 2>/dev/null)
 
-    new_name="${win}-stale-${TODAY}"
-    if [ "$DRY_RUN" = 1 ]; then
-      echo "would-archive ${session}:${win} -> ${new_name}  (log idle ${idle_hours}h)"
-    else
-      if tmux rename-window -t "=${session}:${win}" "$new_name" 2>/dev/null; then
-        echo "archived ${session}:${win} -> ${new_name}  (log idle ${idle_hours}h)"
-      else
-        echo "failed   ${session}:${win} -> ${new_name}  (rename returned non-zero)"
-      fi
-    fi
-  done < <(tmux list-windows -t "=$session" -F '#{window_name}' 2>/dev/null || true)
-done
+  if [ "$is_busy" = 1 ]; then
+    echo "kept-busy ${session}:${win}  (created $created_day, claude still busy)"
+    continue
+  fi
+  if [ "$DRY_RUN" = 1 ]; then
+    echo "would-close ${session}:${win}  (created $created_day, ${#convs[@]} claude conversation(s))"
+    continue
+  fi
+
+  mkdir -p "$STATE_DIR"
+  {
+    echo "- $(date -Iseconds) closed \`${session}:${win}\` (created $created_day)"
+    [ ${#convs[@]} -eq 0 ] && echo "  - no live claude conversation in this window"
+    printf '%s\n' "${convs[@]}"
+  } >> "$LOG"
+  tmux kill-window -t "$win_id" 2>/dev/null \
+    && echo "closed   ${session}:${win}  (created $created_day, logged to $LOG)" \
+    || echo "failed   ${session}:${win}  (kill-window returned non-zero)"
+done < <(tmux list-windows -a -F $'#{session_name}\t#{window_name}\t#{window_id}\t#{session_created}' 2>/dev/null)
 
 exit 0
