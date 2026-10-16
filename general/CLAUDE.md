@@ -77,6 +77,11 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - the user says "encrypt the config and push", "update the secret in dotfiles", or mentions `.scr` / git-secret / `SECRETS_EXTENSION`
   - restoring secrets on a new machine (`git secret reveal`)
 
+- [`~/.claude/lazy/android.md`](.claude/lazy/android.md). **Read when** any of:
+  - running any `adb` command against a phone, or installing/testing an app on the phone
+  - doing Android, Flutter, or other mobile app work that touches a real device
+  - about to change phone settings (screen timeout, lock, permissions) over adb
+
 ## CRITICAL: Editing a `~/work` repo from a foreign cwd
 The lazy-scan hook only walks ancestors of the current cwd, so when a session started elsewhere (e.g. a `~/worktrees/` checkout) sends you to edit files under `~/work/**`, that tree's `CLAUDE.md` lazy index never enters context and its triggers never fire. Before the first Write/Edit under `~/work/**`, read `~/work/CLAUDE.md` and load any lazy file in its "Detail files" index whose Read-when matches the task. Skipping this once reintroduced a bug a documented convention there explicitly warns against.
 
@@ -97,3 +102,9 @@ Configs (alias in parens): nvim `~/.config/nvim/init.lua` (`.v`), zsh `~/.config
 Ansible uses role-based structure (core/auth roles, `tasks/` by category).
 
 Shortcuts: files in `~/.config/shortcuts/sf`, dirs in `sd`. Auto-suspend via `xautolock@kanon.service`.
+
+## Mobile development
+
+- Run mobile toolchains (Android SDK, Gradle, Flutter, NDK, etc.) inside containers (docker), never install them on the host. Keep the image in a repo `Dockerfile` so CI builds the same way.
+- Install and test builds on the real phone over `adb` (wireless debugging; the phone is already paired, so `adb connect <ip>:<port>` is enough).
+- Phone screen and lock handling: see [`~/.claude/lazy/android.md`](.claude/lazy/android.md).

@@ -13,10 +13,10 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×50)
+- done. (×64)
 - good catch, will fix. (×1)
 - fixed. (×12)
-- done (×11)
+- done (×15)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
@@ -49,6 +49,10 @@ increment from there.
 - done, switched to `dotc1z.NewStore` which reads pebble `C1Z3` too. good catch. (×1)
 - done, the zstd path is gone now, reads through the sdk store. (×1)
 - is true, the early catch ran before `wrapOfficialClientError` so it came back `codes.Unknown`. routed both 409 sites through the wrapper now so they carry `codes.AlreadyExists` (×1)
+- now returns the error on 404 (×1)
+- done. `for_deletion` shows as disabled, not deleted, since the account can still be restored in the grace period. the raw status goes in the status details. (×1)
+- on purpose, it's what revoke wrote before and what `CreateAccount` gives new users. added a line. `GrantImmutable` follow-up sounds good. (×1)
+- agreed, leaving it for a follow-up. (×1)
 
 ### Replies — pushback
 
@@ -71,6 +75,9 @@ increment from there.
 - intended db2 case, keeping it. the test name and the new code comment spell out the trade-off. (×1)
 - added `limit`/`offset`. loud-failing the bare-array branch would change behavior. (×1)
 - false positive i think. the generator only uses `dirname(entry)` to find `specs/`, it never opens the entry file. `specs/` is at the repo root in a standalone repo so the dir has to be `$PWD`. adding `src/` points it at `$PWD/src/specs/source` which doesn't exist. (×1)
+- didn't add an `account_type` check, but a 403 from the lifecycle api now says the account isn't managed by the org (app accounts never are) or the key is missing user management access. a 404 still comes back as is. (×1)
+- yeah, known gap. without the org key, `Delete` and the enable/disable actions fail right away with an error naming `atlassian-orgId` and `atlassian-api-token`, so it's not silent. leaving the capabilities static for now. (×1)
+- dropped the state check, it sets the value directly now. the user walk has to stay because every write command takes a username and lastpass can't look a user up by id. https://support.lastpass.com/s/document-item?bundleId=lastpass&topicId=LastPass%2Fapi_get_user_data.html (×1)
 
 ### New line comments — feedback
 
@@ -105,6 +112,8 @@ increment from there.
 - right now it lists every workspace again for each membership and key, with no caching, so a sync makes a lot of extra api calls on bigger orgs. better to switch to the v2 syncer and keep the workspace ids in the session store: save them in `workspaceBuilder.List` and read them in `Grants`. (×2)
 - `CreateAccount` only sends `email`/`firstName`/`lastName`/`memberType`, but the account schema also offers `userKind` and `sendInvite`. `userKind` is a real create-member field, so setting it to `guest`/`embed` gets silently dropped, and `sendInvite` isn't a create-member param at all. could we wire `userKind` (and `isGuest`) in, or drop those two from the schema so it's not offering inputs that do nothing? https://help.sigmacomputing.com/reference/createmember (×1)
 - `*assignedUser.LastUpdated` is deref'd with no nil check (same at :509). https://github.com/okta/okta-sdk-golang/blob/v2.20.0/okta/appUser.go#L39 (×1)
+- `README.md:44` still says `Full control` for quarantine, can you flip it to `Read/Write` there too? otherwise it disagrees with this line. (×1)
+- `wrapError` drops the ERS body, so a CSRF-enabled tenant now gets `403 Forbidden` instead of `CSRF nonce validation failed`, the string the README tells people to look for. could we carry `messages[].title` into the error? (×1)
 
 ### Top-level PR/MR comments
 
@@ -133,6 +142,13 @@ increment from there.
 - intentional, not a missed classification. a code-less 404 here cannot be told apart from a routing or directory failure, so we fail loud rather than report a revoke that never happened as already-revoked. (×1)
 - confirmed: a null or missing `Data` yields an empty set, not an error. (×1)
 - audited all seven against the openapi. only `listManagedSystems` uses the container, and only when `limit` is sent. the rest are bare arrays, `ManagedAccounts` included. no sibling shares it. (×1)
+- flipped this back, a 404 on delete is success again per the thread on `Delete`. (×1)
+- this is the user we just created. `AlreadyExists` comes from the pre-check before `batchadd` so is not the same (×1)
+- on purpose, the user still holds Basic so success would be wrong. hiding it with `GrantImmutable` is a follow-up. (×1)
+
+### Ticket status updates
+
+- PR is up: https://github.com/ConductorOne/baton-netsuite/pull/65. It's only been tested against a mock NetSuite server, since we don't have a real NetSuite tenant. Could the customer from the Pylon ticket run a first sync with OAuth 2.0 client credentials once this ships? That would be our live check. Existing TBA setups don't need any changes. (×1)
 
 ## Anti-patterns — what NOT to post
 

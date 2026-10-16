@@ -27,6 +27,18 @@ Three flavors. Pick exactly one:
 
 Hard rule: if the draft references a file, function, variable, or specific code behaviour, it MUST be a line comment, not a top-level comment. Top-level is the fallback only when the comment is genuinely MR-wide.
 
+## CRITICAL: never reply to bot comments
+
+Never draft or post a reply to a comment authored by a bot (login ends in `[bot]`, or is `github-actions`, `coderabbitai`, etc.). Bots don't read replies. Fix the code or leave the thread alone; if the bot's point was declined, say so to the operator in chat, not on the PR. Drop bot targets before writing the draft file.
+
+## CRITICAL: "+1 <thread/comment>" = a reaction, never a comment
+
+When the operator says "+1 <X>" / "thumbs up <X>" / "upvote <X>", add an emoji reaction to that comment and post NO text. Skip drafting, `humanize`, the qa pane, and `record_example.py`; the instruction is the approval. Prefer an "x2"/"me too" emoji if the platform has one, else thumbs up.
+
+- GitHub has no x2 reaction (only `+1 -1 laugh confused heart hooray rocket eyes`), so use `+1`. Review-thread comment: `AUTO_NEW_DAY_APPROVED=1 gh api repos/OWNER/REPO/pulls/comments/COMMENT_ID/reactions -X POST -f content='+1'`. Conversation comment: `.../issues/comments/COMMENT_ID/reactions`.
+- GitLab: award emoji on the note, `glab api projects/PROJECT_ID/merge_requests/MR_IID/notes/NOTE_ID/award_emoji -X POST -f name=thumbsup` (no x2 there either).
+- For a thread, react to the root comment (the reviewer's point), not the latest reply.
+
 ## Direct-dictation shortcut: `post <exact text>`
 
 When the operator's instruction already names the literal reply body (`post "done"`, `just say "done"`, `reply with "lgtm"`), that dictation is both the draft and the approval at once. Skip drafting, `humanize`, fact-check, and the qa pane, post the exact text (unmodified, no elaboration, no added context) to the target thread/line right away.
@@ -508,7 +520,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - **Never open the draft in a new tmux window.** The operator will not switch windows to review a batch of drafts. The pane keeps everything on one screen. (The qa helper enforces this: it only ever splits a pane.)
    - **Append, don't spawn a new draft file, on a same-session second invocation.** If a draft file from THIS session already exists (grep `/tmp/add-comment-drafts-<PR>-*` and pick the newest whose timestamp is within the last hour), append the new blocks to that file and re-run the helper on the same path — it focuses the already-open pane rather than opening a second one. The operator ends up with a single draft file that grows as findings arrive.
 
-4. Surface a one-line "edit `- answer:`, `SKIP` the ones you don't want, then say 'post'" message in chat and STOP. Do NOT call `AskUserQuestion` — the pane IS the confirmation surface, and the operator's "post" is the go signal. (`AskUserQuestion` only appears when the helper exited `3`, i.e. no tmux and no `$TERMINAL`; see step 5 in the Workflow.) When the operator says "post", re-read the file and post every surviving block (the operator drops bot blocks themselves by `SKIP`-ing them in the file).
+4. Surface a one-line "edit `- answer:`, `SKIP` the ones you don't want, then say 'post'" message in chat and STOP. Do NOT call `AskUserQuestion` — the pane IS the confirmation surface, and the operator's "post" is the go signal. (`AskUserQuestion` only appears when the helper exited `3`, i.e. no tmux and no `$TERMINAL`; see step 5 in the Workflow.) When the operator says "post", re-read the file and post every surviving block (bot threads never get a block, see "never reply to bot comments").
 
 5. On "Post", re-read the draft file. Split it on `---` lines into blocks (an empty block between two adjacent `---` counts as "the operator deleted this one"). For each block, apply the body-resolution + skip rules:
 

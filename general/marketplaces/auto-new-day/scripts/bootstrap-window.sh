@@ -185,7 +185,12 @@ if [ -n "$REPO_DIR" ]; then
   else
     cd "$REPO_DIR"
     if [ -f .envrc ]; then
-      envrc_err=$(. ./.envrc 2>&1 >/dev/null)
+      # direnv stdlib builtins (source_env_if_exists, dotenv) only exist under direnv; plain `.` fails on them.
+      if command -v direnv >/dev/null 2>&1; then
+        envrc_err=$(direnv exec . true 2>&1 >/dev/null)
+      else
+        envrc_err=$(. ./.envrc 2>&1 >/dev/null)
+      fi
       envrc_rc=$?
       if [ "$envrc_rc" -ne 0 ]; then
         write_blocked ".envrc failed to source (rc=$envrc_rc)" "$envrc_err"
