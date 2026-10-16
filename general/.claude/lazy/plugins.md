@@ -49,7 +49,7 @@ Claude Code does NOT run the source. On `install` it copies the source into a ve
 
 ## The version-keyed cache gotcha
 
-`claude plugin marketplace update <name>` reports success but does **NOT** re-copy when the plugin `version` is unchanged. The cache is keyed by version (`…/<plugin>/<version>/`), so a same-version update only re-validates + re-registers; it never overwrites the existing version dir. Edit source, run `update`, and the runtime stays stale.
+`claude plugin marketplace update <name>` reports success but does **NOT** re-copy when the plugin `version` is unchanged. The cache is keyed by version (`…/<plugin>/<version>/`), so a same-version update only re-validates + re-registers; it never overwrites the existing version dir. Edit source, run `update`, and the runtime stays stale. Exception: a plugin installed from a local directory marketplace (e.g. `~/marketplaces/*`) loads in place from source (`claude plugin install` says so), so edits apply at the next session start or `/reload-plugins`; bump the version and run `claude plugin update <plugin>@<marketplace>` only to re-record it.
 
 Apply a change one of two ways:
 
