@@ -1,7 +1,7 @@
 ---
 name: lazy-gaps
-description: Audit a set of PR-review comments / bug findings / lessons against $HOME/work/CLAUDE.md + $HOME/work/.claude/lazy/*.md. For each item, decide COVERED-AND-CORRECT / COVERED-BUT-WRONG-OR-OUTDATED / NOT-COVERED, judge whether the gap is worth a rule, then update an existing lazy file or create a new one. Entries land SHORT and CLEAR. Triggers on "/lazy-gaps", "audit lazy gaps", "are these documented in lazy", "save these review notes as rules", "check if my lazy files cover X". AUTO-INVOKE (1) at the tail of a PR-feedback fix run (after the commit + `/report` land) when the operator says "save the rules" or "document these in lazy", and (2) after any bug-fix PR is created in a Baton connector for previously-shipped code (bug ticket filed against a feature the operator already merged, e.g. CXH-1980 / CXH-1981 landing on the shipped CXH-752 impl). The fix itself is evidence a rule was missing, so audit before ending the turn even without an explicit ask. Do NOT trigger for skill-body edits (use the relevant skill directly), for connector-specific notes that belong in `CLAUDE.local.md`, or to bulk-rewrite a lazy file (that's `claude-md-simplify`).
-argument-hint: "[source] [scope=work|all|auto]" — `source` is either a path to a dispatch JSON (`~/work/.auto-new-day/dispatch/<TICKET>.json`), a PR URL whose comments you want audited, or free text describing each item one per line. `scope` controls which lazy files the audit walks: `work` = only `$HOME/work/CLAUDE.md` + `$HOME/work/.claude/lazy/*.md`; `all` = work files plus the global `~/CLAUDE.md` + `~/.claude/lazy/**/*.md`; `auto` (default) = walk ancestors from cwd (work files when inside `$HOME/work/`, global otherwise). `fix-bug-work` always passes `scope=work`. Empty source = ask the operator.
+description: Audit a batch of lessons (PR-review comments, bug findings, post-mortem notes) against the governing CLAUDE.md and .claude/lazy/*.md files, then save what is missing. Classifies each item COVERED-AND-CORRECT, COVERED-BUT-WRONG-OR-OUTDATED, or NOT-COVERED, and writes the worthwhile gaps short and grep-friendly into the lazy file whose trigger fits, creating a new file when none does. Triggers on "/lazy-gaps", "audit lazy gaps", "are these documented in lazy", "save these review notes as rules", "check if my lazy files cover X". Also self-invoke without being asked (1) at the tail of a PR-feedback fix run, once the commit and /report have landed, and (2) after a bug-fix PR against previously-shipped code, since the fix itself is evidence a rule was missing. Do NOT use to edit a skill body or hook (edit those directly), to store machine-local recipes or credentials (CLAUDE.local.md), or to restructure a file wholesale (claude-md-simplify).
+argument-hint: "[source: dispatch-JSON path | PR URL | ticket URL | free text, one item per line] [scope: work|all|auto, default auto]"
 ---
 
 # lazy-gaps
@@ -35,6 +35,16 @@ Do NOT use for:
 | Empty | (nothing) | ask the operator for items |
 
 If the source contains items the skill can't normalize into a one-line statement (vague rambling, multiple ideas per line), ask the operator to restate before continuing.
+
+`<scope>` controls which rule files the audit walks:
+
+| Value | Walks |
+|---|---|
+| `work` | `$HOME/work/CLAUDE.md` + `$HOME/work/.claude/lazy/*.md` only |
+| `all` | the work files, plus global `~/CLAUDE.md` + `~/.claude/lazy/**/*.md` |
+| `auto` (default) | ancestor walk from cwd: work files when inside `$HOME/work/`, global otherwise |
+
+`fix-bug-work` always passes `scope=work`.
 
 ## Workflow
 

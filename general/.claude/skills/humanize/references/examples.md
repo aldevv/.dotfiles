@@ -130,6 +130,10 @@ increment from there.
 - `optionalStringField` at line 501-504 already does `strings.TrimSpace(raw)`, so the outer `strings.TrimSpace(...)` here is redundant. can drop it: `if mapped := optionalStringField(profileMap, "email"); mapped != "" {`. (×1)
 - let's not log `user_id`, it's user data. `role` is enough here. and this can be `Debug` instead of `Warn`. (×1)
 
+### Answers
+
+- This was a misconfiguration on our side. NiceDCV was flagged as disabled on your Megastation, so the dashboard stopped offering it. That's fixed. Refresh the dashboard and it should be back in the connect options. (×1)
+
 ### Replies — clarifying / asking back
 
 - deployment names are unique per databricks cloud, so no collision risk. also pre-existing, not new in this PR. (×1)

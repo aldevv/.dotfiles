@@ -20,4 +20,6 @@ general/CLAUDE-machines.md
 **/.ssh/config
 nvim/.config/nvim/KeymapTracker/.id
 general/.config/tmux/plugins/tmux-continuum
+general/.config/tmux/plugins/tmux-resurrect-claude
+general/.config/tmux/plugins/tmux-resurrect/save_command_strategies/claude.sh
 general/.claude/skills/auto-pr-ci-fix/references/common-fixes.md

@@ -65,6 +65,11 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - running any `claude plugin …` command (install / marketplace add|update|remove / enable), or asked where a plugin/skill lives or how to edit/apply a plugin change
   - the user mentions `~/marketplaces`, "the marketplace", or the auto-new-day morning sweep / its systemd timer
 
+- [`~/.claude/lazy/tmux.md`](.claude/lazy/tmux.md). **Read when** any of:
+  - editing `tmux.conf` or any script under `.local/share/scripts/utilities/tmux/`
+  - about to test a tmux config/script change (window naming, hooks, key bindings) before committing it
+  - diagnosing a tmux window/pane naming, title, or automatic-rename issue
+
 - [`~/.claude/lazy/rclone-remotes.md`](.claude/lazy/rclone-remotes.md). **Read when** any of:
   - running any `rclone` command, or about to upload / download / sync / mount files to or from a Google Drive
   - the user asks to upload something to their Google Drive / Drive / gdrive / a gmail account
@@ -81,6 +86,12 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - running any `adb` command against a phone, or installing/testing an app on the phone
   - doing Android, Flutter, or other mobile app work that touches a real device
   - about to change phone settings (screen timeout, lock, permissions) over adb
+
+- [`~/.claude/lazy/phone.md`](.claude/lazy/phone.md). **Read when** any of:
+  - the environment's OS Version / `uname -r` contains `android`, or `hostname` prints `localhost`, or `~/.machine_metadata` has `id=phone`
+  - about to run `adb`, `pm`, `am`, `docker`, or install an APK
+  - a command fails with `command not found` for a tool expected on a normal Linux box, or `GOROOT` errors
+  - the user mentions "my phone", "termux", or "on the phone"
 
 ## CRITICAL: Editing a `~/work` repo from a foreign cwd
 The lazy-scan hook only walks ancestors of the current cwd, so when a session started elsewhere (e.g. a `~/worktrees/` checkout) sends you to edit files under `~/work/**`, that tree's `CLAUDE.md` lazy index never enters context and its triggers never fire. Before the first Write/Edit under `~/work/**`, read `~/work/CLAUDE.md` and load any lazy file in its "Detail files" index whose Read-when matches the task. Skipping this once reintroduced a bug a documented convention there explicitly warns against.
