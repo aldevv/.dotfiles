@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Toggle a centered floating nvim on a todo.md (prefix + t).
+#
+# The popup attaches to a hidden "todo" session, so hiding it keeps nvim alive.
+# The file is picked only when that session doesn't exist yet (first open, or
+# after quitting nvim):
+#   ./todo.md only            -> ./todo.md
+#   ~/work/todo.md only       -> ~/work/todo.md
+#   both, and cwd under ~/work -> fzf to choose
+#   both, cwd outside ~/work  -> ./todo.md
+#
+#   tmux-todo <session_name> <pane_current_path>   from the bind
+#   tmux-todo --pick <dir>                         runs inside the popup
+
+set -euo pipefail
+
+readonly SESSION=todo
+readonly WORK_TODO="$HOME/work/todo.md"
+readonly ATTACH="env TMUX= tmux -S ${TMUX%%,*} attach-session -t $SESSION"
+
+pick() {
+	local dir="$1" local_todo="$1/todo.md" file="$WORK_TODO"
+	if [[ -f "$local_todo" && "$local_todo" != "$WORK_TODO" ]]; then
+		file="$local_todo"
+		[[ "$dir/" == "$HOME/work/"* && -f "$WORK_TODO" ]] &&
+			file="$(printf '%s\n' "$local_todo" "$WORK_TODO" | fzf --prompt 'todo> ')"
+	fi
+	tmux new-session -d -s "$SESSION" -c "$(dirname "$file")" nvim "$file"
+	tmux set-option -t "$SESSION" status off \; set-option -t "$SESSION" detach-on-destroy on
+	exec $ATTACH
+}
+
+if [[ "${1:-}" == "--pick" ]]; then
+	pick "$2"
+fi
+
+if [[ "$1" == "$SESSION" ]]; then
+	tmux detach-client
+	exit 0
+fi
+
+if tmux has-session -t "=$SESSION" 2>/dev/null; then
+	tmux display-popup -E -w 85% -h 85% "$ATTACH"
+else
+	tmux display-popup -E -w 85% -h 85% -d "$2" "$0 --pick '$2'"
+fi
