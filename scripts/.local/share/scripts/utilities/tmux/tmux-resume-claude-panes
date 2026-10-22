@@ -53,11 +53,34 @@ wait_for_claude_pane() {
 	return 1
 }
 
-while IFS=$'\t' read -r session window pane; do
+# Per-pane session ids written by tmux-save-claude-sessions on every save.
+# --continue alone would reopen the newest conversation in the cwd, so every
+# pane sharing a cwd would come back as the same conversation.
+sessions_map="$resurrect_dir/claude_sessions"
+
+session_id_for() {
+	[[ -f "$sessions_map" ]] || return 0
+	awk -F'\t' -v s="$1" -v w="$2" -v p="$3" '$1==s && $2==w && $3==p { print $4; exit }' "$sessions_map"
+}
+
+declare -A continued_dirs
+while IFS=$'\t' read -r session window pane dir; do
+	dir="${dir#:}"
 	target="${session}:${window}.${pane}"
+	sid="$(session_id_for "$session" "$window" "$pane")"
+	if [[ -n "$sid" ]]; then
+		resume_flag="--resume $sid"
+	elif [[ -z "${continued_dirs[$dir]:-}" ]]; then
+		resume_flag="--continue"
+		continued_dirs[$dir]=1
+	else
+		# no recorded id and --continue already used for this dir: a fresh
+		# session beats a duplicate of another pane's conversation
+		continue
+	fi
 	wait_for_claude_pane "$target" || continue
 	# respawn-pane -k replaces the pane's process outright: typing --continue
 	# via send-keys instead would land as a chat message once claude is already
 	# running, since resurrect's own relaunch already has it open by then.
-	tmux respawn-pane -k -t "$target" "claude --dangerously-skip-permissions --continue"
-done < <(awk -F'\t' '$1=="pane" && $11 ~ /^:claude( |$)/ { print $2"\t"$3"\t"$6 }' "$snapshot")
+	tmux respawn-pane -k -c "$dir" -t "$target" "claude --dangerously-skip-permissions $resume_flag"
+done < <(awk -F'\t' '$1=="pane" && $11 ~ /^:claude( |$)/ { print $2"\t"$3"\t"$6"\t"$8 }' "$snapshot")

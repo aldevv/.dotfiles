@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# tmux-resurrect post-save-all hook: record which Claude Code conversation
+# each tmux pane is running, so tmux-resume-claude-panes can relaunch every
+# pane with `claude --resume <id>`. Without this map, restore falls back to
+# `--continue`, which picks the newest conversation in the cwd, so every
+# claude pane sharing a cwd reopens the same conversation.
+#
+# Claude Code writes ~/.claude/sessions/<pid>.json per running instance with
+# its sessionId and a "tmux" field shaped "<session>:@<window_id>.%<pane_id>".
+# Output: one "<session>\t<window_index>\t<pane_index>\t<sessionId>" line per
+# live claude pane, in $resurrect_dir/claude_sessions.
+resurrect_dir="$(tmux show-option -gqv "@resurrect-dir")"
+if [[ -z "$resurrect_dir" ]]; then
+	if [[ -d "$HOME/.tmux/resurrect" ]]; then
+		resurrect_dir="$HOME/.tmux/resurrect"
+	else
+		resurrect_dir="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect"
+	fi
+fi
+out="$resurrect_dir/claude_sessions"
+tmp="$out.tmp"
+: >"$tmp"
+
+for f in "$HOME"/.claude/sessions/*.json; do
+	[[ -f "$f" ]] || continue
+	read -r pid sid pane_id < <(jq -r '[.pid, .sessionId, ((.tmux // "") | sub("^.*\\."; ""))] | @tsv' "$f" 2>/dev/null)
+	[[ "$pane_id" == %* ]] || continue
+	# stale file left by a claude that already exited
+	kill -0 "$pid" 2>/dev/null || continue
+	loc="$(tmux display-message -p -t "$pane_id" $'#{session_name}\t#{window_index}\t#{pane_index}' 2>/dev/null)" || continue
+	printf '%s\t%s\n' "$loc" "$sid" >>"$tmp"
+done
+
+mv "$tmp" "$out"

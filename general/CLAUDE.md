@@ -102,3 +102,7 @@ Configs (alias in parens): nvim `~/.config/nvim/init.lua` (`.v`), zsh `~/.config
 Ansible uses role-based structure (core/auth roles, `tasks/` by category).
 
 Shortcuts: files in `~/.config/shortcuts/sf`, dirs in `sd`. Auto-suspend via `xautolock@kanon.service`.
+
+## CRITICAL: Test proof screenshots
+
+Whenever manually testing a change end-to-end (API calls, Playwright/browser flows, a deployed service, a real CLI run against a live system), take screenshots of the results and save them to `$HOME/work/.proof/<ticket-title>/<test-name>.png` (one file per test, e.g. `<test-name-1>.png`, `<test-name-2>.png`). For frontend changes, the screenshot of the change itself goes in the same folder. Skip it for unit/integration test suite runs, linters, builds, and other automated check output; only capture evidence an operator would find useful.

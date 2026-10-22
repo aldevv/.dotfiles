@@ -45,6 +45,10 @@ qa returns: the temp file path, and (on "done") the edited contents.
 
 5. **On "done", re-read the file** with `Read` and hand the contents to the caller to parse. The edited file is the source of truth; whatever the operator changed, deleted, or left is what the caller acts on.
 
+   **Links footer.** When the content mentions tickets, PRs, or MRs, append a links section after the final `---` listing the full URL for each one mentioned (`- DISP-3110: https://...`), so the operator can paste them in by hand. Never put links inside an editable block, and keep the footer in sync whenever a mention is added or removed.
+
+   **CRITICAL: every update to an open qa file starts from its CURRENT on-disk state.** The operator may have edited it since you last looked, so before each change `Read` the file again in the same turn, then make the smallest targeted `Edit` (one phrase or line) against that fresh content. Never rewrite a whole block or the whole file from an earlier read, a script's hardcoded text, or a `sed`/`python` replace written before the latest read, because it silently wipes the operator's edits. If their version and your change conflict, keep their wording and apply only your delta. Before each write, also check the editor pane for unsaved changes (`tmux capture-pane -p -t <pane>`, look for a modified `[+]` flag); if they have unsaved edits, ask them to save first.
+
 6. **Clean up** when the caller is finished with the batch: `rm -f /tmp/qa-<slug>-<TS>.md`.
 
 ## Notes

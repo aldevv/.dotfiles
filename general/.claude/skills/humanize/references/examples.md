@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×50)
+- done. (×60)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×11)
@@ -49,6 +49,7 @@ increment from there.
 - done, switched to `dotc1z.NewStore` which reads pebble `C1Z3` too. good catch. (×1)
 - done, the zstd path is gone now, reads through the sdk store. (×1)
 - is true, the early catch ran before `wrapOfficialClientError` so it came back `codes.Unknown`. routed both 409 sites through the wrapper now so they carry `codes.AlreadyExists` (×1)
+- done, switched both to `B`. (×1)
 
 ### Replies — pushback
 
@@ -71,6 +72,8 @@ increment from there.
 - intended db2 case, keeping it. the test name and the new code comment spell out the trade-off. (×1)
 - added `limit`/`offset`. loud-failing the bare-array branch would change behavior. (×1)
 - false positive i think. the generator only uses `dirname(entry)` to find `specs/`, it never opens the entry file. `specs/` is at the repo root in a standalone repo so the dir has to be `$PWD`. adding `src/` points it at `$PWD/src/specs/source` which doesn't exist. (×1)
+- done, but kept `a.act_id`. `activity.source_id` is the adjustment id, so it'd just repeat `gal_adjustment_id`. (×1)
+- the `adjustment.source_id` isnt the activity id, `activity.source_id` holds the `adj_id`, so I think we need the activity table to get `act_id` (×1)
 
 ### New line comments — feedback
 
@@ -137,6 +140,8 @@ increment from there.
 - intentional, not a missed classification. a code-less 404 here cannot be told apart from a routing or directory failure, so we fail loud rather than report a revoke that never happened as already-revoked. (×1)
 - confirmed: a null or missing `Data` yields an empty set, not an error. (×1)
 - audited all seven against the openapi. only `listManagedSystems` uses the container, and only when `limit` is sent. the rest are bare arrays, `ManagedAccounts` included. no sibling shares it. (×1)
+- outdated, the test expects the partial sync now. (×1)
+- i removed the line to follow the mental model that mohammed told me about (×2)
 
 ## Anti-patterns — what NOT to post
 
