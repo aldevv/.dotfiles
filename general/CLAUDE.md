@@ -82,6 +82,17 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - the user says "encrypt the config and push", "update the secret in dotfiles", or mentions `.scr` / git-secret / `SECRETS_EXTENSION`
   - restoring secrets on a new machine (`git secret reveal`)
 
+- [`~/.claude/lazy/android.md`](.claude/lazy/android.md). **Read when** any of:
+  - running any `adb` command against a phone, or installing/testing an app on the phone
+  - doing Android, Flutter, or other mobile app work that touches a real device
+  - about to change phone settings (screen timeout, lock, permissions) over adb
+
+- [`~/.claude/lazy/phone.md`](.claude/lazy/phone.md). **Read when** any of:
+  - the environment's OS Version / `uname -r` contains `android`, or `hostname` prints `localhost`, or `~/.machine_metadata` has `id=phone`
+  - about to run `adb`, `pm`, `am`, `docker`, or install an APK
+  - a command fails with `command not found` for a tool expected on a normal Linux box, or `GOROOT` errors
+  - the user mentions "my phone", "termux", or "on the phone"
+
 ## CRITICAL: Editing a `~/work` repo from a foreign cwd
 The lazy-scan hook only walks ancestors of the current cwd, so when a session started elsewhere (e.g. a `~/worktrees/` checkout) sends you to edit files under `~/work/**`, that tree's `CLAUDE.md` lazy index never enters context and its triggers never fire. Before the first Write/Edit under `~/work/**`, read `~/work/CLAUDE.md` and load any lazy file in its "Detail files" index whose Read-when matches the task. Skipping this once reintroduced a bug a documented convention there explicitly warns against.
 
@@ -106,3 +117,9 @@ Shortcuts: files in `~/.config/shortcuts/sf`, dirs in `sd`. Auto-suspend via `xa
 ## CRITICAL: Test proof screenshots
 
 Whenever manually testing a change end-to-end (API calls, Playwright/browser flows, a deployed service, a real CLI run against a live system), take screenshots of the results and save them to `$HOME/work/.proof/<ticket-title>/<test-name>.png` (one file per test, e.g. `<test-name-1>.png`, `<test-name-2>.png`). For frontend changes, the screenshot of the change itself goes in the same folder. Skip it for unit/integration test suite runs, linters, builds, and other automated check output; only capture evidence an operator would find useful.
+
+## Mobile development
+
+- Run mobile toolchains (Android SDK, Gradle, Flutter, NDK, etc.) inside containers (docker), never install them on the host. Keep the image in a repo `Dockerfile` so CI builds the same way.
+- Install and test builds on the real phone over `adb` (wireless debugging; the phone is already paired, so `adb connect <ip>:<port>` is enough).
+- Phone screen and lock handling: see [`~/.claude/lazy/android.md`](.claude/lazy/android.md).

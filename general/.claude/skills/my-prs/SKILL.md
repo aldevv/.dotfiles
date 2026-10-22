@@ -108,12 +108,13 @@ Close with a small `Recommended actions` table, one row per PR that still needs 
 - `Next action`: the shortest concrete verb phrase for the ball that's in your court, e.g. `address github-actions changes`, `address <reviewer>'s ask, then merge`, `ping <reviewer> for review`, `merge` (approved + clean + you own the merge), `open a PR`. One phrase, no prose.
 
 ## Step 7 — "create a new release" (operator command)
-When the operator says **"create a new release"** for a merged/approved connector PR shown in the table, run this three-part workflow (this is the one write path in this skill, gated on that explicit phrase):
+When the operator says **"create a new release"** for a merged/approved connector PR shown in the table, run this four-part workflow (this is the one write path in this skill, gated on that explicit phrase):
 1. **Cut a release** for the connector(s) of the relevant merged PR(s): `gh release create vX.Y.Z --target main --title "vX.Y.Z" --generate-notes -R ConductorOne/<repo>`. Version = next patch above the latest tag (`gh api repos/ConductorOne/<repo>/tags`); a brand-new axiomatic connector's first release is `v0.0.1`. Always `--generate-notes` (compact per-PR notes, stays under the registry 10k changelog limit), never a bare `git tag && git push`. Full rules: `$HOME/work/.claude/lazy/releases.md` §3 (classic) / §4 (axiomatic).
 2. **Move the connector's Linear ticket(s) to `Validation`** (Linear `save_issue` with `state: "Validation"`).
 3. **Reassign the ticket(s) to Manuel** (Manuel Traversaro Sasia, id `d5452641-fe73-44a6-bcb1-46d9d2201259`) — he owns connector validation (`save_issue` `assignee`).
+4. **Verify the release pipeline goes green.** Watch the tag's release run. If it fails, re-run it once. If it fails again, fix the cause and open a PR. Full procedure: `$HOME/work/.claude/lazy/releases.md` §6 step 4. The release isn't done until this step finishes.
 
-This reassign + status move is an explicit operator-triggered action, so it is exempt from the read-only guardrail below and from the auto-new-day no-reassign ban (which only binds the unattended sweep). Reply with the release link(s) plus a one-line confirmation that the ticket(s) moved to Validation under Manuel.
+This reassign + status move is an explicit operator-triggered action, so it is exempt from the read-only guardrail below and from the auto-new-day no-reassign ban (which only binds the unattended sweep). Reply with the release link(s), each run's final state (green / green after rerun / fix PR link), plus a one-line confirmation that the ticket(s) moved to Validation under Manuel.
 
 ## Guardrails
 - **Before merging any PR (whenever the operator says "merge"), run the approved-with-an-ask check (Step 4) on that PR first.** An APPROVED state alone is not a green light: read whatever the approver wrote alongside or after their approval. If they said "open threads worth a pass before merge", "address X first", or any "one last thing", the PR is not clean to merge, hold it and tell the operator what the approver still wants. This skill itself never merges, but this is the gate the operator relies on before they do.

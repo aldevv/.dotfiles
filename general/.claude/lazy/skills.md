@@ -23,6 +23,7 @@
 - OS differences live behind `case "$os" in linux|arch) ... ;; macOS|darwin) ... ;; esac` guards, not separate skills
 - No secrets, machine IDs, or personal identifiers embedded in the skill body; pull them from env (via direnv in the repo, or `~/.machine_metadata` for persistent machine data)
 - External binaries referenced in the skill must exist on every machine per the `ansible/` role, or be explicitly declared as a precondition in the frontmatter description
+- Global skills (under `~/.dotfiles/general/.claude/skills/`) stay employer- and project-neutral: when editing one, never add company, product, repo, or vendor names (no connectors, internal platforms, tickets) to its body, examples, or scripts. Phrase additions generically; employer-specific detail belongs in the work tree's lazy files or a work-scoped skill.
 
 **2. Composable.** A skill should delegate to another skill when the other skill already covers a branch of its flow; never duplicate the logic. Composition patterns I use:
 - **Delegation** (single direction): the caller detects a condition and hands control to a more-general skill; the callee never needs to know it was delegated to. Example: `sync-dotfiles` -> `sync-dotfiles-full` when the 30-day or uninitialized-submodule threshold fires.

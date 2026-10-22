@@ -20,7 +20,7 @@ Do NOT use for:
 - Personal credentials or per-trial recipes (those belong in `CLAUDE.local.md`).
 - Restructuring an entire lazy file (use `claude-md-simplify`).
 - Editing a skill body or hook (edit it directly).
-- One-off oddities that won't repeat across connectors.
+- One-off oddities that won't repeat across projects.
 
 ## Input formats
 
@@ -28,23 +28,36 @@ Do NOT use for:
 
 | Form | Example | Skill reads |
 |---|---|---|
-| Dispatch JSON path | `~/work/.auto-new-day/dispatch/CXH-1491.json` | the `feedback[]` array |
-| PR URL | `https://github.com/ConductorOne/baton-foo/pull/29` | `gh pr view` + `gh api .../pulls/<n>/comments` |
-| Linear ticket URL | `https://linear.app/conductorone/issue/CXH-1491` | the ticket body + comments via the linear MCP |
-| Free text | `404 on revoke should be GrantAlreadyRevoked. ResourceIdField for synced refs.` | one item per line / semicolon |
+| Dispatch JSON path | `<dispatcher-dir>/dispatch/ENG-1491.json` | the `feedback[]` array |
+| PR URL | `https://github.com/acme/widget-api/pull/29` | `gh pr view` + `gh api .../pulls/<n>/comments` |
+| Ticket URL | `https://tracker.example.com/issue/ENG-1491` | the ticket body + comments via the tracker's MCP |
+| Free text | `404 on delete should count as success. Validate config flags at startup.` | one item per line / semicolon |
 | Empty | (nothing) | ask the operator for items |
 
 If the source contains items the skill can't normalize into a one-line statement (vague rambling, multiple ideas per line), ask the operator to restate before continuing.
 
 `<scope>` controls which rule files the audit walks:
 
+(`$WORK` below is the workspace root: a shared parent tree with its own `CLAUDE.md` and `.claude/lazy/`, e.g. an employer folder like `~/work`.)
+
 | Value | Walks |
 |---|---|
-| `work` | `$HOME/work/CLAUDE.md` + `$HOME/work/.claude/lazy/*.md` only |
+| `work` | `$WORK/CLAUDE.md` + `$WORK/.claude/lazy/*.md` only |
 | `all` | the work files, plus global `~/CLAUDE.md` + `~/.claude/lazy/**/*.md` |
-| `auto` (default) | ancestor walk from cwd: work files when inside `$HOME/work/`, global otherwise |
+| `auto` (default) | ancestor walk from cwd: work files when inside `$WORK/`, global otherwise |
 
-`fix-bug-work` always passes `scope=work`.
+Callers that always run inside the workspace tree pass `scope=work`.
+
+**CRITICAL: a named target or scope never narrows classification.** Every run sorts each item into its own tier and saves it there, even when the caller names one file (e.g. "update `CLAUDE.local.md`") or one scope:
+
+| Tier | Home |
+|---|---|
+| Repo-only (one project's third-party quirks, test-account recipes, config modes) | that repo's `CLAUDE.local.md` / repo-local lazy files |
+| Workspace (true for every repo under a shared parent tree: tooling, browser-automation/credential recipes, shared dev-environment flows, shared SDK behavior) | that tree's `.claude/lazy/*.md` (e.g. `$WORK/.claude/lazy/`) |
+| Org-level fact the operator states (company events, priority shifts) | that tree's `CLAUDE.md` (see Step 4 exception) |
+| Universal (any codebase, any employer) | global `~/.claude/lazy/**` |
+
+The named target receives only the items that belong in it. A run that writes every lesson into the one file the caller named, and audits nothing else, is the failure this rule prevents.
 
 ## Workflow
 
@@ -52,16 +65,20 @@ If the source contains items the skill can't normalize into a one-line statement
 
 Normalize the source into a flat list. Each item is one rule candidate: a single concrete behaviour the next agent should follow (or avoid). Examples:
 
-- `revoke must return GrantAlreadyRevoked on 404`
-- `user_id action args use ResourceIdField with AllowedResourceTypeIds`
-- `every pkg/client/ HTTP wrapper doc comment names <METHOD> /path + required permission`
-- `argument-validation errors wrap with status.Error(codes.InvalidArgument, ...)`
+- `delete must treat 404 as success, not an error`
+- `config flags are validated at startup, never lazily on first use`
+- `every HTTP client wrapper doc comment names <METHOD> /path + required permission`
+- `argument-validation errors map to the API's invalid-argument error code`
 
 If two PR comments boil down to the same rule, dedupe to one item.
 
+**Session sweep (when the source is a session or free-text summary).** Also scan the session itself for lessons the caller didn't list: a documented recipe that failed and needed a workaround (a COVERED-BUT-WRONG candidate), a tool behavior that surprised (a secret leaking into a snapshot, a command matching its own shell), a helper script improvised to get past a blocker, a flow step that moved. Add each as an item and tier it like the rest.
+
 ### 2. For each item, audit coverage
 
-Walk the lazy index and `$HOME/work/CLAUDE.md`. Grep for the most distinctive 1-3 keywords (function names, type names, vendor-specific terms). Read the matching section in full when you get a hit.
+Start by building the knowledge tree: `python3 ${CLAUDE_SKILL_DIR:-~/.claude/skills/lazy-gaps}/scripts/knowledge-tree.py [repo-path]`. It prints JSON, built fresh from disk, of every tier (global, workspace, repo): each rule file with its `Read when` trigger and `##`/`###` headings, plus `kind` (`claude-md`, `lazy`, `rule`, `script`). Use it to pick candidate files per tier by trigger and headings, then grep and read those files. Never cache or hand-edit this JSON; rerun it instead.
+
+Walk the lazy index and `$WORK/CLAUDE.md`. Grep for the most distinctive 1-3 keywords (function names, type names, vendor-specific terms). Read the matching section in full when you get a hit.
 
 Classify into one of three buckets:
 
@@ -73,13 +90,13 @@ The audit is read-only at this phase. Do not edit yet.
 
 ### 3. For NOT-COVERED items, judge importance
 
-Ask: would a fresh agent (or a different connector's PR) plausibly trip this same wire again?
+Ask: would a fresh agent (or a different project's PR) plausibly trip this same wire again?
 
 KEEP (worth a rule) if any of:
 - The same shape of mistake has now been raised twice (this PR + any prior commit / lesson the operator can recall).
-- The vendor/SDK convention is non-obvious to anyone who hasn't shipped a similar connector.
-- It's a CRITICAL portfolio rule (auth, error wrapping, gRPC codes, capability annotations, push safety).
-- Multiple connectors expose the same surface (HTTP wrapper docs, action arg fields, revoke idempotency) and a rule applied portfolio-wide would catch it.
+- The vendor/SDK convention is non-obvious to anyone who hasn't built something similar.
+- It's a CRITICAL portfolio rule (auth, error handling, permission metadata, push safety).
+- Multiple projects expose the same surface (HTTP client wrappers, argument validation, delete idempotency) and a rule applied workspace-wide would catch it.
 
 SKIP (not worth a rule) if any of:
 - Vendor-specific edge case unlikely to repeat (e.g. "Acme returns 200 with body `null` only on Tuesdays").
@@ -89,27 +106,29 @@ SKIP (not worth a rule) if any of:
 
 ### 4. Plan the edits
 
-**CRITICAL: decide SCOPE before picking a file.** A rule that is only true inside ONE repo's checkout (its Helm chart, build, CI, file layout, deploy cells, service-specific values, per-repo conventions) is REPO-SCOPED and must land in that repo's own `<repo>/.claude/lazy/<topic>.md`, registered in a repo-local `<repo>/CLAUDE.md` Detail-files index. Do NOT put a repo-specific rule in a shared `~/work/.claude/lazy/*` file: that loads it for every unrelated `~/work` session AND buries it where the next agent working that repo won't look. A rule is WORKSPACE-SCOPED (shared `~/work/.claude/lazy/*`) only when it genuinely applies across multiple repos. Creating the repo-local `CLAUDE.md` + `.claude/lazy/` structure from scratch is expected when the repo has none yet — that is the correct move, not a reason to fall back to a shared file. When the scope is genuinely ambiguous, `claude-md-save` (Step 6) owns the final call; pass it the scope you concluded so it confirms or corrects.
+**CRITICAL: decide SCOPE before picking a file.** A rule that is only true inside ONE repo's checkout (its Helm chart, build, CI, file layout, deploy cells, service-specific values, per-repo conventions) is REPO-SCOPED and must land in that repo's own `<repo>/.claude/lazy/<topic>.md`, registered in a repo-local `<repo>/CLAUDE.md` Detail-files index. Do NOT put a repo-specific rule in a shared `$WORK/.claude/lazy/*` file: that loads it for every unrelated workspace session AND buries it where the next agent working that repo won't look. A rule is WORKSPACE-SCOPED (shared `$WORK/.claude/lazy/*`) only when it genuinely applies across multiple repos. Creating the repo-local `CLAUDE.md` + `.claude/lazy/` structure from scratch is expected when the repo has none yet — that is the correct move, not a reason to fall back to a shared file. When the scope is genuinely ambiguous, `claude-md-save` (Step 6) owns the final call; pass it the scope you concluded so it confirms or corrects.
 
 For each KEEP item (and every COVERED-BUT-WRONG item), pick a target (or targets, see below) WITHIN the chosen scope. Preference order:
 
-1. **Update the closest matching lazy file in place** — the right choice only when an existing file at the CORRECT SCOPE already has a fitting trigger. Do not reach for a shared-scope file just because it is the closest existing one; scope-correctness beats proximity. Append to the most relevant existing section, or add one short bullet to a "Common Mistakes" / "Gotchas" list. **Trigger match beats topical proximity.** A file named after a TOOL or FEATURE (`linear.md`, `golang-connectors.md`) is not a natural home for a cross-cutting JUDGMENT-CALL rule (when to stop implementing and escalate, when to reject a request, when a behavior needs a design decision) just because the example that surfaced it happened to involve that tool. Test it: would this rule's `**Read when**` fire regardless of which tool/connector is involved? If yes, and no existing file's trigger already names that judgment call, it fails test 1 even when one file sits right next to the topic — move to test 2 or 3.
-2. **Add a new top-level section to an existing lazy file** — when the item is a new sub-topic of an existing file at the correct scope (e.g. a new `### 404 on Revoke` section under `golang-connectors.md`'s idempotency block).
-3. **Create a brand-new lazy file** — when no existing lazy file AT THE CORRECT SCOPE is a natural home, or when the topic has its own trigger distinct from any current file. This is the default for a repo-scoped rule when the repo has no matching lazy file yet. Justification bar: the item has a clear `**Read when**` trigger that a fresh agent can recognize (a specific file path, a command, an error string, a user phrase — see `~/.claude/lazy/trigger-authoring.md`). Register the new file in the governing CLAUDE.md for its scope (repo-local `<repo>/CLAUDE.md` for repo-scoped rules, `~/work/CLAUDE.md` for workspace-scoped) under a `## Detail files (load on demand)` index with that trigger. **Do NOT gate this option on "5+ connectors will touch it" or "5+ rules land at once".** A single well-triggered rule that has no home already justifies a new lazy file — a wasted lazy load is fine, a rule buried in the wrong file (or wrong scope) is not. **Two or more audited items sharing a theme that no existing file's trigger names** (e.g. several "stop and escalate instead of implementing" lessons landing in one audit) is a strong signal for a new file, even when a topically-adjacent file exists — see the trigger-match test in option 1.
+1. **Update the closest matching lazy file in place** — the right choice only when an existing file at the CORRECT SCOPE already has a fitting trigger. Do not reach for a shared-scope file just because it is the closest existing one; scope-correctness beats proximity. Append to the most relevant existing section, or add one short bullet to a "Common Mistakes" / "Gotchas" list. **Trigger match beats topical proximity.** A file named after a TOOL or FEATURE (`tracker.md`, `go-services.md`) is not a natural home for a cross-cutting JUDGMENT-CALL rule (when to stop implementing and escalate, when to reject a request, when a behavior needs a design decision) just because the example that surfaced it happened to involve that tool. Test it: would this rule's `**Read when**` fire regardless of which tool or project is involved? If yes, and no existing file's trigger already names that judgment call, it fails test 1 even when one file sits right next to the topic — move to test 2 or 3.
+2. **Add a new top-level section to an existing lazy file** — when the item is a new sub-topic of an existing file at the correct scope (e.g. a new `### 404 on Delete` section under `api-clients.md`'s idempotency block).
+3. **Create a brand-new lazy file** — when no existing lazy file AT THE CORRECT SCOPE is a natural home, or when the topic has its own trigger distinct from any current file. This is the default for a repo-scoped rule when the repo has no matching lazy file yet. Justification bar: the item has a clear `**Read when**` trigger that a fresh agent can recognize (a specific file path, a command, an error string, a user phrase — see `~/.claude/lazy/trigger-authoring.md`). Register the new file in the governing CLAUDE.md for its scope (repo-local `<repo>/CLAUDE.md` for repo-scoped rules, `$WORK/CLAUDE.md` for workspace-scoped) under a `## Detail files (load on demand)` index with that trigger. **Do NOT gate this option on "5+ projects will touch it" or "5+ rules land at once".** A single well-triggered rule that has no home already justifies a new lazy file — a wasted lazy load is fine, a rule buried in the wrong file (or wrong scope) is not. **Two or more audited items sharing a theme that no existing file's trigger names** (e.g. several "stop and escalate instead of implementing" lessons landing in one audit) is a strong signal for a new file, even when a topically-adjacent file exists — see the trigger-match test in option 1.
 
 **CRITICAL: one gap can need MORE THAN ONE home. Do not add it to one file and call it done.** A rule often governs several work-surfaces that load through DIFFERENT triggers. If it lands in only the first file, an agent working a surface covered by a different trigger never sees it, and the same mistake recurs. For every KEEP / COVERED-BUT-WRONG item:
 
 1. **List every distinct surface the rule constrains** (e.g. test fixtures, docs, source comments, config.yaml, CI workflows, error strings). One item, possibly many surfaces.
-2. **Map each surface to the lazy file whose `**Read when**` trigger fires there.** Fixtures → `testing.md`; docs → `docs.md`; HTTP config → `http-connectors.md`; CI → `pipelines.md`; and so on. When two surfaces map to two different files, the rule needs a presence in BOTH.
-3. **Full rule in the PRIMARY home** (the surface where the mistake most often originates), plus a **one-line cross-reference** in each other triggered file (`See <file> → <section>` per the `~/work/CLAUDE.md` "link, don't copy" convention). Duplicate the whole rule only when it is a single short sentence and a cross-ref would be more friction than the copy. A wrong rule fixed in one file but left stale in another is the same COVERED-BUT-WRONG bug: fix every copy.
+2. **Map each surface to the lazy file whose `**Read when**` trigger fires there.** Fixtures → `testing.md`; docs → `docs.md`; HTTP config → `http-config.md`; CI → `pipelines.md`; and so on. When two surfaces map to two different files, the rule needs a presence in BOTH.
+3. **Full rule in the PRIMARY home** (the surface where the mistake most often originates), plus a **one-line cross-reference** in each other triggered file (`See <file> → <section>` per the `$WORK/CLAUDE.md` "link, don't copy" convention). Duplicate the whole rule only when it is a single short sentence and a cross-ref would be more friction than the copy. A wrong rule fixed in one file but left stale in another is the same COVERED-BUT-WRONG bug: fix every copy.
 
 Worked shape: "no customer data in a public repo" constrains fixtures (`testing.md`), docs runbooks (`docs.md`), and source comments (any Go file). Primary home `testing.md`; a one-line cross-ref bullet in `docs.md` so a docs-only edit still surfaces it. One surface, one file → one edit; several surfaces, several files → several edits.
 
-**CRITICAL: `~/work/CLAUDE.md` is not a save target for new rules.** Do NOT append new bullets, sections, or paragraphs to `~/work/CLAUDE.md`. Every KEEP item lands in an existing lazy file or a new lazy file. Even portfolio-wide CRITICAL rules go into a lazy file — the Detail-files index in `~/work/CLAUDE.md` names the trigger, so `**Read when:** working in any baton connector` is legitimate for a rule that truly applies every turn. If the rule doesn't fit any existing lazy file's trigger, that's the signal to CREATE a new one, not to inline it in CLAUDE.md.
+**CRITICAL: `$WORK/CLAUDE.md` is not a save target for new rules.** Do NOT append new bullets, sections, or paragraphs to `$WORK/CLAUDE.md`. Every KEEP item lands in an existing lazy file or a new lazy file. Even portfolio-wide CRITICAL rules go into a lazy file — the Detail-files index in `$WORK/CLAUDE.md` names the trigger, so `**Read when:** working in any repo under the workspace` is legitimate for a rule that truly applies every turn. If the rule doesn't fit any existing lazy file's trigger, that's the signal to CREATE a new one, not to inline it in CLAUDE.md.
 
-The ONLY exception is a COVERED-BUT-WRONG edit that surgically rewrites an existing wrong line already inside `~/work/CLAUDE.md` (see Step 6). Adding new content is off-limits.
+Two exceptions: (a) a COVERED-BUT-WRONG edit that surgically rewrites an existing wrong line already inside `$WORK/CLAUDE.md` (see Step 6); (b) an org-level fact the operator states that changes priorities for every work session (a company event, a project becoming top priority). Add (b) as a short `## CRITICAL:` section near the top plus a table-of-contents entry, 2-3 sentences, pointing to the repo-local file for details. Anything else is off-limits.
 
-**When `~/work/CLAUDE.md` looks too big or a section reads as out-of-place**, treat that as a signal to extract or move content into a lazy file (delegate to `claude-md-simplify` — see Sibling skills), not to keep piling on inline.
+**Helper scripts.** When a saved rule depends on a script the session improvised (a one-shot secret server, a receiver, a log parser), save the script to the tier's `.claude/scripts/` (e.g. `$WORK/.claude/scripts/`, or `~/.claude/scripts/` for global rules) with a 2-3 line docstring, and point the rule at that path. A rule that says "use the helper" with no saved helper is unusable next session.
+
+**When `$WORK/CLAUDE.md` looks too big or a section reads as out-of-place**, treat that as a signal to extract or move content into a lazy file (delegate to `claude-md-simplify` — see Sibling skills), not to keep piling on inline.
 
 ### CRITICAL: as small as possible while still clear
 
@@ -131,9 +150,9 @@ Keep a sentence ONLY if losing it changes what the reader does. Everything else 
 Style directives:
 
 - **CLEAR.** State the rule as a directive: "use X", "every Y must Z", "never do W". Not "consider", "you might want to", "in some cases". If the rule has exceptions, list them in the same breath.
-- **GREP-FRIENDLY.** Name the SDK helper, the vendor field, the annotation type, the gRPC code. Future agents grep for these strings. Keep the file:line pointer that anchors the rule; drop everything else.
+- **GREP-FRIENDLY.** Name the SDK helper, the vendor field, the annotation type, the error code. Future agents grep for these strings. Keep the file:line pointer that anchors the rule; drop everything else.
 - **NO EM-DASHES.** Use commas, periods, parens. (Global writing-style rule.)
-- **NO META-NARRATION.** "added because luisina flagged this" belongs in the commit message, not the rule. Rules state what to do, not the history of why we wrote them down.
+- **NO META-NARRATION.** "added because the reviewer flagged this" belongs in the commit message, not the rule. Rules state what to do, not the history of why we wrote them down.
 
 For COVERED-BUT-WRONG edits, prefer rewriting the wrong line in place rather than appending a new contradicting rule. If the wrong rule has authority (e.g. a documented example shows the anti-pattern), fix the example too.
 
@@ -165,7 +184,7 @@ Invoke `claude-md-save` once per NOT-COVERED-KEEP item with the trimmed rule tex
 
 After every edit (delegated or direct), confirm the file still parses: the lazy-index entry exists if a new file was added, the `**Read when**` trigger is grammatical, no broken markdown fences.
 
-Do NOT commit. The operator owns the commit.
+Do NOT commit. `$WORK/.claude/` is not a git repo, so work-scope edits are live once written; never tell the operator to commit them. Only repo-local lazy files (inside a real git checkout) have a commit for the operator to own.
 
 ### 7. Report
 
@@ -176,34 +195,36 @@ Print a tight summary:
 - N wrong-or-outdated (cited the edit per file).
 - N net-new entries (cited every file + section each landed in; when an item needed multiple homes, list the primary AND each cross-ref file, so a partial save is visible).
 - N skipped as not-worth-a-rule (one-line reason each, so the operator can disagree).
+- **Per tier:** one line each for repo, workspace, `$WORK/CLAUDE.md`, and global, naming what landed or `none (<why>)`. A tier with no line reads as "never audited".
 
-End with the `Changes made` block from the auto-new-day pattern: `Verdict: Yes | No` + one-line `Why:`.
+End with a `Changes made` block: `Verdict: Yes | No` + one-line `Why:`.
 
 ## Anti-patterns
 
 - **Oversize entries.** A sub-section past its 6-line ceiling, a dense paragraph cramming 5+ clauses (over budget even within the line count), a worked case past 20 lines, a snippet reproducing a whole config block when 6 lines show the shape, prose that repeats the snippet or explains mechanism/internals the rule doesn't need. Count the lines, cut to the shortest entry that still stands alone.
 - **Bypassing `claude-md-save`** for NOT-COVERED-KEEP adds. The only Edit-tool exception is COVERED-BUT-WRONG (rewrite in place). Anything that ADDS content goes through the save skill.
 - **Padded rules.** "It is generally considered best practice to..." → delete and write "use X."
-- **Rule-by-attribution.** "Per luisina's review, ..." → state the rule, not the source.
-- **Adding new content to `~/work/CLAUDE.md`.** New rules land in a lazy file (existing or new). The only edit allowed on `~/work/CLAUDE.md` is a surgical rewrite of an existing wrong line (COVERED-BUT-WRONG). If a rule "must apply every turn," its lazy file trigger says so, `~/work/CLAUDE.md` itself does not accumulate content.
+- **Rule-by-attribution.** "Per <reviewer>'s review, ..." → state the rule, not the source.
+- **Adding new content to `$WORK/CLAUDE.md`.** New rules land in a lazy file (existing or new). The only edits allowed on `$WORK/CLAUDE.md` are a surgical rewrite of an existing wrong line (COVERED-BUT-WRONG) and an operator-stated org-level fact (Step 4 exception (b)).
+- **Single-target runs.** Writing every lesson into the one file the caller named and never auditing the other tiers. Tier every item first (see the scope rule under Input formats). If a rule "must apply every turn," its lazy file trigger says so, `$WORK/CLAUDE.md` itself does not accumulate content.
 - **Piling into an existing lazy file when the topic doesn't fit its trigger.** If a rule's natural trigger differs from every existing lazy file's `**Read when:**`, that's the signal to create a new lazy file, not to shoehorn the rule into the closest wrong home. Trigger fit beats file-count minimalism.
-- **Saving a repo-specific rule into a shared workspace lazy file.** A rule only true inside one repo (its chart, build, CI, deploy cells, file layout) belongs in that repo's `<repo>/.claude/lazy/<topic>.md` + repo-local `CLAUDE.md` index, NOT in `~/work/.claude/lazy/*`. Create the repo-local structure when it's absent; that's the correct move, not overhead to avoid. Scope-correctness beats reusing the closest existing shared file.
+- **Saving a repo-specific rule into a shared workspace lazy file.** A rule only true inside one repo (its chart, build, CI, deploy cells, file layout) belongs in that repo's `<repo>/.claude/lazy/<topic>.md` + repo-local `CLAUDE.md` index, NOT in `$WORK/.claude/lazy/*`. Create the repo-local structure when it's absent; that's the correct move, not overhead to avoid. Scope-correctness beats reusing the closest existing shared file.
 - **One-and-done when a gap spans multiple triggers.** Adding a rule to one lazy file and stopping, when the rule governs surfaces that load through different triggers (fixtures + docs + CI, etc.). The unaddressed files leave the same mistake reachable. Map every constrained surface to its file and land the rule (full or cross-ref) in each (Step 4).
 - **Rules that restate `~/CLAUDE.md`.** Don't re-encode global writing-style or git-safety rules into work-scope files. Point to them by name.
 - **Burying the rule in a code example.** The rule must be readable as prose first; the snippet is the illustration.
-- **Forgetting the index.** A new lazy file that isn't registered in `~/work/CLAUDE.md`'s `## Detail files (load on demand)` index won't get loaded on trigger. Always register.
+- **Forgetting the index.** A new lazy file that isn't registered in `$WORK/CLAUDE.md`'s `## Detail files (load on demand)` index won't get loaded on trigger. Always register.
 
 ## Worked example
 
-Input: dispatch JSON for CXH-1491 with 6 PR-comment items (1× 404-on-revoke, 1× doc-comments on HTTP wrappers, 1× ResourceIdField, 1× SDK helpers, 1× error prefix, 1× InvalidArgument).
+Input: a PR review with 6 comments (1× 404-on-delete, 1× doc comments on HTTP client wrappers, 1× argument helper, 1× SDK helper, 1× error prefix, 1× invalid-argument code).
 
 Audit result:
-- 404-on-revoke → NOT-COVERED-KEEP (portfolio-wide; revoke paths repeat across every connector). Target: append to `golang-connectors.md` idempotency section.
-- HTTP-wrapper doc comments → NOT-COVERED-KEEP (every connector ships a `pkg/client/`). Target: append to `golang-connectors.md` client section.
-- ResourceIdField on synced-resource args → COVERED-BUT-WRONG (`actions.md` examples used `StringField`). Target: fix examples + add one bullet to Common Mistakes.
-- `actions.GetStringArg` / `GetResourceIDArg` → COVERED-BUT-WRONG (`actions.md` showed `args.Fields[...]`). Same target.
-- `baton-<connector>:` error prefix → COVERED-BUT-WRONG (`~/work/CLAUDE.md:344` had `<connector>-connector:`). Target: fix the line.
-- `status.Error(codes.InvalidArgument, ...)` on arg validation → NOT-COVERED-KEEP (portfolio; every action has arg validation). Target: append to the new `actions.md` section + Common Mistakes.
+- 404-on-delete → NOT-COVERED-KEEP (workspace-wide; delete paths repeat across every project). Target: append to `api-clients.md` idempotency section.
+- HTTP-client doc comments → NOT-COVERED-KEEP (every project ships an HTTP client package). Target: append to `api-clients.md` client section.
+- Argument helper for resource IDs → COVERED-BUT-WRONG (`handlers.md` examples used raw strings). Target: fix examples + add one bullet to Common Mistakes.
+- SDK getter helpers → COVERED-BUT-WRONG (`handlers.md` showed raw map access). Same target.
+- `<project>:` error prefix → COVERED-BUT-WRONG (`$WORK/CLAUDE.md` had a different prefix). Target: fix the line.
+- Invalid-argument code on validation errors → NOT-COVERED-KEEP (every handler validates arguments). Target: append to `handlers.md` + Common Mistakes.
 
 5 edits, no new lazy file. Skill applies all five without asking, then reports.
 

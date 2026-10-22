@@ -21,6 +21,7 @@ Read like a tired engineer typing a reply, not a memo.
 
 - **As short as possible.** The ideal reply is one word ("done", "fixed", "yep", "agreed"). Cut every sentence that isn't doing the one job of closing the thread or making the one point.
 - **Stop once the point's out.** No trailing qualifier ("just want to check...", "just making sure"), no restating the same point differently, no listing every other place it also applies. If a second point genuinely matters, it's its own sentence, or its own message, not a tail glued onto this one.
+- **Write for a reader with zero context.** Assume they haven't seen the investigation. Drop internal acronyms, API, product, and permission names they wouldn't already use (say "Workday doesn't tell us which users are AI agents", not "agents run as ASUs, not ISUs"). Hand over exact settings only once they've asked for them.
 - **Plain words.** "matters" not "is load-bearing". "before the loop" not "prior to iteration".
 - **Simple grammar.** Short sentences. No semicolons. No nested "which" clauses. One idea per sentence.
 - **Contractions.** i'd, doesn't, isn't, can't.
