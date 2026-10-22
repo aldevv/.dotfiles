@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×67)
+- done. (×72)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×15)
@@ -78,6 +78,8 @@ increment from there.
 - didn't add an `account_type` check, but a 403 from the lifecycle api now says the account isn't managed by the org (app accounts never are) or the key is missing user management access. a 404 still comes back as is. (×1)
 - yeah, known gap. without the org key, `Delete` and the enable/disable actions fail right away with an error naming `atlassian-orgId` and `atlassian-api-token`, so it's not silent. leaving the capabilities static for now. (×1)
 - dropped the state check, it sets the value directly now. the user walk has to stay because every write command takes a username and lastpass can't look a user up by id. https://support.lastpass.com/s/document-item?bundleId=lastpass&topicId=LastPass%2Fapi_get_user_data.html (×1)
+- grants can't read the space profile yet, so keeping `DescribeSpace` until the runtime supports it. (×1)
+- same runtime gap as the spaces thread, grants can't read the profile yet. (×1)
 
 ### New line comments — feedback
 
@@ -153,6 +155,10 @@ increment from there.
 ### Ticket status updates
 
 - PR is up: https://github.com/ConductorOne/baton-netsuite/pull/65. It's only been tested against a mock NetSuite server, since we don't have a real NetSuite tenant. Could the customer from the Pylon ticket run a first sync with OAuth 2.0 client credentials once this ships? That would be our live check. Existing TBA setups don't need any changes. (×1)
+
+### Ticket comments
+
+- Workday's docs say not to use the Graph API for bulk export, and a connector sync is a bulk export: > Use Graph API within the defined limits. Don't use Graph API for bulk data import or export, or mass operations that can indirectly trigger many Graph API requests. [Workday Graph API Fundamentals](https://developer.workday.com/documentation/uiy1557767007800/WorkdayGraphAPIFundamentals) (needs a developer.workday.com login) (×1)
 
 ## Anti-patterns — what NOT to post
 
