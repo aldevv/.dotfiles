@@ -31,7 +31,11 @@ Read like a tired engineer typing a reply, not a memo.
 - **No AI-slop vocabulary.** `no-op`, `leverage`, `robust`, `seamless(ly)`, `streamline(d)`, `unlock(s)`, `harness` (verb), `delve`, `utilize`, `intricate`, `tapestry`, `realm`, `landscape`, `journey` (metaphor), `dive into`. Full list and reasoning: `~/.dotfiles/general/.claude/rules/writing-style.md`. Say what the thing actually does instead: not "the pop is a no-op now", but "the pop does nothing now, X isn't in the body anymore".
 - **No unusual noun shortenings.** Spell out `caps`/`impl` as `capabilities`/`implementation`. Widely-recognized ones stay (`docs`, `auth`, `env`, `repo`, `config`, `sync`, `api`).
 - **Backticks for code identifiers**, when the message references one: function/type/package/method/variable names, error codes, gRPC codes, HTTP statuses, JSON fields, config keys, CLI flags, file paths. Don't backtick a generic noun phrase ("the auth flow").
-- **Lowercase, for casual contexts** (PR/MR comments, chat replies). Keep normal sentence case for a status update, a ticket comment addressed to a wider audience, or anywhere the surrounding thread is already capitalized, match the room.
+- **Lowercase starts by default**, including PR/MR comments, chat replies, and status updates (bullets too). Keep sentence case only for a ticket comment addressed to a wider audience, or where the surrounding thread is already capitalized.
+- **Rarely, one subtle slip.** At most one per message, and often none. Make it the kind people don't notice: a missing apostrophe ("dont", "its" for "it's"), a skipped comma, no final period. No misspelled words. Never in names, numbers, code identifiers, ids, or anything someone might copy.
+- **Never add reasons or benefits the draft doesn't state.** No "so that", "which means", "making it easier to". If you're unsure what something means, say less, not more.
+- **Plain words that stay accurate.** Swap jargon for the reader's term ("login key", not "SSH key"), never for a vivid but wrong image ("sold out" for "the provider had no capacity").
+- **Vary the shape.** The same sentence pattern on every line ("X. now Y. released."), "also" openers, and lists of three all read as an LLM.
 
 ## Confirming a fix that's already applied
 
