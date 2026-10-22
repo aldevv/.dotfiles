@@ -26,7 +26,7 @@ The lazy spec passes `dev = { path = "~/repos/github.com/rest-nvim", ... }` so a
 - `lua/utils/lua/` — Lua helpers (`float.lua`, `lazy.lua`, `globals.lua`, `misc.lua`, `lsp.lua`, `telescope.lua`, `windows.lua`, `highlight.lua`, …).
 - `lua/utils/vanilla/` — pure-vimscript utilities (e.g. quickfix/location toggles).
 - `lua/plugins-debug.lua` — minimal spec for `NVIM_DEBUG=1`.
-- `lua/plugins.lua` — **legacy**, not the active spec dir; the active spec is the `plugins/` directory above.
+- `lua/plugins.lua`: older spec file, still imported by `lazy.setup("plugins", ...)` alongside `plugins/*.lua` (nvim-ufo, harpoon and others live only here).
 - `lua/shortcuts.lua` — wired in via `pcall` so a missing `~/.config/shortcuts/` does not break startup.
 - `after/plugin/` — runs after plugins (`formatoptions.vim`, `fugitive.lua`, `settings.lua`).
 - `ftplugin/`, `plugin/skeleton.vim`, `ftdetect/`, `spell/`, `my_snippets/` — standard runtime dirs.

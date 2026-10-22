@@ -3,6 +3,7 @@ if pcall(require, "toggleterm") == false then
 end
 
 local nor = { noremap = true }
+local nor_s = { noremap = true, silent = true }
 local map = vim.keymap.set
 
 map("n", "sñ", ":botright terminal<cr>", nor)

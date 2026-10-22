@@ -9,7 +9,7 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     config = req("config.plugins.lsp.lsp"),
     dependencies = {
-      { "mason-org/mason.nvim",           version = "^2.0", cmd = { "Mason", "MasonInstall", "MasonUpdate" } },
+      { "mason-org/mason.nvim",           version = "^2.0", cmd = { "Mason", "MasonInstall", "MasonUpdate" }, opts = { PATH = "append" } },
       { "mason-org/mason-lspconfig.nvim", version = "^2.0" },
       {
         'saghen/blink.cmp',

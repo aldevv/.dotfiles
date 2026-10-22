@@ -89,7 +89,7 @@ vim.api.nvim_create_autocmd("FileType", {
     if is_big_file(buf) then
       return
     end
-    local lang = ft_aliases[args.match] or args.match
+    local lang = ft_aliases[args.match] or vim.treesitter.language.get_lang(args.match) or args.match
     if not pcall(vim.treesitter.start, buf, lang) then
       return
     end

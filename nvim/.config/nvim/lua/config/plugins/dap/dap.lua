@@ -16,9 +16,9 @@ local level = "info" -- trace, error, debug, info, warn
 dap.set_log_level(level)
 
 local servers = {
-  "debugpy",
+  "python",
   "delve",
-  "node-debug2-adapter",
+  "js",
 }
 
 -- handler names
@@ -28,13 +28,6 @@ local handlers = {
     require("mason-nvim-dap").default_setup(config)
   end,
   -- for c use cpptools, out of the box
-  node2 = function(config)
-    config.adapters = {
-      type = "executable",
-      command = "node-debug2-adapter",
-    }
-    require("mason-nvim-dap").default_setup(config)
-  end,
   python = function(config)
     require("dap-python").setup()
     require("dap-python").test_runner = "pytest"

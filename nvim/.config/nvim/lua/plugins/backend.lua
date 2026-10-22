@@ -30,6 +30,11 @@ return {
     init = function()
       vim.g.rustaceanvim = {
         server = {
+          -- Prefer Mason's binary: a rustup proxy without the rust-analyzer component can shadow it on PATH.
+          cmd = function()
+            local mason_bin = vim.fn.stdpath("data") .. "/mason/bin/rust-analyzer"
+            return { vim.fn.executable(mason_bin) == 1 and mason_bin or "rust-analyzer" }
+          end,
           default_settings = {
             ["rust-analyzer"] = {
               -- v5: checkOnSave is now a bool; per-tool config lives under `check`.

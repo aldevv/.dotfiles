@@ -134,13 +134,14 @@ M.find_folders = function(opt)
     local cmd =
     "git ls-files --full-name $(git rev-parse --show-toplevel) | xargs -n 1 dirname | sort --version-sort | uniq | grep --invert-match '^.$'"
     local files = vim.fn.system(cmd)
-    t = vim.split(files, "\n")
+    local dirs = vim.split(files, "\n")
 
-    opt.finder = finders.new_table({ results = t })
+    opt.finder = finders.new_table({ results = dirs })
     opt.prompt_title = "<AL's Folders Git>"
-    opt.sorter = conf.generic_sorter(opts)
-    opt.attach_mapping = function(prompt_bufnr, map)
+    opt.sorter = conf.generic_sorter(opt)
+    opt.attach_mappings = function(prompt_bufnr, map)
       map("i", "<CR>", enter_find_folders_git)
+      return true
     end
 
     local folders_git = pickers.new(opt)

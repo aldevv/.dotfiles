@@ -197,7 +197,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = format_patterns,
   callback = function(args)
     if vim.b[args.buf].bigfile then return end
-    vim.lsp.buf.format({ timeout_ms = 3000, bufnr = args.buf })
+    require("conform").format({ timeout_ms = 3000, bufnr = args.buf, lsp_format = "fallback" })
   end,
 })
 

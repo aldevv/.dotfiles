@@ -34,7 +34,7 @@ if os.getenv("NVIM_MINIMAL") ~= nil then
   servers = {}
 end
 
-vim.lsp.inlay_hint.enable = false
+vim.lsp.log.set_level(vim.log.levels.OFF)
 local default_opts = require("config.plugins.lsp.defaults_opts")
 local get_lsp_opts = function()
   local opts = vim.deepcopy(default_opts)
@@ -84,9 +84,32 @@ local function enable_server(server_name)
   vim.lsp.enable(server_name)
 end
 
-require("mason").setup({
-  PATH = "append", -- default is prepend
-})
+local mason_registry = require("mason-registry")
+
+-- A ~/.npmrc pointing at a private registry with an expired token makes every Mason npm
+-- install fail with E401, so Mason installs always use public npm.
+local running_installs = 0
+mason_registry:on("package:install:handle", function()
+  running_installs = running_installs + 1
+  vim.uv.os_setenv("npm_config_registry", "https://registry.npmjs.org/")
+end)
+local function on_install_done()
+  running_installs = running_installs - 1
+  if running_installs == 0 then vim.uv.os_unsetenv("npm_config_registry") end
+end
+mason_registry:on("package:install:success", on_install_done)
+mason_registry:on("package:install:failed", on_install_done)
+
+local tools = { "stylua", "luacheck", "vint", "shfmt", "prettier", "clang-format", "sql-formatter" }
+if os.getenv("NVIM_MINIMAL") ~= nil then
+  tools = {}
+end
+mason_registry.refresh(function()
+  for _, name in ipairs(tools) do
+    local pkg = mason_registry.get_package(name)
+    if not pkg:is_installed() and not pkg:is_installing() then pkg:install() end
+  end
+end)
 require("mason-lspconfig").setup({
   ensure_installed = servers,
   -- 2.x default: automatic_enable = true, which calls vim.lsp.enable for

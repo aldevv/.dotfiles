@@ -44,13 +44,9 @@ conform.setup({
     },
   },
   -- format-on-save is owned by the autocmd in lua/config/automation/init.lua
-  -- (it calls vim.lsp.buf.format which delegates to conform via
-  -- the formatexpr conform sets up). No format_after_save here.
+  -- (it calls conform.format with lsp_format = "fallback"). No format_after_save here.
 })
 
--- conform integrates with vim.lsp.buf.format by setting `formatexpr` and
--- providing a `format()` API. The format-on-save autocmd in automation/init.lua
--- calls vim.lsp.buf.format which falls back to conform for non-LSP filetypes.
 vim.api.nvim_create_user_command("ConformFormat", function(args)
   local range = nil
   if args.count ~= -1 then

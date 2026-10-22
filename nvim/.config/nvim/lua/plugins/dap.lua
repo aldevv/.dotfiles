@@ -16,7 +16,7 @@ return {
       { "nvim-telescope/telescope-dap.nvim" },
       { "mfussenegger/nvim-dap-python" },
       { "leoluz/nvim-dap-go" },
-      "williamboman/mason.nvim",
+      "mason-org/mason.nvim",
     },
     -- lazy.nvim's `module` field was deprecated; dependencies are
     -- pulled in on demand by the `require` calls inside config.

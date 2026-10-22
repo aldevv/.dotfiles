@@ -26,7 +26,7 @@ local function fold_persist_skip(buf)
 end
 
 local function save_fold_state(buf)
-  if fold_persist_skip(buf) then return end
+  if fold_persist_skip(buf) or not vim.api.nvim_buf_is_loaded(buf) then return end
   local closed = {}
   vim.api.nvim_buf_call(buf, function()
     local last = vim.api.nvim_buf_line_count(buf)
@@ -49,6 +49,25 @@ local function save_fold_state(buf)
   end
 end
 
+-- ufo replaces the initial treesitter folds asynchronously (foldmethod becomes "manual");
+-- closing folds before that is lost, so retry until ufo's folds exist.
+local function apply_closed_folds(buf, closed, tries_left)
+  if not vim.api.nvim_buf_is_valid(buf) then return end
+  local is_ready = vim.api.nvim_buf_call(buf, function()
+    return vim.wo.foldmethod == "manual" and vim.fn.foldlevel(closed[1][1]) > 0
+  end)
+  if not is_ready and tries_left > 0 then
+    vim.defer_fn(function() apply_closed_folds(buf, closed, tries_left - 1) end, 50)
+    return
+  end
+  vim.api.nvim_buf_call(buf, function()
+    pcall(vim.cmd, "silent! %foldopen!")
+    for _, range in ipairs(closed) do
+      pcall(vim.cmd, string.format("silent! %d,%dfoldclose", range[1], range[2]))
+    end
+  end)
+end
+
 local function load_fold_state(buf)
   if fold_persist_skip(buf) then return end
   local f = io.open(fold_state_path(vim.api.nvim_buf_get_name(buf)), "r")
@@ -56,17 +75,12 @@ local function load_fold_state(buf)
   local data = f:read("*a")
   f:close()
   local ok, closed = pcall(vim.json.decode, data)
-  if not ok or type(closed) ~= "table" then return end
-  vim.api.nvim_buf_call(buf, function()
-    pcall(vim.cmd, "silent! normal! zR")
-    for _, range in ipairs(closed) do
-      pcall(vim.cmd, string.format("silent! %d,%dfoldclose", range[1], range[2]))
-    end
-  end)
+  if not ok or type(closed) ~= "table" or #closed == 0 then return end
+  apply_closed_folds(buf, closed, 40)
 end
 
 local fold_group = vim.api.nvim_create_augroup("remember_folds", { clear = true })
-vim.api.nvim_create_autocmd("BufWinLeave", {
+vim.api.nvim_create_autocmd({ "BufWinLeave", "BufWritePost" }, {
   group = fold_group,
   pattern = "?*",
   callback = function(args) save_fold_state(args.buf) end,
@@ -74,14 +88,7 @@ vim.api.nvim_create_autocmd("BufWinLeave", {
 vim.api.nvim_create_autocmd("BufWinEnter", {
   group = fold_group,
   pattern = "?*",
-  callback = function(args)
-    -- ufo computes folds asynchronously; wait so the structure exists when we apply.
-    vim.defer_fn(function()
-      if vim.api.nvim_buf_is_valid(args.buf) then
-        load_fold_state(args.buf)
-      end
-    end, 150)
-  end,
+  callback = function(args) load_fold_state(args.buf) end,
 })
 
 -- Single-character ops on a closed fold otherwise act on the whole fold; open it first.
@@ -101,9 +108,10 @@ end
 -- incsearch highlight.
 vim.api.nvim_create_autocmd("CmdlineLeave", {
   group = fold_group,
-  pattern = { "/", "?" },
   callback = function()
-    if vim.v.event.abort then return end
+    -- Checked here, not via `pattern`: a "/" pattern also matches ":" cmdlines (nvim 0.12).
+    local cmdtype = vim.v.event.cmdtype
+    if vim.v.event.abort or (cmdtype ~= "/" and cmdtype ~= "?") then return end
     vim.schedule(function()
       local pattern = vim.fn.getreg("/")
       if pattern ~= "" then
