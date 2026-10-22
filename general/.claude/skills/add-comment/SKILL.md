@@ -519,6 +519,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    Rules:
    - **Never open the draft in a new tmux window.** The operator will not switch windows to review a batch of drafts. The pane keeps everything on one screen. (The qa helper enforces this: it only ever splits a pane.)
    - **Append, don't spawn a new draft file, on a same-session second invocation.** If a draft file from THIS session already exists (grep `/tmp/add-comment-drafts-<PR>-*` and pick the newest whose timestamp is within the last hour), append the new blocks to that file and re-run the helper on the same path — it focuses the already-open pane rather than opening a second one. The operator ends up with a single draft file that grows as findings arrive.
+   - **Revise against the current file, never an earlier copy.** When the operator asks for changes to an open draft, re-read it first and make targeted edits on top of their edits. See the qa skill's "every update to an open qa file starts from its CURRENT on-disk state" rule.
 
 4. Surface a one-line "edit `- answer:`, `SKIP` the ones you don't want, then say 'post'" message in chat and STOP. Do NOT call `AskUserQuestion` — the pane IS the confirmation surface, and the operator's "post" is the go signal. (`AskUserQuestion` only appears when the helper exited `3`, i.e. no tmux and no `$TERMINAL`; see step 5 in the Workflow.) When the operator says "post", re-read the file and post every surviving block (bot threads never get a block, see "never reply to bot comments").
 

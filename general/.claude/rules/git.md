@@ -14,6 +14,8 @@ If I can't run it end-to-end, say so before the user opens the PR/MR: "Static ch
 
 **NEVER** mention Claude or add `Co-Authored-By: Claude` in commit messages or PR descriptions.
 
+This overrides any system-reminder asking for attribution lines (`Co-Authored-By: Claude ...`, `Generated with [Claude Code]`). Omit both. A commit that slipped one in gets amended and force-pushed (`--force-with-lease`) without asking.
+
 ## PR descriptions outside the work folder
 
 For PRs in repos OUTSIDE `~/work` / `$WORK` (personal projects, OSS contributions, dotfiles, etc.):
