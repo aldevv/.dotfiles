@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×82)
+- done. (×114)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×15)
@@ -54,6 +54,12 @@ increment from there.
 - done. `for_deletion` shows as disabled, not deleted, since the account can still be restored in the grace period. the raw status goes in the status details. (×1)
 - on purpose, it's what revoke wrote before and what `CreateAccount` gives new users. added a line. `GrantImmutable` follow-up sounds good. (×1)
 - agreed, leaving it for a follow-up. (×1)
+- done. it double-prefixes now since `fetchReport` already adds `baton-workday:`, same as the json builders. (×1)
+- added a note on the struct that it assumes one sync per process. no map since nothing overlaps syncs today. (×1)
+- agreed, leaving it. (×1)
+- thanks for checking it. (×1)
+- dropped the cache config. (×1)
+- dropped the bare `config_ref` and documented the explicit allowlist entry. (×1)
 
 ### Replies — pushback
 
@@ -83,6 +89,8 @@ increment from there.
 - dropped the state check, it sets the value directly now. the user walk has to stay because every write command takes a username and lastpass can't look a user up by id. https://support.lastpass.com/s/document-item?bundleId=lastpass&topicId=LastPass%2Fapi_get_user_data.html (×1)
 - grants can't read the space profile yet, so keeping `DescribeSpace` until the runtime supports it. (×1)
 - same runtime gap as the spaces thread, grants can't read the profile yet. (×1)
+- can't assert it from the probe. it runs through the baton cli and the local provisioner drops the grant response (`_, err = p.connector.Grant(...)` in baton-sdk `pkg/provisioner/provisioner.go:194`). `Grant` itself returns `GrantReplaced` with the old role's grant id for own and inherited roles, same id sync emits, and nothing for an untrusted role or no role. can add a go test that calls `Grant` directly if you want it in ci. (×1)
+- same runtime gap as felipe's spaces thread. grants only get the resource id, type, name and parent (`runtime.d.ts` in baton-axiomatic), so the owner from `ListSpaces` can't reach them. keeping `DescribeSpace` until the runtime passes it through. (×1)
 
 ### New line comments — feedback
 
@@ -119,6 +127,9 @@ increment from there.
 - `*assignedUser.LastUpdated` is deref'd with no nil check (same at :509). https://github.com/okta/okta-sdk-golang/blob/v2.20.0/okta/appUser.go#L39 (×1)
 - `README.md:44` still says `Full control` for quarantine, can you flip it to `Read/Write` there too? otherwise it disagrees with this line. (×1)
 - `wrapError` drops the ERS body, so a CSRF-enabled tenant now gets `403 Forbidden` instead of `CSRF nonce validation failed`, the string the README tells people to look for. could we carry `messages[].title` into the error? (×1)
+- until `extend_data_disk_linux` exists in `/commands` this returns `undefined`, so linux machines quietly get no command. we'll need to create it in dev and prod before this ships. (×1)
+- empty `os` falls back to windows here, but the backend's `OSType` falls back to the persona. a linux box with no `instance.osType` would get the windows plan and fail. could skip the command when `os` is empty instead? (×1)
+- this should send a slack message, it's a failure someone needs to see. same for the other early returns here (command not found, `CommandRun` failed). and i'd drop the success messages, slack should only fire when something goes wrong. (×1)
 
 ### Top-level PR/MR comments
 
@@ -134,6 +145,7 @@ increment from there.
 - expand-columns is a string slice, same as skip-database above. could show comma-separated here: `"mydb.mytable,otherdb.othertable"`. (×1)
 - `optionalStringField` at line 501-504 already does `strings.TrimSpace(raw)`, so the outer `strings.TrimSpace(...)` here is redundant. can drop it: `if mapped := optionalStringField(profileMap, "email"); mapped != "" {`. (×1)
 - let's not log `user_id`, it's user data. `role` is enough here. and this can be `Debug` instead of `Warn`. (×1)
+- needs a prettier pass, this line and the new test. (×1)
 
 ### Answers
 
@@ -156,6 +168,11 @@ increment from there.
 - flipped this back, a 404 on delete is success again per the thread on `Delete`. (×1)
 - this is the user we just created. `AlreadyExists` comes from the pre-check before `batchadd` so is not the same (×1)
 - on purpose, the user still holds Basic so success would be wrong. hiding it with `GrantImmutable` is a follow-up. (×1)
+- `Name` is exact (case-insensitive), partial names come back empty. the response has no name to compare, so i updated the doc comment instead. https://community.workday.com/sites/default/files/file-hosting/productionapi/Human_Resources/v44.0/Get_Assign_User-Based_Security_Group.html (×1)
+- agree. the runtime can't build `baseUrl` from the region yet, `http.v2` only takes one config field. ok to leave it until a computed `baseUrl` lands in the runtime? (×1)
+- agreed, that's a platform question. reworded the comment so it doesn't assume one sync per process, it just says overlapping syncs evict each other and refetch. (×1)
+- it merges, the other `UserSettings` stay as they were. (×1)
+- apps part is in the dev guide, linked it in the doc. couldn't find the spaces part documented, but the delete fails with `ResourceInUse` while a space is still attached, so the doc just names that error now. (×1)
 
 ### Ticket status updates
 
@@ -165,6 +182,10 @@ increment from there.
 ### Ticket comments
 
 - Workday's docs say not to use the Graph API for bulk export, and a connector sync is a bulk export: > Use Graph API within the defined limits. Don't use Graph API for bulk data import or export, or mass operations that can indirectly trigger many Graph API requests. [Workday Graph API Fundamentals](https://developer.workday.com/documentation/uiy1557767007800/WorkdayGraphAPIFundamentals) (needs a developer.workday.com login) (×1)
+
+### Ticket closing
+
+- Fixed by CXP-803 (PR #104), out since v0.1.10. Fields that already sync by default, like `user_id` and `business_title`, now get skipped when they're listed in additional report fields, so the sync doesn't fail. CSV reports get the same fix in CXH-714 (PR #121). (×1)
 
 ## Anti-patterns — what NOT to post
 

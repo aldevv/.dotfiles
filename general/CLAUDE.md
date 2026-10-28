@@ -70,6 +70,11 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - about to test a tmux config/script change (window naming, hooks, key bindings) before committing it
   - diagnosing a tmux window/pane naming, title, or automatic-rename issue
 
+- [`~/.claude/lazy/hunk.md`](.claude/lazy/hunk.md). **Read when** any of:
+  - the user says "open in hunk", "show it in hunk", "hunk the diff", or otherwise names hunk
+  - running any `hunk` command (`hunk diff`, `hunk session ...`), or installing/upgrading `hunkdiff`
+  - a `hunk session` command errors (no session, line not covered, runtime state unsafe)
+
 - [`~/.claude/lazy/rclone-remotes.md`](.claude/lazy/rclone-remotes.md). **Read when** any of:
   - running any `rclone` command, or about to upload / download / sync / mount files to or from a Google Drive
   - the user asks to upload something to their Google Drive / Drive / gdrive / a gmail account
@@ -121,6 +126,10 @@ Whenever manually testing a change end-to-end (API calls, Playwright/browser flo
 Anything visible in a proof screenshot (SQL comments, query text, labels) is read by management: keep it to the simplest plain comment explaining what the query shows. Never write "proof", ticket numbers, or env names in it; the ticket goes in the filename. Write the comment all lowercase. In SQL client screenshots, leave a few blank lines above the query so it isn't jammed at the top of the editor, and click away so nothing is selected before capturing.
 
 When the whole goal of the conversation hinges on the result a screenshot shows (the feature working, the end-to-end check passing), open it for the user right away with `xdg-open <file>` without asking. Make sure it shows the result itself (e.g. the menu open, the response on screen), not the page after the state is gone.
+
+## Showing multiple design options
+
+When there are several options to compare (competing UI designs, variants from parallel agents), combine their screenshots into ONE big image: each option labeled, separated by colored bars or clear gaps, so the user opens a single file and zooms into the one they want. Never hand over a pile of separate files.
 
 ## Mobile development
 

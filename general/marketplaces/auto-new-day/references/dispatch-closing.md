@@ -51,15 +51,16 @@ Dispatch reason phrasings for Variant B's sections:
 - `## Live tenant tested` → `❌ No — no code changes this run` when the run committed nothing.
 - Blocked case: `## Ready to push` = `⛔ No — <blocker>`, `## Live tenant tested` = `❌ No — <blocker>`, and `## Summary` names the blocker.
 
-Then the Variant B `### Recommended actions` list: 2-4 bullets, most-important first, pitched at the DECISION level, not the mechanics. Each bullet answers "what kind of follow-up does the operator owe here" — the category of action, so they can triage at a glance without reading the context file. Lead each bullet with the category in bold, then one short clause of specifics (target + where the detail lives). The recurring categories:
+Then the Variant B `### Recommended actions`, in exactly this shape and nothing else:
 
-- **Reply to the reviewer** — a comment is answered in code / needs a written response. `**Reply to <reviewer>** — the fix answers their question; draft reasoning is in the Hunk note.`
-- **Make a code change** — more work is needed before this is done. `**More code needed** — <what's still unimplemented>; see context file.`
-- **Push** — nothing else owed, just ship it. `**Just push** — \`<sha>\` is complete and verified, no open questions.`
-- **Make a judgment call** — a decision only the operator can make (design, policy, a flagged rule conflict). `**Your call** — <the decision>, options in the context file.`
-- **Verify** — something the operator should confirm before trusting it. `**Verify live** — I couldn't reach a tenant; <what to check>.`
+```
+### Recommended actions
+- More Work:
+  - <short plain item: a few words plus the exact target, most important first>
+- Good to open PR now: yes | no
+```
 
-Pick the categories that actually apply; don't force all five. If the only follow-up is to push, that's ONE bullet, not a padded list. If there's genuinely nothing, one bullet: `**Nothing** — <one-line why>.` Keep exact shas / paths / commands as the trailing specifics, never as the headline.
+`More Work` sub-bullets stay short and plain, one line each, in words a reader with zero context understands (no shorthand coined during the run). No background or reasoning there; that belongs in `## Summary`. Write `- More Work: none` when nothing is owed. `Good to open PR now` is `yes` only when nothing under `More Work` blocks opening the PR.
 
 The block is the full Variant B set of `##` sections — `## Changes made` (a bullet per change with `file:line`; NEVER an empty header — it is a section with bullets, not the block title), `## Summary` (2-4 bullets, not a prose paragraph), `## Ready to push`, `## Live tenant tested`, `## Lazy-gaps` (own-work dispatch runs always invoke lazy-gaps, so this line is required: `N rule(s) added (<file>, <file>); M covered, K skipped`, or `none — all findings already covered`, or `not run — <reason>`) — followed by `### Recommended actions`. Do NOT collapse it to a bare title + status lines.
 

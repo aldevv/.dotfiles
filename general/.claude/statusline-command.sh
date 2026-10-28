@@ -8,6 +8,7 @@ cwd=$(echo "$input" | jq -r '.workspace.current_dir')
 model=$(echo "$input" | jq -r '.model.display_name')
 week_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' | cut -d. -f1)
 week_resets_at=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
+session_short=$(echo "$input" | jq -r '.session_id // empty' | cut -c1-8)
 
 # Get git info (skip optional locks to avoid blocking)
 git_info=""
@@ -64,5 +65,5 @@ if [ -n "$week_pct" ]; then
   week_segment=$(printf ' \033[0;37m%s%%%s' "$week_pct" "$reset_suffix")
 fi
 
-printf '\033[1;34m[ %s\033[0;37mpwd: %s\033[1;32m%s\033[1;34m ] \033[1;37m%s%s\033[0m' \
-  "$host_segment" "$cwd" "$git_info" "$model" "$week_segment"
+printf '\033[1;34m[ %s\033[0;37mpwd: %s\033[1;32m%s\033[1;34m ] \033[0;90m%s \033[1;37m%s%s\033[0m' \
+  "$host_segment" "$cwd" "$git_info" "$session_short" "$model" "$week_segment"

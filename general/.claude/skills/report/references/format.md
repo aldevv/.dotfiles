@@ -25,7 +25,8 @@ notes that roll up into this block are defined in the sibling `diff-note-format.
 4. **Recommended actions call out what the OPERATOR must do.** Every action the operator owes is
    spelled out and visibly flagged (lead the bullet with the action verb + a `you:` / `Action:`
    cue where it isn't obvious), most-important first, each naming the exact target (sha / command /
-   reviewer / path). If there's genuinely nothing to do, one bullet saying so.
+   reviewer / path). If there's genuinely nothing to do, one bullet saying so. Variant B overrides
+   the shape: see its item 7.
 
 ---
 
@@ -139,10 +140,15 @@ summary, then the decision — operator preference):
    flows do). State whether gaps were found and addressed: `N rule(s) added (<file>, <file>); M
    covered, K skipped`, or `none — all findings already covered`, or `not run — <reason>`. Omit this
    section entirely for skills that never run lazy-gaps (e.g. the standalone report skill).
-7. `### Recommended actions` — universal rule 4. When `Ready to push: ⛔ No`, the FIRST bullet is the
-   exact decision/step the operator must take to unblock (e.g. `you: decide X vs Y — options in
-   <context path>`). When `✅ Yes`, the first bullet is the push step (`you: push \`<sha>\` — nothing
-   else owed`).
+7. `### Recommended actions` — exactly this two-bullet shape, nothing else (operator preference):
+   ```
+   - More Work:
+     - <short plain item, one line each, most important first>
+   - Good to open PR now: yes | no
+   ```
+   `More Work` sub-bullets are short and plain (a few words plus the exact target), no background or
+   reasoning; that lives in `## Summary` / the context file. Write `- More Work: none` when nothing is
+   owed. `Good to open PR now` is `yes` only when nothing under `More Work` blocks the PR.
 
 No prose walkthrough after (universal rule 2); the context file holds the full detail.
 
