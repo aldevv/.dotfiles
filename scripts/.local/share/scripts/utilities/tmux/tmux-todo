@@ -9,7 +9,7 @@
 #   both, and cwd under ~/work -> fzf to choose
 #   both, cwd outside ~/work  -> ./todo.md
 #
-#   tmux-todo <session_name> <pane_current_path>   from the bind
+#   tmux-todo <session_name> <pane_current_path> <client_name>   from the bind
 #   tmux-todo --pick <dir>                         runs inside the popup
 
 set -euo pipefail
@@ -34,8 +34,11 @@ if [[ "${1:-}" == "--pick" ]]; then
 	pick "$2"
 fi
 
-if [[ "$1" == "$SESSION" ]]; then
-	tmux detach-client
+# A popup client can end up on another session (e.g. switched away from todo),
+# so also check whether this client is the popup's own attach.
+client_pid="$(tmux display-message -p -c "$3" '#{client_pid}')"
+if [[ "$1" == "$SESSION" || "$(ps -o args= -p "$(ps -o ppid= -p "$client_pid")")" == *"attach-session -t $SESSION" ]]; then
+	tmux detach-client -t "$3"
 	exit 0
 fi
 

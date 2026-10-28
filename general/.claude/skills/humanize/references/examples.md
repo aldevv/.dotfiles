@@ -119,6 +119,9 @@ increment from there.
 - `*assignedUser.LastUpdated` is deref'd with no nil check (same at :509). https://github.com/okta/okta-sdk-golang/blob/v2.20.0/okta/appUser.go#L39 (×1)
 - `README.md:44` still says `Full control` for quarantine, can you flip it to `Read/Write` there too? otherwise it disagrees with this line. (×1)
 - `wrapError` drops the ERS body, so a CSRF-enabled tenant now gets `403 Forbidden` instead of `CSRF nonce validation failed`, the string the README tells people to look for. could we carry `messages[].title` into the error? (×1)
+- until `extend_data_disk_linux` exists in `/commands` this returns `undefined`, so linux machines quietly get no command. we'll need to create it in dev and prod before this ships. (×1)
+- empty `os` falls back to windows here, but the backend's `OSType` falls back to the persona. a linux box with no `instance.osType` would get the windows plan and fail. could skip the command when `os` is empty instead? (×1)
+- this should send a slack message, it's a failure someone needs to see. same for the other early returns here (command not found, `CommandRun` failed). and i'd drop the success messages, slack should only fire when something goes wrong. (×1)
 
 ### Top-level PR/MR comments
 
@@ -134,6 +137,7 @@ increment from there.
 - expand-columns is a string slice, same as skip-database above. could show comma-separated here: `"mydb.mytable,otherdb.othertable"`. (×1)
 - `optionalStringField` at line 501-504 already does `strings.TrimSpace(raw)`, so the outer `strings.TrimSpace(...)` here is redundant. can drop it: `if mapped := optionalStringField(profileMap, "email"); mapped != "" {`. (×1)
 - let's not log `user_id`, it's user data. `role` is enough here. and this can be `Debug` instead of `Warn`. (×1)
+- needs a prettier pass, this line and the new test. (×1)
 
 ### Answers
 
