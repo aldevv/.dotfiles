@@ -160,6 +160,7 @@ increment from there.
 ### Ticket status updates
 
 - PR is up: https://github.com/ConductorOne/baton-netsuite/pull/65. It's only been tested against a mock NetSuite server, since we don't have a real NetSuite tenant. Could the customer from the Pylon ticket run a first sync with OAuth 2.0 client credentials once this ships? That would be our live check. Existing TBA setups don't need any changes. (×1)
+- Can't test this in CV yet. The tables are deployed and refreshing but empty. Blocked on two things: Quavo can't create disputes on Populus transactions. `getAllTransHistory` returns 503 for migrated accounts (Ledgers). Migrated adjustments aren't linked to their activity, `source_table`/`source_id` are empty. The migration team needs to backfill them. Parsing works on a sample ADEc transaction id. (×1)
 
 ### Ticket comments
 

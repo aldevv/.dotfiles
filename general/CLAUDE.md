@@ -118,6 +118,8 @@ Shortcuts: files in `~/.config/shortcuts/sf`, dirs in `sd`. Auto-suspend via `xa
 
 Whenever manually testing a change end-to-end (API calls, Playwright/browser flows, a deployed service, a real CLI run against a live system), take screenshots of the results and save them to `$HOME/work/.proof/<ticket-title>/<test-name>.png` (one file per test, e.g. `<test-name-1>.png`, `<test-name-2>.png`). For frontend changes, the screenshot of the change itself goes in the same folder. Skip it for unit/integration test suite runs, linters, builds, and other automated check output; only capture evidence an operator would find useful.
 
+Anything visible in a proof screenshot (SQL comments, query text, labels) is read by management: keep it to the simplest plain comment explaining what the query shows. Never write "proof", ticket numbers, or env names in it; the ticket goes in the filename. Write the comment all lowercase. In SQL client screenshots, leave a few blank lines above the query so it isn't jammed at the top of the editor, and click away so nothing is selected before capturing.
+
 When the whole goal of the conversation hinges on the result a screenshot shows (the feature working, the end-to-end check passing), open it for the user right away with `xdg-open <file>` without asking. Make sure it shows the result itself (e.g. the menu open, the response on screen), not the page after the state is gone.
 
 ## Mobile development
