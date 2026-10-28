@@ -1,6 +1,6 @@
 ---
 name: rna
-description: Recommended next actions. Tell the operator, in very plain words, what's done, what's still pending, what needs them, and what Claude can do next, assuming they have zero context on the work. Triggers on "/rna", "rna", "recommended next actions", "what's next", "what should I do next", "is there work pending", "what's left". Use at any point in a session, including right after a long autonomous run. Not for detailed reports or review findings (use the report or review skills), PR/ticket status tables, or periodic status reports. This is the short version a busy person reads in ten seconds.
+description: Recommended next actions. One short numbered list of the actual next actions, each marked done/failed/pending/operator-only with an emoji, plus a bold line saying whether code work or testing is still pending, written for an operator with zero context on the work. Triggers on "/rna", "rna", "recommended next actions", "what's next", "what should I do next", "is there work pending", "what's left". Use at any point in a session, including right after a long autonomous run. Not for detailed reports or review findings (use the report or review skills), PR/ticket status tables, or periodic status reports. This is the short version a busy person reads in ten seconds.
 ---
 
 # rna
@@ -25,16 +25,15 @@ Fixed shape, nothing else:
 ```
 <ticket id + title, or the feature name if there's no ticket>
 <one line: what the work does, in plain words>
-<one line: where things stand, from the Done bucket>
+**<work left: "⏳ code work left" | "⏳ testing left" | "⏳ code work and testing left" | "✅ code and testing done">**
 
-**needs you**
-1. <action>, <why, as a short clause>
+1. <emoji> <action>
+2. <emoji> <action>
 
-**i can do next**
-2. <action>
-
-<one line: "want me to start on X?", X = the top "i can do next" item>
+<one line: "want me to start on X?", X = the top item Claude can do>
 ```
+
+Emoji per item: ✅ done, ❌ failed (say what failed in a few words), ⏳ still to do, 👤 only the operator can do it (a send, push, PR, or a decision they own).
 
 Rules:
 
@@ -42,13 +41,13 @@ Rules:
 - **Name every system by its real name.** Never "our app", "the app", "the tool", "the service", "the platform" when more than one system is involved. Say which one, by the name the operator uses for it.
 - **No bare "it" or "switch it on".** Every item names the thing it acts on and, for a decision, who decides and what changes. "ask the <named system> owners to let <named system> check <named vendor> for changes every few minutes", not "get the ok to switch it on".
 - **A reply or comment item says what it answers.** Name who asked, what they asked for in plain words, and what was done about it, so the reply's text makes sense on its own. "reply to the review bot, which asked us to say in the docs that the user name must match exactly: tell it that's done", not "write that "done." reply".
-- **Number every item, continuing across both lists** (1, 2, 3...), so the operator can answer "do 2 and 4". Keep the bold headings.
-- **"needs you" is only what the operator alone can do.** A decision another team owns is not the operator's. Put "draft the ask to <team>" under "i can do next" instead, and list only the send (if it's outward-facing) under "needs you".
-- **3 items per list, max.** Pick the ones that matter most. Fewer is fine.
-- **Drop an empty list.** If nothing needs the operator, leave that section out.
+- **One numbered list of actions, nothing else.** No "needs you" / "i can do next" sections, no prose paragraphs. Number items so the operator can answer "do 2 and 4".
+- **The bold work-left line is mandatory.** It must say plainly whether code work or testing is still pending for the ticket, so the operator knows at a glance without reading the list.
+- **👤 is only what the operator alone can do.** A decision another team owns is not the operator's: list "draft the ask to <team>" as ⏳ instead, and mark only the send 👤 if it's outward-facing.
+- **5 items max, one line each.** Pick the ones that matter most. Fewer is fine.
 - **Nothing pending?** Say so in one line and stop.
 - **No caveats, no history, no how-it-works.** If the operator wants more, they'll ask.
 
 ## 3. Humanize
 
-Run the draft through the `humanize` skill, telling it the reader has zero context and to keep the section headings and bullets, only tightening the wording. Show the result as the reply. Don't show the pre-humanize draft.
+Run the draft through the `humanize` skill, telling it the reader has zero context and to keep the header lines, the numbered list and the emoji, only tightening the wording. Show the result as the reply. Don't show the pre-humanize draft.
