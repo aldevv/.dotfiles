@@ -16,7 +16,7 @@ increment from there.
 - done. (×114)
 - good catch, will fix. (×1)
 - fixed. (×12)
-- done (×15)
+- done (×16)
 - fixed. same resolveUserAndRoleNames path on revoke. (×1)
 - fixed. uses escapeQueryValue now. (×1)
 - fixed. resolveUserAndRoleNames does an api lookup by RecordNo, no DisplayName dependency. (×1)
@@ -60,6 +60,7 @@ increment from there.
 - thanks for checking it. (×1)
 - dropped the cache config. (×1)
 - dropped the bare `config_ref` and documented the explicit allowlist entry. (×1)
+- done. tn70 !49 needs its override renamed from `integration-python311` to `integration-python311-el9`, otherwise the new rule skips it (×1)
 
 ### Replies — pushback
 

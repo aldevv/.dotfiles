@@ -1,0 +1,70 @@
+#!/bin/bash
+# Wait until the pipeline of every given MR/PR finishes, then print each final status.
+# usage: waitmr URL... [-i SECONDS] [-t MINUTES]
+#   URL  GitLab MR (https://gitlab.com/<group>/<proj>/-/merge_requests/<n>)
+#        or GitHub PR (https://github.com/<owner>/<repo>/pull/<n>)
+#   -i   poll interval, default 20s; -t give up after, default 30 min
+# Exits 0 when every pipeline succeeded, 1 otherwise (failed, canceled, timed out).
+
+set -o pipefail
+
+interval=20
+timeout_min=30
+urls=()
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+	-i) interval=$2 && shift ;;
+	-t) timeout_min=$2 && shift ;;
+	*) urls+=("$1") ;;
+	esac
+	shift
+done
+[ "${#urls[@]}" -gt 0 ] || {
+	echo "usage: waitmr URL... [-i SECONDS] [-t MINUTES]" >&2
+	exit 1
+}
+
+# $1=MR/PR url; prints one status word: success, failed, running, pending, none...
+pipeline_status() {
+	local url=$1
+	case "$url" in
+	*gitlab.com/*/-/merge_requests/*)
+		local path=${url#*gitlab.com/}
+		local proj=${path%%/-/*}
+		local iid=${url##*/}
+		glab api "projects/${proj//\//%2F}/merge_requests/$iid" |
+			python3 -c 'import json,sys;print((json.load(sys.stdin).get("head_pipeline") or {}).get("status","none"))'
+		;;
+	*github.com/*/pull/*)
+		# Collapse all check runs into one word, failure beats pending beats success.
+		gh pr checks "$url" --json bucket -q '[.[].bucket] | if length==0 then "none" elif any(.=="fail") then "failed" elif any(.=="pending") then "running" else "success" end'
+		;;
+	*) echo "unsupported" ;;
+	esac
+}
+
+deadline=$(($(date +%s) + timeout_min * 60))
+while :; do
+	is_done=1
+	statuses=()
+	for url in "${urls[@]}"; do
+		status=$(pipeline_status "$url")
+		statuses+=("$status")
+		case "$status" in
+		running | pending | created | preparing | waiting_for_resource | scheduled | none | "") is_done=0 ;;
+		esac
+	done
+	[ "$is_done" = 1 ] && break
+	if [ "$(date +%s)" -ge "$deadline" ]; then
+		echo "timed out after ${timeout_min}m" >&2
+		break
+	fi
+	sleep "$interval"
+done
+
+rc=0
+for i in "${!urls[@]}"; do
+	echo "${statuses[$i]} ${urls[$i]}"
+	[ "${statuses[$i]}" = success ] || rc=1
+done
+exit $rc
