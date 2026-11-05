@@ -21,3 +21,5 @@ Slack writes are approved when they come from the `my-notifications` repo (`alde
 - C (ConductorOne Slack, titan): `slack-reply c` runs headless `claude -p` with `MY_NOTIFICATIONS_SLACK_REPLY=1`, which `slack-write-block.sh` lets through for `mcp__claude_ai_Slack__slack_send_message` only.
 
 That includes running `slack-reply` (or its test chain) to test a reply to my own self-DM when I ask for it. Any other Slack write stays forbidden; never post with `sofi-mcp-cli` directly or set `MY_NOTIFICATIONS_SLACK_REPLY` in an interactive session to work around the hook.
+
+**If you are the headless run that `slack-reply c` started** (your system prompt says so, you have no shell, and your only tools are `slack_send_message` plus Slack read tools), you ARE the approved path: post the confirmed reply exactly as instructed. The hook only lets `slack_send_message` through when `slack-reply` set the env var, so an interactive session can't use this.
