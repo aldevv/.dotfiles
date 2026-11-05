@@ -98,11 +98,21 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - a command fails with `command not found` for a tool expected on a normal Linux box, or `GOROOT` errors
   - the user mentions "my phone", "termux", or "on the phone"
 
+- [`~/.claude/lazy/mac-input.md`](.claude/lazy/mac-input.md). **Read when** any of:
+  - about to run `cliclick`, or `osascript` with `System Events` `keystroke` / `key code` / `click`, to drive a macOS app or dialog
+  - a synthetic key press (Enter/Return) seems ignored, or a macOS password dialog needs filling from a script
+  - the user mentions Colemak or the keyboard layout while automating input
+
 ## CRITICAL: Editing a `~/work` repo from a foreign cwd
 The lazy-scan hook only walks ancestors of the current cwd, so when a session started elsewhere (e.g. a `~/worktrees/` checkout) sends you to edit files under `~/work/**`, that tree's `CLAUDE.md` lazy index never enters context and its triggers never fire. Before the first Write/Edit under `~/work/**`, read `~/work/CLAUDE.md` and load any lazy file in its "Detail files" index whose Read-when matches the task. Skipping this once reintroduced a bug a documented convention there explicitly warns against.
 
 ## Machine connection notes
-Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (gitignored, machine-local). Read it when the user mentions `mac`, `titan`, or other host aliases, or asks how to push code/configs between machines.
+Per-machine connection info, SSH aliases, and deploy recipes live in `~/CLAUDE-machines.md` (symlink to the private `personal/CLAUDE-machines.md` submodule, shared by every machine; never put it in the public repo). Read it when the user mentions `mac`, `titan`, `elite`, or other host aliases, needs to reach a machine on the LAN by MAC address, or asks how to push code/configs between machines.
+
+If `~/CLAUDE-machines.md` is missing or a dangling symlink:
+1. `cd ~/.dotfiles && git submodule update --init personal` (url `git@personal:aldevv/.dotfiles-personal.git`; the `personal` SSH alias is `github.com` as `git`, needs a key on the GitHub account), then `git -C personal pull`.
+2. `ln -sf .dotfiles/personal/CLAUDE-machines.md ~/CLAUDE-machines.md`.
+3. If GitHub auth isn't there, copy it from a machine that has it, e.g. `scp kanon@titan.local:.dotfiles/personal/CLAUDE-machines.md ~/.dotfiles/personal/`.
 
 ## CRITICAL: Editing this file
 **Before adding any rule, command, or note to this file, grep the whole file for the topic first.** Past sessions have introduced duplicates by adding a new entry without checking what was already documented. If a section already covers it, edit that section in place. Never create a parallel copy. When a rule must be visible from multiple contexts, link with `See ## Section Name` rather than copying.
