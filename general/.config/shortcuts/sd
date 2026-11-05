@@ -33,7 +33,7 @@ ff      $FILES
 u.      $UTILITIES
 a.      $AUTOMATION
 A.     $APPS
-ml.     $MLIBS
+ml.     $MYLIBS
 o       ~/Downloads
 O       ~/Documents
 vv      ~/Videos

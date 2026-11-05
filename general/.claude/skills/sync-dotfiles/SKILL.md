@@ -196,8 +196,8 @@ One bash invocation that does **everything** for the happy path: secret scan, co
 
 - **`exit 8`** = merge conflict surfaced. Continue at Step 3 (resolve). Step 3 then checks whether the merge ALSO added new files: if yes → Step 4 → Step 5 → Step 5b → Step 6; if no → Step 5 → Step 5b → Step 6.
 - **`exit 9`** = clean merge added new files that need restowing. Continue at Step 4 (restow), then Step 5 (finalize), then Step 5b (apply my-settings overlay), then Step 6 (report).
-- **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and run Step 6 (report) directly so the user sees what blocked. **Skip Step 5b** — when the git sync didn't complete, propagating my-settings.json into settings.json could spread whatever made the scan fail.
-- **`exit 0`** = git sync succeeded. Continue to **Step 5b** (apply my-settings overlay), then Step 6 (report). This includes the "Already up to date / nothing to push" no-op case; Step 5b still runs because my-settings.json may have been edited locally even when the remote was a no-op, and the overlay must reflect that.
+- **`exit 7`** = pre-commit scan blocked (symlink loop or secret). Stop and run Step 6 (report) directly so the user sees what blocked. **Skip Steps 5b and 5c** — when the git sync didn't complete, propagating my-settings.json into settings.json could spread whatever made the scan fail.
+- **`exit 0`** = git sync succeeded. Continue to **Step 5b** (apply my-settings overlay), **Step 5c** (restore nvim plugins), then Step 6 (report). This includes the "Already up to date / nothing to push" no-op case; Step 5b still runs because my-settings.json may have been edited locally even when the remote was a no-op, and the overlay must reflect that.
 
 ```bash
 set -e -o pipefail
@@ -406,6 +406,18 @@ Exit codes: `0` success (updated, no-op merge, or skipped because my-settings.js
 
 ---
 
+## Step 5c — Restore nvim plugins to the lockfile
+
+Runs right after Step 5b, under the same skip rule. Pulling a new `lazy-lock.json` doesn't move installed plugins, so without this a machine keeps old plugin versions and the config breaks against them (e.g. a 2.x-only API called on a 1.x plugin). The script hashes the lockfile and runs a headless `Lazy! restore` only when it changed since the last restore on this machine, so it also catches lockfiles that came in through a plain `git pull`. Skips if `nvim` isn't installed.
+
+```bash
+"$HOME/.claude/skills/sync-dotfiles/scripts/restore-nvim-plugins.sh"
+```
+
+Exit codes: `0` restored or skipped, `1` restore failed (report it, don't retry). Cache: `~/.cache/sync-dotfiles/lazy-lock-restored.sha`. Any lockfile entries lazy adds during the restore get committed by the next sync.
+
+---
+
 ## Pre-commit scan (reference)
 
 Implemented in `scripts/precommit-scan.sh`. Step 2 pipes the union of `git diff --name-only HEAD` (modified-tracked) and `git ls-files --others --exclude-standard` (untracked, gitignore-respecting) into it. The post-merge guard (Step 2b) pipes `git diff $pre $post --diff-filter=AM` with `--loop-only`. Untracked files are scanned the same way as modified ones — the secret/loop checks are the gate that keeps `git add -A` safe to use blindly.
@@ -437,3 +449,4 @@ Exits 0 if every input file passes; exits 7 (after scanning all of them) if any 
 - Packages restowed, if any
 - Final pushed commit (or "nothing to push")
 - my-settings.json overlay (Step 5b): updated / no diff / skipped because unchanged / skipped because git sync failed / error
+- nvim plugins (Step 5c): restored / skipped because lockfile unchanged / skipped because git sync failed / failed

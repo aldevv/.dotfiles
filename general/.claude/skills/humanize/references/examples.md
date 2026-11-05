@@ -60,7 +60,7 @@ increment from there.
 - thanks for checking it. (×1)
 - dropped the cache config. (×1)
 - dropped the bare `config_ref` and documented the explicit allowlist entry. (×1)
-- done. tn70 !49 needs its override renamed from `integration-python311` to `integration-python311-el9`, otherwise the new rule skips it (×1)
+- done. <repo> <mr> needs its override renamed from `integration-tests` to `integration-tests-v2`, otherwise the new rule skips it (×1)
 - fixed it, the cache is keyed by job ID now and keeps the last 2. (×1)
 - done, it skips the change call when nothing changed. two differences: the email compare is exact since <vendor> keeps case, so a case-only change is a real change. phone compares `phone_digits` instead of `formatted`, which carries the country code. kept the docs tip, the ui still re-runs the action until the value shows up on the next fetch. (×1)
 - confirmed, `GET /users/{id}` returns deactivated users without a flag, only an unknown id 404s. so `Get` marks them inactive. added a deactivated case to `TestUsersGet` too. (×1)

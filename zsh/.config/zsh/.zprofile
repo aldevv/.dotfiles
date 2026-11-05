@@ -153,8 +153,8 @@ export  LESS_TERMCAP_us=$'\e[1;32m'
 # LIBS
 #=======================================
 # export LD_LIBRARY_PATH=.:/usr/local/lib
-# export MLIBS="$FILES/mlibs"
-# export C_INCLUDE_PATH=.:$MLIBS
+export MYLIBS="$FILES/mlibs"
+# export C_INCLUDE_PATH=.:$MYLIBS
 
 #=================================================
 

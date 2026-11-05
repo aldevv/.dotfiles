@@ -136,6 +136,10 @@ vim.keymap.set("n", "<backspace>A.", "<cmd>e /Users/juanbernal/.local/share/scri
 vim.keymap.set("n","<backspace><a-p>A.", ":lua require('telescope.builtin').find_files({prompt_title = '</Users/juanbernal/.local/share/scripts/apps>', cwd = '/Users/juanbernal/.local/share/scripts/apps', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>A.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP /Users/juanbernal/.local/share/scripts/apps>', cwd = '/Users/juanbernal/.local/share/scripts/apps', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
 
+vim.keymap.set("n", "<backspace>ml.", "<cmd>e /Users/juanbernal/.local/share/scripts/files/mlibs<cr>", {silent=true, noremap=true})
+vim.keymap.set("n","<backspace><a-p>ml.", ":lua require('telescope.builtin').find_files({prompt_title = '</Users/juanbernal/.local/share/scripts/files/mlibs>', cwd = '/Users/juanbernal/.local/share/scripts/files/mlibs', hidden = 'true'})<cr>", { noremap = true, silent = true })
+vim.keymap.set("n","<backspace><a-r>ml.", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP /Users/juanbernal/.local/share/scripts/files/mlibs>', cwd = '/Users/juanbernal/.local/share/scripts/files/mlibs', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })
+
 vim.keymap.set("n", "<backspace>o", "<cmd>e ~/Downloads<cr>", {silent=true, noremap=true})
 vim.keymap.set("n","<backspace><a-p>o", ":lua require('telescope.builtin').find_files({prompt_title = '<~/Downloads>', cwd = '~/Downloads', hidden = 'true'})<cr>", { noremap = true, silent = true })
 vim.keymap.set("n","<backspace><a-r>o", ":lua require('telescope.builtin').grep_string({prompt_title = '<LIVE GREP ~/Downloads>', cwd = '~/Downloads', search ='',  shorten_path = true})<cr>", { noremap = true, silent = true })

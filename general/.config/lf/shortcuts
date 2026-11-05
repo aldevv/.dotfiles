@@ -102,6 +102,9 @@ map Ya. $ cp -rv $f /Users/juanbernal/.local/share/scripts/automation
 map <backspace2>A. cd /Users/juanbernal/.local/share/scripts/apps
 map mA. $ mv -v $f /Users/juanbernal/.local/share/scripts/apps
 map YA. $ cp -rv $f /Users/juanbernal/.local/share/scripts/apps
+map <backspace2>ml. cd /Users/juanbernal/.local/share/scripts/files/mlibs
+map mml. $ mv -v $f /Users/juanbernal/.local/share/scripts/files/mlibs
+map Yml. $ cp -rv $f /Users/juanbernal/.local/share/scripts/files/mlibs
 map <backspace2>o cd ~/Downloads
 map mo $ mv -v $f ~/Downloads
 map Yo $ cp -rv $f ~/Downloads

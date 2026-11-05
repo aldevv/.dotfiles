@@ -270,6 +270,18 @@ Exit codes: `0` success (updated, no-op merge, or skipped because my-settings.js
 
 ---
 
+## Step 7c — Restore nvim plugins to the lockfile
+
+Runs right after Step 7b, under the same skip rule. Pulling a new `lazy-lock.json` doesn't move installed plugins, so without this a machine keeps old plugin versions and the config breaks against them (e.g. a 2.x-only API called on a 1.x plugin). The script hashes the lockfile and runs a headless `Lazy! restore` only when it changed since the last restore on this machine, so it also catches lockfiles that came in through a plain `git pull`. Skips if `nvim` isn't installed.
+
+```bash
+"$HOME/.claude/skills/sync-dotfiles/scripts/restore-nvim-plugins.sh"
+```
+
+Exit codes: `0` restored or skipped, `1` restore failed (report it, don't retry). Cache: `~/.cache/sync-dotfiles/lazy-lock-restored.sha`. Any lockfile entries lazy adds during the restore get committed by the next sync.
+
+---
+
 ## Pre-commit scan (reference)
 
 Implemented in `scripts/precommit-scan.sh`. Step 3 templates pipe the union of `git diff --name-only HEAD` (modified-tracked) and `git ls-files --others --exclude-standard` (untracked, gitignore-respecting) into it; per-submodule calls pass `--prefix=<path>` so parallel output identifies which repo flagged. The wider net plus the scan is what makes `git add -A` safe: untracked configs / scripts the user dropped under `~/.dotfiles` travel between machines automatically, while gitignored files and anything matching the secret/loop checks are filtered out.
@@ -298,3 +310,4 @@ Exits 0 if every input file passes; exits 7 (after scanning all of them) if any 
 - Final pushed commit (or "nothing to push")
 - Full-sync timestamp recorded (or skipped due to failure)
 - my-settings.json overlay (Step 7b): updated / no diff / skipped because unchanged / skipped because git sync failed / error
+- nvim plugins (Step 7c): restored / skipped because lockfile unchanged / skipped because git sync failed / failed
