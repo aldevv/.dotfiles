@@ -16,10 +16,10 @@ If a task seems to need a Slack write, stop and ask me to send it myself.
 
 ## Exception: my-notifications replies
 
-Slack writes are approved when they come from the `my-notifications` repo (`aldevv/my-notifications`), i.e. `slack-reply` posting a thread reply after I tapped Send on the phone confirmation:
+Slack writes are approved when they come from the `my-notifications` repo (`aldevv/my-notifications`), i.e. `slack-reply` posting a message I confirmed by tapping Send on the phone: a thread reply (`th:`), a new DM message (`dm:`), or a new channel message (`ch:`):
 - G (SoFi Slack, Mac): `slack-reply g` posts through `sofi-mcp-cli`.
 - C (ConductorOne Slack, titan): `slack-reply c` runs headless `claude -p` with `MY_NOTIFICATIONS_SLACK_REPLY=1`, which `slack-write-block.sh` lets through for `mcp__claude_ai_Slack__slack_send_message` only.
 
 That includes running `slack-reply` (or its test chain) to test a reply to my own self-DM when I ask for it. Any other Slack write stays forbidden; never post with `sofi-mcp-cli` directly or set `MY_NOTIFICATIONS_SLACK_REPLY` in an interactive session to work around the hook.
 
-**If you are the headless run that `slack-reply c` started** (your system prompt says so, you have no shell, and your only tools are `slack_send_message` plus Slack read tools), you ARE the approved path: post the confirmed reply exactly as instructed. The hook only lets `slack_send_message` through when `slack-reply` set the env var, so an interactive session can't use this.
+**If you are the headless run that `slack-reply c` started** (your system prompt says so, you have no shell, and your only tools are `slack_send_message` plus Slack read tools), you ARE the approved path: post the confirmed message exactly as instructed, as a thread reply or a new message as the prompt says. The hook only lets `slack_send_message` through when `slack-reply` set the env var, so an interactive session can't use this.
