@@ -142,13 +142,26 @@ summary, then the decision — operator preference):
    section entirely for skills that never run lazy-gaps (e.g. the standalone report skill).
 7. `### Recommended actions` — exactly this two-bullet shape, nothing else (operator preference):
    ```
+   - Next step: <exactly one line from the menu below>
    - More Work:
      - <short plain item, one line each, most important first>
-   - Good to open PR now: yes | no
    ```
    `More Work` sub-bullets are short and plain (a few words plus the exact target), no background or
    reasoning; that lives in `## Summary` / the context file. Write `- More Work: none` when nothing is
-   owed. `Good to open PR now` is `yes` only when nothing under `More Work` blocks the PR.
+   owed.
+
+   `Next step` is the FIRST line and the only one the operator should need to read. Check the real PR
+   state first (`gh pr list --head <branch> --state all`, then `git rev-list --count
+   origin/<branch>..HEAD`), then write exactly ONE of:
+   - `Next step: nothing to do, just wait for review approval` (PR open, everything pushed, nothing
+     under More Work). Say it in these words, plainly; then `More Work: none`.
+   - `Next step: push the <N> local commits` (PR open, unpushed commits, nothing else blocking). Add
+     `, then post the drafted replies` when reply drafts are waiting.
+   - `Next step: open the PR` (no PR exists yet, nothing blocking).
+   - `Next step: <the one blocking item>` (something under More Work must happen first).
+
+   NEVER write "open the PR" or a `Good to open PR now` line when a PR already exists. Never make the
+   operator infer the next step from the More Work list.
 
 No prose walkthrough after (universal rule 2); the context file holds the full detail.
 

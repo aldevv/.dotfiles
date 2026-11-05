@@ -21,8 +21,10 @@ Key derivation:
 - review: `KEY="review-$AUTO_NEW_DAY_WINDOW"`, brief at `$AUTO_NEW_DAY_DATE_DIR/dispatch/$KEY.brief.md`.
 
 Build the brief:
-- **own-work:** fetch the ticket via Linear MCP `get_issue` (id = `$AUTO_NEW_DAY_TICKET`); capture `title`, `description`. Shape: `# <ticket>: <title>` → `## TLDR` → `## Ticket description` → `---` + `linear url: <url>`.
-- **review:** `gh pr view <prUrl> --json title,author,body,headRefName,baseRefName,url` (prUrl from `$AUTO_NEW_DAY_DATE_DIR/dispatch/review-$AUTO_NEW_DAY_WINDOW.json`); if a Linear ticket is linked (payload `linearUrl` or PR body), fetch it via `get_issue`, else ticket section = `n/a`. Shape: `# <repo>#<num>: <title>` → metadata (pr url / author / branch) → `## TLDR` → `## PR description` → `## Ticket description`.
+- **own-work:** fetch the ticket via Linear MCP `get_issue` (id = `$AUTO_NEW_DAY_TICKET`); capture `title`, `description`. Shape: `# <ticket>: <title>` → `author: <PR author login>` (from `gh pr view <prUrl> --json author` when the dispatch JSON has a `prUrl`; skip the line when there is no PR) → `## TLDR` → `## Ticket description` → `---` + `linear url: <url>`.
+- **review:** `gh pr view <prUrl> --json title,author,body,headRefName,baseRefName,url` (prUrl from `$AUTO_NEW_DAY_DATE_DIR/dispatch/review-$AUTO_NEW_DAY_WINDOW.json`); if a Linear ticket is linked (payload `linearUrl` or PR body), fetch it via `get_issue`, else ticket section = `n/a`. Shape: `# <repo>#<num>: <title>` → `author: <login>` on the line right under the title → `pr url:` / `branch:` lines → `## TLDR` → `## PR description` → `## Ticket description`.
+
+**Author line goes directly under the `#` title in every brief** (plain `author: <login>`, no bullet), so it is visible in the pager's first lines without scrolling.
 
 TLDR rules (both): 1-3 sentences OR 2-5 bullets, each line < 85 chars, no lead-in prose. own-work answers what breaks / where / what the fix looks like; review answers what changes / why / what to look for.
 

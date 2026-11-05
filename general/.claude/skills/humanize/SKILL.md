@@ -92,6 +92,8 @@ python3 ~/.claude/skills/humanize/scripts/record_example.py \
 
 Same text in the same category bumps `(×N)`; new text appends a new bullet under `## Answers`.
 
+The corpus is public, so record a genericized copy, never the raw post: keep the voice and shape, swap company, product, vendor, customer and people names, repo names, ticket ids and private links for neutral analogs or placeholders (`<vendor>`, `<field>`, `<TICKET>`, `<link>`), and swap domain-specific concepts for everyday backend ones. The script refuses (exit 2) a body with any term from the private denylists (`$HUMANIZE_DENYLIST`, else `$WORK/.claude/humanize/denylist.txt`); genericize and re-run, never skip the record.
+
 ## Used by
 
 - `add-comment` runs every PR/MR comment draft through this skill before showing it in the qa pane, then layers its own review-specific rules (backticks, no internal-tooling refs, doc-link preservation) on top, and records posted comments here via `record_example.py`.

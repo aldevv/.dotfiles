@@ -134,7 +134,8 @@ log: $LOG" \
   fi
   prelude_trust_worktree "$WT_PATH"
 
-  local window_name="AUTO-CI-FIX#${WIN_SHA}-${REPO_BASENAME}"
+  local window_key="AUTO-CI-FIX#${WIN_SHA}-${REPO_BASENAME}"
+  local window_name="AUTO-CI-FIX#${WIN_LABEL}"
   local log_cmd
   case "$PLATFORM" in
     github) log_cmd="gh run view <id> --log-failed | tail -200" ;;
@@ -161,7 +162,7 @@ EOF
 
   echo "[ci] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"
   if prelude_spawn_tmux_window "${TARGET_SESSION}" "${window_name}" "${WT_PATH}" \
-       "claude --dangerously-skip-permissions $(printf '%q' "$prompt")" "ci"; then
+       "claude --dangerously-skip-permissions $(printf '%q' "$prompt")" "ci" "$window_key"; then
     echo "[ci] fixer launched"
   fi
 }

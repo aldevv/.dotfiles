@@ -25,7 +25,7 @@ watch_comments() {
   local gitlab_bot="${GITLAB_REVIEW_BOT:-sa-mr-bot-mr-bot}"
   local watch_start_epoch attempts i pr_head body review_body=""
   local blocking=0 suggestions=0 findings verdict comments_json
-  local late_head review_file pr_verb prompt prompt_head prompt_tail apply_policy window_name comment_hash
+  local late_head review_file pr_verb prompt prompt_head prompt_tail apply_policy window_name window_key comment_hash
 
   watch_start_epoch=$(date +%s)
   attempts=40   # ~20 minutes at 30s
@@ -197,9 +197,10 @@ log: $LOG" \
 
   comment_hash=$(printf '%s' "$review_body" | sha256sum 2>/dev/null | cut -c1-8)
   comment_hash=${comment_hash:-nohash}
-  window_name="AUTO-COMMENT-FIX#${WIN_SHA}-${comment_hash}-${REPO_BASENAME}"
-  if tmux list-windows -a -F '#W' 2>/dev/null | grep -Fxq "$window_name"; then
-    echo "[comments] window '$window_name' already exists (same comment hash) -- skip spawn"
+  window_key="AUTO-COMMENT-FIX#${WIN_SHA}-${comment_hash}-${REPO_BASENAME}"
+  window_name="AUTO-COMMENT-FIX#${WIN_LABEL}"
+  if tmux list-windows -a -F '#{@pr-watch-key}' 2>/dev/null | grep -Fxq "$window_key"; then
+    echo "[comments] window '$window_key' already exists (same comment hash) -- skip spawn"
     return 0
   fi
 
@@ -257,8 +258,8 @@ EOF
 
   echo "[comments] spawning fixer in tmux session=${TARGET_SESSION} window=${window_name} cwd=${WT_PATH}"
   if prelude_spawn_tmux_window "${TARGET_SESSION}" "${window_name}" "${WT_PATH}" \
-       "claude --dangerously-skip-permissions $(printf '%q' "$prompt")" "comments"; then
-    tmux set-window-option -t "=${TARGET_SESSION}:${window_name}" monitor-bell on 2>/dev/null || true
+       "claude --dangerously-skip-permissions $(printf '%q' "$prompt")" "comments" "$window_key"; then
+    tmux set-window-option -t "$SPAWNED_WINDOW_ID" monitor-bell on 2>/dev/null || true
     echo "[comments] fixer launched, monitor-bell enabled"
   fi
 }

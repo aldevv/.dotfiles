@@ -275,7 +275,7 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
      -F body="<the approved draft>"
    ```
 
-7. **Record the example.** After every successful post, append the chosen text to humanize's [`references/examples.md`](../humanize/references/examples.md) so future runs can see it:
+7. **Record the example.** After every successful post, append a genericized copy of the chosen text to humanize's [`references/examples.md`](../humanize/references/examples.md) so future runs can see it. The corpus is public: strip names, repos, ticket ids, private links and domain concepts first (rules in humanize's "Voice-training corpus" section). If the script exits `2` it found a private term; genericize and re-run.
 
    ```bash
    python3 ~/.claude/skills/humanize/scripts/record_example.py \

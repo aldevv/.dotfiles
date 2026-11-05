@@ -3,23 +3,14 @@
 #
 # Drives review work through the *parent* Claude session (no `claude -p`
 # subagent), so review uses the same context, prompt cache, and conversation.
-# The flow is 2-phase in default-ish modes and 3-phase in bypassPermissions,
-# because `permissionDecision: "ask"` is silently auto-allowed in bypass.
+# Two phases, never asks the user for confirmation (user opted out).
 #
 #   Phase 1 (no sentinel): open Hunk in a new tmux window, drop a [pending]
 #     placeholder, pre-compute the diff, write sentinel=1, return
 #     permissionDecision: "deny" with the review brief in additionalContext.
 #
-#   Phase 2 (sentinel=1):
-#     - default-ish modes: clear sentinel + diff file, return
-#       permissionDecision: "ask" so the user gets an Allow/Deny UI prompt.
-#     - bypassPermissions: advance sentinel to 2, return "deny" with a reason
-#       that instructs the parent to call AskUserQuestion (since "ask" would
-#       silently auto-allow in this mode).
-#
-#   Phase 3 (sentinel=2, only reached from bypassPermissions): clear sentinel
-#     + diff file and exit 0 with no decision. The user already confirmed via
-#     the Phase-2 AskUserQuestion. Returning no permissionDecision lets later
+#   Phase 2 (sentinel=1, or a leftover sentinel=2): clear sentinel + diff file
+#     and exit 0 with no decision. Returning no permissionDecision lets later
 #     PreToolUse hooks (e.g. pre-mr-check) still run and block on their own
 #     checks; an explicit "allow" here would prevent them from blocking.
 set -euo pipefail
@@ -32,10 +23,9 @@ set -euo pipefail
 export HUNK_HOOK_ACTIVE=1
 
 # Hooks receive the tool input as JSON on stdin:
-#   {"tool_name":"Bash","tool_input":{"command":"..."},"permission_mode":"...",...}
+#   {"tool_name":"Bash","tool_input":{"command":"..."},...}
 hook_input="$(cat 2>/dev/null || true)"
 tool_command="$(printf '%s' "$hook_input" | jq -r '.tool_input.command // empty' 2>/dev/null || true)"
-permission_mode="$(printf '%s' "$hook_input" | jq -r '.permission_mode // "default"' 2>/dev/null || echo default)"
 
 # Split the command on whitespace-bounded shell separators (`&&`, `||`, `;`)
 # and inspect each segment, so chained forms like `cd /path && gh pr create`
@@ -112,7 +102,7 @@ sentinel_ttl=600
 
 current_phase=""
 if [[ -f "$sentinel" ]]; then
-  age=$(( $(date +%s) - $(stat -f %m "$sentinel" 2>/dev/null || stat -c %Y "$sentinel" 2>/dev/null || echo 0) ))
+  age=$(( $(date +%s) - $(stat -c %Y "$sentinel" 2>/dev/null || stat -f %m "$sentinel" 2>/dev/null || echo 0) ))
   if (( age < sentinel_ttl )); then
     current_phase="$(cat "$sentinel" 2>/dev/null || true)"
   else
@@ -120,36 +110,9 @@ if [[ -f "$sentinel" ]]; then
   fi
 fi
 
-# Phase 3 (bypassPermissions only): user already confirmed via
-# AskUserQuestion in Phase 2. Exit 0 with no decision so later PreToolUse
-# hooks (pre-mr-check, etc.) still run and can block.
-if [[ "$current_phase" == "2" ]]; then
+# Phase 2: review applied. Pass through with no confirmation prompt.
+if [[ "$current_phase" == "1" || "$current_phase" == "2" ]]; then
   rm -f "$sentinel" "$diff_file"
-  exit 0
-fi
-
-# Phase 2: review applied. Branch on permission_mode.
-if [[ "$current_phase" == "1" ]]; then
-  if [[ "$permission_mode" == "bypassPermissions" ]]; then
-    printf '2' > "$sentinel"
-    reason="bypassPermissions mode auto-allows \"ask\", so this hook can't show an Allow/Deny UI prompt directly. Call AskUserQuestion with question=\"Create the $artifact_label?\" and options=[\"Yes, create it\", \"No, abort\"]. On \"Yes\", re-run \`$tool_label\` with the same arguments; on \"No\", stop."
-    jq -nc --arg r "$reason" '
-      {hookSpecificOutput:{
-        hookEventName:"PreToolUse",
-        permissionDecision:"deny",
-        permissionDecisionReason:$r
-      }}
-    '
-    exit 0
-  fi
-  rm -f "$sentinel" "$diff_file"
-  jq -nc --arg artifact "$artifact_label" '
-    {hookSpecificOutput:{
-      hookEventName:"PreToolUse",
-      permissionDecision:"ask",
-      permissionDecisionReason:("Review applied. Inspect the hunk window and approve to create the " + $artifact + ".")
-    }}
-  '
   exit 0
 fi
 
@@ -234,22 +197,15 @@ STEP 2 — DECIDE:
 
     printf '%s' '{"comments":[{"filePath":"path/to/file","hunkNumber":1,"summary":"one-line headline","rationale":"shape of the flow / why-it-matters"}]}' | hunk session comment apply --repo $repo_root --stdin
 
-STEP 3 — STOP and let the user review Hunk.
+STEP 3 — Re-run right away, no confirmation.
 
-Tell the user in chat:
-- What you applied (or that you chose to skip — one short sentence on why).
-- That the Hunk TUI split pane is open in their current tmux window and ready for their review.
-- That you'll re-run \`$tool_label\` ONLY after they confirm they're done looking at Hunk.
-
-Wait for an affirmative reply from the user (e.g. "go", "lgtm", "create the $artifact_label") before re-running \`$tool_label\`. Do NOT re-run immediately — the user needs wall-clock time to actually look at the Hunk pane in tmux, and the gap between your "applied" report and a re-run is what prevents them from reviewing.
-
-When the user confirms, re-run \`$tool_label\` with the same arguments. The hook will then surface a single Allow/Deny UI prompt for the $artifact_label as the final confirmation gate.
+Tell the user in one line what you applied (or that you skipped), and that the Hunk pane is open in their tmux window. Then immediately re-run \`$tool_label\` with the same arguments. Do NOT wait for or ask for confirmation; the retry goes through with no prompt.
 
 Do not modify files, push commits, or run tests. The hook will clean up the diff file.
 EOF
 )
 
-reason="Review the diff in hunk before opening the $artifact_label. Follow the brief in additionalContext to compose and apply review comments to the hunk session, then re-attempt \`$tool_label\` — the hook will then prompt for confirmation."
+reason="Review the diff in hunk before opening the $artifact_label. Follow the brief in additionalContext to compose and apply review comments to the hunk session, then re-attempt \`$tool_label\`; the retry goes through with no confirmation prompt."
 
 jq -nc --arg reason "$reason" --arg ctx "$review_brief" '
   {hookSpecificOutput:{

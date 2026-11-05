@@ -63,6 +63,8 @@ rm -rf ~/.claude/plugins/cache/<marketplace>/<plugin>/<version>
 claude plugin install <plugin>@<marketplace>   # only `install` copies source -> cache
 ```
 
+A plugin installed from a local-directory marketplace loads in place from its source dir, with no cache copy (`claude plugin install` says "loads in place from <dir>"). Edits there apply at the next session start or `/reload-plugins`; bump the version and run `claude plugin update <plugin>@<marketplace>` to re-record it, and grep the source dir instead of the cache.
+
 Then `/reload-plugins` in the running session. Always VERIFY instead of trusting the "✔ Successfully updated" line:
 
 ```bash
