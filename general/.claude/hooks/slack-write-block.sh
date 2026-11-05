@@ -29,6 +29,11 @@ fi
 # Future-proofing: a native Slack MCP server's tools would show up as
 # mcp__<server>__<toolName>. Default-deny unless the tool name looks read-only.
 if [[ "$tool_name" == mcp__* ]] && grep -qi 'slack' <<<"$tool_name"; then
+  # my-notifications' slack-reply sets this on the headless claude it runs to post a
+  # phone reply I already confirmed with the Send button. Only that one tool is let through.
+  if [[ "$tool_name" == "mcp__claude_ai_Slack__slack_send_message" && "${MY_NOTIFICATIONS_SLACK_REPLY:-}" == "1" ]]; then
+    exit 0
+  fi
   if ! grep -qiE 'search|list_channel|list_user|info|history|repl(y|ies)|lookup|read|get_reactions' <<<"$tool_name"; then
     deny
   fi

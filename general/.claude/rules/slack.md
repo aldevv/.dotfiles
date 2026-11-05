@@ -13,3 +13,11 @@ For the Slack MCP specifically:
 A `slack-write-block.sh` hook enforces this mechanically (denies matching Bash commands and any `mcp__*slack*` tool call that doesn't look read-only), but the rule holds regardless of whether the hook is present on a given machine.
 
 If a task seems to need a Slack write, stop and ask me to send it myself.
+
+## Exception: my-notifications replies
+
+Slack writes are approved when they come from the `my-notifications` repo (`aldevv/my-notifications`), i.e. `slack-reply` posting a thread reply after I tapped Send on the phone confirmation:
+- G (SoFi Slack, Mac): `slack-reply g` posts through `sofi-mcp-cli`.
+- C (ConductorOne Slack, titan): `slack-reply c` runs headless `claude -p` with `MY_NOTIFICATIONS_SLACK_REPLY=1`, which `slack-write-block.sh` lets through for `mcp__claude_ai_Slack__slack_send_message` only.
+
+That includes running `slack-reply` (or its test chain) to test a reply to my own self-DM when I ask for it. Any other Slack write stays forbidden; never post with `sofi-mcp-cli` directly or set `MY_NOTIFICATIONS_SLACK_REPLY` in an interactive session to work around the hook.
