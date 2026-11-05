@@ -11,7 +11,8 @@
       "Bash(cat:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "bypassPermissions"
   },
   "autoMemoryEnabled": false,
   "env": {
@@ -131,5 +132,7 @@
         ]
       }
     ]
-  }
+  },
+  "idleCompaction": false,
+  "skipDangerousModePermissionPrompt": true
 }

@@ -168,10 +168,10 @@ SHORT_SHA=$(printf '%s' "$HEAD_SHA" | cut -c1-8)
 WIN_SHA=$(printf '%s' "$HEAD_SHA" | cut -c1-5)
 
 # Recursion guard: any active fixer window for this head sha means the prior
-# watcher already handled it. Window names are AUTO-<KIND>-FIX#<sha5>-...-<repo>
-# (see the lib files); this matches the suffixless CI window for this sha+repo.
+# watcher already handled it. Fixer windows carry @pr-watch-key AUTO-<KIND>-FIX#<sha5>-...-<repo>
+# (see the lib files); this matches the suffixless CI key for this sha+repo.
 if command -v tmux >/dev/null 2>&1 && \
-   tmux list-windows -a -F '#W' 2>/dev/null \
+   tmux list-windows -a -F '#{@pr-watch-key}' 2>/dev/null \
      | grep -E "^AUTO-(CI|COMMENT)-FIX#${WIN_SHA}-${REPO_BASENAME}\$" >/dev/null; then
   echo "fixer window for ${WIN_SHA}-${REPO_BASENAME} already exists -- exiting (recursion guard)"
   exit 0
@@ -219,6 +219,19 @@ if command -v tmux >/dev/null 2>&1; then
 fi
 echo "TARGET_SESSION: ${TARGET_SESSION:-<none>}"
 
+# --- Fixer window label: <source window>-<ticket>-<repo>#<rest of branch> ---
+SOURCE_WINDOW=""
+if [ -n "${TMUX_PANE:-}" ]; then
+  SOURCE_WINDOW=$(tmux display-message -p -t "$TMUX_PANE" '#I' 2>/dev/null || true)
+fi
+REPO_NAME=$(basename "$(printf '%s' "$URL" | sed -E 's#(/-)?/(pull|merge_requests)/[0-9]+.*$##')")
+TICKET=$(printf '%s' "$BRANCH" | grep -oiE '^[a-z]+-[0-9]+' || true)
+BRANCH_REST=${BRANCH#"$TICKET"}
+BRANCH_REST=${BRANCH_REST#-}
+case "$BRANCH_REST" in "$REPO_NAME"-*) BRANCH_REST=${BRANCH_REST#"$REPO_NAME"-} ;; esac
+WIN_LABEL="${SOURCE_WINDOW:+$SOURCE_WINDOW-}${TICKET:+$TICKET-}${REPO_NAME}#${BRANCH_REST}"
+echo "WIN_LABEL: $WIN_LABEL"
+
 # --- "Watching" notification (single, combined) ---
 NOTIFY_TITLE="watching CI + comments" \
 NOTIFY_BODY="$URL
@@ -228,7 +241,7 @@ NOTIFY_URGENCY="low" \
 NOTIFY_BG="#f9a825" \
   "$HOME/.claude/hooks/notify.sh" custom || true
 
-export REPO_DIR REPO_BASENAME URL PLATFORM HEAD_SHA SHORT_SHA WIN_SHA BRANCH PR_BRANCH \
+export REPO_DIR REPO_BASENAME URL PLATFORM HEAD_SHA SHORT_SHA WIN_SHA WIN_LABEL BRANCH PR_BRANCH \
        TARGET_SESSION LOG LOG_DIR
 
 # --- Run both pipelines in parallel ---

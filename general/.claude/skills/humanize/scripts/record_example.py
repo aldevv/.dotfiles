@@ -13,6 +13,11 @@ Behavior:
     `- <body> (×1)` bullet.
   - Bodies are normalized (collapsed whitespace) before comparison so trivial
     formatting differences don't fragment the dedup.
+  - Refuses (exit 2) a body containing any term from the private denylists,
+    so employer names and work concepts never land in this public corpus.
+    Denylists: colon-separated paths in $HUMANIZE_DENYLIST, else
+    $WORK/.claude/humanize/denylist.txt. One term per line, `re:` prefix for a
+    regex, `#` for comments. Genericize the body and re-run on refusal.
 
 Common categories:
   - Replies — agreeing or already done
@@ -26,6 +31,7 @@ Common categories:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -39,6 +45,34 @@ BULLET_RE = re.compile(r"^- (.*?)\s+\(×(\d+)\)\s*$")
 def normalize(body: str) -> str:
     """Collapse whitespace so equivalent comments dedup correctly."""
     return " ".join(body.split())
+
+
+def denylist_paths() -> list[Path]:
+    raw = os.environ.get("HUMANIZE_DENYLIST")
+    if raw:
+        return [Path(p).expanduser() for p in raw.split(":") if p]
+    work = os.environ.get("WORK")
+    return [Path(work) / ".claude" / "humanize" / "denylist.txt"] if work else []
+
+
+def load_patterns(paths: list[Path]) -> list[re.Pattern[str]]:
+    patterns = []
+    for path in paths:
+        if not path.exists():
+            continue
+        for line in path.read_text().splitlines():
+            term = line.strip()
+            if not term or term.startswith("#"):
+                continue
+            if term.startswith("re:"):
+                patterns.append(re.compile(term[3:]))
+            else:
+                patterns.append(re.compile(rf"(?<!\w){re.escape(term)}(?!\w)", re.I))
+    return patterns
+
+
+def denied_terms(body: str, patterns: list[re.Pattern[str]]) -> list[str]:
+    return sorted({m.group(0) for p in patterns for m in [p.search(body)] if m})
 
 
 def find_section_bounds(lines: list[str], heading: str) -> tuple[int, int] | None:
@@ -139,6 +173,15 @@ def main() -> int:
     if not normalize(args.body):
         print("record_example: empty body, nothing to record", file=sys.stderr)
         return 1
+
+    hits = denied_terms(args.body, load_patterns(denylist_paths()))
+    if hits:
+        print(
+            f"record_example: refused, body has private terms {hits}. "
+            "genericize it (placeholders like <vendor>, <field>, <TICKET>) and re-run.",
+            file=sys.stderr,
+        )
+        return 2
 
     if not EXAMPLES_PATH.exists():
         print(f"record_example: missing {EXAMPLES_PATH}", file=sys.stderr)

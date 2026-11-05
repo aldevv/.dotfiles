@@ -335,14 +335,19 @@ prelude_trust_worktree() {
 # Spawn a tmux window running CMD in SESSION, recreating SESSION if it was closed.
 # tmux -t does prefix/fnmatch matching, so a gone session silently resolves to a
 # prefix-sibling (AUTO-inreview -> AUTO-inreview-others); we match the session list
-# exactly and use the '=' exact target. Args: session window cwd cmd label.
+# exactly and use the '=' exact target. Args: session window cwd cmd label key.
+# KEY is stored in the window option @pr-watch-key, which the dedup guards match on
+# (window names no longer carry the sha). Sets SPAWNED_WINDOW_ID on success.
 prelude_spawn_tmux_window() {
-  local session=$1 window=$2 cwd=$3 cmd=$4 label=${5:-}
+  local session=$1 window=$2 cwd=$3 cmd=$4 label=${5:-} key=${6:-}
   local pfx=""
   [ -n "$label" ] && pfx="[$label] "
+  # tmux format-expands -n, so a literal '#' must be doubled.
+  local name=${window//#/##}
 
   if tmux list-sessions -F '#S' 2>/dev/null | grep -Fxq "$session"; then
-    if tmux new-window -t "=${session}:" -n "$window" -c "$cwd" "$cmd"; then
+    if SPAWNED_WINDOW_ID=$(tmux new-window -P -F '#{window_id}' -t "=${session}:" -n "$name" -c "$cwd" "$cmd"); then
+      tmux set-option -w -t "$SPAWNED_WINDOW_ID" @pr-watch-key "$key" 2>/dev/null || true
       return 0
     fi
     echo "${pfx}tmux new-window failed (rc=$?)"
@@ -350,7 +355,8 @@ prelude_spawn_tmux_window() {
   fi
 
   echo "${pfx}session '${session}' was closed — recreating it"
-  if tmux new-session -d -s "$session" -n "$window" -c "$cwd" "$cmd"; then
+  if SPAWNED_WINDOW_ID=$(tmux new-session -d -P -F '#{window_id}' -s "$session" -n "$name" -c "$cwd" "$cmd"); then
+    tmux set-option -w -t "$SPAWNED_WINDOW_ID" @pr-watch-key "$key" 2>/dev/null || true
     return 0
   fi
   echo "${pfx}tmux new-session failed (rc=$?)"

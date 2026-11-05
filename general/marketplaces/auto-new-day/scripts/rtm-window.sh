@@ -155,7 +155,7 @@ elif [ "$STATUS" = "followup" ]; then
   # or open/merge a PR until the operator says so.
   CO=""
   [ -n "$BRANCH" ] && CO="git checkout '$BRANCH' 2>/dev/null; "
-  SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions. Any local changes are under review in the Hunk pane to your right. Summarize the state and recommended actions for me in a few lines, then WAIT. Do NOT run git push, gh pr create, or gh pr merge until I explicitly tell you to."
+  SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions. Any local changes are under review in the Hunk pane to your right. Summarize the state and recommended actions for me in a few lines, written as if I have no context: for every decision or term in a recommended step, say what it is, who asked for what, why it is blocked, and what each option means. Then WAIT. Do NOT run git push, gh pr create, or gh pr merge until I explicitly tell you to."
   LEFT="cd '$REPO_DIR'; ${CO}clear; exec claude --dangerously-skip-permissions '$SEED'"
 elif [ "$STATUS" = "skill" ]; then
   # An UNGUARDED claude session running the skill (e.g. /my-prs). No push/gh shim:
