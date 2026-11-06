@@ -10,8 +10,9 @@
 #               the same pager under a "READY TO MERGE" banner. The default when
 #               guards.merge is blocked (sweep did not merge).
 #   followup -> left pane: a claude session on the branch (--dangerously-skip-
-#               permissions, seeded with the body, told to wait) so the operator can
-#               say "push"/"open the PR"/"merge"; right pane: a pager under a "NEEDS
+#               permissions, seeded with the body) that drives the item end to end on
+#               its own and stops only before push / PR create / merge, then reports;
+#               right pane: a pager under a "NEEDS
 #               YOU" banner with the ticket summary + recommended actions, and, when
 #               --review-diff is given, a Hunk pane below it on those local changes.
 #               Use for an own-work item already worked by a prior sweep (skip/resume)
@@ -149,13 +150,12 @@ if [ "$STATUS" = "merged" ]; then
   # A bare claude session, cd'd to the repo. No auto prompt (idle, ready for you).
   LEFT="cd '$REPO_DIR'; clear; echo 'ready-to-merge: $WINDOW — PR merged. right pane has the ticket + MERGED banner.'; exec claude --dangerously-skip-permissions"
 elif [ "$STATUS" = "followup" ]; then
-  # A claude session on the branch, seeded with the follow-up context so the
-  # operator can just say "push" / "open the PR" / "merge". It is told to WAIT:
-  # this is the operator's session, not an autonomous child, so it must not push
-  # or open/merge a PR until the operator says so.
+  # A claude session on the branch that finishes the item autonomously (no
+  # questions to the operator) and stops only before push / PR create / merge,
+  # which stay the operator's call. The seed must contain no single quotes.
   CO=""
   [ -n "$BRANCH" ] && CO="git checkout '$BRANCH' 2>/dev/null; "
-  SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions. Any local changes are under review in the Hunk pane to your right. Summarize the state and recommended actions for me in a few lines, written as if I have no context: for every decision or term in a recommended step, say what it is, who asked for what, why it is blocked, and what each option means. Then WAIT. Do NOT run git push, gh pr create, or gh pr merge until I explicitly tell you to."
+  SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions; local changes are in the Hunk pane to your right. Work autonomously end to end and do not ask me anything or wait for my approval: re-read the ticket and its comments, resolve open questions yourself (which repo or connector the customer runs, whether another PR already covers it), run the live checks, tests, lint, and the pre-PR review skills, fix what they find, and commit locally. Stop only before git push, gh pr create, and gh pr merge. Finish with one short report in plain words: what the ticket asks, what you found, what you changed, what is verified and what is not, and the push or PR step left for me."
   LEFT="cd '$REPO_DIR'; ${CO}clear; exec claude --dangerously-skip-permissions '$SEED'"
 elif [ "$STATUS" = "skill" ]; then
   # An UNGUARDED claude session running the skill (e.g. /my-prs). No push/gh shim:

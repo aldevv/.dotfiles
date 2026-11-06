@@ -102,8 +102,9 @@ One line under the table: total tickets, how many PRs, how many merged, how many
 ## Step 6b — Recommended actions table
 Close with a small `Recommended actions` table, one row per PR that still needs something, so the next move on each is obvious at a glance. Keep it as small as possible: drop any PR that needs nothing from you (merged, or approved-and-clean waiting only on a reviewer with no ask back to you), and if every PR is done render a single line `Nothing to do.` instead of an empty table.
 
-`PR | Next action`
+`Ticket | PR | Next action`
 
+- `Ticket`: `[CXH-1234](ticket-url)`, same format as the main table (team in parens when results span teams). A PR-less ticket gets a row with `PR = (none yet)`.
 - `PR`: `[repo#N](pr-url)`.
 - `Next action`: the shortest concrete verb phrase for the ball that's in your court, e.g. `address github-actions changes`, `address <reviewer>'s ask, then merge`, `ping <reviewer> for review`, `merge` (approved + clean + you own the merge), `open a PR`. One phrase, no prose.
 
