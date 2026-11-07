@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×117)
+- done. (×120)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×16)
@@ -67,6 +67,7 @@ increment from there.
 - done, an empty job ID skips the cache now. the queue lib also fails a job with no ID (`ErrNoJobID` in the worker package), so it shouldn't happen. (×1)
 - dropped them. the endpoint comes from the region now and `base-url` is a hidden cli-only override. (×1)
 - opened <link> (×1)
+- fixed it here instead of a follow-up. (×1)
 
 ### Replies — pushback
 
@@ -151,6 +152,7 @@ increment from there.
 - I don't think this is a blocker, and this would add pagination to the delete/update operations, which would have side effects. I think we should keep it as is. (×1)
 - closing as won't fix. the owner update already fails cleanly with a 400, not worth a breaking change. moving owner to `base_owner` changes its id and forces a one-time remove+add on every account. (×1)
 - @alice @bob done with the feedback, mind taking another look? (×1)
+- closing, the bug is in <other-repo>. this repo already does it the right way, and the `<function>` removed here isnt called anywhere. fix is in <link> (×1)
 
 ### New line comments — nit
 
@@ -189,6 +191,8 @@ increment from there.
 - kept it in its own commit, added the h2 test. (×1)
 - LRU now and failed loads don't take a slot. a third overlapping job can still evict the oldest one. (×1)
 - workers can't read the resource profile yet. the follow-up pr adds that, i'll drop the extra describes once it lands. <link> (×1)
+- ~200 KB token for a 200 KB <field>. rows are keyed without the <field> now, so old tokens still match too (×1)
+- should i make <option> the only step for <setting>? (×1)
 
 ### Ticket status updates
 
@@ -202,6 +206,10 @@ increment from there.
 ### Ticket closing
 
 - Fixed by <TICKET>, out since v0.1.10. Fields that already load by default, like `user_id` and `title`, now get skipped when they're listed in additional report fields, so the import doesn't fail. CSV reports get the same fix in <TICKET>. (×1)
+
+### Ticket status
+
+- This field was only needed for <feature>, so that's tracked in <TICKET> now. Closed <repo>#<N> and moved on to building <service> in Go. (×1)
 
 ## Anti-patterns — what NOT to post
 
