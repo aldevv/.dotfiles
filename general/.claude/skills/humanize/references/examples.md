@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×124)
+- done. (×132)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×16)
@@ -68,6 +68,7 @@ increment from there.
 - dropped them. the endpoint comes from the region now and `base-url` is a hidden cli-only override. (×1)
 - opened <link> (×1)
 - fixed it here instead of a follow-up. (×1)
+- done, `<helper>` takes path segments now. kept `url.PathEscape` on the id since `JoinPath` won't escape a `/` inside a segment. (×1)
 
 ### Replies — pushback
 

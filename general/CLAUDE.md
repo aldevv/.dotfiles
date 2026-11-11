@@ -103,6 +103,10 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - a synthetic key press (Enter/Return) seems ignored, or a macOS password dialog needs filling from a script
   - the user mentions Colemak or the keyboard layout while automating input
 
+- [`~/.claude/lazy/playwright.md`](.claude/lazy/playwright.md). **Read when** any of:
+  - the user says "pnogui", "playwright no gui", "headless playwright", "agent mode" for the browser, or complains the browser window takes focus
+  - about to call any `mcp__plugin_playwright_playwright__*` browser tool, or write/run a Playwright script from Bash
+
 ## CRITICAL: Editing a `~/work` repo from a foreign cwd
 The lazy-scan hook only walks ancestors of the current cwd, so when a session started elsewhere (e.g. a `~/worktrees/` checkout) sends you to edit files under `~/work/**`, that tree's `CLAUDE.md` lazy index never enters context and its triggers never fire. Before the first Write/Edit under `~/work/**`, read `~/work/CLAUDE.md` and load any lazy file in its "Detail files" index whose Read-when matches the task. Skipping this once reintroduced a bug a documented convention there explicitly warns against.
 

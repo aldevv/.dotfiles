@@ -1,7 +1,7 @@
 ---
 name: pr-code-review
 description: Multi-angle review of one OR more GitHub PRs. The coordinator adaptively picks an agent count between 1 and 12 plus an effort tier (low / medium / high) per PR based on the PR's scope, importance, and complexity — a one-file typo gets 1 agent at low effort; a security-sensitive multi-file refactor gets 10-12 at high effort. The user can still override with `count=<N>` or a leading integer. Loads applicable CLAUDE.md / CLAUDE.local.md / lazy rules from cwd, walking up to home, before fanning out, and passes the loaded rules to every subagent. After the review agents return, spawns a second parallel verification pass that has DIFFERENT subagents fact-check every factual claim. BLOCKER and MAJOR findings MUST be verified by public-doc fetch, local reproduction on the checked-out PR branch, or runtime-path trace through code; the "very obvious from the diff" escape hatch requires the verifier to state explicitly that no extra verification was needed. Each consolidated finding ships with a confidence percentage (0-100%), a ✓ marker, and the verification mode used. Opens Hunk with ALL findings attached first, then asks the operator a yes/no whether to reduce to the most important + highest-confidence findings (the skill picks an integer between 1 and 5 based on confidence and importance), then walks each surviving finding with the user for Yes-post / Edit / Skip. Trigger on "/auto-new-day:pr-code-review <pr-or-list>", "code review this PR with N subagents", "review these PRs with subagents", "do a multi-angle review of PR #N", or any explicit request to deeply review one or more PRs. Use `pr-code-review` for explicit PRs with operator-in-the-loop comment posting. Sibling skills (project-scoped batch drivers like `pr-code-review-all`) call this skill under the hood.
-argument-hint: <pr-or-list> [count=<N>] [--no-subagents] (e.g. https://github.com/owner/repo/pull/80, "owner/repo#80 owner/other-repo#42 count=9", or "9 <url1> <url2>"). `--no-subagents` (or `NO_SUBAGENTS=1` in env) collapses every parallel review / verification `Agent(...)` spawn into a sequential `TaskCreate` list in the main session — slower wall-time, much cheaper token cost.
+argument-hint: <pr-or-list> [count=<N>] [--no-subagents] (e.g. https://github.com/owner/repo/pull/80, "owner/repo#80 owner/other-repo#42 count=9", or "9 <url1> <url2>"). `--no-subagents` (or `NO_SUBAGENTS=1` in env) runs one isolated reviewer agent and one isolated validator agent per pass instead of the full fan-out: cheaper, still a fresh context each.
 ---
 
 # pr-code-review
@@ -18,24 +18,16 @@ The repo-local layout keeps the log next to its repo. The parent-folder layout k
 
 See `references/examples.md` for sample findings, comment phrasing, and ask/post loop output.
 
-## Subagent execution mode (`--no-subagents` / `NO_SUBAGENTS=1`)
+## CRITICAL: Isolated reviewers and validators (always, including `--no-subagents`)
 
-Default: the parallel review / verification / hunk-prep fan-outs described below fire as designed (fastest wall time, highest token cost). Passing `--no-subagents` in `$ARGUMENTS`, OR setting `NO_SUBAGENTS=1` in the environment, replaces EVERY `Agent(...)` parallel-spawn step in this skill with a `TaskCreate` list executed sequentially by the main session — one task per would-be subagent role (each review lens, each verification pass), same brief, same synthesis at the end. Trades wall time for token cost (no context duplication across N subagents). `auto-new-day` sets this by default; its `--fast` flag suppresses it.
+Follow `../../references/review-isolation.md` (resolve it from this skill's base directory). In short:
 
-## CRITICAL: Validation loop in `--no-subagents` mode
-
-When `--no-subagents` is active, the Step 4 verification round MUST run as a **repeated checklist**, not a single sequential pass. A single pass in the same session shares context with the review, so it counts as `✓1` at best — the operator ends up with reviewed-but-not-independently-verified findings. That defeats the review.
-
-Policy (applies whenever `--no-subagents` / `NO_SUBAGENTS=1` is set):
-
-- Build a **VALIDATION_CHECKLIST** at Step 4 with one row per surviving finding from Step 3. Each row lists: the claim, the anchor `file:line`, the specific check to run (doc fetch, code path trace, spec quote, local reproduction), and the pass counter.
-- Run the checklist end-to-end **at least three times** (default `VALIDATION_PASSES=3`; the operator may override with `passes=<N>` in `$ARGUMENTS`, clamped to `2..5`). Each pass is a fresh sweep over the whole checklist — do NOT stop early on the first "looks fine" pass, and do NOT skip rows on later passes because an earlier pass passed them.
-- Each independent pass counts as `+1` toward the finding's `✓N` marker. `✓3` in sequential mode means three independent re-checks in the SAME session, each performed after clearing local scratch state (drop the prior verifier's notes, re-read the code / doc from scratch, form the verdict without looking at earlier passes' answers).
-- If any pass FLIPS a verdict (e.g. `TRUE` → `FALSE` or vice versa), surface the disagreement in Step 5 and lower the confidence — do NOT quietly average. Two out of three still leaves the finding uncertain; say so.
-- BLOCKER and MAJOR findings ALWAYS get the full pass count. MINOR findings may cap at `VALIDATION_PASSES=2` when the operator opts in via `--fast-minor`, otherwise they run the full count too.
-- The rule also applies to Step 5a's "approve PR" confidence: the final go/no-go is computed only after all validation passes complete, and the confidence percentage is scaled down when passes disagreed.
-
-Why: `--no-subagents` exists to save tokens on runs no human is watching in real time (typically `auto-new-day`). Cheap wall time is fine to spend on multiple sequential re-checks; the alternative is shipping `✓1` findings that were never actually verified.
+- **Reviewers** (Step 3) are always fresh `Agent(...)` spawns whose prompt carries only the diff, the changed-file list, the PR title/body, the loaded rules, the lens briefs, and the severe-findings few-shot block. Never the coordinator's own notes about the PR.
+- **Validators** (Step 4) are always fresh `Agent(...)` spawns, distinct from every reviewer and from each other, given only the claim, its `file:line`, the diff path and the check to run. No reviewer reasoning, no other verdicts, no few-shot block.
+- **`--no-subagents` / `NO_SUBAGENTS=1` reduces the count, not the isolation:** Step 3 becomes ONE isolated reviewer agent that runs every chosen lens in order, and Step 4 becomes `VALIDATION_PASSES` (default 3, `passes=<N>` clamps to 2..5) separate validator agents, each checking the whole finding list blind to the other passes. `auto-new-day` sets it by default; its `--fast` flag suppresses it. Inline same-session checks never count toward `✓N`.
+- If a pass flips a verdict, surface the disagreement in Step 5 and lower the confidence, never average it. BLOCKER and MAJOR findings always get the full pass count; MINOR may cap at 2 passes with `--fast-minor`. Step 5a's approve confidence is computed after all passes and scaled down when they disagreed.
+- If this skill is itself running inside a subagent (cannot spawn), do the work inline and mark everything `✓0 (not isolated)`.
+- **Severe-findings loop:** read the top 20 entries of the nearest `.claude/review-examples/severe.md` (section 5 of the reference) into every reviewer prompt, and at Step 5c record each BLOCKER/MAJOR that ended `✓2` or better.
 
 ## CRITICAL: Approving a PR — no body unless explicitly asked
 
@@ -409,6 +401,8 @@ When count is 7-12, keep all six standing angles, add the API verifier (Agent 7)
 
 Launch every agent for every PR in a SINGLE message (parallel Agent tool calls), `run_in_background: true`. For two PRs at count=9, that's 18 agents in one batch. The runtime handles them concurrently.
 
+Under `--no-subagents`, launch ONE isolated reviewer agent per PR instead, carrying every chosen lens brief in order (see the isolation section at the top). Either way, each prompt lists the changed files most-changed first (`gh pr diff <N> --name-only` ordered by `git diff --numstat`), tells the agent to spend its effort there, and ends with the severe-findings few-shot block from `../../references/review-isolation.md` section 5 (top 20 entries of the nearest `.claude/review-examples/severe.md`; omit the block when no file exists).
+
 Each prompt MUST include this hard constraint verbatim:
 
 > **HARD CONSTRAINT:** only flag issues anchored to a `+` line in `/tmp/pr-<N>.diff`. Every finding MUST cite a `+` line. Skip concerns about unchanged code, even if PR behavior depends on it. Report `file:post-image-line` and the one-line excerpt of the `+` line so the user can verify it lives in the diff.
@@ -556,7 +550,7 @@ This agent's output merges into the consolidated punch-list at Step 5 just like 
 
 ## Step 4. Verification round (parallel, ≥1 different subagent per finding)
 
-Once all review agents return, **spawn at least one verification agent per finding** in a single message, parallel, `run_in_background: true`. Every verifier MUST be a DIFFERENT `Agent` invocation than the reviewer that produced the finding (don't reuse the same agentId; the system already routes new Agent calls to fresh contexts).
+Once all review agents return, **spawn at least one verification agent per finding** in a single message, parallel, `run_in_background: true`. Under `--no-subagents`, run `VALIDATION_PASSES` separate validator agents instead, each checking every finding blind to the other passes (isolation section at the top). Validator prompts never include the reviewer's argument or the severe-findings block. Every verifier MUST be a DIFFERENT `Agent` invocation than the reviewer that produced the finding (don't reuse the same agentId; the system already routes new Agent calls to fresh contexts).
 
 ### Verifier count scales with importance
 
@@ -623,9 +617,7 @@ Each verifier prompt:
 > **Claim:** <agent's claim verbatim>
 > **Anchored at:** <file>:<line> in PR #<N> at <REPO_DIR>, diff /tmp/pr-<N>.diff
 > **Excerpt:** <the + line the original agent cited>
-> **Claimed consequence:** <agent's stated consequence>
 > **Verifiable by:** <agent's `verifiable_by` field>
-> **Initial agent confidence:** <agent_confidence_pct>%
 > **Severity:** <BLOCKER|MAJOR|MINOR>
 >
 > Verify by reading source code, vendored / dependency code, fetching external docs (WebFetch / context7), or reproducing locally on the checked-out PR branch at `$REPO_DIR`. Trace the actual runtime path or read the actual spec. Do NOT take the claim at face value.
@@ -821,6 +813,8 @@ Alongside the full archive at Step 5b, append a short summary to the per-PR log.
 - parent layout: `$PR_LOG_ROOT/$REPO/$PR_NUM.md`  (where `$PR_LOG_ROOT` = `<INVOKED_FROM>/.inreview/$DATE/auto-new-day:pr-code-review`)
 
 This is the lightweight pointer that future re-reviews read at Step 1b. One entry per review run, one line per finding; full bodies live in the archive.
+
+**Record severe findings.** For every BLOCKER or MAJOR that ended `✓2` or better, add or bump an entry in the nearest `.claude/review-examples/severe.md` (walk up from `$REPO_DIR`, fall back to `~/.claude/review-examples/severe.md`) using the format and dedupe rule in `../../references/review-isolation.md` section 5, with `source: own-review`. Local bookkeeping only: it runs under AUTO sessions without asking and never posts.
 
 Call the helper script `scripts/pr-log-append.sh` (shipped with this skill) rather than inlining the markdown template here. The script handles header initialization on first call, severity counts, and append-only ordering so Step 1b's SHA grep keeps working.
 

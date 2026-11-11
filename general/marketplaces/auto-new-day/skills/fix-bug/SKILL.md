@@ -1,7 +1,7 @@
 ---
 name: fix-bug
 description: Multi-agent root-cause-and-fix workflow for any non-trivial bug in any codebase. Phase 1 spawns 12 parallel investigation agents (each a distinct hypothesis), phase 2 synthesizes a detailed plan, phase 3 spawns 6 parallel review agents (distinct critique angles), phase 4 revises the plan, phase 5 the orchestrator implements, phase 6 spawns 3 validation agents. Every plan and the final validation MUST include a numeric confidence score (0-100%) per symptom, with explicit gaps and assumptions called out, especially when the bug couldn't be reproduced end-to-end. Counts default to 12/6/3 but accept overrides as the first argument. Triggers on "/auto-new-day:fix-bug", "fix this bug with N agents", "spawn agents to figure out X", "investigate this bug using N agents", "do a multi-agent debug", "use the fix-bug skill", or any ticket / stack-trace / repro paired with explicit multi-agent debugging intent. AUTO-INVOKE when the user pairs a substantial bug context (Linear/Jira URL, GitHub issue, log excerpt, stack trace, reproducer) with phrasing like "figure out why this is happening and fix it", "use N subagents to debug", "spawn investigators". Do NOT trigger for trivial bugs (typo, syntax error, one-line fix the model can see immediately), code reviews of an existing diff (use code-review), read-only investigations (use a plain Agent call), or bugs where the user has already identified the root cause and just wants the edit applied.
-argument-hint: "[N1/N2/N3] [reference] [--skip-hunk] [--no-subagents]" — N1/N2/N3 are agent counts for investigation/review/validation (defaults 12/6/3; pass "8/4/2" for lighter, "16/8/4" for heavier). Reference is the bug source (Linear URL, ticket ID, stack trace, repro path, free text). `--skip-hunk` ends the skill at Phase 6 (no Hunk invocation); use when a caller wraps fix-bug and wants to run its own pre-Hunk tail. `--no-subagents` (or `NO_SUBAGENTS=1` in env) collapses every parallel `Agent(...)` spawn into a sequential `TaskCreate` list in the main session (slower, cheaper). All optional; the orchestrator will ask if missing.
+argument-hint: "[N1/N2/N3] [reference] [--skip-hunk] [--no-subagents]" — N1/N2/N3 are agent counts for investigation/review/validation (defaults 12/6/3; pass "8/4/2" for lighter, "16/8/4" for heavier). Reference is the bug source (Linear URL, ticket ID, stack trace, repro path, free text). `--skip-hunk` ends the skill at Phase 6 (no Hunk invocation); use when a caller wraps fix-bug and wants to run its own pre-Hunk tail. `--no-subagents` (or `NO_SUBAGENTS=1` in env) runs investigation sequentially in the main session but keeps review and validation in isolated agents (one reviewer agent, one validator agent per pass). All optional; the orchestrator will ask if missing.
 ---
 
 # fix-bug
@@ -10,24 +10,16 @@ Generic multi-agent debug-and-fix workflow. Designed for non-trivial bugs where 
 
 **User input**: $ARGUMENTS
 
-## Subagent execution mode (`--no-subagents` / `NO_SUBAGENTS=1`)
+## CRITICAL: Isolated reviewers and validators (always, including `--no-subagents`)
 
-Default: the parallel-agent fan-outs described below fire as designed (fastest wall time, highest token cost). Passing `--no-subagents` in `$ARGUMENTS`, OR setting `NO_SUBAGENTS=1` in the environment, replaces EVERY `Agent(...)` parallel-spawn step in this skill (Phase 1 investigation, Phase 3 review, Phase 6 validation) with a `TaskCreate` list executed sequentially by the main session — one task per would-be subagent role, same brief, same synthesis at the end. Trades wall time for token cost (no context duplication across N subagents). `auto-new-day` sets this by default; its `--fast` flag suppresses it.
+Follow `../../references/review-isolation.md` (resolve it from this skill's base directory). The orchestrator wrote the plan and the fix, so it must never review or validate its own work inline.
 
-## CRITICAL: Validation loop in `--no-subagents` mode
-
-When `--no-subagents` is active, Phase 6 (validation) MUST run as a **repeated checklist**, not a single sequential pass. A single pass in the same session shares context with the implementation, so from the operator's perspective it counts as `✓1` — the fix was written and "checked" by the same head. That's not validation.
-
-Policy (applies whenever `--no-subagents` / `NO_SUBAGENTS=1` is set):
-
-- Build a **VALIDATION_CHECKLIST** at the start of Phase 6 with one row per validation task the parallel agents would have done: reproduce the original bug on the unpatched code, run the patched code against the same repro, exercise the golden path, exercise edge cases, run the test suite the plan called out, verify each symptom listed in the Phase 2 "Confidence breakdown". Each row lists the specific command / action, the expected outcome, and the pass counter.
-- Run the checklist end-to-end **at least three times** (default `VALIDATION_PASSES=3`; the operator may override with `passes=<N>` in `$ARGUMENTS`, clamped to `2..5`; the third positional-arg slot `N1/N2/N3` still governs the "how many roles per pass" fan-out — passes multiply on top of that). Each pass is a fresh sweep. Do NOT stop early on the first green pass, and do NOT skip rows on later passes because an earlier pass passed them.
-- Each independent pass counts as `+1` toward the finding's `✓N` marker. `✓3` in sequential mode means three independent re-checks in the SAME session, each performed after clearing local scratch state (re-read the plan, re-read the diff, re-run the repro from scratch, form the verdict without looking at earlier passes' answers).
-- If any pass FLIPS a verdict (e.g. green → red or vice versa), surface the disagreement in the Phase 6 report and lower the confidence — do NOT quietly average. Two out of three still leaves the fix uncertain; say so.
-- Symptoms flagged BLOCKER by the Phase 2 confidence breakdown ALWAYS get the full pass count. Non-blocker symptoms may cap at `VALIDATION_PASSES=2` when the operator opts in via `--fast-minor`, otherwise they run the full count too.
-- The mandatory confidence-breakdown table in Phase 6 must reflect the multi-pass result: each symptom's confidence is the WORST verdict across passes, not the best.
-
-Why: `--no-subagents` exists to save tokens on runs no human is watching in real time (typically `auto-new-day`). Cheap wall time is fine to spend on multiple sequential re-checks; the alternative is shipping `✓1` fixes that were validated by the same head that wrote them.
+- **Phase 1 investigation** follows the normal fan-out. With `--no-subagents` it may run as a sequential `TaskCreate` list in the main session (investigation isn't a review, so sharing context there is fine).
+- **Phase 3 review and Phase 6 validation are always fresh `Agent(...)` spawns.** Reviewer prompts carry the plan file, the ticket/reference text and the loaded rules, never the Phase 1 transcripts or the orchestrator's reasoning. Validator prompts carry the implemented diff, the changed-file list (most-changed first), the original symptom, the reproducer path if one exists, and the plan's out-of-scope list. They never get the Phase 5 notes or why the orchestrator thinks the fix works.
+- **`--no-subagents` / `NO_SUBAGENTS=1` reduces the count, not the isolation.** Phase 3 becomes ONE isolated reviewer agent running all N2 angles in order. Phase 6 becomes `VALIDATION_PASSES` (default 3; `passes=<N>` or the third counts slot clamps to 2..5) separate validator agents, each running the full checklist (reproduce on the unpatched code, run the patched code, regression paths, completeness) blind to the other passes. `auto-new-day` sets it by default; its `--fast` flag suppresses it.
+- `✓N` counts agreeing validator agents only. If a pass flips a verdict (green to red or the reverse), surface it in the Phase 6 report and lower the confidence; each symptom's confidence is the WORST verdict across passes. BLOCKER symptoms always get the full pass count; non-blockers may cap at 2 with `--fast-minor`.
+- If this skill is itself running inside a subagent (cannot spawn), do the work inline and mark the Phase 6 table `isolation: none`, `✓0`.
+- **Severe-findings loop:** Phase 3 reviewer prompts (never Phase 6 validators) end with the top 20 entries of the nearest `.claude/review-examples/severe.md` (reference section 5). Phase 8 records new ones.
 
 ## When this skill earns its cost
 
@@ -512,6 +504,8 @@ This recap is the artifact the operator uses to reply to each reviewer at PR-com
 
 Spawn N3 final validators in parallel. They review the IMPLEMENTED diff, not the plan.
 
+Each validator is a fresh agent per the isolation section at the top: it gets the diff and the changed-file list ordered most-changed first, reviews those files first, and cites a changed line for every finding. Code the diff didn't touch is only flagged when the diff makes it worse, tagged `pre-existing`.
+
 - **V1 Correctness** — does the applied fix actually resolve the original symptom? If a reproducer was built in Phase 1, does it now pass?
 - **V2 Regression check** — do other related code paths still work? Specifically look at what the plan said was OUT of scope and confirm those areas weren't touched accidentally.
 - **V3 Completeness** — loose ends: open follow-up tickets, doc updates, release notes, observability, runbook entries. Anything the operator should do before merging.
@@ -522,8 +516,9 @@ Spawn N3 final validators in parallel. They review the IMPLEMENTED diff, not the
 You are <validator name>, one of N3 final validators.
 
 Diff to validate: <path to patch file or branch reference>
-Plan it implements: /tmp/fix-bug-plan-<id>-v2.md
-Original bug context: <one-paragraph recap>
+Changed files (most-changed first): <list from git diff --numstat>
+Out of scope per the plan: <the plan's out-of-scope list only, not its rationale>
+Original bug context: <the ticket's symptom and reproducer path, not the orchestrator's theory of the fix>
 
 YOUR ANGLE: <V1, V2, or V3 above>
 
@@ -613,6 +608,8 @@ Set the three flags independently. A typical fix-bug note ends up `fixed: yes / 
 The summary printed after Phase 7 names the Hunk window the operator should attach to, and lists the composite confidence number FIRST per the Consolidating-confidence rules above.
 
 ## Phase 8 — audit lazy-file coverage
+
+**Record severe findings first.** Before `lazy-gaps`, add or bump entries in the nearest `.claude/review-examples/severe.md` (format and dedupe in `../../references/review-isolation.md` section 5) for: (a) every Phase 6 finding at BLOCKER/MAJOR that ended `✓2` or better (`source: own-review`), and (b) every review item this run fixed that a human or bot marked severe on our PR (stated Blocking/Critical/High/Major, a red-tier bot glyph, or a line-anchored CHANGES_REQUESTED), judged real, with `source: <login>`. Runs unattended without asking; never posts.
 
 After Hunk is open, invoke the `lazy-gaps` skill with the dispatched feedback list (or, if the bug wasn't review-driven, the per-symptom finding list from Phase 6) as the source. This closes the loop: every actionable item either becomes a persisted rule the next dispatched run picks up, or is logged as "intentionally not worth a rule".
 

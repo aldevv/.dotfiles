@@ -87,7 +87,7 @@ Resolve the team's members once: `gh api "orgs/<org>/teams/<team>/members" --pag
 ## Step 5 — Render the table
 One row per PR (or per PR-less ticket), grouped so a ticket's rows sit together. Sort: unmerged-and-unapproved first (needs attention), then approved-not-merged, then merged last.
 
-`Ticket | Title | PR | Merged | Approved | Approved by`
+`Ticket | Title | PR | Merged | Approved | Approved by | Handled in`
 
 - `Ticket`: `[CXH-1234](ticket-url)`. When your results span more than one team, append the team in parens (`[CXF-297](url) (Connector Flux)`) so a ticket that lives on a different team than the rest is obvious at a glance.
 - `Title`: short, truncate to ~50 chars.
@@ -95,6 +95,7 @@ One row per PR (or per PR-less ticket), grouped so a ticket's rows sit together.
 - `Merged`: `yes` when merged, `no` when not (or `unavailable` on a failed lookup).
 - `Approved`: `✅` when the approver list is non-empty, else `no`. When `reviewDecision == CHANGES_REQUESTED`, show `changes requested` instead of a bare `no`. When the approved-with-an-ask check (Step 4) found the approver left a request at/after approving, show `✅ (check: <approver> asked for more)` so an approval that is not actually merge-ready stands out.
 - `Approved by`: comma-separated approver logins (with the `(non-approver)` tag from Step 4 when applicable), or `-`.
+- `Handled in`: the live `auto-new-day` tmux window working on this ticket, as `<session>:<window>` (e.g. `AUTO-inreview:CXH-1234-repo`, `AUTO-followup:...`), or `-` when none. Look it up once with `tmux list-windows -a -F '#S:#W'` and match a window in an `AUTO-*` session (not an archived `AUTO-*-<weekday>` one) whose name starts with the ticket id. Add a short role tag after it: `(worker)` for a dispatched child, `(status)` for a status-only window, `(followup)` for `AUTO-followup`. Tell worker from status by the day's plan: a window listed in `$AUTO_NEW_DAY_STATE_DIR/dates/<today>-create.md` is a worker, any other `AUTO-inreview` window is a status window. No tmux or no match -> `-`.
 
 ## Step 6 — Summary line
 One line under the table: total tickets, how many PRs, how many merged, how many approved-but-not-merged (ready to merge), how many still need an approval, and any tickets with no PR yet. Call out the ones waiting on you to merge vs waiting on a reviewer.
@@ -102,11 +103,12 @@ One line under the table: total tickets, how many PRs, how many merged, how many
 ## Step 6b — Recommended actions table
 Close with a small `Recommended actions` table, one row per PR that still needs something, so the next move on each is obvious at a glance. Keep it as small as possible: drop any PR that needs nothing from you (merged, or approved-and-clean waiting only on a reviewer with no ask back to you), and if every PR is done render a single line `Nothing to do.` instead of an empty table.
 
-`Ticket | PR | Next action`
+`Ticket | PR | Next action | Handled in`
 
 - `Ticket`: `[CXH-1234](ticket-url)`, same format as the main table (team in parens when results span teams). A PR-less ticket gets a row with `PR = (none yet)`.
 - `PR`: `[repo#N](pr-url)`.
 - `Next action`: the shortest concrete verb phrase for the ball that's in your court, e.g. `address github-actions changes`, `address <reviewer>'s ask, then merge`, `ping <reviewer> for review`, `merge` (approved + clean + you own the merge), `open a PR`. One phrase, no prose.
+- `Handled in`: same value as the main table's column, so you can see at a glance which actions a sweep window already owns and which still need you.
 
 ## Step 7 — "create a new release" (operator command)
 When the operator says **"create a new release"** for a merged/approved connector PR shown in the table, run this four-part workflow (this is the one write path in this skill, gated on that explicit phrase):
