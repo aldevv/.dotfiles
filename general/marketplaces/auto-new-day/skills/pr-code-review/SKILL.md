@@ -18,6 +18,10 @@ The repo-local layout keeps the log next to its repo. The parent-folder layout k
 
 See `references/examples.md` for sample findings, comment phrasing, and ask/post loop output.
 
+## CRITICAL: Decide, don't punt
+
+Before handing a fork to the operator (a review comment you might disagree with, two rules that conflict, an open behavior question), run every check you have yourself (docs, a live or mock repro, the code path, a second agent tasked to confirm the other side), then decide, act, and report the decision with confidence and evidence. Escalate only what evidence can't settle or what the operator owns (scope, priority, approvals), and still bring a recommended answer. Rule + spot examples: `~/marketplaces/auto-new-day/references/decide-dont-punt.md`.
+
 ## CRITICAL: Isolated reviewers and validators (always, including `--no-subagents`)
 
 Follow `../../references/review-isolation.md` (resolve it from this skill's base directory). In short:
@@ -183,6 +187,10 @@ For each angle, decide which loaded files matter. Examples:
 - **API surface** agent: don't pass CLAUDE.md rules (they don't help with vendor docs); pass vendor doc URLs from the PR description instead.
 
 If `cwd` is outside any project checkout (e.g. running this skill from `~`), still load home + any ancestor-walk rules; the per-repo CLAUDE.md is filled in once `REPO_DIR` resolves per PR.
+
+### Repo review criteria
+
+After Step 0b resolves `$REPO_DIR`, check for review criteria the repo ships for its CI reviewer bot, such as `$REPO_DIR/.claude/skills/ci-review.md`. If one exists, read it from the PR's base branch (`git show origin/<base>:<path>`, the version CI applies) and paste it into every reviewer prompt under "Criteria the CI PR reviewer will apply". Map its blocking severities to BLOCKER. No file means no block.
 
 ## Step 0b. Resolve the local checkout (per PR)
 

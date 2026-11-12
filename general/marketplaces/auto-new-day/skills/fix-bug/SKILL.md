@@ -10,6 +10,10 @@ Generic multi-agent debug-and-fix workflow. Designed for non-trivial bugs where 
 
 **User input**: $ARGUMENTS
 
+## CRITICAL: Decide, don't punt
+
+Before handing a fork to the operator (a review comment you might disagree with, two rules that conflict, an open behavior question), run every check you have yourself (docs, a live or mock repro, the code path, a second agent tasked to confirm the other side), then decide, act, and report the decision with confidence and evidence. Escalate only what evidence can't settle or what the operator owns (scope, priority, approvals), and still bring a recommended answer. Rule + spot examples: `~/marketplaces/auto-new-day/references/decide-dont-punt.md`.
+
 ## CRITICAL: Isolated reviewers and validators (always, including `--no-subagents`)
 
 Follow `../../references/review-isolation.md` (resolve it from this skill's base directory). The orchestrator wrote the plan and the fix, so it must never review or validate its own work inline.
