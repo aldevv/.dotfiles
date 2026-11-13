@@ -66,15 +66,17 @@ EOF
     launchctl bootstrap "gui/$(id -u)" "$plist"
     echo "started: $label"
   else
+    # pystray picks AppIndicator on GNOME and dies without its typelib; GTK uses the legacy tray instead.
+    exec_env="PYSTRAY_BACKEND=gtk${kv:+ \"$kv\"}"
     mkdir -p "$HOME/.config/autostart"
     cat >"$HOME/.config/autostart/tray-$name.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=tray-$name
-Exec=env ${kv:+"$kv"} $VENV/bin/python $script
+Exec=env $exec_env $VENV/bin/python $script
 X-GNOME-Autostart-enabled=true
 EOF
-    env ${kv:+"$kv"} setsid -f "$VENV/bin/python" "$script" >/dev/null 2>&1
+    env PYSTRAY_BACKEND=gtk ${kv:+"$kv"} setsid -f "$VENV/bin/python" "$script" >/dev/null 2>&1
     echo "started: tray-$name"
   fi
 done
