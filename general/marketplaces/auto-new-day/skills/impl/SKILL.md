@@ -27,7 +27,7 @@ The argument is a GitHub URL. Classify it:
 - **PR URL you authored** → address the review feedback on it. You are on the PR branch.
 - **PR URL someone else authored** (a teammate or a bot opened it on your issue) → assess whether it actually completes the issue and works, then finish the missing pieces as local commits on the PR branch.
 
-Read it: `gh issue view <url> --json title,body,labels,comments` or `gh pr view <url> --json title,body,headRefName,reviews,comments,files`. For a PR, also read the unresolved review threads (`gh api repos/<o>/<r>/pulls/<n>/comments` + the GraphQL `reviewThreads` query for resolved/outdated state) and the diff (`gh pr diff <url>`).
+Read it: `gh issue view <url> --json title,body,labels,comments` or `gh pr view <url> --json title,body,headRefName,reviews,comments,files`. For a PR, also read the unresolved review threads (`gh api --paginate repos/<o>/<r>/pulls/<n>/comments` + the GraphQL `reviewThreads` query for resolved/outdated state) and the diff (`gh pr diff <url>`).
 
 ## Step 2. Understand before changing
 

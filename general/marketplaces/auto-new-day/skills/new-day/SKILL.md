@@ -172,7 +172,7 @@ Run this for EVERY open PR linked to the item, not just the newest one: a ticket
 
 - **approval**: an APPROVED review whose `author.login` is in `approvers[]`.
 - **changes-requested**: `CHANGES_REQUESTED` reviews newer than `state.json[item].lastCheckedAt`.
-- **foreign commits**: per-commit authors from `gh api repos/<o>/<r>/pulls/<n>/commits`; a commit is foreign if its author login is set and is not your account. On new foreign commits, fast-forward the local branch with `${SCRIPTS}/pull-foreign-commits.sh <repo-dir> <num> <branch> --log <log>` (safe: stashes a dirty tree, skips a diverged branch). Foreign commits are surfaced but do NOT by themselves escalate a quiet item.
+- **foreign commits**: per-commit authors from `gh api --paginate repos/<o>/<r>/pulls/<n>/commits`; a commit is foreign if its author login is set and is not your account. On new foreign commits, fast-forward the local branch with `${SCRIPTS}/pull-foreign-commits.sh <repo-dir> <num> <branch> --log <log>` (safe: stashes a dirty tree, skips a diverged branch). Foreign commits are surfaced but do NOT by themselves escalate a quiet item.
 - **unresolved bot threads**: the GraphQL `reviewThreads` query (isResolved/isOutdated); unresolved non-outdated bot threads count as actionable.
 - **merge conflict**: `gh pr view --json mergeable,mergeStateStatus`; `mergeable == CONFLICTING` (`mergeStateStatus == DIRTY`) is actionable on its own. The child rebases/merges the base locally and resolves it (never pushes). Retry once if `mergeable` comes back `UNKNOWN`. A conflict is new state since any prior marker, so when `triage.sh` says `skip marker exists ... state changed`, re-dispatch with `--recheck` (see Step 7 item 1); do NOT downgrade it to quiet or a followup.
 
@@ -282,6 +282,8 @@ If all three hold, merge with the repo's configured method (e.g. `gh pr merge <u
 ## Step 8. Persist state + archive
 
 Write `state.json` via `${SCRIPTS}/state-write.sh` (flock-serialized): per-item `lastCheckedAt` for items still in an active state, `reviewedPRs[<url>]` for teammate PRs. Reconcile against the current discovery: any item that left active status moves to `done/<ITEM>.json` and its `markerPath` is `rm -f`'d. Skipped-on-error items do NOT advance. Skipped entirely in dry-run and date-replay.
+
+Then run `${SCRIPTS}/prs-status --baseline` (same skips). It snapshots your open PRs so the `prs-status.timer` (every 15 min, weekdays 06:00 to 21:00 in `tz`, installed by `launch --install`) only reacts to activity after this sweep: a new human comment / review, CI turning red, or a new conflict on one of your PRs is sent to the live claude window already on that PR (same ticket window or same branch), or opens a new `AUTO-inreview` window running `bucket_skills.inreview --recheck`. Log: `$STATE_DIR/prs-status.log`.
 
 ## Step 9. Weekly report
 

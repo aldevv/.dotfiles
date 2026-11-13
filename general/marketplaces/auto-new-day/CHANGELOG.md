@@ -4,6 +4,12 @@ Newest first. One entry per `.claude-plugin/plugin.json` version; the pre-commit
 
 **Rollback:** find the commit that set a version with `git log --oneline -S'"version": "<X>"' -- <plugin>/.claude-plugin/plugin.json`, then `git revert <sha>` (or `git checkout <sha> -- <plugin>/<file>` for one file), bump the version, add an entry here, and reinstall (`claude plugin marketplace update <m> && claude plugin update <p>@<m>`).
 
+## 0.1.24 (2026-11-13)
+- New `scripts/prs-status`: every 15 min (`prs-status.timer`, weekdays 06:00 to 21:00 in the profile `tz`) it snapshots your open PRs and routes new human comments/reviews, CI turning red, or a new conflict. The live claude window already on that PR gets a message (checked that it went busy); otherwise a new `AUTO-inreview` window runs `bucket_skills.inreview --recheck`. A failed dispatch is retried next tick.
+- `launch-auto-new-day.sh --install` also installs and enables `prs-status.timer` and links `~/.local/bin/prs-status`.
+- `new-day` Step 8 runs `prs-status --baseline` so the timer only reacts to activity after the sweep.
+- `gh api` list calls for PR comments / reviews / commits now page through everything (`--paginate --slurp` + `jq add`). GitHub pages at 30, so a busy PR silently dropped its newest reviews; `pr-code-review` reads the head SHA from `gh pr view --json headRefOid` instead of `commits[-1]`.
+
 ## 0.1.23 (2026-11-12)
 - Removed employer and work-pack references from comments, docs, and examples across scripts, skills, and references (ticket IDs, repo and vendor names, logins, wrapper skill names, `~/work` paths); the code is unchanged.
 - `check-domain-neutral.sh` denylist also catches wrapper skill names, more ticket prefixes, SDK type names, and reviewer logins.

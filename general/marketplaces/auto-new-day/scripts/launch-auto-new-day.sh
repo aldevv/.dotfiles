@@ -167,15 +167,16 @@ if [ "$INSTALL" = "1" ]; then
            "$_sd/dispatch" "$_sd/done"
 
   echo "==> stopping timer (if running) to avoid mid-cp race"
-  systemctl --user stop auto-new-day-sweep.timer 2>/dev/null || true
+  systemctl --user stop auto-new-day-sweep.timer prs-status.timer 2>/dev/null || true
 
   echo "==> installing unit files (substituting launcher path, dirs, timezone, slash)"
   # A domain pack can point the unit's ExecStart at its own entrypoint (which
   # then delegates back here); default is this launcher.
   _launcher="${AUTO_NEW_DAY_LAUNCHER:-$SKILL_DIR/scripts/launch-auto-new-day.sh}"
   _slash="${AUTO_NEW_DAY_SLASH:-/auto-new-day:new-day}"
-  for _u in auto-new-day-sweep.service auto-new-day-sweep.timer; do
+  for _u in auto-new-day-sweep.service auto-new-day-sweep.timer prs-status.service prs-status.timer; do
     sed -e "s#__LAUNCHER__#$_launcher#g" \
+      -e "s#__SCRIPTS_DIR__#$SKILL_DIR/scripts#g" \
       -e "s#__WORKING_ROOT__#$_wr#g" \
       -e "s#__STATE_DIR__#$_sd#g" \
       -e "s#__TZ__#$_tz#g" \
@@ -187,10 +188,12 @@ if [ "$INSTALL" = "1" ]; then
   systemctl --user daemon-reload
 
   echo "==> enabling timer"
-  systemctl --user enable --now auto-new-day-sweep.timer
+  systemctl --user enable --now auto-new-day-sweep.timer prs-status.timer
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$SKILL_DIR/scripts/prs-status" "$HOME/.local/bin/prs-status"
 
   echo "==> next fire:"
-  systemctl --user list-timers auto-new-day-sweep.timer --no-pager
+  systemctl --user list-timers auto-new-day-sweep.timer prs-status.timer --no-pager
   echo
   echo "done. test now with: $0 --dry-run"
   exit 0

@@ -251,16 +251,16 @@ gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" \
 
 git diff "origin/$(jq -r .base /tmp/pr-$PR_NUM.meta.json)...pr-$PR_NUM" > "/tmp/pr-$PR_NUM.diff"
 
-gh api "repos/$OWNER/$REPO/pulls/$PR_NUM/comments" \
-  --jq '[.[] | {id, in_reply_to_id, user: .user.login, path, line, commit_id, body: (.body[0:400])}]' \
+gh api --paginate --slurp "repos/$OWNER/$REPO/pulls/$PR_NUM/comments" \
+  | jq 'add | [.[] | {id, in_reply_to_id, user: .user.login, path, line, commit_id, body: (.body[0:400])}]' \
   > "/tmp/pr-$PR_NUM.existing-comments.json"
 
-gh api "repos/$OWNER/$REPO/issues/$PR_NUM/comments" \
-  --jq '[.[] | {id, user: .user.login, body: (.body[0:500])}]' \
+gh api --paginate --slurp "repos/$OWNER/$REPO/issues/$PR_NUM/comments" \
+  | jq 'add | [.[] | {id, user: .user.login, body: (.body[0:500])}]' \
   > "/tmp/pr-$PR_NUM.existing-issue-comments.json"
 
-gh api "repos/$OWNER/$REPO/pulls/$PR_NUM/reviews" \
-  --jq '[.[] | select(.body != "" and .body != null) | {id, user: .user.login, state, submitted_at, commit_id, body: (.body[0:800])}]' \
+gh api --paginate --slurp "repos/$OWNER/$REPO/pulls/$PR_NUM/reviews" \
+  | jq 'add | [.[] | select(.body != "" and .body != null) | {id, user: .user.login, state, submitted_at, commit_id, body: (.body[0:800])}]' \
   > "/tmp/pr-$PR_NUM.existing-reviews.json"
 ```
 
@@ -1091,7 +1091,7 @@ gh api "repos/$OWNER/$REPO/pulls/$PR_NUM/comments" \
   --jq '.html_url'
 ```
 
-Print the returned `html_url` so the user can verify. If `gh` returns `commit_id is not part of the pull request`, you used an abbreviated SHA; refetch the full SHA via `gh api repos/$OWNER/$REPO/pulls/$PR_NUM/commits --jq '.[-1].sha'`.
+Print the returned `html_url` so the user can verify. If `gh` returns `commit_id is not part of the pull request`, you used an abbreviated SHA; refetch the full SHA via `gh pr view $PR_NUM --repo $OWNER/$REPO --json headRefOid --jq .headRefOid`.
 
 **Append every approved comment to `references/examples.md`** so the corpus grows with the operator's actual voice. After a successful post, edit `~/.claude/skills/auto-new-day:pr-code-review/references/examples.md` to add the new entry under the matching category section (Correctness / Data model / Error handling / API surface / Pagination / Tests / Style nits). Format:
 
@@ -1219,7 +1219,7 @@ If the operator says "approve all" after a multi-PR run, do the bodiless approve
 
 ## Failure modes
 
-- **`gh` refuses `commit_id`**: you abbreviated the SHA. Use the full 40-char SHA from `gh api .../pulls/<N>/commits | jq '.[-1].sha'`.
+- **`gh` refuses `commit_id`**: you abbreviated the SHA. Use the full 40-char SHA from `gh pr view <N> --json headRefOid --jq .headRefOid` (the commits endpoint pages at 30, so `.[-1]` is wrong on longer PRs).
 - **`line` out of diff range**: GitHub rejects inline comments on lines GitHub doesn't show as changed. Either move the anchor to an actual `+` line, or fall back to a PR-level issue comment.
 - **Local clone missing**: clone into a checkout root the operator already uses (see Step 0b). Don't review from a worktree if the dev-env files may not be mirrored.
 - **PR force-pushed mid-review**: refetch `pr-<N>` (`git fetch origin pull/<N>/head:pr-<N> -f`), re-run Step 1 to get the new HEAD SHA, and warn the user that prior posted comments may now be on stale lines.
