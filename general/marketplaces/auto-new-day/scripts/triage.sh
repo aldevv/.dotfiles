@@ -13,7 +13,7 @@
 #
 # Bucket-specific logic:
 #
-#   inreview          own actionable PRs (fix-bug-work dispatches)
+#   inreview          own actionable PRs (the fix-bug wrapper dispatches)
 #     discard cases : ticket-left-status, reassigned, pr-merged, pr-closed
 #     resume        : marker exists + prior manifest + local HEAD unchanged
 #                     + branch NOT pushed
@@ -23,7 +23,7 @@
 #     resume        : marker exists + prior manifest + local HEAD unchanged
 #                     + branch not pushed + no PR linked yet
 #
-#   inreview-others   teammate PRs queued for /pr-code-review-work
+#   inreview-others   teammate PRs queued for the review wrapper skill
 #     discard cases : pr-merged, pr-approved-by-authoritative-approver
 #     resume        : marker exists + prior manifest + PR branchSha unchanged
 #
@@ -73,8 +73,8 @@ Options:
   --linear-status <s>     Current Linear status (for own-work discard cases)
   --linear-assignee <a>   Current assignee id/login/name (for reassignment discard)
   --me-linear <id>        Current user's Linear id (compared vs --linear-assignee)
-  --state-json <path>     Path to state.json  (default ~/work/.auto-new-day/state.json)
-  --dates-dir <path>      Path to dates dir   (default ~/work/.auto-new-day/dates)
+  --state-json <path>     Path to state.json  (default <state_dir>/state.json)
+  --dates-dir <path>      Path to dates dir   (default <state_dir>/dates)
   --today <YYYY-MM-DD>    Override "today"    (default: today's date)
   --force                 Bypass discard+resume; always emit "dispatch"
 

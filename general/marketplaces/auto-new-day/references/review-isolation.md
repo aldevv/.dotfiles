@@ -16,9 +16,9 @@ A review written by a context that already holds the implementation (the plan, t
 A validator that saw the reviewer's reasoning (or wrote the code) confirms instead of checking.
 
 - **Validators are always `Agent(...)` spawns, distinct from the reviewer agent and from each other.** That holds with or without `--no-subagents`.
-- **The validator prompt carries only:** the claim as one sentence, its `file:line` anchor, the diff path, and the check to run (doc fetch, code path trace, local reproduction, spec quote). Leave out the reviewer's confidence, its argument, other validators' verdicts, and the severe-findings examples (they bias toward "yes, severe").
+- **The validator prompt carries only:** the claim as one sentence, its `file:line` anchor, the diff path, and the check to run (doc fetch, code path trace, local reproduction, spec quote). Leave out the reviewer's evidence level, its argument, other validators' verdicts, and the severe-findings examples (they bias toward "yes, severe").
 - **With `--no-subagents`**, a validation pass is **one** fresh validator agent that checks the whole finding list. Run `VALIDATION_PASSES` (default 3, `passes=<N>` clamps to 2..5) passes as separate agents, never inline. Do not give pass N the verdicts of passes 1..N-1.
-- **`✓N` counts independent validator agents that agreed.** A same-session recheck counts for nothing. If a pass flips a verdict, surface the disagreement and lower the confidence, never average it away.
+- **`✓N` counts independent validator agents that agreed** (per-level breakdown per `~/.claude/rules/review.md`). A same-session recheck counts for nothing. If a pass flips a verdict, surface the disagreement and downgrade the evidence level, never average it away.
 
 ### Allowed exceptions
 

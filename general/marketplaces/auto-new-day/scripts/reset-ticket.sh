@@ -14,9 +14,9 @@
 # re-dispatch.
 #
 # Usage:
-#   reset-ticket.sh CXH-1234            # nuke today's artifacts + state.json
-#   reset-ticket.sh CXH-1234 --date <d> # nuke <d>'s artifacts + state.json
-#   reset-ticket.sh --dry-run CXH-1234  # show what WOULD be removed; touches nothing
+#   reset-ticket.sh ABC-123            # nuke today's artifacts + state.json
+#   reset-ticket.sh ABC-123 --date <d> # nuke <d>'s artifacts + state.json
+#   reset-ticket.sh --dry-run ABC-123  # show what WOULD be removed; touches nothing
 #
 # Always safe to re-run; missing files are fine.
 
@@ -43,7 +43,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-[ -n "$TICKET" ] || { echo "reset-ticket.sh: need a ticket id (e.g. CXH-1234)" >&2; exit 2; }
+[ -n "$TICKET" ] || { echo "reset-ticket.sh: need a ticket id (e.g. ABC-123)" >&2; exit 2; }
 
 if [ -n "$DATE_PHRASE" ]; then
   TARGET_DATE=$("$SCRIPTS_DIR/resolve-date.sh" $DATE_PHRASE) || exit 1
@@ -68,7 +68,7 @@ for repo in "$WORKING_ROOT"/*/; do
     done
   done
 done
-# Fallback marker dir (used for newconnector tickets where the repo doesn't
+# Fallback marker dir (used for new-item tickets where the repo doesn't
 # exist yet).
 fallback="$STATE_ROOT/markers/inprogress/${TICKET}.md"
 [ -f "$fallback" ] && TARGETS+=("$fallback")

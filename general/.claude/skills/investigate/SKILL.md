@@ -38,7 +38,7 @@ Before spawning any agents, decide how many to launch based on three signals:
 | Signal | 1 agent | 3 agents | 6 agents | 12 agents |
 |---|---|---|---|---|
 | **Scope** | Single public fact, quote, or well-known doc page | Single field, object, or rule | One API surface (several related fields/endpoints) | Multiple APIs, versions, or vendor layers |
-| **Confidence needed** | Sanity check, no real risk | Low-stakes clarification | Implementation decision | Critical correctness (security, data loss, billing) |
+| **Evidence needed** | Sanity check, no real risk | Low-stakes clarification | Implementation decision | Critical correctness (security, data loss, billing) |
 | **Contradiction risk** | None expected, one canonical source | Source is likely authoritative and unambiguous | Some community vs. official doc tension possible | Known divergence between versions, SDKs, or regions |
 
 Default to 3. Drop to 1 for trivially simple lookups: a single public fact, a quote from a known
@@ -246,16 +246,16 @@ Each agent prompt must include:
 ```
 Return:
 - ANSWER: one-paragraph direct answer (or "not found" if nothing useful was found)
-- CONFIDENCE: Definitive | Likely | Unconfirmed | Contradicted, PLUS a numeric percentage 0–100
-  (e.g. "Likely (~80%)"). If the answer has multiple sub-claims, give per-claim numbers too.
+- EVIDENCE: Definitive | Likely | Unconfirmed | Contradicted, PLUS the evidence level reached per
+  claim (`cited` / `traced` / `inferred` / `unverified`, per `~/.claude/rules/review.md` section
+  "Evidence level and verification count"). If the answer has multiple sub-claims, label each.
 - SOURCES: bulleted list of URLs with a one-line description of what each confirms
 - CONTRADICTIONS: any conflicting claims found (empty if none)
 ```
 
-The numeric percentage is mandatory. Map the label to an honest number — don't just pick the
-midpoint of the band. If the strongest source is an official spec corroborated by working code,
-that's ~95%. If it's one community blog post and nothing else, that's ~40%. Surface uncertainty
-in the number; the synthesizer aggregates these across agents.
+The evidence level is mandatory. Docs and spec claims need `cited` (URL or file:line); a claim
+backed only by community posts is `inferred`. Surface uncertainty in the level; the synthesizer
+aggregates these across agents.
 
 ## Step 5 — Synthesize
 
@@ -284,23 +284,21 @@ After the verdict line, add the rest of the report:
    - Complex (multiple layers, caveats, version differences): a short prose paragraph plus
      a caveats sub-section. Still aim for under 150 words total.
 
-   **Every claim (or sub-claim if the answer is multi-part) gets a numeric confidence in parentheses immediately after it**, e.g. "POST body is a JSON array (~98%)" or "last-Owner deletion returns 400 (~50%)". The headline confidence (top-of-report) is the lowest per-claim number — never average. If the user can only act on one sentence, they need to see the weakest link.
+   **Every claim (or sub-claim if the answer is multi-part) gets an evidence level in parentheses immediately after it**, e.g. "POST body is a JSON array (cited)" or "last-Owner deletion returns 400 (inferred)". The headline evidence (top-of-report) is the weakest per-claim level — never average. If the user can only act on one sentence, they need to see the weakest link.
 
 2. **Sources** — bulleted list; every claim must trace to at least one URL. No source = omit
    the claim.
 3. **Caveats** (only if present) — things that might invalidate the answer in specific
    contexts (version, region, plan tier, etc.).
 
-**Confidence label + percentage rules:**
+**Label rules** (evidence levels are defined in `~/.claude/rules/review.md`, section "Evidence level and verification count"):
 
-| Label | Numeric band | When to use |
-|---|---|---|
-| **Definitive** | 90–100% | Multiple independent sources agree AND at least one is official docs / official SDK / canonical implementation, with no counter-evidence. |
-| **Likely** | 65–90% | One authoritative source + corroborating community evidence; no hard contradictions; or a canonical implementation but no live test. |
-| **Unconfirmed** | 30–65% | Community-only source, OR one source with no corroboration, OR contradictory third-party guides. |
-| **Contradicted** | 0–30% | Sources disagree. Surface BOTH claims with their sources; do NOT pick a winner — tell the user to verify. |
-
-Pick the number honestly inside the band. Don't anchor to the midpoint just because the band is wide. "I read it on one blog" is 35%, not 50%. "Official spec + working SDK code + a fixture" is 95%, not 80%. The number is supposed to be lossy compression of "what would I bet that this is right" — if you wouldn't bet your salary at 95%, write 80%.
+| Label | When to use |
+|---|---|
+| **Definitive** | Multiple independent sources agree AND at least one is official docs / official SDK / canonical implementation, with no counter-evidence. |
+| **Likely** | One authoritative source + corroborating community evidence; no hard contradictions; or a canonical implementation but no live test. |
+| **Unconfirmed** | Community-only source, OR one source with no corroboration, OR contradictory third-party guides. |
+| **Contradicted** | Sources disagree. Surface BOTH claims with their sources; do NOT pick a winner — tell the user to verify. |
 
 Never suppress a contradiction to make the answer look cleaner. Never round up to make the report look more decisive.
 
@@ -316,7 +314,7 @@ File format:
 ```markdown
 # <question>
 
-_Investigated: <date> | Headline confidence: <label> (~NN%) | Agents: <count>_
+_Investigated: <date> | Headline evidence: <label> (<level>) | Agents: <count>_
 
 ## Answer
 
@@ -338,9 +336,9 @@ the global gitignore (`.investigations/`).
 
 After saving, check whether the findings are *testable* against reality cheaply. If yes,
 run the test now and append the results to the saved file under a `## Live validation
-(<date>)` section. Bump each finding's confidence percentage based on what the live test
-showed (confirmed → 95–100%; refuted → flip the claim and note the refutation; partial →
-narrow the % toward the band that matches the new evidence).
+(<date>)` section. Raise each finding's evidence level based on what the live test
+showed (confirmed → `reproduced`; refuted → flip the claim and note the refutation; partial →
+narrow the claim to what the run showed).
 
 Skip this step entirely when the question was inherently non-testable: a definition,
 a policy decision, a historical fact, a "should we do X" question, anything where there
@@ -361,15 +359,15 @@ Skip when ANY of these hold:
   last Owner of a real tenant).
 - The test would touch a shared / production system without isolation.
 - The user is just doing background reading and hasn't asked for a decision.
-- The findings are already at 95%+ from independent sources AND the marginal cost of
+- The findings are already `cited` by independent sources AND the marginal cost of
   doubt is small.
 
 If you're unsure, ask the user with one short question rather than skipping silently.
 
 ### How to run the test
 
-Pick the smallest test that disambiguates the lowest-confidence finding(s) first. Don't
-test the 95% claims to "be thorough" — test the 50% claim that will actually change
+Pick the smallest test that disambiguates the weakest-evidence finding(s) first. Don't
+test the `cited` claims to "be thorough" — test the `inferred` claim that will actually change
 behavior.
 
 Common test shapes:
@@ -416,10 +414,10 @@ Ran against <tenant / system identifier>. Token / scope / environment:
 <one line of context — e.g. "Reader-scoped LD token, free-tier tenant">.
 
 **Confirmed:**
-- <claim>: <one-line summary of probe + result> → confidence now ~NN% (was ~MM%).
+- <claim>: <one-line summary of probe + result> → now `reproduced` (was <old level>).
 
 **Refuted / corrected:**
-- <claim>: <real behavior>; updating finding to <new claim> (~NN%).
+- <claim>: <real behavior>; updating finding to <new claim> (`reproduced`).
 
 **Could not test:**
 | Probe | Reason |
@@ -435,7 +433,7 @@ reader what's still soft.
 
 ### Re-state the verdict if anything moved
 
-If the live run flipped a high-confidence finding, update the headline verdict at the
+If the live run flipped a well-evidenced finding, update the headline verdict at the
 top of the saved file in place (don't just append a contradiction). The file should
 read top-to-bottom as the current best answer; the live-validation section is the
 audit trail.

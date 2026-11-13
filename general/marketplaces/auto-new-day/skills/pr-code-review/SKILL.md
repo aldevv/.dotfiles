@@ -1,26 +1,26 @@
 ---
 name: pr-code-review
-description: Multi-angle review of one OR more GitHub PRs. The coordinator adaptively picks an agent count between 1 and 12 plus an effort tier (low / medium / high) per PR based on the PR's scope, importance, and complexity — a one-file typo gets 1 agent at low effort; a security-sensitive multi-file refactor gets 10-12 at high effort. The user can still override with `count=<N>` or a leading integer. Loads applicable CLAUDE.md / CLAUDE.local.md / lazy rules from cwd, walking up to home, before fanning out, and passes the loaded rules to every subagent. After the review agents return, spawns a second parallel verification pass that has DIFFERENT subagents fact-check every factual claim. BLOCKER and MAJOR findings MUST be verified by public-doc fetch, local reproduction on the checked-out PR branch, or runtime-path trace through code; the "very obvious from the diff" escape hatch requires the verifier to state explicitly that no extra verification was needed. Each consolidated finding ships with a confidence percentage (0-100%), a ✓ marker, and the verification mode used. Opens Hunk with ALL findings attached first, then asks the operator a yes/no whether to reduce to the most important + highest-confidence findings (the skill picks an integer between 1 and 5 based on confidence and importance), then walks each surviving finding with the user for Yes-post / Edit / Skip. Trigger on "/auto-new-day:pr-code-review <pr-or-list>", "code review this PR with N subagents", "review these PRs with subagents", "do a multi-angle review of PR #N", or any explicit request to deeply review one or more PRs. Use `pr-code-review` for explicit PRs with operator-in-the-loop comment posting. Sibling skills (project-scoped batch drivers like `pr-code-review-all`) call this skill under the hood.
+description: Multi-angle review of one OR more GitHub PRs. The coordinator adaptively picks an agent count between 1 and 12 plus an effort tier (low / medium / high) per PR based on the PR's scope, importance, and complexity — a one-file typo gets 1 agent at low effort; a security-sensitive multi-file refactor gets 10-12 at high effort. The user can still override with `count=<N>` or a leading integer. Loads applicable CLAUDE.md / CLAUDE.local.md / lazy rules from cwd, walking up to home, before fanning out, and passes the loaded rules to every subagent. After the review agents return, spawns a second parallel verification pass that has DIFFERENT subagents fact-check every factual claim. BLOCKER and MAJOR findings MUST be verified by public-doc fetch, local reproduction on the checked-out PR branch, or runtime-path trace through code; the "very obvious from the diff" escape hatch requires the verifier to state explicitly that no extra verification was needed. Each consolidated finding ships with an evidence level, a `✓N` marker, and the verification mode used (per `~/.claude/rules/review.md`). Opens Hunk with ALL findings attached first, then asks the operator a yes/no whether to reduce to the most important + best-evidenced findings (the skill picks an integer between 1 and 5 based on evidence and importance), then walks each surviving finding with the user for Yes-post / Edit / Skip. Trigger on "/auto-new-day:pr-code-review <pr-or-list>", "code review this PR with N subagents", "review these PRs with subagents", "do a multi-angle review of PR #N", or any explicit request to deeply review one or more PRs. Use `pr-code-review` for explicit PRs with operator-in-the-loop comment posting. Sibling skills (project-scoped batch drivers in a domain pack) call this skill under the hood.
 argument-hint: <pr-or-list> [count=<N>] [--no-subagents] (e.g. https://github.com/owner/repo/pull/80, "owner/repo#80 owner/other-repo#42 count=9", or "9 <url1> <url2>"). `--no-subagents` (or `NO_SUBAGENTS=1` in env) runs one isolated reviewer agent and one isolated validator agent per pass instead of the full fan-out: cheaper, still a fresh context each.
 ---
 
 # pr-code-review
 
-Multi-PR multi-angle review with verified findings, confidence scoring, and operator-in-the-loop comment posting. One or more PRs per invocation. Each subagent flags only issues anchored to `+` lines in the diff. Each factual claim is independently fact-checked by a different subagent before the operator sees the table. The operator approves each finding before it lands on the PR.
+Multi-PR multi-angle review with verified findings, evidence levels, and operator-in-the-loop comment posting. One or more PRs per invocation. Each subagent flags only issues anchored to `+` lines in the diff. Each factual claim is independently fact-checked by a different subagent before the operator sees the table. The operator approves each finding before it lands on the PR.
 
 Re-review awareness: each review appends a short entry to a per-PR log. When a PR is reviewed again, the skill reads that file first, so the next pass knows which lines were already commented on, which findings were filtered as FALSE, and what HEAD SHA the last review saw. That lets the new run focus on what changed since then rather than re-litigating settled ground.
 
 The log's location depends on where the operator invoked the skill (`INVOKED_FROM`, captured at Step 0a):
 - **Invoked inside a git repo** (`INVOKED_FROM` resolves under any `.git` directory) → log lives at `$REPO_DIR/.pr/$PR_NUM.md`. One folder per repo; one file per PR.
-- **Invoked outside any git repo** (typical: `~/work`, `~/repos`, a multi-repo coordinator dir) → log lives at `$INVOKED_FROM/.pr/$REPO/$PR_NUM.md`. One `.pr/` folder collecting every reviewed repo as a subdirectory; one file per PR.
+- **Invoked outside any git repo** (typical: `<working_root>`, a multi-repo coordinator dir) → log lives at `$INVOKED_FROM/.pr/$REPO/$PR_NUM.md`. One `.pr/` folder collecting every reviewed repo as a subdirectory; one file per PR.
 
-The repo-local layout keeps the log next to its repo. The parent-folder layout keeps cross-repo reviews grouped together, which is the common case when batch-reviewing PRs from a multi-repo home like `~/work`.
+The repo-local layout keeps the log next to its repo. The parent-folder layout keeps cross-repo reviews grouped together, which is the common case when batch-reviewing PRs from a multi-repo home like `<working_root>`.
 
 See `references/examples.md` for sample findings, comment phrasing, and ask/post loop output.
 
 ## CRITICAL: Decide, don't punt
 
-Before handing a fork to the operator (a review comment you might disagree with, two rules that conflict, an open behavior question), run every check you have yourself (docs, a live or mock repro, the code path, a second agent tasked to confirm the other side), then decide, act, and report the decision with confidence and evidence. Escalate only what evidence can't settle or what the operator owns (scope, priority, approvals), and still bring a recommended answer. Rule + spot examples: `~/marketplaces/auto-new-day/references/decide-dont-punt.md`.
+Before handing a fork to the operator (a review comment you might disagree with, two rules that conflict, an open behavior question), run every check you have yourself (docs, a live or mock repro, the code path, a second agent tasked to confirm the other side), then decide, act, and report the decision with its evidence level. Escalate only what evidence can't settle or what the operator owns (scope, priority, approvals), and still bring a recommended answer. Rule + spot examples: `~/marketplaces/auto-new-day/references/decide-dont-punt.md`.
 
 ## CRITICAL: Isolated reviewers and validators (always, including `--no-subagents`)
 
@@ -29,7 +29,7 @@ Follow `../../references/review-isolation.md` (resolve it from this skill's base
 - **Reviewers** (Step 3) are always fresh `Agent(...)` spawns whose prompt carries only the diff, the changed-file list, the PR title/body, the loaded rules, the lens briefs, and the severe-findings few-shot block. Never the coordinator's own notes about the PR.
 - **Validators** (Step 4) are always fresh `Agent(...)` spawns, distinct from every reviewer and from each other, given only the claim, its `file:line`, the diff path and the check to run. No reviewer reasoning, no other verdicts, no few-shot block.
 - **`--no-subagents` / `NO_SUBAGENTS=1` reduces the count, not the isolation:** Step 3 becomes ONE isolated reviewer agent that runs every chosen lens in order, and Step 4 becomes `VALIDATION_PASSES` (default 3, `passes=<N>` clamps to 2..5) separate validator agents, each checking the whole finding list blind to the other passes. `auto-new-day` sets it by default; its `--fast` flag suppresses it. Inline same-session checks never count toward `✓N`.
-- If a pass flips a verdict, surface the disagreement in Step 5 and lower the confidence, never average it. BLOCKER and MAJOR findings always get the full pass count; MINOR may cap at 2 passes with `--fast-minor`. Step 5a's approve confidence is computed after all passes and scaled down when they disagreed.
+- If a pass flips a verdict, surface the disagreement in Step 5 and downgrade the evidence level, never average it. BLOCKER and MAJOR findings always get the full pass count; MINOR may cap at 2 passes with `--fast-minor`. Step 5a's approve verdict is picked after all passes, using the downgraded level for any finding the passes disagreed on.
 - If this skill is itself running inside a subagent (cannot spawn), do the work inline and mark everything `✓0 (not isolated)`.
 - **Severe-findings loop:** read the top 20 entries of the nearest `.claude/review-examples/severe.md` (section 5 of the reference) into every reviewer prompt, and at Step 5c record each BLOCKER/MAJOR that ended `✓2` or better.
 
@@ -134,12 +134,12 @@ Then resolve the canonical log root once and remember it for every PR in the bat
 
 ```bash
 # Resolve the target date once (--date arg or today).
-SCRIPTS="$HOME/work/.claude/skills/auto-new-day/scripts"
+SCRIPTS="${AUTO_NEW_DAY_SCRIPTS_DIR:-${CLAUDE_PLUGIN_ROOT}/scripts}"
 DATE=$("$SCRIPTS/resolve-date.sh" ${DATE_ARG:-today})
 
 # If INVOKED_FROM is inside any git repo, per-repo layout wins (one
 # .inreview/<DATE>/auto-new-day:pr-code-review/ folder next to each repo's code).
-# Otherwise, treat INVOKED_FROM as a multi-repo parent (e.g. ~/work) and
+# Otherwise, treat INVOKED_FROM as a multi-repo parent (e.g. <working_root>) and
 # group all PR logs under <INVOKED_FROM>/.inreview/<DATE>/auto-new-day:pr-code-review/<repo>/.
 if git -C "$INVOKED_FROM" rev-parse --show-toplevel >/dev/null 2>&1; then
   PR_LOG_LAYOUT="per-repo"
@@ -149,7 +149,7 @@ else
 fi
 ```
 
-State the chosen layout in chat ("PR review logs will land under `~/work/.inreview/<DATE>/auto-new-day:pr-code-review/<repo>/<N>.md` because cwd is not in a git repo.") so the operator can interrupt and override if the auto-detection picked wrong. (Note: this used to be a separate `.pr/` folder; it now lives under `.inreview/<DATE>/auto-new-day:pr-code-review/` so auto-new-day's per-date archive picks it up automatically — `/auto-new-day --date X` replays this report with zero copy-around.)
+State the chosen layout in chat ("PR review logs will land under `<working_root>/.inreview/<DATE>/auto-new-day:pr-code-review/<repo>/<N>.md` because cwd is not in a git repo.") so the operator can interrupt and override if the auto-detection picked wrong. (Note: this used to be a separate `.pr/` folder; it now lives under `.inreview/<DATE>/auto-new-day:pr-code-review/` so auto-new-day's per-date archive picks it up automatically — `/auto-new-day --date X` replays this report with zero copy-around.)
 
 Also resolve the operator's own GitHub login once. Step 5's author-aware overlap tagging uses it to tell apart comments the operator wrote (tag `overlap=self-silent` for insist, `overlap=self-engaged` for lower-default) from comments other humans wrote (tag `overlap=external-human`) and from bot comments (tag `overlap=external-bot`). No overlap ever silently drops a finding; every consolidated finding still ships to Hunk in Step 6b with its tag in the summary prefix. The operator makes the drop decision in Step 8.
 
@@ -196,7 +196,7 @@ After Step 0b resolves `$REPO_DIR`, check for review criteria the repo ships for
 
 For each PR, the diff and the inline-comment workflow both need a local clone. The skill first looks for an existing checkout in the common locations, and only clones if none is found.
 
-When a clone IS needed, the destination depends on whether the operator is currently working in a "work" context. Detection is based on `pwd`: if the current directory is inside `${WORK:-$HOME/work}` or `$HOME/worktrees/work`, the operator is working on work repos, so the clone lands under `${WORK:-$HOME/work}/$REPO`. Otherwise it lands under `${PROJECTS:-$HOME/repos}/$REPO`. This avoids dropping a work repo into the personal tree (or vice versa) just because the operator happens to be elsewhere when they kick off a review.
+When a clone IS needed, the destination depends on whether the operator is currently working in a "work" context. Detection is based on `pwd`: if the current directory is inside the configured work root (or its worktrees dir), the operator is working on work repos, so the clone lands under `<work_root>/$REPO`. Otherwise it lands under `${PROJECTS:-$HOME/repos}/$REPO`. This avoids dropping a work repo into the personal tree (or vice versa) just because the operator happens to be elsewhere when they kick off a review.
 
 ```bash
 # Existing-checkout search: any of these wins.
@@ -328,7 +328,7 @@ Classification rules:
 
 If unsure, lean toward REFACTOR. The cost of missing a logic bug in a refactor is small (the bug existed pre-PR or was forced by the move); the cost of dumping six logic findings on a refactor PR is real damage to the reviewer's relationship with the author.
 
-**Worked example (the one this skill is calibrated against).** PR description: "Containerizes the baton-panda-doc connector ... Migrated to ConnectorBuilderV2 / ResourceSyncerV2 ... Replaced in-memory user cache with session store ... Added workspace session cache: workspaces are written to the session store page-by-page during the List phase." Diff: 11 files, ~573 lines, all SDK signature migrations + relocation of `cacheUsers` (deleted) into `getUsersFromSession`/`fetchAllUsers` (added) + relocation of `roleBuilder.GetWorkspaces` (deleted) into `getWorkspacesFromSession`/`fetchAllWorkspaces` (added) + new metadata config options. **Classification: REFACTOR.** Wrong-classification findings that should NOT have been raised: "session-store errors lack connector prefix" (the pre-PR `cacheUsers` had the same bareness), "removing usersMtx introduces a double-drain race" (the mutex was removed BECAUSE of the lambda compatibility requirement that drives the entire refactor; the race is a consequence of the forced move, not a logic bug to fix on this PR), "per-page cache writes + non-empty short-circuit could expose partial cache" (this is the implementation of the move itself). Correct findings: orphan `ValidateConfig` left behind after its only caller was deleted (move debris).
+**Worked example (the one this skill is calibrated against).** PR description: "Containerizes the repo-a service ... Migrated to the v2 builder/syncer interfaces ... Replaced in-memory user cache with session store ... Added workspace session cache: workspaces are written to the session store page-by-page during the List phase." Diff: 11 files, ~573 lines, all SDK signature migrations + relocation of `cacheUsers` (deleted) into `getUsersFromSession`/`fetchAllUsers` (added) + relocation of `roleBuilder.GetWorkspaces` (deleted) into `getWorkspacesFromSession`/`fetchAllWorkspaces` (added) + new metadata config options. **Classification: REFACTOR.** Wrong-classification findings that should NOT have been raised: "session-store errors lack connector prefix" (the pre-PR `cacheUsers` had the same bareness), "removing usersMtx introduces a double-drain race" (the mutex was removed BECAUSE of the lambda compatibility requirement that drives the entire refactor; the race is a consequence of the forced move, not a logic bug to fix on this PR), "per-page cache writes + non-empty short-circuit could expose partial cache" (this is the implementation of the move itself). Correct findings: orphan `ValidateConfig` left behind after its only caller was deleted (move debris).
 
 In REFACTOR mode, the finding bar is: "would this break, or has this already broken, something that worked pre-PR?" If the answer is no, drop it.
 
@@ -421,7 +421,7 @@ Each prompt MUST include this hard constraint verbatim:
 
 Each prompt MUST include this verification preamble verbatim:
 
-> **VERIFICATION RULE:** every claim you make about runtime behavior, framework / SDK behavior, vendor API, or rule violation will be re-checked by a different subagent. Do NOT assert behavior you have not directly traced in the code or read in the spec. If you are uncertain, say so explicitly with a confidence percentage (0-100%) on the finding. Confidence below 60% should not be a finding. It's a question; reword as "verify this against X" rather than asserting the bug.
+> **VERIFICATION RULE:** every claim you make about runtime behavior, framework / SDK behavior, vendor API, or rule violation will be re-checked by a different subagent. Do NOT assert behavior you have not directly traced in the code or read in the spec. State the evidence level you reached on each finding (`traced` / `cited` / `inferred` / `unverified`, per `~/.claude/rules/review.md` section "Evidence level and verification count"). An `inferred` or `unverified` claim is not a finding. It's a question; reword as "verify this against X" rather than asserting the bug.
 >
 > **In-code comments claiming a runtime lacks a capability** ("this runtime has no X", "X isn't available", "the interpreter doesn't expose Y") are snapshots, not facts. When such a comment justifies a design choice on the PR (e.g. "we use Math.random because goja has no Web Crypto"), feature-detect (`typeof X === "function"` probe or upstream API grep) before treating the comment as evidence. If the capability is actually present, that's a MAJOR finding — the design choice is defending against a constraint that no longer exists.
 
@@ -473,13 +473,13 @@ The six standing angles (specialize each prompt around the PR's actual content, 
 
 Severity tiers across all six: **BLOCKER / MAJOR / MINOR**.
 
-Each finding now also carries an **agent-side confidence percentage (0-100%)**. The agent reports its own initial estimate; the verification step in Step 4 either confirms (✓) or revises it. The output shape per finding is:
+Each finding now also carries an **agent-side evidence level**. The agent reports the level it reached; the verification step in Step 4 either confirms it or revises it. The output shape per finding is:
 
 ```
 {
   "agent": "<angle name>",
   "severity": "BLOCKER|MAJOR|MINOR",
-  "confidence_pct": 0-100,
+  "evidence": "traced|cited|inferred|unverified",
   "file": "path/to/file.go",
   "line": 67,
   "excerpt": "<the + line>",
@@ -552,7 +552,7 @@ When spawned, the agent's prompt is:
 >
 > Use WebFetch / WebSearch against the official vendor docs and OpenAPI / Postman spec. Do NOT pattern-match from REST conventions or sibling projects; cite the actual spec for every claim.
 >
-> **HARD CONSTRAINT + VERIFICATION RULE** (same as the other agents): every finding must anchor to a `+` line in `/tmp/pr-<N>.diff`, must include a confidence percentage, and will be re-checked by a separate verifier subagent. Report `file:line` + `+` excerpt + 1-3 sentence issue + concrete fix + the doc URL that proves your claim. Severity: BLOCKER (URL / method / required-field wrong, doesn't exist) / MAJOR (optional-field mismatch, header missing, payload shape drift) / MINOR (naming nit, missing-but-unused field). Under 600 words.
+> **HARD CONSTRAINT + VERIFICATION RULE** (same as the other agents): every finding must anchor to a `+` line in `/tmp/pr-<N>.diff`, must include an evidence level, and will be re-checked by a separate verifier subagent. Report `file:line` + `+` excerpt + 1-3 sentence issue + concrete fix + the doc URL that proves your claim. Severity: BLOCKER (URL / method / required-field wrong, doesn't exist) / MAJOR (optional-field mismatch, header missing, payload shape drift) / MINOR (naming nit, missing-but-unused field). Under 600 words.
 
 This agent's output merges into the consolidated punch-list at Step 5 just like the others.
 
@@ -562,32 +562,31 @@ Once all review agents return, **spawn at least one verification agent per findi
 
 ### Verifier count scales with importance
 
-Don't use a single verifier for every finding. The coordinator picks the count per finding based on severity and the agent's reported confidence:
+Don't use a single verifier for every finding. The coordinator picks the count per finding based on severity:
 
 | Original finding                                  | Verifiers to spawn |
 | ------------------------------------------------- | ------------------ |
-| BLOCKER, any confidence                           | **3 verifiers** (consensus check)   |
-| MAJOR with agent confidence ≥ 80%                 | **2 verifiers**                     |
-| MAJOR with agent confidence 60-79%                | **1 verifier**                      |
-| MINOR, any confidence                             | **1 verifier**                      |
+| BLOCKER                                           | **3 verifiers** (consensus check)   |
+| MAJOR                                             | **2 verifiers**                     |
+| MINOR                                             | **1 verifier**                      |
 | Any finding that makes a CLAUDE.md-rule claim     | **+1 extra** (one verifier reads the rule file independently) |
 | Any finding citing vendor API behavior            | **+1 extra** (one verifier fetches the doc independently)     |
 
-The "+1 extra" stacks on top of the base count, so a BLOCKER that asserts framework retry behavior gets 3 base + 1 source-reader = 4 verifiers; a MAJOR that asserts an OpenAPI shape gets 2 base + 1 doc-fetcher = 3.
+The "+1 extra" stacks on top of the base count, so a BLOCKER that asserts framework retry behavior gets 3 base + 1 source-reader = 4 verifiers; a MAJOR that asserts an OpenAPI shape gets 2 base + 1 doc-fetcher = 3. Agreement among verifiers who only `traced` is weaker than one `reproduced` (`~/.claude/rules/review.md`).
 
-Fire all verifiers across all findings in ONE message. A PR with 5 findings (1 BLOCKER, 2 MAJOR-high, 2 MINOR) plus one CLAUDE-rule claim and one vendor-API claim → 3 + 2+2 + 1+1 + 1 + 1 = 11 verifiers in parallel.
+Fire all verifiers across all findings in ONE message. A PR with 5 findings (1 BLOCKER, 2 MAJOR, 2 MINOR) plus one CLAUDE-rule claim and one vendor-API claim → 3 + 2+2 + 1+1 + 1 + 1 = 11 verifiers in parallel.
 
 ### Aggregating multi-verifier results
 
-When multiple verifiers cover one finding, aggregate by majority + confidence:
+When multiple verifiers cover one finding, aggregate by majority:
 
-- **All verifiers VERIFIED** → final confidence = mean of verifier confidences, marker = `✓<N>` (N = total verifiers, ALL agreeing).
-- **Majority VERIFIED, minority NUANCED** → final confidence = mean of VERIFIED verifiers, marker = `✓<K>/<N>` (K = VERIFIED count, N = total verifiers); body must mention the nuance from the dissenting verifier.
-- **Split (50/50 VERIFIED vs FALSE/NUANCED<60%)** → DROP the finding; log the disagreement in `/tmp/pr-<N>-verification.md` so the operator can review.
+- **All verifiers VERIFIED** → final evidence = the strongest level any verifier reached, marker = `✓<N>` (N = total verifiers, ALL agreeing) plus the per-level breakdown.
+- **Majority VERIFIED, minority NUANCED** → final evidence = the strongest level among VERIFIED verifiers, marker = `✓<K>/<N>` (K = VERIFIED count, N = total verifiers); body must mention the nuance from the dissenting verifier.
+- **Split (no VERIFIED majority, the rest FALSE or NUANCED)** → keep ONLY if at least one VERIFIED verifier reached `reproduced` or `cited` (a run or a spec quote outranks traced dissent); final evidence = that level, marker = `✓<K>/<N>`, and the body names the dissent. Otherwise DROP the finding. Either way, log the disagreement in `/tmp/pr-<N>-verification.md` so the operator can review.
 - **Majority FALSE** → DROP the finding.
 - **All FALSE** → DROP the finding without ambiguity.
 
-For a single-verifier finding (MINOR or MAJOR<80%), the rules from the previous spec apply unchanged: VERIFIED keeps it (marker = `✓1`), FALSE drops it, NUANCED ≥60% keeps it (marker = `✓1` with nuance in body), NUANCED <60% drops.
+For a single-verifier finding (MINOR), VERIFIED keeps it (marker = `✓1`), FALSE drops it, NUANCED at `traced` or stronger keeps it (marker = `✓1` with nuance in body), NUANCED at `inferred` or weaker drops.
 
 **Marker shape recap:** the operator should be able to glance at the marker and know how many independent subagents looked at the claim and how many agreed.
 - `✓1` — one verifier, agreed.
@@ -642,16 +641,18 @@ Each verifier prompt:
 > If the claim references a CLAUDE.md / project-rule, check the loaded CONTEXT_PACK; do not invent the rule.
 >
 > Return one of:
-> - **VERIFIED** + revised confidence (0-100%) + 1-2 sentences citing the evidence + `mode: <docs|repro|trace|obvious>` + `evidence: <doc URL | file:line chain | command + outcome | one-sentence justification>`
+> - **VERIFIED** + evidence level reached + 1-2 sentences citing the evidence + `mode: <docs|repro|trace|obvious>` + `evidence: <doc URL | file:line chain | command + outcome | one-sentence justification>`
 > - **FALSE** + 1-2 sentences explaining why the claim does not hold (with citation) + `mode: <…>` + `evidence: <…>`
-> - **NUANCED** + revised confidence + 1-2 sentences explaining the gap (e.g. "claim is true only when X; PR is in the X=false case") + `mode: <…>` + `evidence: <…>`
+> - **NUANCED** + evidence level reached + 1-2 sentences explaining the gap (e.g. "claim is true only when X; PR is in the X=false case") + `mode: <…>` + `evidence: <…>`
+>
+> Before verifying, read `~/.claude/rules/review.md` section "Evidence level and verification count". Report the evidence level you actually reached: reproduce runtime behavior (`mode: repro` = `reproduced`), cite API claims (`mode: docs` = `cited`), and say "not reproduced: <reason>" when you could only trace (`mode: trace` = `traced`).
 >
 > Word cap: 250 words.
 
-The verifier output sets the FINAL confidence percentage and the ✓ marker:
-- **VERIFIED** → final confidence = verifier's revised confidence, ✓ marker present.
-- **NUANCED** with confidence ≥ 60% → keep as a finding with verifier's confidence, ✓ marker present but the body must include the nuance.
-- **NUANCED** with confidence < 60% → drop the finding entirely. It's a question, not a bug.
+The verifier output sets the FINAL evidence level and the `✓N` marker:
+- **VERIFIED** → final evidence = the verifier's level, marker present.
+- **NUANCED** at `traced` or stronger → keep as a finding with the verifier's level, marker present but the body must include the nuance.
+- **NUANCED** at `inferred` or weaker → drop the finding entirely. It's a question, not a bug.
 - **FALSE** → drop the finding entirely. Do NOT surface it to the operator. Add a one-liner to the verification log so the operator can see what was filtered.
 
 The verification log lives at `/tmp/pr-<N>-verification.md` and is preserved for audit:
@@ -659,10 +660,10 @@ The verification log lives at `/tmp/pr-<N>-verification.md` and is preserved for
 ```
 ## Verification log for PR #<N>
 
-| Original Agent | Claim (short) | Verdict | Final Conf | Reason |
+| Original Agent | Claim (short) | Verdict | Final Evidence | Reason |
 | -------------- | ------------- | ------- | ---------- | ------ |
 | correctness    | un-coded error skips framework retry | FALSE | n/a | framework retry.go:60 only retries codes A+B |
-| api-surface    | endpoint X is v2-only                | VERIFIED | 88% | vendor docs confirm; PR docs.mdx also states |
+| api-surface    | endpoint X is v2-only                | VERIFIED | cited | vendor docs confirm; PR docs.mdx also states |
 ```
 
 This log is NOT shown to the operator inline (it'd be noise); only summarized in the final wrap.
@@ -672,13 +673,13 @@ This log is NOT shown to the operator inline (it'd be noise); only summarized in
 Now build the punch-list from surviving (VERIFIED + qualifying NUANCED) findings. For each:
 
 - `severity` (BLOCKER / MAJOR / MINOR)
-- `confidence_pct` (final, from verifier)
-- `verified` (always `true` here, since FALSE / <60% NUANCED were dropped. The ✓ goes on every surfaced finding by construction.)
+- `evidence` (final, from verifier)
+- `verified` (always `true` here, since FALSE / weak NUANCED were dropped. The ✓ goes on every surfaced finding by construction.)
 - `file`
 - `line` (post-image, must correspond to a `+` line in the diff)
 - `body` (the comment as it will be posted. See "Comment phrasing" below.)
 
-Dedupe overlapping findings across review agents on the same PR: two agents flagging the same line collapse to one row. Keep the higher severity and the higher final confidence. Use `references/examples.md` for examples of merged vs split findings.
+Dedupe overlapping findings across review agents on the same PR: two agents flagging the same line collapse to one row. Keep the higher severity and the stronger final evidence. Use `references/examples.md` for examples of merged vs split findings.
 
 **Author-aware overlap tagging** against `/tmp/pr-<N>.existing-comments.json`, `/tmp/pr-<N>.existing-issue-comments.json`, and `/tmp/pr-<N>.existing-reviews.json` from Step 1. For EVERY consolidated finding, scan all three sources — **including bot comments (Copilot, coderabbit, sourcery, greptile, DeepSource, sonarcloud, and any `*[bot]` login)** — for an entry that already raises the same concern. This is a HARD requirement: never surface a finding without running this check first, and never re-raise an issue a human developer or bot already flagged on this PR.
 
@@ -720,50 +721,26 @@ Comments are inline review notes, not essays. Match the operator's existing styl
 
 Examples in `references/examples.md`.
 
-## Step 5a. Compute "approve PR" confidence
+## Step 5a. Approve verdict (rule-based)
 
-After the punch-list is final (deduped per Step 5), compute a single 0-100% number per PR so the operator can tell at a glance whether it's safe to approve. The number IS opinionated: it weighs both severity and how much scrutiny each finding got.
+After the punch-list is final (deduped per Step 5), pick ONE tier per PR by walking these rules top-down; the first rule that matches wins. No score: self-scored percentages are uncalibrated (see `~/.claude/rules/review.md`). Severity and evidence levels come from that rule file.
 
-Formula. Start at 100 and deduct per surviving finding:
+| # | Rule (first match wins) | Tier |
+| - | ----------------------- | ---- |
+| 1 | Any surviving BLOCKER (any evidence level) | **DO NOT APPROVE YET** |
+| 2 | Any MAJOR at `reproduced` or `cited`, OR 3+ MAJORs at any level, OR any INSIST'd (re-flagged, still unaddressed) finding | **APPROVE WITH CAUTION** |
+| 3 | 1-2 MAJORs, all at `traced` / `inferred` | **APPROVE WITH NOTES** |
+| 4 | No BLOCKER or MAJOR (MINORs only, or empty punch-list) | **SAFE TO APPROVE** |
 
-```
-approve_pct = 100
+Adjustments, applied after the table:
+- If `OPERATOR_LOGIN == pr.author.login` (the operator is reviewing their own PR), drop the tier one level (you're biased).
+- A finding whose validation passes disagreed counts at its downgraded evidence level (Step 5 already downgrades it), never at the stronger one.
 
-for each finding in surviving_punch_list:
-  if finding.severity == "BLOCKER":
-    approve_pct -= 50              # one BLOCKER drops you under the "approve" line
-  elif finding.severity == "MAJOR":
-    if finding.final_confidence >= 80: approve_pct -= 15
-    else:                              approve_pct -= 7
-  elif finding.severity == "MINOR":
-    if finding.final_confidence >= 85 and finding.has_concrete_fix:
-      approve_pct -= 2
-    # else MINOR doesn't move the needle
-  if finding.insist:
-    approve_pct -= 5               # re-flagged unaddressed comment, extra weight
-
-approve_pct = max(0, approve_pct)
-```
-
-Bucket the number into a recommendation tier and include both the number and the tier in the report and the wrap:
-
-| approve_pct | Tier                         | What it means                                                                                  |
-| ----------- | ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| 81-100      | **SAFE TO APPROVE**          | Zero BLOCKERs, at most a couple of low-conf MAJORs / MINORs. The PR can land.                  |
-| 61-80       | **APPROVE WITH NOTES**       | MAJORs present but advisory. Author should glance at the comments; nothing blocks merge.       |
-| 31-60       | **APPROVE WITH CAUTION**     | Multiple MAJORs or one high-conf BLOCKER bordering. Address the listed items before merge.     |
-| 0-30        | **DO NOT APPROVE YET**       | BLOCKER(s) outstanding. Material issues to resolve first.                                      |
-
-Floor and ceiling rules:
-- ANY BLOCKER caps the tier at "APPROVE WITH CAUTION" or lower (a single 50%-confidence BLOCKER is still a BLOCKER; never silently downgrade because the math floats).
-- An empty punch-list (zero surviving findings) is always `approve_pct = 100`, tier "SAFE TO APPROVE".
-- If `OPERATOR_LOGIN == pr.author.login` (the operator is reviewing their own PR), drop the tier one level (you're biased; the math should reflect that).
-
-State the number and tier in chat once it's computed so the operator sees it before Hunk opens:
+State the tier and the rule that fired in chat so the operator sees it before Hunk opens:
 
 ```
-PR #<N> — approve_pct=<P>%  →  <TIER>
-  reasons: <X> BLOCKER(s), <Y> MAJOR(s), <Z> INSIST'd, <W> MINOR(s) over the bar
+PR #<N> → <TIER>  (rule <#>: <one-line reason>)
+  counts: <X> BLOCKER(s), <Y> MAJOR(s) (<k> reproduced/cited), <Z> INSIST'd, <W> MINOR(s)
 ```
 
 ## Step 5b. Persist the consolidated report
@@ -780,7 +757,7 @@ Before opening Hunk or asking the operator anything, write the full consolidated
 - `<pr-title-slug>` = sanitized PR title: lowercase, replace any non-alnum run with `-`, trim leading/trailing `-`, cap at 120 chars. Prefix with the PR number for uniqueness, suffix with `-full` to distinguish from the short per-PR log at `pr-<N>.md` (Step 5c).
 - The full report lives next to the per-PR log in the same per-date archive so auto-new-day's snapshot picks BOTH up — `/auto-new-day --date X` can replay the full review verbatim.
 
-Retired: the previous `${REVIEWS_DIR:-$HOME/.reviews}/<repo>/<DATE>/<author>/pr-<N>-<slug>.md` archive. It's been folded into the per-date in-repo archive so there's one source of truth. The `reviews` fzf util now points at `~/work/baton-*/.inreview/*/auto-new-day:pr-code-review/*.md` instead of `~/.reviews/`.
+Retired: the previous `${REVIEWS_DIR:-$HOME/.reviews}/<repo>/<DATE>/<author>/pr-<N>-<slug>.md` archive. It's been folded into the per-date in-repo archive so there's one source of truth. The `reviews` fzf util now points at `<working_root>/*/.inreview/*/auto-new-day:pr-code-review/*.md` instead of `~/.reviews/`.
 
 ```bash
 SLUG=$(jq -r '.title' "/tmp/pr-$PR_NUM.meta.json" \
@@ -796,7 +773,7 @@ REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG-full.md"
 
 1. Header line: `# PR #<N>: <title>` (title verbatim from `.title` in the meta.json).
 2. Metadata block listing, in this order:
-   - **Approve verdict** first: `Approve: <P>% — <TIER>` (e.g. `Approve: 72% — APPROVE WITH NOTES`). The verdict is the first line so a reader scanning the archive sees it before the finding details.
+   - **Approve verdict** first: `Approve: <TIER> (rule <#>)` (e.g. `Approve: APPROVE WITH NOTES (rule 3)`). The verdict is the first line so a reader scanning the archive sees it before the finding details.
    - **PR URL** (from `.html_url`).
    - **Author** (from `.author`).
    - **Created** (from `.created_at`, formatted as `YYYY-MM-DD HH:MM UTC` — trim the `T`/`Z` for readability).
@@ -805,14 +782,14 @@ REPORT_PATH="$REPORT_DIR/pr-$PR_NUM-$SLUG-full.md"
    - **Agent count** + **verifier counts** (per severity tier).
    - **Run timestamp** (this review's local ISO-8601).
 3. **PR description** section: a `## Description` heading followed by the PR body verbatim from `.body`. If `.body` is empty or null, write `_(no description provided)_`. Fence with `> ` block-quote prefix on every line so the description is visually distinct from this skill's own prose. This gives the reader the PR author's intent right next to the findings, so they don't have to switch to GitHub to read what the PR was for.
-4. The findings table from Step 6a (verbatim, same Sev / Conf / ✓ / File:Line / Headline columns).
-5. One subsection per finding with the FULL comment body, the diff excerpt, the verifier verdict(s), and the resolved confidence. BLOCKERs first, MAJORs next, MINORs last.
+4. The findings table from Step 6a (verbatim, same Sev / Evidence / ✓ / File:Line / Headline columns).
+5. One subsection per finding with the FULL comment body, the diff excerpt, the verifier verdict(s), and the resolved evidence level. BLOCKERs first, MAJORs next, MINORs last.
 6. Link to the verification audit log at `/tmp/pr-<N>-verification.md` and instruction to copy it into the same persisted dir if the operator wants the FALSE-drop history retained.
 7. List of agents that ran (angles) and their individual report paths (`/tmp/pr-<N>.agent<K>.md`) so the operator can dig deeper.
 
 Write the report BEFORE opening Hunk or asking the reduce question. The operator may interrupt at any point and the on-disk artifact survives.
 
-The `reviews` CLI util (commonly at `$SCRIPTS/shared/utilities/reviews`) fzf-picks any report under `~/work/baton-*/.inreview/*/auto-new-day:pr-code-review/*.md` (the per-date in-repo archive) by date or across all dates.
+The `reviews` CLI util (commonly at `$SCRIPTS/shared/utilities/reviews`) fzf-picks any report under `<working_root>/*/.inreview/*/auto-new-day:pr-code-review/*.md` (the per-date in-repo archive) by date or across all dates.
 
 ## Step 5c. Append entry to the per-PR log
 
@@ -830,11 +807,11 @@ First build two TSV files from the consolidated punch-list and the verification 
 
 ```bash
 # Findings TSV: one row per surviving finding (Step 5 punch-list, BLOCKER->MAJOR->MINOR).
-# Columns: sev<TAB>conf<TAB>verified-marker<TAB>file:line<TAB>headline
+# Columns: sev<TAB>evidence<TAB>verified-marker<TAB>file:line<TAB>headline
 findings_tsv=$(mktemp)
 # ... populate from the consolidated punch-list ...
 
-# Filtered TSV: one row per claim dropped at Step 4 (verifier FALSE / low-conf NUANCED).
+# Filtered TSV: one row per claim dropped at Step 4 (verifier FALSE / weak-evidence NUANCED).
 # Columns: angle<TAB>claim<TAB>reason
 filtered_tsv=$(mktemp)
 # ... populate from /tmp/pr-$PR_NUM-verification.md ...
@@ -875,11 +852,11 @@ Surfaced: <total> findings (<B> BLOCKER, <Mj> MAJOR, <Mn> MINOR)
 Archive: <path to Step 5b report>
 
 ### Surfaced (do not re-flag the same line unless code changed)
-- BLOCKER 92% ✓3 src/foo.go:42 wrong type breaks downstream consumer
-- MAJOR 78% ✓2 src/bar.go:18 items emitted twice across pages
-- MINOR 65% ✓1 src/baz.go:91 repeated literal could be a const
+- BLOCKER reproduced ✓3 src/foo.go:42 wrong type breaks downstream consumer
+- MAJOR traced ✓2 src/bar.go:18 items emitted twice across pages
+- MINOR traced ✓1 src/baz.go:91 repeated literal could be a const
 
-### Filtered FALSE / low-confidence (do not re-litigate)
+### Filtered FALSE / weak-evidence (do not re-litigate)
 - correctness: un-coded error skips framework retry (framework retry.go:60 only retries codes A+B)
 ```
 
@@ -900,18 +877,18 @@ The operator decides what to post by scanning the full picture once: a table of 
 
 Print one Markdown table per PR to the user before opening Hunk. Columns:
 
-| # | Sev | Conf | Verified | Mode(s) | File:Line | Headline |
+| # | Sev | Evidence | Verified | Mode(s) | File:Line | Headline |
 | - | --- | ---- | -------- | ------- | --------- | -------- |
-| 1 | BLOCKER | 92% | ✓3      | docs + trace + repro | src/foo.go:42 | wrong type breaks downstream consumer |
-| 2 | MAJOR   | 78% | ✓2      | docs + trace         | src/bar.go:18 | items emitted twice across pages |
-| 3 | MAJOR   | 73% | ✓2/3    | trace                | src/qux.go:55 | role mapping mismatch (1 nuance) |
-| 4 | BLOCKER | 95% | ✓3      | obvious              | src/baz.go:18 | nil deref on next line (no guard) |
-| 5 | MINOR   | 65% | ✓1      | —                    | src/baz.go:91 | repeated literal could be a const |
+| 1 | BLOCKER | reproduced | ✓3 (1 reproduced, 2 traced) | docs + trace + repro | src/foo.go:42 | wrong type breaks downstream consumer |
+| 2 | MAJOR   | cited | ✓2      | docs + trace         | src/bar.go:18 | items emitted twice across pages |
+| 3 | MAJOR   | traced | ✓2/3    | trace                | src/qux.go:55 | role mapping mismatch (1 nuance) |
+| 4 | BLOCKER | traced | ✓3      | obvious              | src/baz.go:18 | nil deref on next line (no guard) |
+| 5 | MINOR   | traced | ✓1      | —                    | src/baz.go:91 | repeated literal could be a const |
 
 Rules (canonical format spec lives in the shared hunk references — [`~/.claude/skills/report/references/format.md`](~/.claude/skills/report/references/format.md) for the finding marker + verdict/report block, and [`diff-note-format.md`](~/.claude/skills/report/references/diff-note-format.md) for the Hunk note shape; keep every surface consistent with them):
-- BLOCKERs first, MAJORs next, MINORs last. Within tier, sort by confidence desc.
-- The Verified column shows `✓<N>` when all N verifiers agreed, or `✓<K>/<N>` when K of N agreed (one or more NUANCED). Every surfaced row carries a marker by construction (FALSE / low-confidence-NUANCED rows were dropped at Step 4). The number tells the operator how much scrutiny the finding got.
-- **Sub-80% + multi-validated → justify the ceiling.** Any finding with final confidence < 80% AND `✓2`+ (or `✓K/N`) MUST include a one-line "why not higher" in its comment body, naming the residual uncertainty the verifiers could not close. A `✓1` sub-80% finding is self-explanatory.
+- BLOCKERs first, MAJORs next, MINORs last. Within tier, sort by evidence strength desc.
+- The Verified column shows `✓<N>` when all N verifiers agreed, or `✓<K>/<N>` when K of N agreed (one or more NUANCED). Every surfaced row carries a marker by construction (FALSE / weak-evidence NUANCED rows were dropped at Step 4). The number tells the operator how much scrutiny the finding got, per `~/.claude/rules/review.md` (section "Evidence level and verification count").
+- A runtime-behavior finding below `reproduced` MUST say "not reproduced: <reason>" in its comment body (`~/.claude/rules/review.md`).
 - Headline is the one-line lede of the comment body (under ~70 chars). Not the full body.
 - `#` matches the order the ask loop will walk in Step 8.
 - If a PR has zero surviving findings, print one line per PR saying so and STILL proceed to Step 6b — existing reviewer threads (`[THREAD]` entries) may still need a Hunk pane. Only after Step 6b's filter shows zero `[NEW]` AND zero eligible `[THREAD]` entries does Step 6c's "nothing to attach" clause fire.
@@ -920,14 +897,14 @@ Rules (canonical format spec lives in the shared hunk references — [`~/.claude
 
 **CRITICAL: open Hunk via `Skill(report)` — do NOT hand-roll the `tmux split-window`.** The report skill opens Hunk with the fixed, correct geometry: `-h -l 70% -t "$TMUX_PANE"` (Hunk to the RIGHT). If you need to scope the diff (exclude `vendor/`, generated files, lockfiles), pass the pathspec through the report skill's args or its range — do NOT open your own `hunk diff … -v` pane. Hunk is ALWAYS the RIGHT pane (`-h`); the answer-draft / notes pager is ALWAYS BELOW (`-v`). NEVER swap them (Hunk `-v` below + pager `-h` right is the exact bug this rule prevents). If a Hunk pane already exists in the window, reuse it instead of opening a second.
 
-After all tables print, invoke the `report` skill in its **fast path** with EVERY consolidated finding attached AND every eligible existing reviewer thread from Step 1. **"Every consolidated finding"** = every row that survived Step 4 verification (VERIFIED or NUANCED≥60%), regardless of Step 5's overlap tags, regardless of severity, regardless of the operator's likely eventual disposition. The Hunk pane is the operator's read-out; the skill does not pre-filter it.
+After all tables print, invoke the `report` skill in its **fast path** with EVERY consolidated finding attached AND every eligible existing reviewer thread from Step 1. **"Every consolidated finding"** = every row that survived Step 4 verification (VERIFIED, NUANCED at `traced` or stronger, or a split kept on `reproduced`/`cited`), regardless of Step 5's overlap tags, regardless of severity, regardless of the operator's likely eventual disposition. The Hunk pane is the operator's read-out; the skill does not pre-filter it.
 
 The mandate is explicit:
 
 - Findings tagged `overlap=external-bot`, `overlap=external-human`, `overlap=self-engaged`, `overlap=self-silent`, `overlap=maybe-dup` — all land in the batch. The summary prefix carries the tag so the operator sees it in the TUI list.
 - `[THREAD]` entries for existing reviewer threads that don't overlap a `[NEW]` finding — all land in the batch (up to the 30-thread cap below).
 - Severity-downgraded rows (BLOCKER → MAJOR, MAJOR → MINOR after verifier NUANCE) — land in the batch at their final severity, not their initial one.
-- MINORs — land regardless of confidence, as long as they passed Step 4.
+- MINORs — land regardless of evidence level, as long as they passed Step 4.
 
 The Step 6a table shows the SAME set of rows as the Hunk batch, in the same order. If a row is in the table but not in Hunk (or vice versa), that's a skill bug — the two views MUST be consistent. Step 7's "reduce to 1-5" is the ONLY place a survivor gets hidden, and it's operator-gated.
 
@@ -938,7 +915,7 @@ cat > /tmp/pr-<N>-comments.json <<'JSON'
 {
   "comments": [
     {"filePath": "src/foo.go", "newLine": 67,
-     "summary": "[NEW] BLOCKER (92% ✓3): <one-line headline>",
+     "summary": "[NEW] BLOCKER (reproduced ✓3): <one-line headline>",
      "rationale": "<the full comment body from Step 5>"},
     {"filePath": "src/foo.go", "newLine": 142,
      "summary": "[THREAD] <author-login>: <one-line excerpt of their comment>",
@@ -951,7 +928,7 @@ JSON
 
 Two categories, distinguished by the `summary` prefix:
 
-- **`[NEW] ...`** — one entry per consolidated finding (Step 5 output), in the same order as the table (BLOCKERs first, MAJORs next, MINORs last). NO filtering. Overlap-tagged findings still ship; their summary prefix carries the tag (e.g. `[NEW][DUP-EXTERNAL-HUMAN] MAJOR (78% ✓2): ...` or `[NEW][DUP-EXTERNAL-BOT] MINOR (72% ✓2): ...`).
+- **`[NEW] ...`** — one entry per consolidated finding (Step 5 output), in the same order as the table (BLOCKERs first, MAJORs next, MINORs last). NO filtering. Overlap-tagged findings still ship; their summary prefix carries the tag (e.g. `[NEW][DUP-EXTERNAL-HUMAN] MAJOR (traced ✓2): ...` or `[NEW][DUP-EXTERNAL-BOT] MINOR (traced ✓2): ...`).
 - **`[THREAD] ...`** — one entry per existing reviewer thread from `/tmp/pr-<N>.existing-comments.json` (inline review-thread comments) + `/tmp/pr-<N>.existing-issue-comments.json` (top-level / issue-style comments) + `/tmp/pr-<N>.existing-reviews.json` (review-summary bodies with non-empty body text). Skip:
   - Threads where the LATEST message is from the operator (`author.login == OPERATOR_LOGIN`) — they already engaged.
   - Bot-authored entries (`author.type == "Bot"`, `*[bot]` login suffix, `github-actions`, `dependabot`, `renovate`, `coderabbitai`, `sonarcloud`, `codecov`).
@@ -964,7 +941,7 @@ Rules for the JSON:
 - `newLine` MUST match the exact `file:line` from the consolidated finding or existing thread, and that line MUST be a `+` line in `/tmp/pr-<N>.diff`. If the finding describes a range, pick the most specific anchor inside the range.
 - Use `oldLine` instead only for findings about a deleted line.
 - NEVER use `hunkNumber` for diff-anchored findings; only use `hunkNumber: 0` for PR-wide threads (issue-style + review summaries that have no file anchor).
-- The `summary` field includes the `[NEW]` or `[THREAD]` prefix + confidence + ✓ marker (NEW only) so the operator sees status in the Hunk TUI title.
+- The `summary` field includes the `[NEW]` or `[THREAD]` prefix + evidence level + ✓ marker (NEW only) so the operator sees status in the Hunk TUI title.
 - Cap threads at 30 per PR. If more exist, attach the 30 most recent (by `created_at` desc) and surface the count in the post-table summary ("attached 30 of 47 existing threads — older ones available in the existing-*.json files").
 
 Hunk's fast path validates every anchor before applying. If you fed it a misaligned line, the apply aborts with a `MISSING ADD <file>:<line>` message; rebuild the JSON with the correct anchor and retry.
@@ -981,12 +958,12 @@ Hunk always splits its TUI off the calling Claude's pane. For single-PR runs the
 
 ### Step 6c. Skipping Hunk
 
-Skip Step 6b ONLY in these two enumerated cases. Every other run opens Hunk, including runs where the approve_pct verdict from Step 5a is SAFE TO APPROVE.
+Skip Step 6b ONLY in these two enumerated cases. Every other run opens Hunk, including runs where the Step 5a verdict is SAFE TO APPROVE.
 
 1. **Missing tools.** `tmux` is not running, OR the `hunk` CLI is not on `$PATH`. Print one line saying which is missing (`hunk skipped: tmux not running` or `hunk skipped: hunk CLI not found on $PATH`) and continue to Step 7.
 2. **Nothing to attach.** After building the Step 6b JSON, BOTH counters are zero: zero `[NEW]` findings survived Step 5 AND zero `[THREAD]` entries survived the Step 6b filters (all threads were already-engaged, bot-authored, empty, or deduped). Print `hunk skipped: no new findings and no eligible existing threads to attach` and continue to Step 7.
 
-If EITHER (a) the tools are available AND (b) at least one `[NEW]` or `[THREAD]` entry exists, Hunk opens. Do not gate Hunk on approve_pct, on the tier, on operator preference guessed from context, or on "this looks like an approve" — none of those are in this list.
+If EITHER (a) the tools are available AND (b) at least one `[NEW]` or `[THREAD]` entry exists, Hunk opens. Do not gate Hunk on the Step 5a tier, on operator preference guessed from context, or on "this looks like an approve" — none of those are in this list.
 
 The findings table from Step 6a still prints regardless of which branch fires.
 
@@ -995,7 +972,7 @@ The findings table from Step 6a still prints regardless of which branch fires.
 Hunk is now open with every finding attached. The operator can scan them in the TUI. Before walking the ask-then-post loop, ALWAYS ask via `AskUserQuestion`:
 
 ```
-question: "<N> findings open in Hunk. Reduce to the most important + highest-confidence ones, or walk all of them?"
+question: "<N> findings open in Hunk. Reduce to the most important + best-evidenced ones, or walk all of them?"
 header:   "Reduce"
 options:
   - "No, walk all <N>" (recommended when total ≤ 5)
@@ -1009,17 +986,17 @@ The recommended option flips on volume: ≤5 → walk all (no reduction needed);
 YOU (the coordinator) decide the survivor count. Pick an integer in `[1, 5]` based on the actual finding mix:
 
 - **All BLOCKERs always survive**, up to the cap of 5.
-- Fill remaining slots with MAJORs in descending confidence order.
-- Fill the final slot(s) with MINORs ONLY when they have ≥ 85% confidence AND describe a concrete fix the author can apply in under 10 lines.
+- Fill remaining slots with MAJORs in descending evidence strength.
+- Fill the final slot(s) with MINORs ONLY when they are `reproduced` or `cited` AND describe a concrete fix the author can apply in under 10 lines.
 - If only 1 finding clears these bars, keep 1. If 5 BLOCKERs exist, keep 5.
 
 Worked sizing:
-- 1 BLOCKER + 4 MAJORs + 6 MINORs → keep 5 (BLOCKER + top 4 MAJORs by confidence).
-- 0 BLOCKERs + 2 MAJORs + 8 MINORs → keep 2-3 (both MAJORs, plus 1 MINOR if it meets the high-confidence concrete-fix bar).
+- 1 BLOCKER + 4 MAJORs + 6 MINORs → keep 5 (BLOCKER + top 4 MAJORs by evidence).
+- 0 BLOCKERs + 2 MAJORs + 8 MINORs → keep 2-3 (both MAJORs, plus 1 MINOR if it meets the strong-evidence concrete-fix bar).
 - 3 BLOCKERs + 0 others → keep 3 (all BLOCKERs, no padding).
-- 0 BLOCKERs + 0 MAJORs + 4 MINORs all ≥ 85% → keep 1-2 (no need to surface every MINOR even if they qualify; pick the most impactful).
+- 0 BLOCKERs + 0 MAJORs + 4 MINORs all `reproduced`/`cited` → keep 1-2 (no need to surface every MINOR even if they qualify; pick the most impactful).
 
-State the count you picked and one-sentence rationale in chat ("Reducing to 3: 1 BLOCKER + 2 MAJORs by confidence."). Do NOT ask the operator to confirm the count — you decide.
+State the count you picked and one-sentence rationale in chat ("Reducing to 3: 1 BLOCKER + 2 MAJORs by evidence."). Do NOT ask the operator to confirm the count — you decide.
 
 Prune the dropped findings from the Hunk session via `/tmp/pr-<N>-commentids.tsv`:
 
@@ -1082,11 +1059,11 @@ For each finding (BLOCKERs first, then MAJORs, then MINORs), use **AskUserQuesti
 - `Edit first` (user dictates the rewrite, then re-ask)
 - `Skip` (don't post; move on)
 
-**Show the full comment body inline in the question text**, fenced with `---` lines, in addition to the `preview` field. The preview box can be missed; the question text is the primary surface the user reads. Include the confidence + ✓ marker in the header so the operator can use it as a sanity check on whether to trust the finding:
+**Show the full comment body inline in the question text**, fenced with `---` lines, in addition to the `preview` field. The preview box can be missed; the question text is the primary surface the user reads. Include the evidence level + ✓ marker in the header so the operator can use it as a sanity check on whether to trust the finding:
 
 ```
 question: "Post this on <file>:<line>?\n\n---\n<comment body>\n---"
-header:   "BLOCKER 1, 92% ✓3"  /  "MAJOR 2, 78% ✓2"  /  "MAJOR 3, 73% ✓2/3"  /  "MINOR 4, 65% ✓1"
+header:   "BLOCKER 1, reproduced ✓3"  /  "MAJOR 2, cited ✓2"  /  "MAJOR 3, traced ✓2/3"  /  "MINOR 4, traced ✓1"
 preview:  <same comment body, wrapped at ~60 cols>
 ```
 
@@ -1226,7 +1203,7 @@ Best-effort; never block on this. The dispatching system is responsible for maki
 
 ## Step 9b. Approving the PR (only on explicit operator request)
 
-The skill does NOT auto-approve based on Step 5a's confidence. The approve verdict is INFORMATION for the operator; the operator decides whether to approve.
+The skill does NOT auto-approve based on Step 5a's score. The approve verdict is INFORMATION for the operator; the operator decides whether to approve.
 
 When the operator says "approve" (or "approve PR #N", "go ahead and approve") after the wrap, the default action is `gh pr review --approve` with NO body. No "LGTM", no "looks good", no summary of the review.
 
@@ -1236,7 +1213,7 @@ gh pr review "$PR_NUM" --repo "$OWNER/$REPO" --approve
 
 Do NOT add `--body "<anything>"` unless the operator explicitly tells you to ("approve with a comment", "approve and say <text>", "approve with body: <text>"). A bodiless approve is the default; an approve-with-body requires an explicit operator instruction in the same message.
 
-When the operator says "approve" but the Step 5a tier is "APPROVE WITH CAUTION" or "DO NOT APPROVE YET", surface the mismatch once before running the command: "approve_pct was <P>% (<TIER>); still want to approve?" then act on the operator's confirmation. The mismatch check happens only once per `approve` request; if the operator confirms, do it and don't re-litigate.
+When the operator says "approve" but the Step 5a tier is "APPROVE WITH CAUTION" or "DO NOT APPROVE YET", surface the mismatch once before running the command: "Step 5a verdict was <TIER> (rule <#>: <reason>); still want to approve?" then act on the operator's confirmation. The mismatch check happens only once per `approve` request; if the operator confirms, do it and don't re-litigate.
 
 If the operator says "approve all" after a multi-PR run, do the bodiless approve in sequence for every PR whose punch-list was walked. Still apply the mismatch check per PR; one "yes, approve all even the cautious ones" covers the whole batch.
 
@@ -1247,7 +1224,7 @@ If the operator says "approve all" after a multi-PR run, do the bodiless approve
 - **Local clone missing**: clone into a checkout root the operator already uses (see Step 0b). Don't review from a worktree if the dev-env files may not be mirrored.
 - **PR force-pushed mid-review**: refetch `pr-<N>` (`git fetch origin pull/<N>/head:pr-<N> -f`), re-run Step 1 to get the new HEAD SHA, and warn the user that prior posted comments may now be on stale lines.
 - **Verification round drops every finding**: not a failure; print "no surviving findings on PR #<N> after independent verification. Full audit at /tmp/pr-<N>-verification.md" and skip to the next PR. The verification log shows which claims were filtered and why.
-- **Subagent over-claims**: if an agent reports confidence ≥ 90% on a behavior claim that the verifier marks FALSE, log it in the verification audit. Repeated over-claims from the same angle indicate the prompt needs tightening, open the SKILL.md to update.
+- **Subagent over-claims**: if an agent reports `traced` or stronger on a behavior claim that the verifier marks FALSE, log it in the verification audit. Repeated over-claims from the same angle indicate the prompt needs tightening, open the SKILL.md to update.
 
 ## Composition
 
@@ -1255,5 +1232,5 @@ If the operator says "approve all" after a multi-PR run, do the bodiless approve
 - **Verification:** Step 4 fans out one verifier per finding in parallel. This is mandatory before the operator sees any finding.
 - **Downstream:** `hunk` (Step 6b) opens the diff with consolidated review notes attached in a new tmux window per PR, before the reduce ask in Step 7.
 - **Sibling skills:**
-  - Project-scoped batch drivers (e.g. `pr-code-review-all` under work) discover a set of PRs and call this skill with their URLs. They are the breadth pass; this skill is the depth-on-one-or-a-few pass.
+  - Project-scoped batch drivers (e.g. a batch driver in a domain pack) discover a set of PRs and call this skill with their URLs. They are the breadth pass; this skill is the depth-on-one-or-a-few pass.
   - `add-comment` (post one specific reply) composes inside this skill's ask-then-post step; you can call out to it for tricky multi-thread replies.

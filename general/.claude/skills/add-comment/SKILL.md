@@ -183,7 +183,7 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
    Write the draft(s) to the single draft file described under "qa draft pane" below (one `---`-delimited block per comment; the format is identical whether there's one block or ten), then open it:
 
    ```bash
-   ~/.claude/skills/qa/scripts/open-qa-pane.sh /tmp/add-comment-drafts-<PR>-<TS>.md
+   ~/.claude/skills/qa/scripts/open-qa-pane.sh /tmp/add-comment-drafts-<REPO>-<PR>-<TS>.md
    ```
 
    Check the exit code and stdout every time:
@@ -360,7 +360,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
 **Single draft file, one block per finding.** Every reply or new comment the skill is asked to draft in one invocation goes into ONE draft file with a `# block N` per finding. Never write one draft file per finding, and never open the draft in a separate tmux window. The operator wants to see every candidate reply on one screen so they can scan, edit, or `SKIP` each in the same editor buffer without switching windows. When a caller (`pr-code-review` post-loop, `pr-comment-fix` batch, or the operator asking to answer several threads at once) hands the skill multiple targets, the skill batches them into a single draft; if the caller hands them in one at a time, the skill still reserves the file and appends new blocks to it on the next invocation within the same session (see step 3 for the append-vs-new-file rule).
 
 1. Build ONE file under `/tmp/`:
-   - `/tmp/add-comment-drafts-<PR_OR_MR>-<TIMESTAMP>.md` — human-editable, one block per reply. All post metadata (target file/line, thread id) lives in the draft's bullets. No sidecar JSON. The `.md` extension is deliberate: `---` separators render as horizontal rules and the bullet fields render as a list, giving free syntax highlighting.
+   - `/tmp/add-comment-drafts-<REPO>-<PR_OR_MR>-<TIMESTAMP>.md` (`<REPO>` is the bare repo name, e.g. `widget-api`, so drafts for two PRs are told apart by filename) — human-editable, one block per reply. All post metadata (target file/line, thread id) lives in the draft's bullets. No sidecar JSON. The `.md` extension is deliberate: `---` separators render as horizontal rules and the bullet fields render as a list, giving free syntax highlighting.
 
 2. **File header (single occurrence, once per file, ABOVE the first `---`).** Two h1 sections in this order: the how-to block (h1 + h2 instructions), then a `# Comments` h1 that carries the metadata lines AND every `---`-delimited comment block below. Both live above / around the blocks and are not repeated per-block:
 
@@ -412,7 +412,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    ---
 
    - file: <path>:<line>
-   - kind: new-line (<SEVERITY> <CONF>% ✓<N>)
+   - kind: new-line (<SEVERITY> <EVIDENCE> ✓<N>)
    - context: <what we did / decided / verified — display only>
 
    - shorter_answer: |
@@ -466,7 +466,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - `- thread_id:` → presence signals "reply to existing thread".
    - `- reviewer:` → **only present on reply blocks.** Display-only. The login of whoever left the original comment (`.user.login` on GitHub, `.author.username` on GitLab) — lets the operator tell who they're answering without cross-referencing the thread id. Omit on new-line and top-level blocks (there's no prior commenter to name).
    - `- posted:` → **only present on reply blocks.** Display-only, parser ignores it. The `YYYY-MM-DD` the replied-to comment was posted, with ` (today)` appended when it matches the current date, so the operator can tell a fresh thread from an old one at a glance. Use the reviewer's most recent comment in the thread for a re-upped thread. Omit on new-line and top-level blocks.
-   - `- kind:` → display-only, one of `new-line`, `reply`, `top-level`, optionally followed by a parenthesized severity/confidence tag for review batches (`new-line (BLOCKER 95% ✓1)`). The parser derives the actual kind from the presence rules below, not from this bullet.
+   - `- kind:` → display-only, one of `new-line`, `reply`, `top-level`, optionally followed by a parenthesized severity/evidence tag for review batches (`new-line (BLOCKER traced ✓1)`). The parser derives the actual kind from the presence rules below, not from this bullet.
    - `- comment:` → **only present on reply blocks.** Display-only. On new-line and top-level blocks, do NOT include a `- comment:` bullet — the new comment IS the reply, there's no reviewer statement to quote.
    - `- answer:` → the body that will actually be posted. **ALWAYS the last bullet in the block.** Editable. Set to `SKIP` (case-insensitive), leave empty, or delete the whole block to drop it.
    - `- shorter_answer:` → the SHORTEST postable form of `- answer:`: the ONE core point, ideally a single line. **Default to just the position / the observation itself, then STOP.** The reason, the mechanism, and the ask are ALL cuttable, drop them unless removing them makes the point unclear or wrong. Worked example: for the full answer "`*assignedUser.LastUpdated` is deref'd here with no nil check, same at :509. it's `*time.Time`/`omitempty` and zap evals eagerly so `Debug` doesn't dodge it, panics after the grant already succeeded if okta omits it. guard it or use `zap.Any`", the shorter_answer is just "`*assignedUser.LastUpdated` is deref'd with no nil check (same at :509)." Keep ONLY: (1) the position, hedged to match how you verified it (never upgrade an inference to a verdict, see "Match the claim's strength" above), and (2) a doc/spec URL on its own trailing line (URLs are free, never counted against length). The URL is PREFERRED, not just tolerated: short + a doc link is the ideal shape, so keep the one from `- answer:` and add one when the point has a public source the answer didn't link (as long as it genuinely backs the claim). The best shorter_answer is one line plus a link. Everything else goes: the reason, the mechanism, restated symbol names, magnitude/severity, the "not blocking since..." aside, the "or better..." fork, the confessional tail, and usually the ask too (a bare observation on the anchor line stands on its own, the author can see the code). Target ONE sentence; a second only when the point is genuinely wrong without it. Plain words, full nouns not slang. **The parser ignores this bullet.** It exists so the operator can eyeball a very short alternate and copy it over `- answer:`, so it must be genuinely postable, not a teaser.
@@ -511,14 +511,14 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
 3. Open the draft file by delegating the pane/terminal plumbing to the **qa** skill's helper, which owns the split-direction and pane-reuse logic:
 
    ```bash
-   ~/.claude/skills/qa/scripts/open-qa-pane.sh /tmp/add-comment-drafts-<PR>-<TS>.md
+   ~/.claude/skills/qa/scripts/open-qa-pane.sh /tmp/add-comment-drafts-<REPO>-<PR>-<TS>.md
    ```
 
    The helper splits a sibling pane off Claude's pane (right at 70% width, or below at 60% height when a neighbour already sits to the right), reuses the pane on a repeat call for the same file, and never opens a new window. When `$TMUX` is unset it opens the draft in a fresh `$TERMINAL` window instead, so the operator can still edit (see the fallback note below). This skill keeps ownership of the draft file's format (the block shape above); qa only opens and re-reads it.
 
    Rules:
    - **Never open the draft in a new tmux window.** The operator will not switch windows to review a batch of drafts. The pane keeps everything on one screen. (The qa helper enforces this: it only ever splits a pane.)
-   - **Append, don't spawn a new draft file, on a same-session second invocation.** If a draft file from THIS session already exists (grep `/tmp/add-comment-drafts-<PR>-*` and pick the newest whose timestamp is within the last hour), append the new blocks to that file and re-run the helper on the same path — it focuses the already-open pane rather than opening a second one. The operator ends up with a single draft file that grows as findings arrive.
+   - **Append, don't spawn a new draft file, on a same-session second invocation.** If a draft file from THIS session already exists (grep `/tmp/add-comment-drafts-<REPO>-<PR>-*` and pick the newest whose timestamp is within the last hour), append the new blocks to that file and re-run the helper on the same path — it focuses the already-open pane rather than opening a second one. The operator ends up with a single draft file that grows as findings arrive.
    - **Revise against the current file, never an earlier copy.** When the operator asks for changes to an open draft, re-read it first and make targeted edits on top of their edits. See the qa skill's "every update to an open qa file starts from its CURRENT on-disk state" rule.
 
 4. Surface a one-line "edit `- answer:`, `SKIP` the ones you don't want, then say 'post'" message in chat and STOP. Do NOT call `AskUserQuestion` — the pane IS the confirmation surface, and the operator's "post" is the go signal. (`AskUserQuestion` only appears when the helper exited `3`, i.e. no tmux and no `$TERMINAL`; see step 5 in the Workflow.) When the operator says "post", re-read the file and post every surviving block (bot threads never get a block, see "never reply to bot comments").
@@ -538,7 +538,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
 
    The draft file is the source of truth. There is no sidecar to fall back to; deleting a block IS the gesture for "don't post this one," deleting only `- answer:` IS the gesture for "post the shorter one," and the parser respects both without further prompting.
 
-6. After the loop, clean up the draft file (`rm -f /tmp/add-comment-drafts-<PR>-<TS>.md`).
+6. After the loop, clean up the draft file (`rm -f /tmp/add-comment-drafts-<REPO>-<PR>-<TS>.md`).
 
 A worked example of the file shape:
 

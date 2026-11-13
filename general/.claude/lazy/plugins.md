@@ -54,7 +54,7 @@ Claude Code does NOT run the source. On `install` it copies the source into a ve
 Apply a change one of two ways:
 
 ```bash
-# A. cleanest — bump "version" in .claude-plugin/plugin.json, then:
+# A. cleanest — bump "version" in .claude-plugin/plugin.json, add a matching "## <version>" entry to the plugin's CHANGELOG.md (my plugins enforce this with a pre-commit check), then:
 claude plugin marketplace update <marketplace>
 #    this is also the only way a FRESH session / a timer reliably picks up the change.
 

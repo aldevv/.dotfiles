@@ -19,7 +19,7 @@ The **caller owns the format**. This skill does not parse or impose any structur
 A caller (a skill, or the operator directly) provides:
 
 - **content**: the full text the file should contain. The caller composes it in whatever format it wants: a how-to header + Q/A blocks, YAML-ish bullets, plain prose, anything. qa writes it verbatim.
-- **slug**: a short label for the filename (e.g. `add-comment-drafts-pr-14`, `spec-questions`). Lowercase, no spaces.
+- **slug**: a short label for the filename (e.g. `add-comment-drafts-widget-api-14`, `spec-questions`). Lowercase, no spaces.
 - **how "done" is interpreted**: the caller re-parses the edited file after "done" and acts on it. qa just returns the bytes.
 
 qa returns: the temp file path, and (on "done") the edited contents.

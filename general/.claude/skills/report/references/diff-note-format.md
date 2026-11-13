@@ -30,14 +30,12 @@ Both are SHORT and both lead with a machine-readable marker.
 
 ## 2. The marker (leads every `summary`)
 
-### Review finding → `[<SEVERITY> <confidence>% ✓N]`
-- `<SEVERITY>` ∈ `BLOCKER` / `MAJOR` / `MINOR` / `LOW` / `NIT`.
-- `<confidence>` = one percentage the finding is real (`~` prefix ok). Not two numbers.
-- `✓N` = validation count, NEVER dropped (`~/.dotfiles/general/.claude/rules/review.md`). Subagent
-  mode: verifier subagents that agreed (`✓K/N` = K of N agreed, keep the dissent in the body).
-  `--no-subagents` mode: independent sequential validations you ran (doc source, build/test, source
-  trace, repro) — name them in the body. `✓0` only for a trivial nit.
-- Example: `[MAJOR 75% ✓4] users(search:{email}) not in the vendor's documented schema`.
+### Review finding → `[<SEVERITY> <evidence> ✓N]`
+- `<SEVERITY>` ∈ `BLOCKER` / `MAJOR` / `MINOR` / `NIT`, `<evidence>` is the evidence level, and `✓N`
+  is the verifier count with its per-level breakdown. Definitions, minimums, and what to report or
+  skip live in `~/.claude/rules/review.md` (sections "What to report, what to skip" and "Evidence
+  level and verification count"); do not restate them here. `✓0` only for a trivial nit.
+- Example: `[MAJOR cited ✓2] users(search:{email}) not in the vendor's documented schema`.
 - **Headline = the defect in ONE concrete phrase, like a bug title.** Name the thing that is
   wrong; do not narrate how you found it or hedge whether it counts. `GrantableTo contains a
   non-principal resource type` — NOT `the entitlements are GrantableTo role and Grants() emits
@@ -52,14 +50,15 @@ Both are SHORT and both lead with a machine-readable marker.
   the primary note and leave the other as an UNMARKED pointer (`see <file>:<line>`) — or, better,
   just leave the one note. This keeps the severity tally honest and the list scannable.
 
-### Own-work status note → `[<STATUS>· <confidence>%]`
+### Own-work status note → `[<STATUS>· <evidence>]`
 - `<STATUS>` ∈ `FIXED` / `PARTIAL` / `DEFERRED` / `NEEDS-VERIFY` / `RISK`.
-- `<confidence>` = confidence the change is correct / the bug is actually fixed (the per-symptom
-  fix confidence from `fix-bug`, when present).
+- `<evidence>` = evidence level that the change is correct / the bug is fixed, per
+  `~/.claude/rules/review.md` ("Evidence level and verification count"). Use the per-symptom level
+  from `fix-bug` when present.
 - Add a severity tag `(RISK: <BLOCKER|MAJOR|MINOR>)` ONLY when the note is flagging a regression /
   risk the reviewer must weigh; ordinary "did X" notes carry no severity.
-- PR-feedback reply notes also name the reviewer: `[FIXED · 90%] <reviewer>: <what answered them>`.
-- Example: `[PARTIAL · 70%] retry path still untested against a live 429`.
+- PR-feedback reply notes also name the reviewer: `[FIXED · reproduced] <reviewer>: <what answered them>`.
+- Example: `[PARTIAL · traced] retry path still untested against a live 429`.
 
 ### Orientation note (exempt)
 Exactly one `Feature Explanation: <headline>` note at the top of the diff carries NO marker.
@@ -67,11 +66,9 @@ It is orientation, not a finding/status. Everything else carries a marker.
 
 ---
 
-## 3. "Why not higher" (confidence honesty)
-Any note with confidence **< 80% AND 2+ validations** (`✓2`+ / `✓K/N`, or a status note that had
-multiple checks) MUST include a one-line "why not higher" in the body, naming the residual
-uncertainty the checks could not close (e.g. "docs may be incomplete; live schema could differ").
-A single-check sub-80% note is self-explanatory and doesn't need it.
+## 3. "Not reproduced" honesty
+A note whose evidence level is below `reproduced` on a runtime-behavior claim MUST say in one line
+why it was not reproduced (e.g. "needs production data"), per `~/.claude/rules/review.md`.
 
 ---
 

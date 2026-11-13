@@ -7,9 +7,9 @@
 #
 #   <repo>/.inreview/<DATE>/
 #   ├── <TICKET>.md                          (copy of <repo>/.inreview/<TICKET>.md)
-#   ├── validate-connector/<TICKET>.md       (copy of the sibling-skill output)
-#   ├── my-connector-review/<TICKET>.md
-#   └── baton-admin-review/<TICKET>.md
+#   ├── <sibling-skill-a>/<ITEM>.md       (copy of the sibling-skill output)
+#   ├── <sibling-skill-b>/<ITEM>.md
+#   └── <sibling-skill-c>/<ITEM>.md
 #   <repo>/.inprogress/<DATE>/<TICKET>.md
 #   <repo>/.inreview-others/<DATE>/<TICKET>.md
 #
@@ -20,12 +20,12 @@
 #
 # Two modes:
 #
-# 1. Sweep-start mode (default): walks ~/work/baton-*/ and snapshots EVERY
+# 1. Sweep-start mode (default): walks <working_root>/*/ and snapshots EVERY
 #    repo's three artifact dirs. Used by auto-new-day Step 1c.  Captures the
 #    END state of all prior dispatches before the new sweep can overwrite.
 #
 # 2. Single-repo mode (--repo <dir>): snapshots ONE repo.  Used by a dispatched
-#    work skill (fix-bug-work / impl-work / newconnector) at the END of
+#    work skill (fix-bug / impl / new-item wrapper) at the END of
 #    its run, when it sees AUTO_NEW_DAY_DATE_DIR exported by the dispatch
 #    bootstrap.  Captures THIS run's freshly-written artifacts before they can
 #    be overwritten by a later same-ticket re-run.
@@ -94,7 +94,7 @@ snap_one_repo() {
       name=$(basename "$entry")
       [[ "$name" =~ $DATE_RE ]] && continue
       if [ -d "$entry" ]; then
-        # nested sibling-skill dir, e.g. validate-connector/
+        # nested sibling-skill dir, e.g. <sibling-skill-a>/
         mkdir -p "$in_repo_dst/$name" 2>/dev/null || true
         cp -a "$entry/." "$in_repo_dst/$name/" 2>/dev/null || true
       else

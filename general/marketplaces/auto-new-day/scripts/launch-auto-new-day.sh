@@ -6,10 +6,10 @@
 # report in the AUTO-new-day tmux session (one `sweep` window). Four sibling
 # sessions get created lazily by the sweep when they have work:
 # AUTO-inreview (own In-Review tickets needing comment-fix, dispatched to
-# /fix-bug-work + /report), AUTO-inprogress (unstarted In Progress tickets,
+# the pack's fix-bug wrapper + /report), AUTO-inprogress (unstarted In Progress tickets,
 # dispatched to /<workflow>), AUTO-inreview-others (up to 5 teammate PRs
-# that need review, dispatched to /pr-code-review-work), and
-# AUTO-ready-to-merge (own PRs already approved by Bjorn/John/Geoff, one plain-shell
+# that need review, dispatched to the review wrapper skill), and
+# AUTO-ready-to-merge (own PRs already approved by the configured approvers, one plain-shell
 # window each parked on the PR branch so the operator can merge; no claude,
 # the sweep never merges). The launcher only manages AUTO-new-day's lifecycle;
 # the other four live across days so the operator doesn't lose in-flight
@@ -63,7 +63,7 @@ session running the /auto-new-day sweep.
 --dry-run (or AUTO_NEW_DAY_DRY_RUN=1):
   - uses tmux session "AUTO-new-day-dryrun" so a real run isn't disturbed
   - the sweep runs discovery only and writes the per-day create.md
-    checkpoint at ~/work/.auto-new-day/dates/<date>-dryrun-create.md;
+    checkpoint at <state_dir>/dates/<date>-dryrun-create.md;
     no per-ticket tmux session is spawned and no child claude is launched
   - skips all state writes
 
@@ -76,7 +76,7 @@ session running the /auto-new-day sweep.
   - composes with --dry-run
 
 --date <date>  or  positional <date> tokens:
-  - replays the dispatch plan saved at ~/work/.auto-new-day/dates/<DATE>-create.md
+  - replays the dispatch plan saved at <state_dir>/dates/<DATE>-create.md
   - accepts: today, yesterday, "june 16", "last friday", 2026-06-16, etc.
     Multi-word phrases can be passed as separate positional args
     (e.g. `launch-auto-new-day.sh june 16`) or quoted with --date.

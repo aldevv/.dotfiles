@@ -25,7 +25,7 @@ usage: pr-log-append.sh \
   --verifiers <V>        total verifier-agent count across all findings
   --count <C>            adaptive count chosen by Step 2 (or operator override)
   --effort <E>           low|medium|high
-  [--findings <tsv>]     TSV: sev<TAB>conf<TAB>verified<TAB>file:line<TAB>headline
+  [--findings <tsv>]     TSV: sev<TAB>evidence<TAB>verified<TAB>file:line<TAB>headline
   [--filtered <tsv>]     TSV: angle<TAB>claim<TAB>reason  (verifier FALSE drops)
   [--archive <path>]     path to the full report written at Step 5b
 
@@ -111,7 +111,7 @@ today=$(date +%Y-%m-%d)
     printf '(none)\n'
   fi
   if [ -n "$filtered" ] && [ -f "$filtered" ] && [ -s "$filtered" ]; then
-    printf '\n### Filtered FALSE / low-confidence (do not re-litigate)\n'
+    printf '\n### Filtered FALSE / weak-evidence (do not re-litigate)\n'
     awk -F'\t' '{ printf "- %s: %s (%s)\n", $1, $2, $3 }' "$filtered"
   fi
 } >> "$pr_log"
