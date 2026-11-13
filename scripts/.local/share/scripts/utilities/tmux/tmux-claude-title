@@ -38,14 +38,27 @@ tidy_kebab() {
 # --usage (default on) logs per-call token/cost metrics; --no-usage disables.
 usage_log=true
 raw=""
+window=""
 for arg in "$@"; do
     case "$arg" in
         --usage) usage_log=true ;;
         --no-usage) usage_log=false ;;
-        *) [ -z "$raw" ] && raw="$arg" ;;
+        *) if [ -z "$raw" ]; then raw="$arg"; else window="$arg"; fi ;;
     esac
 done
 [ -z "$raw" ] && exit 0
+
+# tmux #() is async: the first format evaluation gets "" and automatic-rename
+# only re-checks on pane output, so an idle window keeps "folder:claude:".
+# Re-trigger the check once this job's output has landed, only while blank.
+if [ -n "$window" ]; then
+    (
+        sleep 1
+        case "$(tmux display-message -p -t "$window" '#{window_name}' 2>/dev/null)" in
+            *:) tmux set-option -w -t "$window" automatic-rename on 2>/dev/null ;;
+        esac
+    ) </dev/null >/dev/null 2>&1 &
+fi
 
 script_name="tmux-claude-title"
 # Usage metrics (when usage_log=true and jq is present): every claude -p run

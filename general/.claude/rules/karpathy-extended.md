@@ -87,7 +87,7 @@ Summarize what was done, what's verified, what's left. Don't continue from a sta
 Conformance > taste inside the codebase. Surface a harmful convention; don't fork silently.
 
 ## Rule 11 - Fail loud
-"Completed" is wrong if anything was skipped silently. "Tests pass" is wrong if any were skipped. Surface uncertainty.
+"Completed" is wrong if anything was skipped silently. "Tests pass" is wrong if any were skipped. Surface uncertainty. Lead every result report with the verdict: the first line says what passed, what failed, and what was not done (e.g. "crn01 PASS, crn04 NOT TESTED: ssh failed"). Never put a failure after the successes or behind a "next step".
 
 ## Rule 12 - A rejected or interrupted call may still have run
 Rejection does not guarantee nothing happened; a rejected multi-command script can have already executed its first statements. Re-check any precondition a following test or decision depends on, rather than assuming the prior state survived.

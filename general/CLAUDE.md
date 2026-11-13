@@ -91,6 +91,7 @@ The `~/.claude/lazy/code/` folder has three files; load each only when its own t
   - running any `adb` command against a phone, or installing/testing an app on the phone
   - doing Android, Flutter, or other mobile app work that touches a real device
   - about to change phone settings (screen timeout, lock, permissions) over adb
+  - an Okta Verify push needs approving, or pairing adb with the phone over Wi-Fi (pair code / port)
 
 - [`~/.claude/lazy/phone.md`](.claude/lazy/phone.md). **Read when** any of:
   - the environment's OS Version / `uname -r` contains `android`, or `hostname` prints `localhost`, or `~/.machine_metadata` has `id=phone`

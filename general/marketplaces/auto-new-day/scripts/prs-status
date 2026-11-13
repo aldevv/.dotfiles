@@ -1,0 +1,298 @@
+#!/usr/bin/env bash
+# prs-status: snapshot your open PRs and react to what changed since the last run.
+#
+# Usage: prs-status [--baseline] [--dispatch] [--dry-run]
+#   (none)       print new events (one JSON object per line); read-only, the cache is not touched.
+#   --baseline   record the current state without reporting anything (the sweep runs this at its end).
+#   --dispatch   route each event: a live claude window for the PR's repo in AUTO-inreview /
+#                AUTO-inprogress / AUTO-followup gets a message; otherwise a new AUTO-inreview
+#                window runs the profile's inreview skill with --recheck. A PR whose dispatch
+#                fails keeps its old cache entry, so the next run retries it.
+#   --dry-run    with --dispatch: print the routing decision, touch no tmux, keep the cache.
+#
+# An event is: a new comment / review / thread reply by a human other than you, CI turning red,
+# or the PR turning CONFLICTING. Bot activity is ignored (pr-watch handles bot reviews).
+# Profile: $AUTO_NEW_DAY_PROFILE, else ~/.config/auto-new-day/profile.json.
+# PRS_STATUS_FORGE=gitlab lists your open GitLab MRs through glab instead (list only, no CI).
+# GH_HOST=<host> points the GitHub path at another GitHub host (e.g. an enterprise one).
+# Cache: <state_dir>/prs-status.json. Log: <state_dir>/prs-status.log.
+
+set -euo pipefail
+
+is_baseline=0 should_dispatch=0 is_dry_run=0
+for arg in "$@"; do
+  case "$arg" in
+    --baseline) is_baseline=1 ;;
+    --dispatch) should_dispatch=1 ;;
+    --dry-run) is_dry_run=1 ;;
+    -h | --help)
+      sed -n '2,19p' "$0"
+      exit 0
+      ;;
+    *)
+      echo "prs-status: unknown arg $arg" >&2
+      exit 2
+      ;;
+  esac
+done
+
+SCRIPTS_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+PROFILE="${AUTO_NEW_DAY_PROFILE:-$HOME/.config/auto-new-day/profile.json}"
+
+# $1=jq path into the profile; prints empty when unset, expands a leading ~.
+profile_get() {
+  local path=$1
+  [ -f "$PROFILE" ] || return 0
+  jq -r "$path // empty" "$PROFILE" | sed "s#^~#$HOME#"
+}
+
+STATE_DIR="${AUTO_NEW_DAY_STATE_DIR:-$(profile_get .state_dir)}"
+STATE_DIR="${STATE_DIR:-$HOME/.local/state/auto-new-day}"
+WORKING_ROOT="${AUTO_NEW_DAY_WORKING_ROOT:-$(profile_get .working_root)}"
+WORKING_ROOT="${WORKING_ROOT:-$HOME}"
+GH_ACCOUNT="$(profile_get .gh_account)"
+INREVIEW_SKILL="$(profile_get '(.bucket_skills.inreview | if type == "object" then .default else . end)')"
+INREVIEW_SKILL="${INREVIEW_SKILL:-/auto-new-day:impl}"
+CACHE="$STATE_DIR/prs-status.json"
+LOG="$STATE_DIR/prs-status.log"
+TODAY="$(date +%F)"
+mkdir -p "$STATE_DIR"
+
+log() { echo "$(date +%Y-%m-%dT%H:%M:%S%z) $*" >>"$LOG"; }
+
+# Prints your open GitLab MRs (glab's logged-in account) in the same shape fetch_github produces.
+# Ceiling: 50 MRs, last 100 notes each. No CI state (the MR list has no pipeline).
+fetch_gitlab() {
+  local me mrs out="[]" mr notes
+  me="$(glab api user | jq -r .username)"
+  mrs="$(glab api "merge_requests?state=opened&scope=all&author_username=$me&per_page=50")"
+  while IFS= read -r mr; do
+    [ -n "$mr" ] || continue
+    notes="$(glab api "projects/$(jq -r .project_id <<<"$mr")/merge_requests/$(jq -r .iid <<<"$mr")/notes?per_page=100&sort=desc")"
+    out="$(jq --argjson mr "$mr" --argjson notes "$notes" --arg me "$me" '. + [{
+      url: $mr.web_url, number: $mr.iid, title: $mr.title, branch: $mr.source_branch,
+      repo: ($mr.references.full | split("!")[0] | split("/")[-1]),
+      mergeable: (if $mr.has_conflicts then "CONFLICTING" else "MERGEABLE" end), ci: "NONE",
+      human: [$notes[] | select((.system | not) and .author.username != $me and (.author.username | test("bot|service[-_]?account"; "i") | not)) | {who: .author.username, at: .created_at}]
+    }]' <<<"$out")"
+  done < <(jq -c '.[]' <<<"$mrs")
+  jq 'map(. + {lastHumanAt: ([.human[].at] | max // ""), lastHumanBy: ((.human | max_by(.at)) // {} | .who // "")})' <<<"$out"
+}
+
+if [ "${PRS_STATUS_FORGE:-github}" = gitlab ]; then
+  ME="$(glab api user | jq -r .username)"
+  current="$(fetch_gitlab)"
+else
+  # GH_HOST (gh's own env var) picks the GitHub host; the profile's gh_account picks the account.
+  # Use the account through a token, not `gh auth switch`, so other sessions keep theirs.
+  if [ -n "$GH_ACCOUNT" ]; then
+    GH_TOKEN="$(gh auth token -u "$GH_ACCOUNT")"
+    export GH_TOKEN
+  fi
+  ME="$(gh api user --jq .login)"
+
+  # Fetch every open PR you authored with its human activity, CI rollup and mergeable state.
+  # Ceiling: 50 PRs, last 30 comments/reviews, last 50 threads x 10 replies. Paginate if that bites.
+  read -r -d '' QUERY <<'GQL' || true
+query($q: String!) {
+  search(query: $q, type: ISSUE, first: 50) {
+    nodes {
+      ... on PullRequest {
+        url number title headRefName mergeable
+        repository { name }
+        comments(last: 30) { nodes { author { __typename login } createdAt } }
+        reviews(last: 30) { nodes { author { __typename login } submittedAt } }
+        reviewThreads(last: 50) { nodes { comments(last: 10) { nodes { author { __typename login } createdAt } } } }
+        commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
+      }
+    }
+  }
+}
+GQL
+  current="$(gh api graphql -f query="$QUERY" -f q="is:pr is:open author:$ME archived:false" --jq '.data.search.nodes')"
+
+  # Reduce each PR to: identity fields, ci, mergeable, and the human (non-bot, non-self) activity list.
+  current="$(jq --arg me "$ME" '
+  map({
+    url, number, title, branch: .headRefName, repo: .repository.name, mergeable,
+    ci: (.commits.nodes[0].commit.statusCheckRollup.state // "NONE"),
+    human: [
+      (.comments.nodes[] | {a: .author, at: .createdAt}),
+      (.reviews.nodes[] | {a: .author, at: .submittedAt}),
+      (.reviewThreads.nodes[].comments.nodes[] | {a: .author, at: .createdAt})
+      | select(.a.__typename == "User" and .a.login != $me and .at != null)
+      | {who: .a.login, at}
+    ]
+  })
+  | map(. + {lastHumanAt: ([.human[].at] | max // ""), lastHumanBy: ((.human | max_by(.at)) // {} | .who // "")})' <<<"$current")"
+fi
+
+[ -f "$CACHE" ] || echo '{}' >"$CACHE"
+cache="$(cat "$CACHE")"
+
+# cache entry for a PR = its current snapshot minus the bulky activity list.
+snapshot() { jq 'map({key: .url, value: (del(.human))}) | from_entries' <<<"$1"; }
+
+if [ "$is_baseline" = 1 ] || [ "$cache" = '{}' ]; then
+  snapshot "$current" >"$CACHE"
+  log "baseline: $(jq length <<<"$current") open PRs"
+  exit 0
+fi
+
+# Diff against the cache. A PR missing from the cache (newly opened) is baselined, not reported.
+events="$(jq -c --argjson cache "$cache" '
+  .[] | . as $pr | $cache[$pr.url] as $prev | select($prev != null)
+  | {
+      url, number, title, branch, repo,
+      newComments: [$pr.human[] | select(.at > ($prev.lastHumanAt // ""))],
+      ciRed: (($pr.ci == "FAILURE" or $pr.ci == "ERROR") and ($prev.ci != "FAILURE" and $prev.ci != "ERROR")),
+      conflict: ($pr.mergeable == "CONFLICTING" and $prev.mergeable != "CONFLICTING")
+    }
+  | select((.newComments | length) > 0 or .ciRed or .conflict)' <<<"$current")"
+
+# $1=event JSON; prints the ticket-style item (ABC-123) from the branch or title, else <repo>-<n>.
+item_of() {
+  local event=$1 ticket
+  ticket="$(jq -r '(.branch | capture("^(?<t>[A-Za-z]+-[0-9]+)").t) // (.title | capture("^(?<t>[A-Z]+-[0-9]+)").t) // empty' <<<"$event")"
+  if [ -n "$ticket" ]; then
+    echo "${ticket^^}"
+  else
+    jq -r '"\(.repo)-\(.number)"' <<<"$event"
+  fi
+}
+
+# $1=event JSON; prints the message sent to the worker.
+message_of() {
+  jq -r '
+    [ (if (.newComments | length) > 0 then
+         "\(.newComments | length) new comment(s) from \([.newComments[].who] | unique | join(", ")) (latest \([.newComments[].at] | max))"
+       else empty end),
+      (if .ciRed then "CI turned red" else empty end),
+      (if .conflict then "the PR now conflicts with its base branch" else empty end)
+    ] as $what
+    | "prs-status: new activity on \(.url): \($what | join("; ")). Read the unresolved review threads (GraphQL reviewThreads, paginated) and the failing checks, fix what is still open locally and commit. Do not push, comment, resolve threads or merge. End with a short report of what you changed and what still needs me."' <<<"$1"
+}
+
+# $1=pane target; true once the pane shows Claude working ("Verb… (12s · ...") within $2 seconds.
+wait_busy() {
+  local pane=$1 timeout=$2 i
+  for ((i = 0; i < timeout; i += 2)); do
+    tmux capture-pane -p -t "$pane" | grep -qE '… \(([0-9]+[hms] ?)+' && return 0
+    sleep 2
+  done
+  return 1
+}
+
+# $1=repo name, $2=item, $3=PR branch; prints "<pane-target> <window-name>" of a live claude pane
+# working on this PR: in a checkout of the repo AND (window named <item>-* OR pane on the PR branch).
+# Another PR's window in the same repo never matches, so its worker isn't pulled off its own branch.
+find_pane() {
+  local repo=$1 item=$2 branch=$3 target name cmd path remote
+  while read -r target name cmd path; do
+    [ "$cmd" = claude ] || continue
+    remote="$(git -C "$path" remote get-url origin 2>/dev/null)" || continue
+    [ "$(basename -s .git "$remote")" = "$repo" ] || continue
+    if [[ "$name" == "$item-"* ]] || [ "$(git -C "$path" branch --show-current)" = "$branch" ]; then
+      echo "=$target $name"
+      return 0
+    fi
+  done < <(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{window_name} #{pane_current_command} #{pane_current_path}' 2>/dev/null |
+    grep -E '^AUTO-(inreview|inprogress|followup):')
+  return 1
+}
+
+# $1=main checkout, $2=branch; prints the worktree that has the branch checked out, if any.
+worktree_for() {
+  local checkout=$1 branch=$2
+  git -C "$checkout" worktree list --porcelain |
+    awk -v ref="branch refs/heads/$branch" '/^worktree /{dir=substr($0, 10)} $0 == ref {print dir; exit}'
+}
+
+# $1=event JSON; routes it and returns 0 only when a claude pane is verifiably working on it.
+dispatch() {
+  local event=$1 repo url item msg found pane win repo_dir arg number branch
+  repo="$(jq -r .repo <<<"$event")"
+  url="$(jq -r .url <<<"$event")"
+  number="$(jq -r .number <<<"$event")"
+  branch="$(jq -r .branch <<<"$event")"
+  item="$(item_of "$event")"
+  msg="$(message_of "$event")"
+
+  if found="$(find_pane "$repo" "$item" "$branch")"; then
+    read -r pane win <<<"$found"
+    if [ "$is_dry_run" = 1 ]; then
+      echo "dry-run: $url -> send to $pane ($win): $msg"
+      return 0
+    fi
+    tmux send-keys -t "$pane" -l "$msg"
+    sleep 1
+    tmux send-keys -t "$pane" Enter
+    if wait_busy "$pane" 30; then
+      log "sent: $url -> $pane ($win), claude is working"
+      echo "sent: $url -> $pane ($win)"
+      return 0
+    fi
+    log "FAILED: $url -> $pane ($win), message sent but claude never went busy"
+    echo "failed: $url -> $pane ($win) did not go busy" >&2
+    return 1
+  fi
+
+  repo_dir="$WORKING_ROOT/$repo"
+  if [ ! -d "$repo_dir/.git" ]; then
+    log "FAILED: $url, no window and no checkout at $repo_dir"
+    echo "failed: $url, no checkout at $repo_dir" >&2
+    return 1
+  fi
+  # Reuse the worktree that already has the PR branch; otherwise bootstrap checks it out in the main checkout.
+  local worktree checkout_args="--pr-num $number --pr-branch \"$branch\""
+  worktree="$(worktree_for "$repo_dir" "$branch")"
+  if [ -n "$worktree" ]; then
+    repo_dir="$worktree"
+    checkout_args=""
+  fi
+  win="$item-$repo#$number"
+  arg="$item"
+  [[ "$item" =~ ^[A-Z]+-[0-9]+$ ]] || arg="$url"
+  if [ "$is_dry_run" = 1 ]; then
+    echo "dry-run: $url -> new window AUTO-inreview:$win in $repo_dir running $INREVIEW_SKILL --recheck $arg"
+    return 0
+  fi
+
+  # Spawn the window the same way the sweep does (own-work guards, PR branch checked out).
+  local date_dir="$STATE_DIR/dates/$TODAY"
+  mkdir -p "$date_dir/dispatch" "$date_dir/logs"
+  local bootstrap="AUTO_NEW_DAY_SCRIPTS_DIR=$SCRIPTS_DIR AUTO_NEW_DAY_STATE_DIR=$STATE_DIR \"$SCRIPTS_DIR/bootstrap-window.sh\" --profile own-work --date-dir \"$date_dir\" --repo-dir \"$repo_dir\" $checkout_args --ticket $item --final-cwd \"$repo_dir\""
+  local invocation="NO_SUBAGENTS=1 claude --dangerously-skip-permissions \"$INREVIEW_SKILL --no-subagents --recheck $arg\""
+  local result
+  result="$("$SCRIPTS_DIR/tmux-dispatch.sh" AUTO-inreview "$win" "$repo_dir" "$bootstrap" "$invocation" --log "$date_dir/logs/$win.log")"
+  if [ "$result" != spawned ]; then
+    log "FAILED: $url -> AUTO-inreview:$win, tmux-dispatch said: $result"
+    echo "failed: $url -> AUTO-inreview:$win: $result" >&2
+    return 1
+  fi
+  if wait_busy "=AUTO-inreview:$win" 90; then
+    log "spawned: $url -> AUTO-inreview:$win, claude is working"
+    echo "spawned: $url -> AUTO-inreview:$win"
+    return 0
+  fi
+  log "FAILED: $url -> AUTO-inreview:$win spawned but claude never went busy"
+  echo "failed: $url -> AUTO-inreview:$win did not go busy" >&2
+  return 1
+}
+
+new_cache="$(snapshot "$current")"
+while IFS= read -r event; do
+  [ -n "$event" ] || continue
+  if [ "$should_dispatch" = 0 ]; then
+    echo "$event"
+    continue
+  fi
+  url="$(jq -r .url <<<"$event")"
+  dispatch "$event" && continue
+  new_cache="$(jq --arg u "$url" --argjson old "$cache" '.[$u] = $old[$u]' <<<"$new_cache")"
+done <<<"$events"
+
+if [ "$should_dispatch" = 1 ] && [ "$is_dry_run" = 0 ]; then
+  echo "$new_cache" >"$CACHE"
+fi
+log "checked $(jq length <<<"$current") open PRs, $(grep -c . <<<"$events" || true) with new activity"
