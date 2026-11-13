@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# mssh: ssh into one of my machines by name, from any of the others, over the LAN.
+#
+# Usage: mssh <machine> [--gui] [--ip] [command...]
+#   --gui   run the command inside the logged-in desktop session (Linux: the X/GNOME
+#           session's DISPLAY/XAUTHORITY/DBUS; macOS: launchctl asuser).
+#   --ip    print the machine's current IP and exit.
+#   no command opens an interactive shell.
+#
+# Machine data (user, LAN MAC, mDNS name, host-key alias per source machine) comes from
+# $MACHINES_CONFIG, default ~/.dotfiles/personal/machines.json (private submodule).
+# The working IP is cached in ~/.cache/machines-ops/<machine>.ip.
+set -euo pipefail
+
+CONFIG="${MACHINES_CONFIG:-$HOME/.dotfiles/personal/machines.json}"
+CACHE_DIR="$HOME/.cache/machines-ops"
+
+target="" is_gui=0 want_ip=0
+while [ $# -gt 0 ]; do
+  case $1 in
+    --gui) is_gui=1 ;;
+    --ip) want_ip=1 ;;
+    -h | --help)
+      sed -n '2,13p' "$0"
+      exit 0
+      ;;
+    *)
+      if [ -z "$target" ]; then target=$1; else break; fi
+      ;;
+  esac
+  shift
+done
+[ -n "$target" ] || {
+  echo "usage: mssh <machine> [--gui] [--ip] [command...]" >&2
+  exit 2
+}
+[ -f "$CONFIG" ] || {
+  echo "mssh: no machine config at $CONFIG (init the personal submodule)" >&2
+  exit 1
+}
+
+# $1=jq filter over the config; prints the value or nothing.
+cfg() { jq -r "$1 // empty" "$CONFIG"; }
+
+cfg ".machines[\"$target\"]" >/dev/null && [ -n "$(cfg ".machines[\"$target\"].user")" ] || {
+  echo "mssh: unknown machine '$target' (known: $(cfg '.machines | keys | join(", ")'))" >&2
+  exit 2
+}
+self="$(jq -r --arg h "$(hostname)" '.machines | to_entries[] | select(.value.hostname == $h) | .key' "$CONFIG" | head -1)"
+user="$(cfg ".machines[\"$target\"].user")"
+lan_mac="$(cfg ".machines[\"$target\"].lan_mac")"
+mdns="$(cfg ".machines[\"$target\"].mdns")"
+key_alias="$(cfg ".machines[\"$target\"].host_key_alias[\"$self\"]")"
+subnet="$(cfg .subnet)"
+
+# The host-key alias makes ssh check the key stored under that name, so a wrong IP fails
+# verification instead of logging into some other box: it doubles as the identity check.
+ssh_opts=(-o BatchMode=yes -o ConnectTimeout=4 -o "User=$user")
+[ -z "$key_alias" ] || ssh_opts+=(-o "HostKeyAlias=$key_alias")
+
+# $1=host or IP; true when ssh gets in and the host key matches.
+reaches() { ssh "${ssh_opts[@]}" -o "HostName=$1" "$target" true 2>/dev/null; }
+
+# Prints the IP whose MAC is $lan_mac after a ping sweep (macOS arp drops leading zeros).
+sweep_for_mac() {
+  local want i
+  want="$(echo "$lan_mac" | tr 'A-F' 'a-f' | sed -E 's/(^|:)0([0-9a-f])/\1\2/g')"
+  for i in $(seq 1 254); do
+    if [ "$(uname)" = Darwin ]; then ping -c1 -t1 "$subnet.$i" >/dev/null 2>&1 & else ping -c1 -W1 "$subnet.$i" >/dev/null 2>&1 & fi
+  done
+  wait
+  if [ "$(uname)" = Darwin ]; then
+    arp -an | awk -v m="$want" 'tolower($4) == m {gsub(/[()]/, "", $2); print $2; exit}'
+  else
+    ip neigh | awk -v m="$want" '{l = tolower($5); gsub(/(^|:)0/, ":", l); sub(/^:/, "", l)} l == m {print $1; exit}'
+  fi
+}
+
+host=""
+mkdir -p "$CACHE_DIR"
+cached="$(cat "$CACHE_DIR/$target.ip" 2>/dev/null || true)"
+for candidate in "$cached" "$mdns"; do
+  if [ -n "$candidate" ] && reaches "$candidate"; then
+    host=$candidate
+    break
+  fi
+done
+if [ -z "$host" ]; then
+  candidate="$(sweep_for_mac)"
+  if [ -n "$candidate" ] && reaches "$candidate"; then host=$candidate; fi
+fi
+[ -n "$host" ] || {
+  echo "mssh: cannot reach $target (tried cached IP, mDNS, LAN sweep for its MAC)" >&2
+  exit 1
+}
+[ "$host" = "$mdns" ] || echo "$host" >"$CACHE_DIR/$target.ip"
+
+if [ "$want_ip" = 1 ]; then
+  echo "$host"
+  exit 0
+fi
+
+cmd="$*"
+if [ "$is_gui" = 1 ] && [ -n "$cmd" ]; then
+  if [ "$(cfg ".machines[\"$target\"].os")" = darwin ]; then
+    cmd="launchctl asuser \$(id -u) $cmd"
+  else
+    # Borrow the desktop session's env from its window manager / shell process.
+    cmd='pid=$(pgrep -u "$USER" -o -f "gnome-shell|xmonad" | head -1); '
+    cmd+='eval "$(tr "\0" "\n" </proc/$pid/environ | grep -E "^(DISPLAY|XAUTHORITY|DBUS_SESSION_BUS_ADDRESS|XDG_RUNTIME_DIR)=" | sed "s/^/export /")"; '
+    cmd+="$*"
+  fi
+fi
+
+if [ -n "$cmd" ]; then
+  exec ssh "${ssh_opts[@]}" -o "HostName=$host" "$target" "$cmd"
+fi
+exec ssh -t -o ConnectTimeout=4 -o "User=$user" ${key_alias:+-o "HostKeyAlias=$key_alias"} -o "HostName=$host" "$target"
