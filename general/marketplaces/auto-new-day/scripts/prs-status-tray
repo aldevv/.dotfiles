@@ -2,10 +2,16 @@
 """Tray icon for prs-status: green speech bubble while the 15 min timer is on, grey when off.
 Menu: turn the timer on/off, run a check now, open the log, and one row per open PR
 with who commented last (click opens the PR).
+
+PRS_STATUS_SSH="ssh <args> user@host" points it at the machine that runs the timer
+(e.g. a laptop showing titan's); unset, it reads this machine.
 """
 import json
 import os
+import shlex
 import subprocess
+import sys
+import tempfile
 import time
 from datetime import datetime
 
@@ -17,40 +23,44 @@ if not hasattr(Image, "ANTIALIAS"):
 
 import pystray
 
-PROFILE = os.environ.get("AUTO_NEW_DAY_PROFILE", os.path.expanduser("~/.config/auto-new-day/profile.json"))
-POLL_SECONDS = 10
+SSH = shlex.split(os.environ.get("PRS_STATUS_SSH", ""))
+POLL_SECONDS = 30 if SSH else 10
 COLORS = {True: (63, 185, 80), False: (139, 148, 158)}
+OPENER = "open" if sys.platform == "darwin" else "xdg-open"
+
+# Resolves the state dir on the machine that owns it, so the same snippet works locally and over SSH.
+STATE_DIR = (
+    'd=$(jq -r ".state_dir // empty" ~/.config/auto-new-day/profile.json 2>/dev/null); '
+    'd=${AUTO_NEW_DAY_STATE_DIR:-${d:-$HOME/.local/state/auto-new-day}}; d=${d/#\\~/$HOME}; '
+)
+STATE = STATE_DIR + (
+    "systemctl --user is-active prs-status.timer; "
+    'tail -n1 "$d/prs-status.log" 2>/dev/null || echo "no runs yet"; '
+    'cat "$d/prs-status.json" 2>/dev/null || echo "{}"'
+)
 
 
-def state_dir():
+def sh(script):
+    cmd = [*SSH, "bash -c " + shlex.quote(script)] if SSH else ["bash", "-c", script]
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=20).stdout
+
+
+def read_state():
     try:
-        configured = json.load(open(PROFILE)).get("state_dir")
-    except (FileNotFoundError, ValueError):
-        configured = None
-    return os.path.expanduser(os.environ.get("AUTO_NEW_DAY_STATE_DIR") or configured or "~/.local/state/auto-new-day")
+        active, last_line, cache = sh(STATE).split("\n", 2)
+        prs = json.loads(cache).values()
+    except (ValueError, subprocess.TimeoutExpired):
+        return False, "cannot reach the prs-status machine", []
+    prs = sorted(prs, key=lambda pr: pr.get("lastHumanAt") or "", reverse=True)
+    return active == "active", last_line, prs
 
 
-CACHE = os.path.join(state_dir(), "prs-status.json")
-LOG = os.path.join(state_dir(), "prs-status.log")
-
-
-def timer_on():
-    return subprocess.run(["systemctl", "--user", "is-active", "--quiet", "prs-status.timer"]).returncode == 0
-
-
-def last_log_line():
-    try:
-        return open(LOG).readlines()[-1].strip()
-    except (FileNotFoundError, IndexError):
-        return "no runs yet"
-
-
-def read_prs():
-    try:
-        prs = json.load(open(CACHE)).values()
-    except (FileNotFoundError, ValueError):
-        return []
-    return sorted(prs, key=lambda pr: pr.get("lastHumanAt") or "", reverse=True)
+def notify(title, body):
+    if sys.platform == "darwin":
+        script = f"display notification {json.dumps(body)} with title {json.dumps(title)}"
+        subprocess.run(["osascript", "-e", script])
+    else:
+        subprocess.run(["notify-send", title, body])
 
 
 def local_time(iso):
@@ -62,22 +72,27 @@ def local_time(iso):
 def pr_item(pr):
     who = pr.get("lastHumanBy") or "-"
     label = f"{pr['repo']}#{pr['number']}   {who}   {local_time(pr.get('lastHumanAt'))}"
-    return pystray.MenuItem(label, lambda icon, item: subprocess.Popen(["xdg-open", pr["url"]]))
+    return pystray.MenuItem(label, lambda icon, item: subprocess.Popen([OPENER, pr["url"]]))
 
 
 def toggle(icon, item):
-    action = ["disable", "--now"] if timer_on() else ["enable", "--now"]
-    subprocess.run(["systemctl", "--user", *action, "prs-status.timer"])
+    sh(
+        "if systemctl --user is-active --quiet prs-status.timer; "
+        "then systemctl --user disable --now prs-status.timer; "
+        "else systemctl --user enable --now prs-status.timer; fi"
+    )
     refresh(icon)
 
 
 def run_now(icon, item):
-    subprocess.Popen(["systemctl", "--user", "start", "--no-block", "prs-status.service"])
-    subprocess.run(["notify-send", "prs-status", "check started"])
+    sh("systemctl --user start --no-block prs-status.service")
+    notify("prs-status", "check started")
 
 
 def open_log(icon, item):
-    subprocess.Popen(["xdg-open", LOG])
+    with tempfile.NamedTemporaryFile("w", suffix="-prs-status.log", delete=False) as log:
+        log.write(sh(STATE_DIR + 'tail -n 200 "$d/prs-status.log"'))
+    subprocess.Popen([OPENER, log.name])
 
 
 def quit_app(icon, item):
@@ -85,15 +100,13 @@ def quit_app(icon, item):
     os._exit(0)
 
 
-def menu_items():
-    yield pystray.MenuItem(
-        "Timer on (click to turn off)" if timer_on() else "Timer off (click to turn on)", toggle
-    )
+def menu_items(on, prs):
+    yield pystray.MenuItem("Timer on (click to turn off)" if on else "Timer off (click to turn on)", toggle)
     yield pystray.MenuItem("Check now", run_now)
     yield pystray.MenuItem("Open log", open_log)
     yield pystray.Menu.SEPARATOR
     yield pystray.MenuItem("Last commenter per open PR:", None, enabled=False)
-    for pr in read_prs():
+    for pr in prs:
         yield pr_item(pr)
     yield pystray.Menu.SEPARATOR
     yield pystray.MenuItem("Quit", quit_app)
@@ -109,11 +122,11 @@ def make_bubble(rgb):
     return img
 
 
-def refresh(icon):
-    on = timer_on()
+def refresh(icon, state=None):
+    on, last_line, prs = state or read_state()
     icon.icon = make_bubble(COLORS[on])
-    icon.title = f"prs-status: timer {'on' if on else 'off'}\n{last_log_line()}"
-    icon.menu = pystray.Menu(*menu_items())
+    icon.title = f"prs-status: timer {'on' if on else 'off'}\n{last_line}"
+    icon.menu = pystray.Menu(*menu_items(on, prs))
     icon.update_menu()
 
 
@@ -121,14 +134,14 @@ def poll(icon):
     icon.visible = True
     last_seen = None
     while True:
-        seen = (timer_on(), os.path.getmtime(CACHE) if os.path.exists(CACHE) else 0, last_log_line())
+        state = read_state()
+        seen = (state[0], state[1], [(pr["url"], pr.get("lastHumanAt")) for pr in state[2]])
         if seen != last_seen:
-            refresh(icon)
+            refresh(icon, state)
             last_seen = seen
         time.sleep(POLL_SECONDS)
 
 
 if __name__ == "__main__":
-    tray = pystray.Icon("prs-status", make_bubble(COLORS[timer_on()]), "prs-status")
-    tray.menu = pystray.Menu(*menu_items())
+    tray = pystray.Icon("prs-status", make_bubble(COLORS[False]), "prs-status")
     tray.run(setup=poll)

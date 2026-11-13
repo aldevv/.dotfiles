@@ -33,7 +33,11 @@ if [[ "$event" == "toggle-done" ]]; then
     touch "$done_muted_file"
     state="off"
   fi
-  notify-send -u low -t 2000 -a claude-code "Claude Code" "Done notifications $state" >/dev/null 2>&1 || true
+  if [[ "$(uname -s)" == Darwin ]]; then
+    osascript -e "display notification \"Done notifications $state\" with title \"Claude Code\"" >/dev/null 2>&1 || true
+  else
+    notify-send -u low -t 2000 -a claude-code "Claude Code" "Done notifications $state" >/dev/null 2>&1 || true
+  fi
   exit 0
 fi
 [[ "$event" == "stop" && -e "$done_muted_file" ]] && exit 0

@@ -4,6 +4,9 @@ Newest first. One entry per `.claude-plugin/plugin.json` version; the pre-commit
 
 **Rollback:** find the commit that set a version with `git log --oneline -S'"version": "<X>"' -- <plugin>/.claude-plugin/plugin.json`, then `git revert <sha>` (or `git checkout <sha> -- <plugin>/<file>` for one file), bump the version, add an entry here, and reinstall (`claude plugin marketplace update <m> && claude plugin update <p>@<m>`).
 
+## 0.1.27 (2026-11-13)
+- `prs-status-tray`: `PRS_STATUS_SSH="ssh ... user@host"` shows and controls another machine's prs-status timer (one shell snippet runs locally or over SSH); opens URLs and notifications with the macOS equivalents on Darwin.
+
 ## 0.1.26 (2026-11-13)
 - Window names carry the PR number: own-work / followup windows are `<ITEM>-<repo>#<pr>` (no `#<pr>` until a PR exists), teammate reviews are `<repo>#<pr>`. `prs-status` opens new windows with the same name.
 
