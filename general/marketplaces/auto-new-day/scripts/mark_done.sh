@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # mark_done.sh
-# Called by children (fix-bug-work, impl-work, newconnector, pr-code-review-work)
+# Called by children (the domain pack's wrapper skills)
 # at the end of a completed run — OR by the operator manually — to explicitly signal
 # "this ticket/PR is done, drop it from the next sweep".
 #
@@ -11,7 +11,7 @@
 #   3. Removes today's dispatch manifest at $DATE_DIR/dispatch/<manifest-base>.done.json
 #      so a same-day re-dispatch is a fresh dispatch, not a stale-manifest resume.
 #   4. Appends an audit line to ~/.cache/auto-new-day-sweep/mark-done.log.
-#   5. When --forever: writes a permanent record at ~/work/.auto-new-day/done/<key>.done.json
+#   5. When --forever: writes a permanent record at <state_dir>/done/<key>.done.json
 #      that triage.sh treats as an unconditional discard. Without --forever, the drop is
 #      soft: if the PR / branch state genuinely changes later (new commits from someone
 #      else, new comments), triage.sh's discovery layer re-derives from ground truth and
@@ -58,10 +58,10 @@ Recommended:
 Optional:
   --pr-url <url>          PR URL (required for inreview-others state.json cleanup)
   --repo-dir <path>       Local repo dir (used to resolve the in-repo marker path)
-  --forever               Permanent discard — write ~/work/.auto-new-day/done/<key>.done.json
+  --forever               Permanent discard — write <state_dir>/done/<key>.done.json
                           so triage.sh treats this key as done forever
-  --state-json <path>     state.json path  (default ~/work/.auto-new-day/state.json)
-  --dates-dir <path>      dates dir path   (default ~/work/.auto-new-day/dates)
+  --state-json <path>     state.json path  (default <state_dir>/state.json)
+  --dates-dir <path>      dates dir path   (default <state_dir>/dates)
   --today <YYYY-MM-DD>    Override "today"
 
 Exit codes:

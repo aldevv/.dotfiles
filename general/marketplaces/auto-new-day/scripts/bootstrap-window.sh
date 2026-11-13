@@ -13,7 +13,7 @@
 #     - Used by AUTO-inreview and AUTO-inprogress dispatches
 #
 #   --profile review
-#     - Does NOT prepend any guards/bin to $PATH (residual; pr-code-review-work
+#     - Does NOT prepend any guards/bin to $PATH (residual; the review wrapper skill
 #       never posts, so no shim is installed for this profile)
 #     - Leaves GH_TOKEN / GITHUB_TOKEN intact
 #     - Used by AUTO-inreview-others dispatches
@@ -33,10 +33,10 @@
 # Args (all required unless noted):
 #   --date-dir <path>     Per-date archive dir (sets $AUTO_NEW_DAY_DATE_DIR)
 #   --profile own-work|review
-#                         own-work resolves guards to ~/work/.auto-new-day/guards/own-work/
-#                         review   resolves guards to ~/work/.auto-new-day/guards/review/
+#                         own-work resolves guards to <state_dir>/guards/own-work/
+#                         review   resolves guards to <state_dir>/guards/review/
 #   --repo-dir <path>     Optional. If present, cd into it, source .envrc,
-#                         wire git guards. Skipped for newconnector dispatches
+#                         wire git guards. Skipped for new-item dispatches
 #                         where no repo exists yet.
 #   --pr-num <N>          Optional, paired with --pr-branch. Triggers fetch+checkout.
 #   --pr-branch <name>    Optional. Local branch name to fetch into.
@@ -49,8 +49,8 @@
 #                         $AUTO_NEW_DAY_DATE_DIR/dispatch/review-<NAME>.done.json.
 #   --final-cwd <path>    Required. Where to `cd` before `exec`-ing the shell.
 #                         For own-work in a checked-out PR: the repo dir.
-#                         For newconnector: $HOME/work.
-#                         For review session: $HOME/work (so /pr-code-review-work
+#                         For new-item dispatches: <working_root>.
+#                         For review session: <working_root> (so the review wrapper skill
 #                         is discoverable at the parent of .claude/skills/).
 #
 # Exits 1 with a clear error on bad args or git-work failures (so tmux-dispatch
@@ -142,7 +142,7 @@ if [ "$PROFILE" = "own-work" ]; then
   export PATH="$GUARDS_DIR/bin:$PATH"
   unset GH_TOKEN GITHUB_TOKEN GH_HOST
 fi
-# For --profile review: PATH and gh tokens stay as-is (residual). pr-code-review-work
+# For --profile review: PATH and gh tokens stay as-is (residual). the review wrapper skill
 # never posts; findings go to Hunk + an answer-draft file for the operator to post.
 
 # Resolve a path for blocked.md so per-repo setup failures surface in the

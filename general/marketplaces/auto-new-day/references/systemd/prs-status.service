@@ -1,0 +1,12 @@
+[Unit]
+Description=auto-new-day prs-status: route new activity on your open PRs to tmux workers
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:%h/.nix-profile/bin:%h/.cargo/bin:%h/.bun/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin
+Environment=AUTO_NEW_DAY_STATE_DIR=__STATE_DIR__
+Environment=AUTO_NEW_DAY_WORKING_ROOT=__WORKING_ROOT__
+ExecStart=__SCRIPTS_DIR__/prs-status --dispatch
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=prs-status

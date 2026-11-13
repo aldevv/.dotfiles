@@ -69,7 +69,7 @@ if [ -n "$KEY_FLAG" ]; then
     --diff-range "<git range that was passed to /report>" \
     --pr-feedback "<pr_feedback path passed to /report, if any>" \
     --commits "<short SHAs added this run, space-separated>" \
-    --artifact <kind>=<path>   # repeat for each artifact (validate-connector, my-connector-review, baton-admin-review, etc.)
+    --artifact <kind>=<path>   # repeat for each artifact (one kind per sibling skill)
 fi
 ```
 
@@ -77,7 +77,7 @@ Best-effort; never block. The script always exits 0 unless its args are malforme
 
 ## Compose with wrapping skills
 
-A wrapper skill (e.g. `/fix-bug-work` wraps `/auto-new-day:fix-bug`) should:
+A wrapper skill (e.g. a domain pack's fix-bug wrapper wraps `/auto-new-day:fix-bug`) should:
 
 - Do its OWN resume check at the top, before delegating to the wrapped skill. If the wrapper's manifest exists, fast-path WITHOUT calling the wrapped skill.
 - Pass `--skip-hunk` (or equivalent suppressor) when delegating so the wrapped skill DOESN'T also write a manifest. The wrapper writes the manifest at end with the richer artifact list.

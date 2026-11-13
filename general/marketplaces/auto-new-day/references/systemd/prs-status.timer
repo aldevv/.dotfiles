@@ -1,0 +1,9 @@
+[Unit]
+Description=Run prs-status every 15 min on weekdays, 06:00 to 21:00
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 06..20:00/15:00__TZ__
+Unit=prs-status.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/stop-no-operator-questions.py"}]}
+    ],
+    "SessionStart": [
+      {"matcher": "startup|resume|clear|compact", "hooks": [
+        {"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-context.py 0"},
+        {"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-context.py 1"},
+        {"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-context.py 2"}
+      ]}
+    ]
+  }
+}

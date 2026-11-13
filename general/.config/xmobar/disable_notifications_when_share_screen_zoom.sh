@@ -19,10 +19,12 @@ else
 	fi
 fi
 
-if [[ "$(dunstctl is-paused)" == "true" ]]; then
-	icon="⚐"
+# Claude icon: orange while Claude "Done" notifications are on, grey when muted.
+# Left click toggles them (notify.sh toggle-done), right click pops dunst history.
+if [[ -e "${XDG_CACHE_HOME:-$HOME/.cache}/claude-notify/done-muted" ]]; then
+	icon="claude_off.xpm"
 else
-	icon="⚑"
+	icon="claude_on.xpm"
 fi
 
-echo '<action=`dunstctl history-pop` button=1><fn=3>'"${icon}"'</fn></action>'
+echo '<action=`'"$HOME"'/.claude/hooks/notify.sh toggle-done` button=1><action=`dunstctl history-pop` button=3><icon='"${icon}"'/></action></action>'

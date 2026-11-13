@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×117)
+- done. (×176)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×16)
@@ -67,6 +67,17 @@ increment from there.
 - done, an empty job ID skips the cache now. the queue lib also fails a job with no ID (`ErrNoJobID` in the worker package), so it shouldn't happen. (×1)
 - dropped them. the endpoint comes from the region now and `base-url` is a hidden cli-only override. (×1)
 - opened <link> (×1)
+- fixed it here instead of a follow-up. (×1)
+- done, `<helper>` takes path segments now. kept `url.PathEscape` on the id since `JoinPath` won't escape a `/` inside a segment. (×1)
+- fixed the comment. (×1)
+- done. also noted in the docs that a deleted record waits for the full sync. (×1)
+- done, both. (×1)
+- agreed, will confirm on a live tenant before provisioning goes on. (×1)
+- yep, will map them once a live tenant shows the keys. (×1)
+- you're right, dropped it. <link> (×1)
+- 5 at a time now, with retries per call. skipped the cache. (×1)
+- yep, done. (×1)
+- dropped them. leaving them out gives the same response as sending false. (×1)
 
 ### Replies — pushback
 
@@ -101,6 +112,12 @@ increment from there.
 - task errors don't reach the caller as a gRPC code, the queue passes them back as a plain string. so i'd keep `fmt.Errorf` here. (×1)
 - named regions come back even when disabled, so `requireDefaultRegion` already rejects them. <link> (×1)
 - a `Failed` job can't be used and only delete + recreate fixes it, so linking it would report a job the user can't open. (×1)
+- went with the comment, skipping busy entries wouldn't help since `<counter>` is 0 between pages. (×1)
+- kept every 401 at Debug and fixed the comment. the error's returned and the http client already warns, so Error would report a bad credential twice. (×1)
+- no <platform> PR. adding `<CatalogID>` also changes how every hosted sync is processed, so i'd rather put it in a follow-up for the platform side: <link>. self-hosted already picks it up. (×1)
+- the second read is the post-write check, so it can't reuse the first. (×1)
+- kept it: <vendor> says `<state_a>` and `<state_b>` records can't be used, only deleted and recreated. <link> (×1)
+- the docs show write rejections as a 500 with `<field>`, so i'll narrow it once a live tenant shows a transient one. (×1)
 
 ### New line comments — feedback
 
@@ -154,6 +171,12 @@ increment from there.
 - I don't think this is a blocker, and this would add pagination to the delete/update operations, which would have side effects. I think we should keep it as is. (×1)
 - closing as won't fix. the owner update already fails cleanly with a 400, not worth a breaking change. moving owner to `base_owner` changes its id and forces a one-time remove+add on every account. (×1)
 - @alice @bob done with the feedback, mind taking another look? (×1)
+- closing, the bug is in <other-repo>. this repo already does it the right way, and the `<function>` removed here isnt called anywhere. fix is in <link> (×1)
+- <api> returns 401, not a 500, for an expired or bogus bearer. (×1)
+- <platform> ignores it until the follow-up lands, and the customer was on a different auth mode last time we checked so it wouldn't help them yet. (×1)
+- it's opt-in, <feature> has its own permission policy so read-only setups don't grant writes. confirming with product. (×1)
+- added the builder tests and turned on the CI sync test against the mock server. (×1)
+- fixed the title and description. (×1)
 
 ### New line comments — nit
 
@@ -194,6 +217,14 @@ increment from there.
 - kept it in its own commit, added the h2 test. (×1)
 - LRU now and failed loads don't take a slot. a third overlapping job can still evict the oldest one. (×1)
 - workers can't read the resource profile yet. the follow-up pr adds that, i'll drop the extra describes once it lands. <link> (×1)
+- ~200 KB token for a 200 KB <field>. rows are keyed without the <field> now, so old tokens still match too (×1)
+- should i make <option> the only step for <setting>? (×1)
+- not in the `<Endpoint>` docs, so i checked on a tenant. first window alone matched 26 rows, second alone 4, both 26, so it's an OR. a bad timestamp now gets logged and the row is still reported. (×1)
+- not sure yet, asking the customer. docs now say those instances aren't supported. (×1)
+- no <vendor> creds in ci for this repo yet. tested it end to end against a test account instead. (×1)
+- yes, expected. the docs already say it, in the <feature> paragraph. (×1)
+- not on purpose. `List` gets the same handling now, a 403 still fails the page. (×1)
+- checked on two <env>s. without the permission, both routes return 403 `<CODE_A>` even for unknown IDs. with it, an unknown ID is 404 `<CODE_B>`. only thing i couldnt test is a record hidden by row-level security inside a permission the account does have. (×1)
 
 ### Ticket status updates
 
@@ -207,6 +238,10 @@ increment from there.
 ### Ticket closing
 
 - Fixed by <TICKET>, out since v0.1.10. Fields that already load by default, like `user_id` and `title`, now get skipped when they're listed in additional report fields, so the import doesn't fail. CSV reports get the same fix in <TICKET>. (×1)
+
+### Ticket status
+
+- This field was only needed for <feature>, so that's tracked in <TICKET> now. Closed <repo>#<N> and moved on to building <service> in Go. (×1)
 
 ## Anti-patterns — what NOT to post
 

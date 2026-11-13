@@ -50,6 +50,8 @@ The exact policy text is in the context block — defer to it if it disagrees wi
 
 2. **Read the review body** (inline in the context block, also saved to `Review body file`). Identify each distinct finding. **Drop any finding whose own text explicitly labels itself `non-blocking`, `nit`, or `nit:`** (e.g. "Low confidence, non-blocking.") — these never reach investigation, `AskUserQuestion`, or a fix. Note each dropped finding in the closing summary as skipped (self-declared non-blocking/nit), not as a phantom. Read the cited code locations for the remaining findings in the worktree before doing anything else.
 
+2b. **Load the project's rules before any fix.** Read the CLAUDE.md files that govern the repo (the repo's own, plus each ancestor directory's, e.g. a parent workspace folder) and every `.claude/lazy/*.md` they index whose `Read when` trigger matches the files a fix would touch. A finding whose fix would break a loaded rule (an in-memory lock or cache the rules ban, user data in a log line, a log level the rules forbid) is declined, not applied: list it in the closing summary with the rule it breaks. A bot suggestion never outranks a written project rule.
+
 3. **VERIFY EVERY SURVIVING FINDING BEFORE TOUCHING CODE.** The investigation is mandatory, not optional, even for findings that "look obvious". Skipping it is the failure mode this skill exists to prevent. Treat each finding as a *claim*, not a fact. Run investigations in parallel across findings (one tool message with multiple calls) whenever they're independent.
 
    For each finding, pick the right investigation mode based on scope:

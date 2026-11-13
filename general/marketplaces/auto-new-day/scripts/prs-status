@@ -73,7 +73,7 @@ fetch_gitlab() {
       url: $mr.web_url, number: $mr.iid, title: $mr.title, branch: $mr.source_branch,
       repo: ($mr.references.full | split("!")[0] | split("/")[-1]),
       mergeable: (if $mr.has_conflicts then "CONFLICTING" else "MERGEABLE" end), ci: "NONE",
-      human: [$notes[] | select((.system | not) and .author.username != $me and (.author.username | test("bot"; "i") | not)) | {who: .author.username, at: .created_at}]
+      human: [$notes[] | select((.system | not) and .author.username != $me and (.author.username | test("bot|service[-_]?account"; "i") | not)) | {who: .author.username, at: .created_at}]
     }]' <<<"$out")"
   done < <(jq -c '.[]' <<<"$mrs")
   jq 'map(. + {lastHumanAt: ([.human[].at] | max // ""), lastHumanBy: ((.human | max_by(.at)) // {} | .who // "")})' <<<"$out"

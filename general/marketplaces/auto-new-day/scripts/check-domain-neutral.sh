@@ -18,7 +18,7 @@ ROOT="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
 # Unambiguous work/domain identifiers. Deliberately NOT the bare word
 # "connector" (too generic); only terms that could not appear in a
 # domain-neutral engine.
-PATTERN='baton-|baton_|ConductorOne|al-conductorone|ductone|\bCX[HPO]-[0-9]|squire|Connector Horizon|btipling|johnallers|ggreer|axiomatic|baton-admin|validate-connector|my-connector-review'
+PATTERN='baton-|baton_|ConductorOne|al-conductorone|ductone|\bCX[HPO]-[0-9]|squire|Connector Horizon|btipling|johnallers|ggreer|axiomatic|baton-admin|validate-connector|my-connector-review|CXF-[0-9]|Connector Flux|fix-bug-work|impl-work|newconnector|pr-code-review-work|pr-code-review-all|ConnectorBuilderV2|ResourceSyncerV2|FeliLucero1|luisina|mateoHernandez'
 
 hits=$(grep -rInE "$PATTERN" \
   --include='*.sh' --include='*.md' --include='*.json' \

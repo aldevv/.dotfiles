@@ -43,6 +43,10 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/pre-mr.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/gh-rerequest-guard.sh"
           }
         ]
       },
