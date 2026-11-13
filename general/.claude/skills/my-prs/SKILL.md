@@ -3,8 +3,8 @@ name: my-prs
 description: >
   Show your in-review Linear tickets alongside their GitHub PRs and each PR's
   merge + approval state, as one compact table: ticket, PR link, merged yes/no,
-  approved yes/no, and which reviewers approved. Read-only: never posts, merges,
-  resolves, or changes ticket state. Triggers on "/my-prs", "show my prs",
+  approved yes/no, and which reviewers approved. Read-only, except an explicit
+  "merge <PR>" (merge, then release + ticket handoff without asking). Triggers on "/my-prs", "show my prs",
   "my in-review tickets and their PRs", "are my PRs merged", "which of my PRs are
   approved", "who approved my PRs", "my PR approval status", "status of my open
   PRs". Scans every in-review ticket assigned to you across ALL teams by default,
@@ -110,8 +110,8 @@ Close with a small `Recommended actions` table, one row per PR that still needs 
 - `Next action`: the shortest concrete verb phrase for the ball that's in your court, e.g. `address github-actions changes`, `address <reviewer>'s ask, then merge`, `ping <reviewer> for review`, `merge` (approved + clean + you own the merge), `open a PR`. One phrase, no prose.
 - `Handled in`: same value as the main table's column, so you can see at a glance which actions a sweep window already owns and which still need you.
 
-## Step 7 — "create a new release" (operator command)
-When the operator says **"create a new release"** for a merged/approved connector PR shown in the table, run this four-part workflow (this is the one write path in this skill, gated on that explicit phrase):
+## Step 7 — "merge" / "create a new release" (operator command)
+When the operator says **"merge <PR>"** for a connector PR shown in the table, run the approved-with-an-ask check (Guardrails), merge it (`gh pr merge --squash --match-head-commit <sha>`), then run this four-part workflow right away **without asking**. The release and the Manuel handoff are part of "merge", never a follow-up to offer. "create a new release" for an already-merged PR runs the same four parts. These two phrases are the only write paths in this skill:
 1. **Cut a release** for the connector(s) of the relevant merged PR(s): `gh release create vX.Y.Z --target main --title "vX.Y.Z" --generate-notes -R ConductorOne/<repo>`. Version = next patch above the latest tag (`gh api repos/ConductorOne/<repo>/tags`); a brand-new axiomatic connector's first release is `v0.0.1`. Always `--generate-notes` (compact per-PR notes, stays under the registry 10k changelog limit), never a bare `git tag && git push`. Full rules: `$HOME/work/.claude/lazy/releases.md` §3 (classic) / §4 (axiomatic).
 2. **Move the connector's Linear ticket(s) to `Validation`** (Linear `save_issue` with `state: "Validation"`).
 3. **Reassign the ticket(s) to Manuel** (Manuel Traversaro Sasia, id `d5452641-fe73-44a6-bcb1-46d9d2201259`) — he owns connector validation (`save_issue` `assignee`).
@@ -120,6 +120,6 @@ When the operator says **"create a new release"** for a merged/approved connecto
 This reassign + status move is an explicit operator-triggered action, so it is exempt from the read-only guardrail below and from the auto-new-day no-reassign ban (which only binds the unattended sweep). Reply with the release link(s), each run's final state (green / green after rerun / fix PR link), plus a one-line confirmation that the ticket(s) moved to Validation under Manuel.
 
 ## Guardrails
-- **Before merging any PR (whenever the operator says "merge"), run the approved-with-an-ask check (Step 4) on that PR first.** An APPROVED state alone is not a green light: read whatever the approver wrote alongside or after their approval. If they said "open threads worth a pass before merge", "address X first", or any "one last thing", the PR is not clean to merge, hold it and tell the operator what the approver still wants. This skill itself never merges, but this is the gate the operator relies on before they do.
-- **Read-only by default. Never** merge, post, resolve, dismiss, or change Linear ticket state. No `gh pr merge` / `gh pr review` / `gh pr comment` / `gh api ... -X POST|PUT|PATCH` / any Linear `save_*`/`update_*`. If the operator wants to act, hand off: `add-comment` (reply), or `auto-new-day` (dispatch work); merging is theirs to trigger. The single exception is Step 7's "create a new release" command, which the operator triggers explicitly.
+- **Before merging any PR (whenever the operator says "merge"), run the approved-with-an-ask check (Step 4) on that PR first.** An APPROVED state alone is not a green light: read whatever the approver wrote alongside or after their approval. If they said "open threads worth a pass before merge", "address X first", or any "one last thing", the PR is not clean to merge, hold it and tell the operator what the approver still wants. If it's clean, merge and continue straight into Step 7.
+- **Read-only by default. Never** merge, post, resolve, dismiss, or change Linear ticket state on your own. No `gh pr merge` / `gh pr review` / `gh pr comment` / `gh api ... -X POST|PUT|PATCH` / any Linear `save_*`/`update_*`. If the operator wants to act, hand off: `add-comment` (reply), or `auto-new-day` (dispatch work). The only exceptions are Step 7's "merge" and "create a new release" commands, which the operator triggers explicitly.
 - Truncate titles; keep the table scannable. Don't paste PR bodies or review text.

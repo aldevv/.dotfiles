@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×173)
+- done. (×176)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×16)
@@ -77,6 +77,7 @@ increment from there.
 - you're right, dropped it. <link> (×1)
 - 5 at a time now, with retries per call. skipped the cache. (×1)
 - yep, done. (×1)
+- dropped them. leaving them out gives the same response as sending false. (×1)
 
 ### Replies — pushback
 
@@ -217,6 +218,8 @@ increment from there.
 - not sure yet, asking the customer. docs now say those instances aren't supported. (×1)
 - no <vendor> creds in ci for this repo yet. tested it end to end against a test account instead. (×1)
 - yes, expected. the docs already say it, in the <feature> paragraph. (×1)
+- not on purpose. `List` gets the same handling now, a 403 still fails the page. (×1)
+- checked on two <env>s. without the permission, both routes return 403 `<CODE_A>` even for unknown IDs. with it, an unknown ID is 404 `<CODE_B>`. only thing i couldnt test is a record hidden by row-level security inside a permission the account does have. (×1)
 
 ### Ticket status updates
 
