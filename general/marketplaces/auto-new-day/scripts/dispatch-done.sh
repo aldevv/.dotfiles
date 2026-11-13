@@ -12,7 +12,7 @@
 #
 #   path --ticket <ID>           Print the manifest path (does not check existence).
 #   path --window <NAME>         Same, for review-session windows. Use the bare
-#                                window name like repo-foo-42 (NOT review-...).
+#                                window name like repo-foo#42 (NOT review-...).
 #   path --repo <NAME>           Same, for repo-keyed manifests (generic skills run
 #                                outside a ticket/window context). Manifest filename
 #                                is `repo-<NAME>.done.json`.

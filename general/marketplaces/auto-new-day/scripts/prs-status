@@ -223,7 +223,7 @@ dispatch() {
     repo_dir="$worktree"
     checkout_args=""
   fi
-  win="$item-$repo"
+  win="$item-$repo#$number"
   arg="$item"
   [[ "$item" =~ ^[A-Z]+-[0-9]+$ ]] || arg="$url"
   if [ "$is_dry_run" = 1 ]; then

@@ -99,7 +99,7 @@ fi
 
 posted=0
 for url in "${pr_urls[@]}"; do
-  win_name=$(name_for "$url")  # e.g. <repo>-<N>
+  win_name=$(name_for "$url")  # e.g. <repo>#<N>
   cmd="claude --dangerously-skip-permissions '/auto-new-day:pr-code-review ${url}'"
   if [ -n "$placeholder_idx" ] && [ $posted -eq 0 ]; then
     tmux rename-window -t "${session}:${placeholder_idx}" "$win_name"
