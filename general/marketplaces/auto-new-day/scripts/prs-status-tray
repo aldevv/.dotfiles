@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+"""Tray icon for prs-status: green speech bubble while the 15 min timer is on, grey when off.
+Menu: turn the timer on/off, run a check now, open the log, and one row per open PR
+with who commented last (click opens the PR).
+"""
+import json
+import os
+import subprocess
+import time
+from datetime import datetime
+
+from PIL import Image, ImageDraw
+
+# pystray's Xorg backend still uses PIL.Image.ANTIALIAS, which Pillow 10 removed.
+if not hasattr(Image, "ANTIALIAS"):
+    Image.ANTIALIAS = Image.LANCZOS
+
+import pystray
+
+PROFILE = os.environ.get("AUTO_NEW_DAY_PROFILE", os.path.expanduser("~/.config/auto-new-day/profile.json"))
+POLL_SECONDS = 10
+COLORS = {True: (63, 185, 80), False: (139, 148, 158)}
+
+
+def state_dir():
+    try:
+        configured = json.load(open(PROFILE)).get("state_dir")
+    except (FileNotFoundError, ValueError):
+        configured = None
+    return os.path.expanduser(os.environ.get("AUTO_NEW_DAY_STATE_DIR") or configured or "~/.local/state/auto-new-day")
+
+
+CACHE = os.path.join(state_dir(), "prs-status.json")
+LOG = os.path.join(state_dir(), "prs-status.log")
+
+
+def timer_on():
+    return subprocess.run(["systemctl", "--user", "is-active", "--quiet", "prs-status.timer"]).returncode == 0
+
+
+def last_log_line():
+    try:
+        return open(LOG).readlines()[-1].strip()
+    except (FileNotFoundError, IndexError):
+        return "no runs yet"
+
+
+def read_prs():
+    try:
+        prs = json.load(open(CACHE)).values()
+    except (FileNotFoundError, ValueError):
+        return []
+    return sorted(prs, key=lambda pr: pr.get("lastHumanAt") or "", reverse=True)
+
+
+def local_time(iso):
+    if not iso:
+        return "no comments"
+    return datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone().strftime("%b %d %H:%M")
+
+
+def pr_item(pr):
+    who = pr.get("lastHumanBy") or "-"
+    label = f"{pr['repo']}#{pr['number']}   {who}   {local_time(pr.get('lastHumanAt'))}"
+    return pystray.MenuItem(label, lambda icon, item: subprocess.Popen(["xdg-open", pr["url"]]))
+
+
+def toggle(icon, item):
+    action = ["disable", "--now"] if timer_on() else ["enable", "--now"]
+    subprocess.run(["systemctl", "--user", *action, "prs-status.timer"])
+    refresh(icon)
+
+
+def run_now(icon, item):
+    subprocess.Popen(["systemctl", "--user", "start", "--no-block", "prs-status.service"])
+    subprocess.run(["notify-send", "prs-status", "check started"])
+
+
+def open_log(icon, item):
+    subprocess.Popen(["xdg-open", LOG])
+
+
+def quit_app(icon, item):
+    # icon.stop() waits on poll()'s endless loop; os._exit skips that.
+    os._exit(0)
+
+
+def menu_items():
+    yield pystray.MenuItem(
+        "Timer on (click to turn off)" if timer_on() else "Timer off (click to turn on)", toggle
+    )
+    yield pystray.MenuItem("Check now", run_now)
+    yield pystray.MenuItem("Open log", open_log)
+    yield pystray.Menu.SEPARATOR
+    yield pystray.MenuItem("Last commenter per open PR:", None, enabled=False)
+    for pr in read_prs():
+        yield pr_item(pr)
+    yield pystray.Menu.SEPARATOR
+    yield pystray.MenuItem("Quit", quit_app)
+
+
+def make_bubble(rgb):
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rounded_rectangle((4, 6, 60, 46), radius=12, fill=rgb)
+    draw.polygon([(14, 44), (14, 60), (30, 44)], fill=rgb)
+    for x in (18, 32, 46):
+        draw.ellipse((x - 5, 21, x + 5, 31), fill=(43, 46, 55))
+    return img
+
+
+def refresh(icon):
+    on = timer_on()
+    icon.icon = make_bubble(COLORS[on])
+    icon.title = f"prs-status: timer {'on' if on else 'off'}\n{last_log_line()}"
+    icon.menu = pystray.Menu(*menu_items())
+    icon.update_menu()
+
+
+def poll(icon):
+    icon.visible = True
+    last_seen = None
+    while True:
+        seen = (timer_on(), os.path.getmtime(CACHE) if os.path.exists(CACHE) else 0, last_log_line())
+        if seen != last_seen:
+            refresh(icon)
+            last_seen = seen
+        time.sleep(POLL_SECONDS)
+
+
+if __name__ == "__main__":
+    tray = pystray.Icon("prs-status", make_bubble(COLORS[timer_on()]), "prs-status")
+    tray.menu = pystray.Menu(*menu_items())
+    tray.run(setup=poll)

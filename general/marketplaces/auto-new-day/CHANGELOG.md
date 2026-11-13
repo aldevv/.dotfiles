@@ -4,6 +4,10 @@ Newest first. One entry per `.claude-plugin/plugin.json` version; the pre-commit
 
 **Rollback:** find the commit that set a version with `git log --oneline -S'"version": "<X>"' -- <plugin>/.claude-plugin/plugin.json`, then `git revert <sha>` (or `git checkout <sha> -- <plugin>/<file>` for one file), bump the version, add an entry here, and reinstall (`claude plugin marketplace update <m> && claude plugin update <p>@<m>`).
 
+## 0.1.25 (2026-11-13)
+- New `scripts/prs-status-tray` (pystray): a speech-bubble tray icon, green while `prs-status.timer` is on and grey when off. Its menu turns the timer on/off, runs a check now, opens the log, and lists each open PR with who commented last (click opens the PR). `--install` links it into `~/.local/bin`.
+- `prs-status` stores `lastHumanBy` per PR; a plain `prs-status` run (no flags) is now read-only, so a manual check can't swallow events before the timer routes them.
+
 ## 0.1.24 (2026-11-13)
 - New `scripts/prs-status`: every 15 min (`prs-status.timer`, weekdays 06:00 to 21:00 in the profile `tz`) it snapshots your open PRs and routes new human comments/reviews, CI turning red, or a new conflict. The live claude window already on that PR gets a message (checked that it went busy); otherwise a new `AUTO-inreview` window runs `bucket_skills.inreview --recheck`. A failed dispatch is retried next tick.
 - `launch-auto-new-day.sh --install` also installs and enables `prs-status.timer` and links `~/.local/bin/prs-status`.

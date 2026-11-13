@@ -256,6 +256,7 @@ myStartupHook = do
   -- spawn ("killall trayer; trayer --edge top --align right --widthtype request --SetDockType true --SetPartialStrut true --expand true --monitor 1 --transparent true --alpha 0 " ++ colorTrayer ++ " --height 15 -l") -- kill current trayer and xmobar on each restart
   spawn ("sleep 3 && xsetroot -cursor_name left_ptr") -- for mouse pointer
   spawn "pkill -f '[p]ython3.*notify-tray.py'; sleep 3 && ~/.local/bin/notify-tray.py" -- linux-notify healthcheck tray icon
+  spawn "pkill -f '[p]ython3.*prs-status-tray'; sleep 3 && ~/.local/bin/prs-status-tray" -- prs-status timer toggle + last commenters
 
 myAfterRescreenHook :: X ()
 myAfterRescreenHook = do

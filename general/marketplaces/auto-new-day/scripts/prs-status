@@ -2,7 +2,7 @@
 # prs-status: snapshot your open PRs and react to what changed since the last run.
 #
 # Usage: prs-status [--baseline] [--dispatch] [--dry-run]
-#   (none)       print new events (one JSON object per line) and update the cache.
+#   (none)       print new events (one JSON object per line); read-only, the cache is not touched.
 #   --baseline   record the current state without reporting anything (the sweep runs this at its end).
 #   --dispatch   route each event: a live claude window for the PR's repo in AUTO-inreview /
 #                AUTO-inprogress / AUTO-followup gets a message; otherwise a new AUTO-inreview
@@ -98,7 +98,7 @@ current="$(jq --arg me "$ME" '
       | {who: .a.login, at}
     ]
   })
-  | map(. + {lastHumanAt: ([.human[].at] | max // "")})' <<<"$current")"
+  | map(. + {lastHumanAt: ([.human[].at] | max // ""), lastHumanBy: ((.human | max_by(.at)) // {} | .who // "")})' <<<"$current")"
 
 [ -f "$CACHE" ] || echo '{}' >"$CACHE"
 cache="$(cat "$CACHE")"
@@ -265,7 +265,7 @@ while IFS= read -r event; do
   new_cache="$(jq --arg u "$url" --argjson old "$cache" '.[$u] = $old[$u]' <<<"$new_cache")"
 done <<<"$events"
 
-if [ "$is_dry_run" = 0 ]; then
+if [ "$should_dispatch" = 1 ] && [ "$is_dry_run" = 0 ]; then
   echo "$new_cache" >"$CACHE"
 fi
 log "checked $(jq length <<<"$current") open PRs, $(grep -c . <<<"$events" || true) with new activity"

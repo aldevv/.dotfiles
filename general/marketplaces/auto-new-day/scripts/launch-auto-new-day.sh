@@ -191,6 +191,7 @@ if [ "$INSTALL" = "1" ]; then
   systemctl --user enable --now auto-new-day-sweep.timer prs-status.timer
   mkdir -p "$HOME/.local/bin"
   ln -sf "$SKILL_DIR/scripts/prs-status" "$HOME/.local/bin/prs-status"
+  ln -sf "$SKILL_DIR/scripts/prs-status-tray" "$HOME/.local/bin/prs-status-tray"
 
   echo "==> next fire:"
   systemctl --user list-timers auto-new-day-sweep.timer prs-status.timer --no-pager
