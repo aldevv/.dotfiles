@@ -142,6 +142,9 @@ increment from there.
 - this should send a chat alert, it's a failure someone needs to see. same for the other early returns here (command not found, `CommandRun` failed). and i'd drop the success messages, alerts should only fire when something goes wrong. (×1)
 - <db> doesn't raise <error code> when revoking a role. a multi-account revoke where only some accounts hold the role succeeds and removes that edge, and revoking from an account that doesn't hold it is silent too. so the old single revoke already handled the partial case. could we drop `revokePerVariant`, `isNoSuchGrantErr` and `splitAccount`? per-variant also means a failure halfway leaves some accounts revoked and others not. (×1)
 - I think this shipped in 0.1.1, not 0.1.0. The 0.1.0 tag and image still have the old config fields (the split is a later commit). Same in README lines 27 and 29. (×1)
+- not sure it matters, but a 403 from mega-api here (admin not in the admin group) gets retried once by the 403 handler in `axiosInstance.ts`, so the PUT goes out twice. nothing gets written and the toast says "forbidden". those admins still see a working switch though. (×1)
+- if the save works but the reload fails, the admin sees the success toast and a `getPersonas` error toast together. the change did save so its just confusing, fine to leave (×1)
+- could use one test for a failed save, switch stays put and the error toast shows. these tests also log a bunch of `act(...)` warnings. (×1)
 
 ### Top-level PR/MR comments
 
@@ -158,6 +161,8 @@ increment from there.
 - `optionalStringField` at line 501-504 already does `strings.TrimSpace(raw)`, so the outer `strings.TrimSpace(...)` here is redundant. can drop it: `if mapped := optionalStringField(profileMap, "email"); mapped != "" {`. (×1)
 - let's not log `user_id`, it's user data. `role` is enough here. and this can be `Debug` instead of `Warn`. (×1)
 - needs a prettier pass, this line and the new test. (×1)
+- nit: rest of the file uses `SLOW_CALL_TIMEOUT_SECONDS`. mega-api stops after 5s on this one anyway, so a named constant would read better than `30`. (×1)
+- nit: the other thunks here use the typed `createAsyncThunk<...>` with `rejectWithValue(toRequestError(...))`. errors still show fine, it just doesn't match the rest of the file. (×1)
 
 ### Answers
 

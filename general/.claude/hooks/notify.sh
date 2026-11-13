@@ -22,6 +22,26 @@ set -euo pipefail
 event="${1:-}"
 cat >/dev/null 2>&1 || true
 
+# `notify.sh toggle-done` (the xmobar Claude icon) mutes/unmutes only the Stop "Done" notification.
+done_muted_file="${XDG_CACHE_HOME:-$HOME/.cache}/claude-notify/done-muted"
+if [[ "$event" == "toggle-done" ]]; then
+  mkdir -p "$(dirname "$done_muted_file")"
+  if [[ -e "$done_muted_file" ]]; then
+    rm -f "$done_muted_file"
+    state="on"
+  else
+    touch "$done_muted_file"
+    state="off"
+  fi
+  if [[ "$(uname -s)" == Darwin ]]; then
+    osascript -e "display notification \"Done notifications $state\" with title \"Claude Code\"" >/dev/null 2>&1 || true
+  else
+    notify-send -u low -t 2000 -a claude-code "Claude Code" "Done notifications $state" >/dev/null 2>&1 || true
+  fi
+  exit 0
+fi
+[[ "$event" == "stop" && -e "$done_muted_file" ]] && exit 0
+
 tmux_info=""
 if [[ -n "${TMUX:-}" && -n "${TMUX_PANE:-}" ]] && command -v tmux >/dev/null 2>&1; then
   session="$(tmux display-message -p -t "$TMUX_PANE" '#S' 2>/dev/null || true)"

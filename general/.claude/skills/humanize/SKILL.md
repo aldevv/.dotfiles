@@ -21,11 +21,14 @@ Read like a tired engineer typing a reply, not a memo.
 
 - **As short as possible.** The ideal reply is one word ("done", "fixed", "yep", "agreed"). Cut every sentence that isn't doing the one job of closing the thread or making the one point.
 - **Stop once the point's out.** No trailing qualifier ("just want to check...", "just making sure"), no restating the same point differently, no listing every other place it also applies. If a second point genuinely matters, it's its own sentence, or its own message, not a tail glued onto this one.
-- **Write for a reader with zero context.** Assume they haven't seen the investigation. Drop internal acronyms, API, product, and permission names they wouldn't already use (say "Workday doesn't tell us which users are AI agents", not "agents run as ASUs, not ISUs"). Hand over exact settings only once they've asked for them.
+- **Write for a reader with zero context.** Assume they haven't seen the investigation. Drop internal acronyms, API, product, and permission names they wouldn't already use (say "Workday doesn't tell us which users are AI agents", not "agents run as ASUs, not ISUs"). Hand over exact settings only once they've asked for them. Name the ticket or issue id behind each item when one exists (`ABC-123: ...`), so the reader can look up the details instead of needing them in the message.
+- **Messages the user will copy and paste themselves** (they send it, not you): show the text inside a fenced code block, never as a `>` blockquote (it renders with a `▎` bar that gets copied along). Write every link as the full bare URL (`https://...`), never as a markdown `[text](url)` link, since markdown links lose the URL when copied from the terminal. Put one short line of your own before the code block, so the terminal's `●` reply marker lands on that line and not on the message. When an item is a PR or issue, lead its bullet with the PR URL itself (not a label like "puppet PR"), and write the related tickets as full ticket URLs too.
+- **"Simple" means no specific numbers.** When the user asks for a simple, short or plain message, drop exact counts, sizes, versions and percentages. Say what changed ("now uses both disks", "a lot of machines start shutting down again"), not "419 → 834 GB" or "~330 machines". Keep a number only when it is the point (a price someone asked for, a deadline).
 - **Plain words.** "matters" not "is load-bearing". "before the loop" not "prior to iteration".
 - **Simple grammar.** Short sentences. No semicolons. No nested "which" clauses. One idea per sentence.
 - **Contractions.** i'd, doesn't, isn't, can't.
-- **No greetings, no sign-offs.** No "hey", "hi", "thanks for the look", "let me know if".
+- **Greet when the message starts a conversation.** A new message to a channel, a person or a help desk opens with a short casual greeting ("hey team", "hi <name>"). Replies inside an existing thread and PR/MR review comments skip it.
+- **No sign-offs.** No "thanks for the look", "let me know if".
 - **No em dashes or double-hyphens.** A period or comma instead.
 - **No formal hedges.** Skip "happy to revisit", "open to other approaches", "appreciate the feedback".
 - **No AI-slop vocabulary.** `no-op`, `leverage`, `robust`, `seamless(ly)`, `streamline(d)`, `unlock(s)`, `harness` (verb), `delve`, `utilize`, `intricate`, `tapestry`, `realm`, `landscape`, `journey` (metaphor), `dive into`. Full list and reasoning: `~/.dotfiles/general/.claude/rules/writing-style.md`. Say what the thing actually does instead: not "the pop is a no-op now", but "the pop does nothing now, X isn't in the body anymore".
@@ -66,7 +69,7 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 ## Workflow
 
 1. **Read the draft** and find the one point it's making (the position, the fix, the question). If it's making more than one point, that's a sign it should be separate messages, flag this rather than silently picking one to keep.
-2. **Cut**, in this order: greetings/sign-offs, formal hedges, restated points, magnitude/detail that doesn't change the point, subordinate clauses that just explain more of the same thing.
+2. **Cut**, in this order: sign-offs (and greetings in replies), formal hedges, restated points, magnitude/detail that doesn't change the point, subordinate clauses that just explain more of the same thing.
 3. **Rewrite what's left** in the voice above: short sentences, plain words, contractions, no AI-slop vocab, backticks on code identifiers.
 4. **Produce two lengths when useful**: the full rewrite, and a "shorter" cut roughly half the length, for the caller to pick. Skip the shorter pass if the rewrite is already one sentence.
 5. **Keep every claim's strength honest.** Compression must never upgrade an inference into a verdict. If the input hedges ("i don't think this holds"), the output keeps the hedge ("doesn't look right"), never flattens it to an assertion ("this doesn't hold") just to save words.
@@ -74,7 +77,7 @@ What changed: dropped the magnitude detail, dropped the long subordinate clause,
 
 ## Common failure modes
 
-- Sounding like an LLM: em dashes, "I'd be happy to", "let me know if", any greeting.
+- Sounding like an LLM: em dashes, "I'd be happy to", "let me know if", a greeting on a reply, or a cold start on a new message.
 - Big words: "load-bearing", "non-trivial", "in steady state", "geographically".
 - Long sentences: if there's a semicolon, split it.
 - Over-explaining: one sentence of "why" is the max.
