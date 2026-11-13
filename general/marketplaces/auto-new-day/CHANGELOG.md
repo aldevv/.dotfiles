@@ -4,6 +4,10 @@ Newest first. One entry per `.claude-plugin/plugin.json` version; the pre-commit
 
 **Rollback:** find the commit that set a version with `git log --oneline -S'"version": "<X>"' -- <plugin>/.claude-plugin/plugin.json`, then `git revert <sha>` (or `git checkout <sha> -- <plugin>/<file>` for one file), bump the version, add an entry here, and reinstall (`claude plugin marketplace update <m> && claude plugin update <p>@<m>`).
 
+## 0.1.28 (2026-11-13)
+- `prs-status`: `PRS_STATUS_FORGE=gitlab` lists your open GitLab MRs through `glab` (last human commenter, conflicts; no CI); `GH_HOST` points the GitHub path at another host; log timestamps no longer need GNU `date -Is`.
+- `prs-status-tray`: toggle / check-now drive a launchd agent (`com.kanon.prs-status`) on macOS.
+
 ## 0.1.27 (2026-11-13)
 - `prs-status-tray`: `PRS_STATUS_SSH="ssh ... user@host"` shows and controls another machine's prs-status timer (one shell snippet runs locally or over SSH); opens URLs and notifications with the macOS equivalents on Darwin.
 

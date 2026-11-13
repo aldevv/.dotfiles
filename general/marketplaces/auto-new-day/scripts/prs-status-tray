@@ -33,8 +33,14 @@ STATE_DIR = (
     'd=$(jq -r ".state_dir // empty" ~/.config/auto-new-day/profile.json 2>/dev/null); '
     'd=${AUTO_NEW_DAY_STATE_DIR:-${d:-$HOME/.local/state/auto-new-day}}; d=${d/#\\~/$HOME}; '
 )
+# The refresh job is a systemd timer on Linux and a launchd agent (com.kanon.prs-status) on macOS.
+LAUNCHD = 'gui/$(id -u)/com.kanon.prs-status'
+IS_ON = (
+    "if command -v systemctl >/dev/null; then systemctl --user is-active --quiet prs-status.timer; "
+    f"else launchctl print {LAUNCHD} >/dev/null 2>&1; fi"
+)
 STATE = STATE_DIR + (
-    "systemctl --user is-active prs-status.timer; "
+    f"if {IS_ON}; then echo active; else echo inactive; fi; "
     'tail -n1 "$d/prs-status.log" 2>/dev/null || echo "no runs yet"; '
     'cat "$d/prs-status.json" 2>/dev/null || echo "{}"'
 )
@@ -77,15 +83,21 @@ def pr_item(pr):
 
 def toggle(icon, item):
     sh(
-        "if systemctl --user is-active --quiet prs-status.timer; "
-        "then systemctl --user disable --now prs-status.timer; "
-        "else systemctl --user enable --now prs-status.timer; fi"
+        "if command -v systemctl >/dev/null; then "
+        "  if systemctl --user is-active --quiet prs-status.timer; "
+        "  then systemctl --user disable --now prs-status.timer; "
+        "  else systemctl --user enable --now prs-status.timer; fi; "
+        f"elif launchctl print {LAUNCHD} >/dev/null 2>&1; then launchctl bootout {LAUNCHD}; "
+        "else launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.kanon.prs-status.plist; fi"
     )
     refresh(icon)
 
 
 def run_now(icon, item):
-    sh("systemctl --user start --no-block prs-status.service")
+    sh(
+        "if command -v systemctl >/dev/null; then systemctl --user start --no-block prs-status.service; "
+        f"else launchctl kickstart {LAUNCHD}; fi"
+    )
     notify("prs-status", "check started")
 
 

@@ -13,6 +13,8 @@
 # An event is: a new comment / review / thread reply by a human other than you, CI turning red,
 # or the PR turning CONFLICTING. Bot activity is ignored (pr-watch handles bot reviews).
 # Profile: $AUTO_NEW_DAY_PROFILE, else ~/.config/auto-new-day/profile.json.
+# PRS_STATUS_FORGE=gitlab lists your open GitLab MRs through glab instead (list only, no CI).
+# GH_HOST=<host> points the GitHub path at another GitHub host (e.g. an enterprise one).
 # Cache: <state_dir>/prs-status.json. Log: <state_dir>/prs-status.log.
 
 set -euo pipefail
@@ -24,7 +26,7 @@ for arg in "$@"; do
     --dispatch) should_dispatch=1 ;;
     --dry-run) is_dry_run=1 ;;
     -h | --help)
-      sed -n '2,17p' "$0"
+      sed -n '2,19p' "$0"
       exit 0
       ;;
     *)
@@ -56,18 +58,42 @@ LOG="$STATE_DIR/prs-status.log"
 TODAY="$(date +%F)"
 mkdir -p "$STATE_DIR"
 
-log() { echo "$(date -Is) $*" >>"$LOG"; }
+log() { echo "$(date +%Y-%m-%dT%H:%M:%S%z) $*" >>"$LOG"; }
 
-# Use the profile's gh account through a token, not `gh auth switch`, so other sessions keep theirs.
-if [ -n "$GH_ACCOUNT" ]; then
-  GH_TOKEN="$(gh auth token -u "$GH_ACCOUNT")"
-  export GH_TOKEN
-fi
-ME="$(gh api user --jq .login)"
+# Prints your open GitLab MRs (glab's logged-in account) in the same shape fetch_github produces.
+# Ceiling: 50 MRs, last 100 notes each. No CI state (the MR list has no pipeline).
+fetch_gitlab() {
+  local me mrs out="[]" mr notes
+  me="$(glab api user | jq -r .username)"
+  mrs="$(glab api "merge_requests?state=opened&scope=all&author_username=$me&per_page=50")"
+  while IFS= read -r mr; do
+    [ -n "$mr" ] || continue
+    notes="$(glab api "projects/$(jq -r .project_id <<<"$mr")/merge_requests/$(jq -r .iid <<<"$mr")/notes?per_page=100&sort=desc")"
+    out="$(jq --argjson mr "$mr" --argjson notes "$notes" --arg me "$me" '. + [{
+      url: $mr.web_url, number: $mr.iid, title: $mr.title, branch: $mr.source_branch,
+      repo: ($mr.references.full | split("!")[0] | split("/")[-1]),
+      mergeable: (if $mr.has_conflicts then "CONFLICTING" else "MERGEABLE" end), ci: "NONE",
+      human: [$notes[] | select((.system | not) and .author.username != $me and (.author.username | test("bot"; "i") | not)) | {who: .author.username, at: .created_at}]
+    }]' <<<"$out")"
+  done < <(jq -c '.[]' <<<"$mrs")
+  jq 'map(. + {lastHumanAt: ([.human[].at] | max // ""), lastHumanBy: ((.human | max_by(.at)) // {} | .who // "")})' <<<"$out"
+}
 
-# Fetch every open PR you authored with its human activity, CI rollup and mergeable state.
-# Ceiling: 50 PRs, last 30 comments/reviews, last 50 threads x 10 replies. Paginate if that bites.
-read -r -d '' QUERY <<'GQL' || true
+if [ "${PRS_STATUS_FORGE:-github}" = gitlab ]; then
+  ME="$(glab api user | jq -r .username)"
+  current="$(fetch_gitlab)"
+else
+  # GH_HOST (gh's own env var) picks the GitHub host; the profile's gh_account picks the account.
+  # Use the account through a token, not `gh auth switch`, so other sessions keep theirs.
+  if [ -n "$GH_ACCOUNT" ]; then
+    GH_TOKEN="$(gh auth token -u "$GH_ACCOUNT")"
+    export GH_TOKEN
+  fi
+  ME="$(gh api user --jq .login)"
+
+  # Fetch every open PR you authored with its human activity, CI rollup and mergeable state.
+  # Ceiling: 50 PRs, last 30 comments/reviews, last 50 threads x 10 replies. Paginate if that bites.
+  read -r -d '' QUERY <<'GQL' || true
 query($q: String!) {
   search(query: $q, type: ISSUE, first: 50) {
     nodes {
@@ -83,10 +109,10 @@ query($q: String!) {
   }
 }
 GQL
-current="$(gh api graphql -f query="$QUERY" -f q="is:pr is:open author:$ME archived:false" --jq '.data.search.nodes')"
+  current="$(gh api graphql -f query="$QUERY" -f q="is:pr is:open author:$ME archived:false" --jq '.data.search.nodes')"
 
-# Reduce each PR to: identity fields, ci, mergeable, and the human (non-bot, non-self) activity list.
-current="$(jq --arg me "$ME" '
+  # Reduce each PR to: identity fields, ci, mergeable, and the human (non-bot, non-self) activity list.
+  current="$(jq --arg me "$ME" '
   map({
     url, number, title, branch: .headRefName, repo: .repository.name, mergeable,
     ci: (.commits.nodes[0].commit.statusCheckRollup.state // "NONE"),
@@ -99,6 +125,7 @@ current="$(jq --arg me "$ME" '
     ]
   })
   | map(. + {lastHumanAt: ([.human[].at] | max // ""), lastHumanBy: ((.human | max_by(.at)) // {} | .who // "")})' <<<"$current")"
+fi
 
 [ -f "$CACHE" ] || echo '{}' >"$CACHE"
 cache="$(cat "$CACHE")"
