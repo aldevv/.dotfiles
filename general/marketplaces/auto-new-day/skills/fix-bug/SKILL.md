@@ -1,7 +1,7 @@
 ---
 name: fix-bug
-description: Multi-agent root-cause-and-fix workflow for any non-trivial bug in any codebase. Phase 1 spawns 12 parallel investigation agents (each a distinct hypothesis), phase 2 synthesizes a detailed plan, phase 3 spawns 6 parallel review agents (distinct critique angles), phase 4 revises the plan, phase 5 the orchestrator implements, phase 6 spawns 3 validation agents. Every plan and the final validation MUST include a numeric confidence score (0-100%) per symptom, with explicit gaps and assumptions called out, especially when the bug couldn't be reproduced end-to-end. Counts default to 12/6/3 but accept overrides as the first argument. Triggers on "/auto-new-day:fix-bug", "fix this bug with N agents", "spawn agents to figure out X", "investigate this bug using N agents", "do a multi-agent debug", "use the fix-bug skill", or any ticket / stack-trace / repro paired with explicit multi-agent debugging intent. AUTO-INVOKE when the user pairs a substantial bug context (Linear/Jira URL, GitHub issue, log excerpt, stack trace, reproducer) with phrasing like "figure out why this is happening and fix it", "use N subagents to debug", "spawn investigators". Do NOT trigger for trivial bugs (typo, syntax error, one-line fix the model can see immediately), code reviews of an existing diff (use code-review), read-only investigations (use a plain Agent call), or bugs where the user has already identified the root cause and just wants the edit applied.
-argument-hint: "[N1/N2/N3] [reference] [--skip-hunk] [--no-subagents]" — N1/N2/N3 are agent counts for investigation/review/validation (defaults 12/6/3; pass "8/4/2" for lighter, "16/8/4" for heavier). Reference is the bug source (Linear URL, ticket ID, stack trace, repro path, free text). `--skip-hunk` ends the skill at Phase 6 (no Hunk invocation); use when a caller wraps fix-bug and wants to run its own pre-Hunk tail. `--no-subagents` (or `NO_SUBAGENTS=1` in env) collapses every parallel `Agent(...)` spawn into a sequential `TaskCreate` list in the main session (slower, cheaper). All optional; the orchestrator will ask if missing.
+description: Multi-agent root-cause-and-fix workflow for any non-trivial bug in any codebase. Phase 1 spawns 12 parallel investigation agents (each a distinct hypothesis), phase 2 synthesizes a detailed plan, phase 3 spawns 6 parallel review agents (distinct critique angles), phase 4 revises the plan, phase 5 the orchestrator implements, phase 6 spawns 3 validation agents. Every plan and the final validation MUST state an evidence level per symptom (reproduced / traced / ...), with explicit gaps and assumptions called out, especially when the bug couldn't be reproduced end-to-end. Counts default to 12/6/3 but accept overrides as the first argument. Triggers on "/auto-new-day:fix-bug", "fix this bug with N agents", "spawn agents to figure out X", "investigate this bug using N agents", "do a multi-agent debug", "use the fix-bug skill", or any ticket / stack-trace / repro paired with explicit multi-agent debugging intent. AUTO-INVOKE when the user pairs a substantial bug context (Linear/Jira URL, GitHub issue, log excerpt, stack trace, reproducer) with phrasing like "figure out why this is happening and fix it", "use N subagents to debug", "spawn investigators". Do NOT trigger for trivial bugs (typo, syntax error, one-line fix the model can see immediately), code reviews of an existing diff (use code-review), read-only investigations (use a plain Agent call), or bugs where the user has already identified the root cause and just wants the edit applied.
+argument-hint: "[N1/N2/N3] [reference] [--skip-hunk] [--no-subagents]" — N1/N2/N3 are agent counts for investigation/review/validation (defaults 12/6/3; pass "8/4/2" for lighter, "16/8/4" for heavier). Reference is the bug source (Linear URL, ticket ID, stack trace, repro path, free text). `--skip-hunk` ends the skill at Phase 6 (no Hunk invocation); use when a caller wraps fix-bug and wants to run its own pre-Hunk tail. `--no-subagents` (or `NO_SUBAGENTS=1` in env) runs investigation sequentially in the main session but keeps review and validation in isolated agents (one reviewer agent, one validator agent per pass). All optional; the orchestrator will ask if missing.
 ---
 
 # fix-bug
@@ -10,24 +10,20 @@ Generic multi-agent debug-and-fix workflow. Designed for non-trivial bugs where 
 
 **User input**: $ARGUMENTS
 
-## Subagent execution mode (`--no-subagents` / `NO_SUBAGENTS=1`)
+## CRITICAL: Decide, don't punt
 
-Default: the parallel-agent fan-outs described below fire as designed (fastest wall time, highest token cost). Passing `--no-subagents` in `$ARGUMENTS`, OR setting `NO_SUBAGENTS=1` in the environment, replaces EVERY `Agent(...)` parallel-spawn step in this skill (Phase 1 investigation, Phase 3 review, Phase 6 validation) with a `TaskCreate` list executed sequentially by the main session — one task per would-be subagent role, same brief, same synthesis at the end. Trades wall time for token cost (no context duplication across N subagents). `auto-new-day` sets this by default; its `--fast` flag suppresses it.
+Before handing a fork to the operator (a review comment you might disagree with, two rules that conflict, an open behavior question), run every check you have yourself (docs, a live or mock repro, the code path, a second agent tasked to confirm the other side), then decide, act, and report the decision with its evidence level. Escalate only what evidence can't settle or what the operator owns (scope, priority, approvals), and still bring a recommended answer. Rule + spot examples: `~/marketplaces/auto-new-day/references/decide-dont-punt.md`.
 
-## CRITICAL: Validation loop in `--no-subagents` mode
+## CRITICAL: Isolated reviewers and validators (always, including `--no-subagents`)
 
-When `--no-subagents` is active, Phase 6 (validation) MUST run as a **repeated checklist**, not a single sequential pass. A single pass in the same session shares context with the implementation, so from the operator's perspective it counts as `✓1` — the fix was written and "checked" by the same head. That's not validation.
+Follow `../../references/review-isolation.md` (resolve it from this skill's base directory). The orchestrator wrote the plan and the fix, so it must never review or validate its own work inline.
 
-Policy (applies whenever `--no-subagents` / `NO_SUBAGENTS=1` is set):
-
-- Build a **VALIDATION_CHECKLIST** at the start of Phase 6 with one row per validation task the parallel agents would have done: reproduce the original bug on the unpatched code, run the patched code against the same repro, exercise the golden path, exercise edge cases, run the test suite the plan called out, verify each symptom listed in the Phase 2 "Confidence breakdown". Each row lists the specific command / action, the expected outcome, and the pass counter.
-- Run the checklist end-to-end **at least three times** (default `VALIDATION_PASSES=3`; the operator may override with `passes=<N>` in `$ARGUMENTS`, clamped to `2..5`; the third positional-arg slot `N1/N2/N3` still governs the "how many roles per pass" fan-out — passes multiply on top of that). Each pass is a fresh sweep. Do NOT stop early on the first green pass, and do NOT skip rows on later passes because an earlier pass passed them.
-- Each independent pass counts as `+1` toward the finding's `✓N` marker. `✓3` in sequential mode means three independent re-checks in the SAME session, each performed after clearing local scratch state (re-read the plan, re-read the diff, re-run the repro from scratch, form the verdict without looking at earlier passes' answers).
-- If any pass FLIPS a verdict (e.g. green → red or vice versa), surface the disagreement in the Phase 6 report and lower the confidence — do NOT quietly average. Two out of three still leaves the fix uncertain; say so.
-- Symptoms flagged BLOCKER by the Phase 2 confidence breakdown ALWAYS get the full pass count. Non-blocker symptoms may cap at `VALIDATION_PASSES=2` when the operator opts in via `--fast-minor`, otherwise they run the full count too.
-- The mandatory confidence-breakdown table in Phase 6 must reflect the multi-pass result: each symptom's confidence is the WORST verdict across passes, not the best.
-
-Why: `--no-subagents` exists to save tokens on runs no human is watching in real time (typically `auto-new-day`). Cheap wall time is fine to spend on multiple sequential re-checks; the alternative is shipping `✓1` fixes that were validated by the same head that wrote them.
+- **Phase 1 investigation** follows the normal fan-out. With `--no-subagents` it may run as a sequential `TaskCreate` list in the main session (investigation isn't a review, so sharing context there is fine).
+- **Phase 3 review and Phase 6 validation are always fresh `Agent(...)` spawns.** Reviewer prompts carry the plan file, the ticket/reference text and the loaded rules, never the Phase 1 transcripts or the orchestrator's reasoning. Validator prompts carry the implemented diff, the changed-file list (most-changed first), the original symptom, the reproducer path if one exists, and the plan's out-of-scope list. They never get the Phase 5 notes or why the orchestrator thinks the fix works.
+- **`--no-subagents` / `NO_SUBAGENTS=1` reduces the count, not the isolation.** Phase 3 becomes ONE isolated reviewer agent running all N2 angles in order. Phase 6 becomes `VALIDATION_PASSES` (default 3; `passes=<N>` or the third counts slot clamps to 2..5) separate validator agents, each running the full checklist (reproduce on the unpatched code, run the patched code, regression paths, completeness) blind to the other passes. `auto-new-day` sets it by default; its `--fast` flag suppresses it.
+- `✓N` counts agreeing validator agents only, with the per-level breakdown from `~/.claude/rules/review.md`. If a pass flips a verdict (green to red or the reverse), surface it in the Phase 6 report and downgrade the symptom's evidence level; each symptom's level is the WORST verdict across passes. BLOCKER symptoms always get the full pass count; non-blockers may cap at 2 with `--fast-minor`.
+- If this skill is itself running inside a subagent (cannot spawn), do the work inline and mark the Phase 6 table `isolation: none`, `✓0`.
+- **Severe-findings loop:** Phase 3 reviewer prompts (never Phase 6 validators) end with the top 20 entries of the nearest `.claude/review-examples/severe.md` (reference section 5). Phase 8 records new ones.
 
 ## When this skill earns its cost
 
@@ -44,7 +40,7 @@ Do NOT use for: typos, off-by-one in a small function, syntax errors, "make this
 
 ## Lazy-file loading (every phase, not just Phase 5)
 
-Both the orchestrator and every spawned agent consult the lazy indices for the cwd: the global `~/CLAUDE.md` Lazy load list, plus the nearest ancestor `CLAUDE.md` / `CLAUDE.local.md` walking up from the working directory (e.g. `$HOME/work/CLAUDE.md` for work bugs). Each entry has a `**Read when**` clause; load the file when its trigger matches the current step, and don't bulk-load up front.
+Both the orchestrator and every spawned agent consult the lazy indices for the cwd: the global `~/CLAUDE.md` Lazy load list, plus the nearest ancestor `CLAUDE.md` / `CLAUDE.local.md` walking up from the working directory (e.g. `<working_root>/CLAUDE.md`). Each entry has a `**Read when**` clause; load the file when its trigger matches the current step, and don't bulk-load up front.
 
 Triggers most likely to fire in this skill:
 
@@ -54,58 +50,30 @@ Triggers most likely to fire in this skill:
 
 After a compaction summary the lazy files are evicted; re-load any whose trigger still applies in the next phase.
 
-## Confidence reporting (mandatory)
+## Evidence reporting (mandatory)
 
-Every plan (Phase 2), revised plan (Phase 4), and final validation (Phase 6) MUST emit a numeric confidence score per symptom that the bug is actually fixed. The operator-facing summary MUST lead with this score; don't bury it.
+Every plan (Phase 2), revised plan (Phase 4), and final validation (Phase 6) MUST state, per symptom, the evidence level that the bug is actually fixed, using the levels and `✓N` convention from `~/.claude/rules/review.md` (sections "What to report, what to skip" and "Evidence level and verification count"). The operator-facing summary MUST lead with it; don't bury it.
 
-The score answers: "if we ship this branch right now, how sure am I that the customer-visible symptom goes away?" It is NOT "did the build pass" or "did the unit tests pass". Those are inputs, not the answer.
+The question per symptom: "if we ship this branch right now, what did we actually observe about the customer-visible symptom?" Build or unit-test success is an input, not the answer.
 
-### Tiers and caps
-
-Use one of these tiers as the starting point, then apply caps.
-
-- **Empirically verified end-to-end.** The fix was run against the failing environment AND the customer-visible symptom was observed to disappear. Starts at 90%.
-- **Indirectly verified.** Code analysis + unit tests + a proxy reproducer (lowered page size, mock server, scaled-down repro, etc.) confirm the mechanism, but the actual customer symptom was not observed. Starts at 70%.
-- **Inferred from code analysis only.** No runtime verification of any kind. Starts at 50%.
-
-Then apply these caps (each one binds independently — take the minimum):
-
-- Bug couldn't be reproduced locally at any scale: cap at 70%.
-- No access to the failing environment (prod-only, customer tenant, paid-plan feature, account-specific config): cap at 75% on any symptom that requires that environment.
-- Root cause is hypothesized but not directly observed in a debugger / log / probe: cap at 85%.
-- Defense-in-depth was deferred (a guard that would catch the same bug class in a different shape is in a follow-up ticket): cap at 90%.
-- Fix relies on a vendor / framework / runtime behavior the operator cannot independently verify against a doc, spec, or live probe: cap at 80%.
-- Math in the ticket (counts, percentages, before/after numbers) doesn't fully reconcile with the proposed root cause: cap at 80% on the affected symptom.
-- Fix only changes behavior at a specific scale (>N users, only under contention, only on lambda, etc.) and the test environment couldn't reach that scale: cap at 80%.
-
-Bonuses (small, additive after caps):
-
-- Bug was reproduced locally AND the fix verified locally: +5%.
-- Reproducer landed in the test suite as a regression test that fails before the fix and passes after: +5%.
-- Independent doc backing from 2+ sources (e.g. two doc-hunter agents agreeing): +5%.
-- Both branches of a flag/path exercised (with and without): +5%.
-
-Hard floor: any symptom that wasn't observed end-to-end CANNOT score above 90%.
-Hard ceiling absent end-to-end: ≤90%. Reserve >90% for "I watched the failing symptom disappear."
-
-### Per-symptom breakdown
-
-When the bug has multiple symptoms or affects multiple environment shapes (different tenant sizes, different user roles, different config flags), score each one separately. **The composite score is the MINIMUM of the per-symptom scores, not the average.** A 95% fix on symptom B doesn't help if symptom A is still at 60%.
+- `reproduced` requires the failing symptom observed, then observed gone with the fix, against the failing environment or a faithful repro. A mock server, lowered page size, or scaled-down repro is a proxy: say so and report `traced` with "not reproduced: <reason>".
+- A symptom that needs an environment you cannot reach (prod-only, customer tenant, paid plan, specific scale or contention) is at most `traced`; name the environment.
+- A fix that relies on vendor or framework behavior needs `cited` for that behavior (doc, spec, or live probe), else it stays `inferred`.
+- The overall result is the WEAKEST level across symptoms, never an average.
 
 ### Required output format
 
 In every plan and every validation report, include a section with this exact shape:
 
 ```
-## Confidence breakdown
+## Evidence breakdown
 
-Overall: <N>% confident this branch fixes the bug as described.
-Composite is the minimum across symptoms.
+Overall: <weakest evidence level across symptoms> that this branch fixes the bug as described.
 
-| Symptom | Confidence | Verified by | Assumptions | Gaps |
-|---------|-----------|-------------|-------------|------|
-| <S1>    | <N>%      | <empirical / indirect / inferred + one-line method> | <list of things we treated as true without verifying> | <what we couldn't test> |
-| <S2>    | <N>%      | ... | ... | ... |
+| Symptom | Evidence | ✓N | Verified by | Assumptions | Gaps |
+|---------|----------|----|-------------|-------------|------|
+| <S1>    | <reproduced / cited / traced / inferred / unverified> | <✓N with breakdown> | <one-line method> | <things we treated as true without verifying> | <what we couldn't test> |
+| <S2>    | ... | ... | ... | ... | ... |
 
 ### What we did NOT test
 - <gap 1>: risk if assumption is wrong = <what breaks for the user>
@@ -114,21 +82,21 @@ Composite is the minimum across symptoms.
 ### Closest test to the production symptom
 <one paragraph: what proxy test we ran, why it's a proxy and not the real thing, and what the gap means in operator-visible terms>
 
-### What would push confidence to 100%
-- <action 1>: estimated gain = +<N>%
-- <action 2>: estimated gain = +<N>%
+### What would reach `reproduced`
+- <action 1>
+- <action 2>
 ```
 
 ### Forbidden phrasings
 
-Per `~/.dotfiles/general/.claude/rules/git.md`, don't say "ready to ship", "looks good", "no blockers", "safe to merge" unless every symptom is at empirical-verified tier (≥90% per the caps above). Static checks pass + inferred confidence ≤85% is "OK to ship unverified if the operator accepts the gap" — say that explicitly, don't dress it up.
+Per `~/.dotfiles/general/.claude/rules/git.md`, don't say "ready to ship", "looks good", "no blockers", "safe to merge" unless every symptom is `reproduced`. Static checks pass with anything weaker is "OK to ship unverified if the operator accepts the gap" — say that explicitly, don't dress it up.
 
 ## Attribution in reports (mandatory)
 
 Every plan, revised plan, implementation summary, and validation report MUST attribute each addressed item back to the person who raised it. The operator needs to know whose comment / review / ticket each change resolves — both so they can reply to that person at PR review time, and so they can spot if any voice was missed.
 
 What counts as an "item" with an author:
-- A PR conversation comment → `author.login` (e.g. `bjorn-c1`).
+- A PR conversation comment → `author.login` (e.g. `alice-dev`).
 - A PR review (CHANGES_REQUESTED / COMMENTED / APPROVED) → reviewer's `author.login`, and the review's overall `body` if non-empty.
 - A PR inline review comment on a line of code → `user.login`.
 - A Linear ticket comment → the comment's `user.name`.
@@ -140,7 +108,7 @@ Rules:
 - For every Proposed change in Phase 2 / 4, list the author(s) whose item(s) the change resolves. One author per change is normal; multiple authors when several people raised overlapping concerns.
 - In the Phase 5 implementation summary, the operator-facing recap is one block per addressed item with required fields `author:`, `issue:`, `comment:`, `fix:`, `link:`, blocks separated by `---`. See the Phase 5 "End-of-phase summary" subsection for the exact format and worked examples.
 - If a change resolves a concern from MULTIPLE people, list all of them; conversely, if an item from a person could NOT be addressed (ambiguous, needs design input, out of scope), surface that explicitly with the author's name in the "Open questions" / "Deferred" section.
-- Validation reports (Phase 6) likewise cite the originator when a finding maps to a specific reviewer's comment ("V1: still doesn't address `bjorn-c1`'s point about the gRPC code — see PR comment 2026-06-26T08:11Z").
+- Validation reports (Phase 6) likewise cite the originator when a finding maps to a specific reviewer's comment ("V1: still doesn't address `alice-dev`'s point about the gRPC code — see PR comment 2026-06-26T08:11Z").
 
 This is non-negotiable in operator-facing artifacts. Internal phase-handoff notes don't need attribution, but anything written to `/tmp/fix-bug-*` and anything echoed to chat at the end of a phase does.
 
@@ -167,7 +135,7 @@ Before spawning anything, the orchestrator collects the bug context and presents
    - Grep the suspected function/file on the current default branch (not a stale local checkout) for the fix the ticket describes — a prior PR may have already changed this exact code.
    - `gh pr list --state merged --search "<2-4 keywords from the symptom>" --limit 10` in the target repo, and skim titles for the same file/function.
    - If the ticket names a related/duplicate/linked ticket (Linear `relatedTo` / `duplicateOf`, a linked GitHub issue), check whether THAT one already shipped a fix — two tickets can report the same customer symptom independently and get worked on separately.
-   - If a merged PR already fixes the described symptom: STOP. Do not spawn agents. Tell the operator which PR/commit already fixes it and what (if anything) is still missing — most commonly a regression test, since a bot-authored quick-fix PR often skips one. This is a duplicate-work stop, not a bug; the sibling `impl-work` skill applies the same check at planning time (its "existing-work check").
+   - If a merged PR already fixes the described symptom: STOP. Do not spawn agents. Tell the operator which PR/commit already fixes it and what (if anything) is still missing — most commonly a regression test, since a bot-authored quick-fix PR often skips one. This is a duplicate-work stop, not a bug; the sibling sibling impl skill applies the same check at planning time (its "existing-work check").
 4. **Summarize for the operator** in 5-10 sentences:
    - One-line symptom.
    - Scope: which component, which scale (single user, all users, specific tenants).
@@ -236,7 +204,7 @@ CRITICAL hard rules:
 - Cite file:line for every code claim. Cite URL + section for every external claim.
 - Do NOT propose a fix yet — only diagnose.
 - Do NOT modify any source files. Read-only investigation.
-- Report under <N> words. Confidence-tag your verdict (HIGH / MEDIUM / LOW).
+- Report under <N> words. Read `~/.claude/rules/review.md` section "Evidence level and verification count" and tag your verdict with the evidence level you reached (reproduce when you can, else say why not).
 - If your angle doesn't apply (e.g. "no concurrency in this code"), say so explicitly and return early.
 
 Report format:
@@ -252,7 +220,7 @@ Word cap suggestion: 500 words per agent. Tighten to 300 for narrow angles, expa
 
 As agents return, watch for:
 
-- **Convergence**: 3+ agents independently point to the same root cause → high-confidence diagnosis.
+- **Convergence**: 3+ agents independently point to the same root cause → strong diagnosis.
 - **Smoking gun**: a single agent produces a deterministic reproducer or doc-citation that explains the symptom → near-certain root cause.
 - **Contradiction**: two agents propose mutually exclusive causes → spawn a tie-breaker agent in Phase 2 or run a diagnostic probe yourself.
 - **Scattered**: agents all return INCONCLUSIVE → the angles were wrong; consider a second mini-fanout with new angles before moving to Phase 2.
@@ -273,9 +241,9 @@ The plan is detailed and operator-facing. Structure:
 who raised it: the ticket creator, every commenter (Linear + PR), every
 reviewer who left CHANGES_REQUESTED. One line per voice; cite name, source,
 and a short excerpt. Example:
-- bjorn-c1 (PR review #42, CHANGES_REQUESTED, 2026-06-26T08:11Z): "the gRPC
+- alice-dev (PR review #42, CHANGES_REQUESTED, 2026-06-26T08:11Z): "the gRPC
   code is wrong — use DeadlineExceeded, not ResourceExhausted"
-- John Allers (Linear comment, 2026-06-25T15:22Z): "split the test-server
+- Bob Smith (Linear comment, 2026-06-25T15:22Z): "split the test-server
   change into its own commit"
 - jane-doe (PR inline comment on pkg/foo/bar.go:42): "nit: rename `x` to `xs`"
 >
@@ -292,7 +260,7 @@ For each change, include:
   initiative: <why>") so the operator can decide whether to keep it.>
 - Before / after code sketch (≤ 30 lines)
 - Why this is the right fix (1-3 sentences)
-- Confidence (HIGH / MEDIUM / LOW)
+- Evidence level (per `~/.claude/rules/review.md`)
 - Blast radius (what else could this affect?)
 
 ## Rejected alternatives
@@ -308,10 +276,10 @@ prevents the reviewer agents in Phase 3 from re-proposing them.
 <things that need human judgment before implementation — backwards-compat
 calls, scope decisions, etc.>
 
-## Confidence breakdown
-(Required. Use the format from the "Confidence reporting" section above.
-Score each symptom separately, apply the caps, and surface every gap and
-assumption. Composite = minimum across symptoms.)
+## Evidence breakdown
+(Required. Use the format from the "Evidence reporting" section above.
+Level each symptom separately and surface every gap and assumption.
+Overall = weakest level across symptoms.)
 ```
 
 The plan is read-only at this stage. Do not implement until Phase 4 approval.
@@ -367,7 +335,7 @@ The revised plan must:
 
 - Address every BLOCKING item with an explicit response (accepted / rejected with reason / deferred to follow-up).
 - Note every change from v1 in a "What changed" section at the top.
-- Re-state confidence levels (they should generally go up after review; if they go down, that's a signal to investigate further before implementing).
+- Re-state evidence levels (they should generally go up after review; if they go down, that's a signal to investigate further before implementing).
 - Include any **diagnostic probes** the panel recommended. These are tiny, low-risk experiments to disambiguate competing hypotheses. Run them before committing to a code shape.
 
 Once written, get explicit operator approval before Phase 5. If the operator wants more research or different angles, loop back to a targeted mini-fanout (3-5 agents) rather than redoing the full Phase 1.
@@ -415,15 +383,15 @@ comment: "nit: rename `x` to `xs`, plural reads better here"
 fix: pkg/foo/bar.go:128 — renamed `x` to `xs` throughout iterateThings (3 sites).
 link: https://github.com/example/repo/pull/42#discussion_r1234567891
 ---
-author: John Allers
+author: Bob Smith
 issue: split the test-server change into its own commit so the review boundary is clean.
 comment: "can you split the test-server change into its own commit"
 fix: no code change; reorganised the local commit history — test-server diff is now commit 2 of 2.
-link: https://linear.app/example/issue/CXH-1235#comment-abc123
+link: https://linear.app/example/issue/ABC-1235#comment-abc123
 ```
 
 Rules for each field:
-- `author:` is the display name (e.g. "Bjorn Tipling", "John Allers"). Fall back to gh login only when the source has no display name.
+- `author:` is the display name (e.g. "Bjorn Tipling", "Bob Smith"). Fall back to gh login only when the source has no display name.
 - `issue:` is your paraphrase, not a copy-paste of the comment. Keep it to one sentence; the goal is for the operator to read the recap and recognise what each person asked.
 - `fix:` cites `file:line` and explains what changed in one sentence. If the resolution is a non-code change (reorganised commits, deferred to follow-up ticket, etc.), say so explicitly. Three sub-cases for the level of detail to include:
   - **Trivial change** (rename, typo, one-line tweak, swap a constant): the one-sentence `fix:` line on its own is enough. No snippet, no warning.
@@ -504,13 +472,15 @@ defer reason: out of scope for this PR; the auth subsystem refactor is its own m
 link: https://github.com/example/repo/pull/42#discussion_r1234567892
 ```
 
-Under auto-new-day specifically, also append the deferred block(s) to `~/work/.auto-new-day/dispatch/<TICKET_ID>.blocked.md` so the morning report surfaces the count.
+Under auto-new-day specifically, also append the deferred block(s) to `<state_dir>/dispatch/<TICKET_ID>.blocked.md` so the morning report surfaces the count.
 
 This recap is the artifact the operator uses to reply to each reviewer at PR-comment-resolution time. Each block maps 1:1 to a "Resolve" click in the PR review UI; the `link:` field is the one the operator clicks to jump straight to that conversation.
 
 ## Phase 6 — validation fan-out (N3 agents, default 3)
 
 Spawn N3 final validators in parallel. They review the IMPLEMENTED diff, not the plan.
+
+Each validator is a fresh agent per the isolation section at the top: it gets the diff and the changed-file list ordered most-changed first, reviews those files first, and cites a changed line for every finding. Code the diff didn't touch is only flagged when the diff makes it worse, tagged `pre-existing`.
 
 - **V1 Correctness** — does the applied fix actually resolve the original symptom? If a reproducer was built in Phase 1, does it now pass?
 - **V2 Regression check** — do other related code paths still work? Specifically look at what the plan said was OUT of scope and confirm those areas weren't touched accidentally.
@@ -522,8 +492,9 @@ Spawn N3 final validators in parallel. They review the IMPLEMENTED diff, not the
 You are <validator name>, one of N3 final validators.
 
 Diff to validate: <path to patch file or branch reference>
-Plan it implements: /tmp/fix-bug-plan-<id>-v2.md
-Original bug context: <one-paragraph recap>
+Changed files (most-changed first): <list from git diff --numstat>
+Out of scope per the plan: <the plan's out-of-scope list only, not its rationale>
+Original bug context: <the ticket's symptom and reproducer path, not the orchestrator's theory of the fix>
 
 YOUR ANGLE: <V1, V2, or V3 above>
 
@@ -535,15 +506,15 @@ Read the diff in full first. Run the build + test + lint commands yourself
 Report under <N> words. Output format:
 - BLOCKING / IMPORTANT / NIT items with file:line.
 - Build / test / lint results (paste the relevant output).
-- Per-symptom confidence score using the "Confidence reporting" tiers and
-  caps (empirical / indirect / inferred starting tier, then minus caps for
-  every unverified path). One row per symptom. Cite WHAT you actually ran
-  (or couldn't) for each verdict.
+- Per-symptom evidence level per "Evidence reporting". First read
+  `~/.claude/rules/review.md` section "Evidence level and verification
+  count", reproduce the symptom on the unpatched code when you can, and
+  report the level you actually reached. One row per symptom. Cite WHAT you
+  actually ran (or couldn't) for each verdict.
 - Verdict: SAFE-TO-MERGE / FIX-FIRST / NEEDS-DISCUSSION.
 
-A SAFE-TO-MERGE verdict is incompatible with any symptom score below 85% on
-the empirical tier or 75% on the indirect tier. If the score is lower than
-that, the verdict is FIX-FIRST (run the missing test) or NEEDS-DISCUSSION
+A SAFE-TO-MERGE verdict is incompatible with any symptom below `reproduced`.
+If a symptom is lower than that, the verdict is FIX-FIRST (run the missing test) or NEEDS-DISCUSSION
 (the operator has to accept the gap explicitly).
 
 Do NOT modify any source file. You're verifying, not editing.
@@ -558,20 +529,20 @@ Word cap suggestion: 600 words per validator.
 - Any IMPORTANT item → surface to the operator, ask for accept/defer.
 - One validator says NEEDS-DISCUSSION → bring that finding to the operator before deciding.
 
-### Consolidating confidence
+### Consolidating evidence
 
-After all three validators return, the orchestrator combines their per-symptom scores into a single Confidence breakdown table (same format as Phase 2). Rules:
+After all three validators return, the orchestrator combines their per-symptom levels into a single Evidence breakdown table (same format as Phase 2). Rules:
 
-- For each symptom, take the MINIMUM score across the three validators. A validator who said "I couldn't actually run the failing path" pulls the score down even if the other two were optimistic.
-- The composite score is the minimum across symptoms.
-- Surface this number FIRST in the operator-facing summary. Don't lead with "all checks pass" — lead with "Composite confidence: N%, breakdown follows."
-- If the composite is below 85%, the operator-facing summary must explicitly name the closest empirical test that's still missing (e.g. "no run against >100-member tenant", "couldn't reproduce on prod-only timezone", "fix relies on vendor behavior we couldn't probe"). Offer concrete options to close the gap (spin up a paid plan, ask the original reporter to test, ship with monitoring).
+- For each symptom, take the WEAKEST level across the three validators. A validator who said "I couldn't actually run the failing path" pulls the level down even if the other two were optimistic.
+- The overall level is the weakest across symptoms.
+- Surface it FIRST in the operator-facing summary. Don't lead with "all checks pass" — lead with "Overall evidence: <level>, breakdown follows."
+- If any symptom is below `reproduced`, the operator-facing summary must explicitly name the closest empirical test that's still missing (e.g. "no run against >100-member tenant", "couldn't reproduce on prod-only timezone", "fix relies on vendor behavior we couldn't probe"). Offer concrete options to close the gap (spin up a paid plan, ask the original reporter to test, ship with monitoring).
 
-The operator gets the truth, not a pep talk. A 70% confident fix is fine to ship if the operator accepts the risk; saying "ready to merge" when the score is 70% is not.
+The operator gets the truth, not a pep talk. A `traced` fix is fine to ship if the operator accepts the risk; saying "ready to merge" when it is only `traced` is not.
 
 ## Phase 7 — open the implemented diff in Hunk
 
-After Phase 6's validators return (or the operator accepts a sub-95% composite), invoke the `report` skill against the implemented diff so the operator returning to the session has a one-click review of every change that landed. Do this BEFORE printing the operator-facing summary; the summary should reference the Hunk tmux window by name.
+After Phase 6's validators return (or the operator accepts a symptom below `reproduced`), invoke the `report` skill against the implemented diff so the operator returning to the session has a one-click review of every change that landed. Do this BEFORE printing the operator-facing summary; the summary should reference the Hunk tmux window by name.
 
 **`--skip-hunk` short-circuit.** If `--skip-hunk` was passed in `$ARGUMENTS`, skip Phase 7 entirely and exit after the operator-facing summary at the end of Phase 6. Callers that wrap fix-bug and run their own pre-Hunk tail use this to keep ordering correct (e.g. a wrapper that invokes `/auto-new-day:fix-bug ... --skip-hunk`, runs its own project-specific validation, then calls `hunk` itself so extra reports show up alongside the diff). The summary in `--skip-hunk` mode says `Hunk skipped (caller will open it)` instead of naming a window.
 
@@ -610,14 +581,16 @@ Set the three flags independently. A typical fix-bug note ends up `fixed: yes / 
 - If `hunk` (or `tmux`) is unavailable in the current session (explicit operator opt-out, headless CI run, sandbox without tmux), fall back to printing `git log --oneline <base>..HEAD` + `git diff --stat <base>..HEAD` in the summary and note the fallback reason. Don't reimplement the Hunk UX.
 - In a push-blocked session (e.g. dispatched by `auto-new-day`), Hunk still runs locally; the operator reviews the diff on return and pushes manually.
 
-The summary printed after Phase 7 names the Hunk window the operator should attach to, and lists the composite confidence number FIRST per the Consolidating-confidence rules above.
+The summary printed after Phase 7 names the Hunk window the operator should attach to, and lists the overall evidence level FIRST per the Consolidating-evidence rules above.
 
 ## Phase 8 — audit lazy-file coverage
 
+**Record severe findings first.** Before `lazy-gaps`, add or bump entries in the nearest `.claude/review-examples/severe.md` (format and dedupe in `../../references/review-isolation.md` section 5) for: (a) every Phase 6 finding at BLOCKER/MAJOR that ended `✓2` or better (`source: own-review`), and (b) every review item this run fixed that a human or bot marked severe on our PR (stated Blocking/Critical/High/Major, a red-tier bot glyph, or a line-anchored CHANGES_REQUESTED), judged real, with `source: <login>`. Runs unattended without asking; never posts.
+
 After Hunk is open, invoke the `lazy-gaps` skill with the dispatched feedback list (or, if the bug wasn't review-driven, the per-symptom finding list from Phase 6) as the source. This closes the loop: every actionable item either becomes a persisted rule the next dispatched run picks up, or is logged as "intentionally not worth a rule".
 
-- Pass `scope=auto` (default; cwd's ancestor walk picks the right files). When called by `fix-bug-work`, the wrapper passes `scope=work` instead.
-- Skip Phase 8 entirely when invoked with `--skip-hunk` (`fix-bug-work` runs its own scoped invocation as part of its tail).
+- Pass `scope=auto` (default; cwd's ancestor walk picks the right files). When called by `the fix-bug wrapper`, the wrapper passes `scope=work` instead.
+- Skip Phase 8 entirely when invoked with `--skip-hunk` (`the fix-bug wrapper` runs its own scoped invocation as part of its tail).
 - Skip Phase 8 when Phase 5 made zero edits (nothing to draw rules from) or when the bug was a pure runtime / vendor-side issue with no portable lesson.
 - The lazy-gaps skill owns its own per-item approval gate; do NOT pre-approve edits in this skill's voice.
 
@@ -662,9 +635,9 @@ These files are **operator-only**. Do NOT `git add` them. They are not part of t
 - Don't extend `$ARGUMENTS` parsing into a full DSL — if the operator's input is unusual, just ask them.
 - Don't write multi-paragraph "thinking out loud" between phases. Operator gets one short transition message per phase.
 - Don't run the skill for trivial bugs. The 20+ agent overhead is wasted on a one-line fix.
-- Don't claim ≥95% confidence on a symptom that wasn't observed end-to-end. Per the caps in "Confidence reporting", static checks + mocks + scaled-down repros top out at 90%. Anything above is reserved for "I watched the failing symptom disappear on the failing environment."
-- Don't average per-symptom confidence scores. The composite is the MINIMUM. A fix that's 95% on one symptom and 60% on another is a 60% fix overall.
-- Don't bury the confidence number. Lead with it in the operator-facing summary.
+- Don't claim `reproduced` for a symptom that wasn't observed end-to-end. Static checks, mocks, and scaled-down repros are `traced` with "not reproduced: <reason>".
+- Don't average per-symptom evidence. The overall level is the WEAKEST.
+- Don't bury the evidence level. Lead with it in the operator-facing summary.
 
 ## When validation disagrees
 

@@ -14,7 +14,7 @@ Multi-angle review of one or more GitHub PRs, with verification + Hunk + ask-the
 
 - Resolves the local checkout for each PR, classifies the diff, decides agent count + effort.
 - Spawns N parallel review agents (distinct angles), then a verification round with different agents.
-- Consolidates findings with per-finding confidence + verification marker.
+- Consolidates findings with per-finding evidence level + verification marker.
 - Computes an "approve" confidence and tier.
 - Persists the report to `${REVIEWS_DIR:-$HOME/.reviews}/<repo>/<DATE>/<author>/pr-<N>-<slug>.md` AND the per-PR log to `<repo>/.inreview/<DATE>/pr-code-review/<N>.md` (per-date archive so auto-new-day can replay it).
 - Opens Hunk with every finding attached; asks the operator whether to reduce.
@@ -23,5 +23,5 @@ Multi-angle review of one or more GitHub PRs, with verification + Hunk + ask-the
 ## See also
 
 - `references/dispatch-resume.md` — shared resume contract.
-- `~/work/.claude/skills/pr-code-review-work/` — connector-flavored wrapper.
-- `~/work/.claude/skills/pr-code-review-all/` — Linear-driven batch.
+- a domain pack's review wrapper skill, layered on top.
+- a domain pack's batch driver that collects PRs and calls this skill.

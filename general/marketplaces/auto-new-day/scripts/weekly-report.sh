@@ -7,7 +7,7 @@
 # bullets of what was done (fixes dispatched, reviews done, PRs approved/merged,
 # new work started). No implementation detail, no file paths, no ticket bodies.
 #
-# One file per ISO week: ~/work/.auto-new-day/weekly/<ISO-year>-W<ISO-week>.md
+# One file per ISO week: <state_dir>/weekly/<ISO-year>-W<ISO-week>.md
 #
 # Subcommands:
 #   upsert --date <YYYY-MM-DD> [--bullets-file <f>]

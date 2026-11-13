@@ -14,7 +14,7 @@ Multi-agent root-cause-and-fix workflow for any non-trivial bug.
 
 - Phase 0: triage + summarize.
 - Phase 1: N1 parallel investigation agents (one hypothesis each).
-- Phase 2: synthesize a plan with per-symptom confidence.
+- Phase 2: synthesize a plan with per-symptom evidence level.
 - Phase 3: N2 parallel review agents (distinct critique angles).
 - Phase 4: revise the plan from reviewer findings.
 - Phase 5: orchestrator implements (no agents).
@@ -26,4 +26,4 @@ Multi-agent root-cause-and-fix workflow for any non-trivial bug.
 ## See also
 
 - `references/dispatch-resume.md` — shared resume contract used by sibling skills.
-- `~/.claude/skills/fix-bug-work/` — connector-flavored wrapper.
+- a domain pack's fix-bug wrapper skill, layered on top.

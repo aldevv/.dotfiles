@@ -116,3 +116,9 @@ export PATH="/usr/local/go/bin:$PATH"
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 [[ -d "$HOME/.local/share/gem/ruby/3.2.0/bin" ]] && export PATH="$HOME/.local/share/gem/ruby/3.2.0/bin:$PATH"
+
+# Let bypass-mode Claude Code sessions run variable-path rm without the built-in prompt
+export CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS=1
+
+# Claude Code's Bash tool runs zsh; make bash-style commands behave like bash there
+[[ -n $CLAUDECODE ]] && setopt NO_NOMATCH SH_WORD_SPLIT

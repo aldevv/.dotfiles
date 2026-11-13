@@ -23,3 +23,5 @@ Slack writes are approved when they come from the `my-notifications` repo (`alde
 That includes running `slack-reply` (or its test chain) to test a reply to my own self-DM when I ask for it. Any other Slack write stays forbidden; never post with `sofi-mcp-cli` directly or set `MY_NOTIFICATIONS_SLACK_REPLY` in an interactive session to work around the hook.
 
 **If you are the headless run that `slack-reply c` started** (your system prompt says so, you have no shell, and your only tools are `slack_send_message` plus Slack read tools), you ARE the approved path: post the confirmed message exactly as instructed, as a thread reply or a new message as the prompt says. The hook only lets `slack_send_message` through when `slack-reply` set the env var, so an interactive session can't use this.
+
+**Also allowed:** a channel I allowlisted for bot requests in a work-scope rules file (the work tree's lazy Slack notes). There, posting a request to that channel's bot is allowed, only with the exact message text I approved, and nothing else (no replies to people, no reactions, no edits, no other channels).

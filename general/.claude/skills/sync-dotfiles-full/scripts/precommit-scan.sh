@@ -92,6 +92,14 @@ scan_one() {
 
   [ "$loop_only" = "1" ] && return 0
 
+  # Leftover markers from a failed stash pop (autostash) or a half-resolved merge.
+  # git add -A would mark them resolved and the wip commit would push them.
+  if [ -f "$f" ] && grep -qI '^<<<<<<< ' "$f" 2>/dev/null && grep -qI '^>>>>>>> ' "$f" 2>/dev/null; then
+    echo "BLOCKED: unresolved conflict markers in $display"
+    status=7
+    return 0
+  fi
+
   if echo "$f" | grep -qiE '(^|/)(secring|pubring)\.(gpg|kbx)$|(^|/)private-keys-v1\.d/'; then
     echo "BLOCKED: GPG keyring file: $display"
     status=7

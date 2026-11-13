@@ -10,12 +10,16 @@
 #               the same pager under a "READY TO MERGE" banner. The default when
 #               guards.merge is blocked (sweep did not merge).
 #   followup -> left pane: a claude session on the branch (--dangerously-skip-
-#               permissions, seeded with the body, told to wait) so the operator can
-#               say "push"/"open the PR"/"merge"; right pane: a pager under a "NEEDS
+#               permissions, seeded with the body) that drives the item end to end on
+#               its own and stops only before push / PR create / merge, then reports;
+#               right pane: a pager under a "NEEDS
 #               YOU" banner with the ticket summary + recommended actions, and, when
 #               --review-diff is given, a Hunk pane below it on those local changes.
 #               Use for an own-work item already worked by a prior sweep (skip/resume)
 #               so the operator sees what to do, in a window not chat.
+#   inreview -> same layout as followup, but the claude session only summarizes the
+#               PR state and waits. Used for an own open PR with nothing actionable
+#               (or already worked by a prior sweep) so every open PR has a window.
 #   skill    -> left pane: an UNGUARDED claude session cd'd to --repo-dir running the
 #               --skill slash command (e.g. "/my-prs"); right pane: a pager under a
 #               "READY TO MERGE" banner listing the approved PRs (the --body-file).
@@ -30,7 +34,7 @@
 #
 # Usage:
 #   rtm-window.sh --session <s> --window <w> --repo-dir <d> --body-file <f> \
-#                 --status <merged|parked|followup|skill> [--branch <b>] \
+#                 --status <merged|parked|followup|inreview|skill> [--branch <b>] \
 #                 [--merged-by <login>] [--merged-at <iso>] [--out-dir <dir>] \
 #                 [--skill "<slash-invocation>"]
 #
@@ -113,6 +117,9 @@ BANNER
     echo "  Already worked in a prior sweep. Nothing was re-dispatched."
     echo "  Read the current state + recommended actions below, then act."
     [ -n "$BRANCH" ] && echo "  branch: $BRANCH"
+  elif [ "$STATUS" = "inreview" ]; then
+    echo "  IN REVIEW: open PR, nothing for the sweep to fix right now."
+    [ -n "$BRANCH" ] && echo "  branch: $BRANCH"
   elif [ "$STATUS" = "skill" ]; then
     banner_ready
     echo
@@ -149,13 +156,18 @@ if [ "$STATUS" = "merged" ]; then
   # A bare claude session, cd'd to the repo. No auto prompt (idle, ready for you).
   LEFT="cd '$REPO_DIR'; clear; echo 'ready-to-merge: $WINDOW — PR merged. right pane has the ticket + MERGED banner.'; exec claude --dangerously-skip-permissions"
 elif [ "$STATUS" = "followup" ]; then
-  # A claude session on the branch, seeded with the follow-up context so the
-  # operator can just say "push" / "open the PR" / "merge". It is told to WAIT:
-  # this is the operator's session, not an autonomous child, so it must not push
-  # or open/merge a PR until the operator says so.
+  # A claude session on the branch that finishes the item autonomously (no
+  # questions to the operator) and stops only before push / PR create / merge,
+  # which stay the operator's call. The seed must contain no single quotes.
   CO=""
   [ -n "$BRANCH" ] && CO="git checkout '$BRANCH' 2>/dev/null; "
-  SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions. Any local changes are under review in the Hunk pane to your right. Summarize the state and recommended actions for me in a few lines, written as if I have no context: for every decision or term in a recommended step, say what it is, who asked for what, why it is blocked, and what each option means. Then WAIT. Do NOT run git push, gh pr create, or gh pr merge until I explicitly tell you to."
+  SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions; local changes are in the Hunk pane to your right. Work autonomously end to end and do not ask me anything or wait for my approval: re-read the ticket and its comments, resolve open questions yourself (which repo or connector the customer runs, whether another PR already covers it), run the live checks, tests, lint, and the pre-PR review skills, fix what they find, and commit locally. Stop only before git push, gh pr create, and gh pr merge. Finish with one short report in plain words: what the ticket asks, what you found, what you changed, what is verified and what is not, and the push or PR step left for me."
+  LEFT="cd '$REPO_DIR'; ${CO}clear; exec claude --dangerously-skip-permissions '$SEED'"
+elif [ "$STATUS" = "inreview" ]; then
+  # A claude session on the PR branch that reports state and waits. The seed must contain no single quotes.
+  CO=""
+  [ -n "$BRANCH" ] && CO="git checkout '$BRANCH' 2>/dev/null; "
+  SEED="In-review status window for $WINDOW. Read $BODY_FILE, then give me a short status of this PR in plain words: reviews, CI, open threads, and who has the ball. Then wait for me. Do not push, comment, edit the PR, or merge unless I say so."
   LEFT="cd '$REPO_DIR'; ${CO}clear; exec claude --dangerously-skip-permissions '$SEED'"
 elif [ "$STATUS" = "skill" ]; then
   # An UNGUARDED claude session running the skill (e.g. /my-prs). No push/gh shim:
@@ -176,7 +188,7 @@ else
 fi
 
 MAIN_PANE=$(tmux list-panes -t "$SESSION:$WINDOW" -F '#{pane_id}' | head -1)
-if [ "$STATUS" = "followup" ]; then
+if [ "$STATUS" = "followup" ] || [ "$STATUS" = "inreview" ]; then
   # claude top-left; the "NEEDS YOU" pager below it (twice the normal 20% pager, so
   # -p 40); Hunk (reviews) as a full-height right column.
   if [ -n "$REVIEW_DIFF" ]; then

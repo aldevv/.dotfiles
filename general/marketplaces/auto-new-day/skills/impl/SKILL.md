@@ -13,7 +13,7 @@ The generic worker the auto-new-day engine hands one item to. It runs inside a d
 - **NEVER push.** No `git push` in any form. Commits stay on the local branch.
 - **NEVER open or comment on a PR.** No `gh pr create` / `gh pr comment` / `gh pr review`. The guards block these; do not work around them.
 - **NEVER ask the operator anything.** If you are blocked (ambiguous ask, missing context, a real design decision), write one line to `$AUTO_NEW_DAY_DATE_DIR/dispatch/<ITEM>.blocked.md` saying what you could not do and why, finish whatever you safely can, and exit. No prompts, no `read -p`, no waiting.
-- **`--no-subagents`** (flag or `NO_SUBAGENTS=1`): do the work sequentially in this session with a `TaskCreate` list instead of spawning parallel subagents. This is the default under an unattended sweep.
+- **`--no-subagents`** (flag or `NO_SUBAGENTS=1`): do the work sequentially in this session with a `TaskCreate` list instead of spawning parallel subagents. This is the default under an unattended sweep. It never applies to the self-review in Step 3b, which always runs in isolated agents.
 
 ## Step 0. Load project memory
 
@@ -27,7 +27,7 @@ The argument is a GitHub URL. Classify it:
 - **PR URL you authored** → address the review feedback on it. You are on the PR branch.
 - **PR URL someone else authored** (a teammate or a bot opened it on your issue) → assess whether it actually completes the issue and works, then finish the missing pieces as local commits on the PR branch.
 
-Read it: `gh issue view <url> --json title,body,labels,comments` or `gh pr view <url> --json title,body,headRefName,reviews,comments,files`. For a PR, also read the unresolved review threads (`gh api repos/<o>/<r>/pulls/<n>/comments` + the GraphQL `reviewThreads` query for resolved/outdated state) and the diff (`gh pr diff <url>`).
+Read it: `gh issue view <url> --json title,body,labels,comments` or `gh pr view <url> --json title,body,headRefName,reviews,comments,files`. For a PR, also read the unresolved review threads (`gh api --paginate repos/<o>/<r>/pulls/<n>/comments` + the GraphQL `reviewThreads` query for resolved/outdated state) and the diff (`gh pr diff <url>`).
 
 ## Step 2. Understand before changing
 
@@ -41,6 +41,15 @@ Read it: `gh issue view <url> --json title,body,labels,comments` or `gh pr view 
 - Make the smallest change that satisfies the ask. Follow the repo's style and tests.
 - Run the repo's build + tests if they exist and are cheap; verify the change does what the issue asked (do not just assume). Fix what you broke.
 - Preserve any foreign commits already on the branch, do not rebase them away.
+
+## Step 3b. Isolated self-review before committing
+
+You wrote the change, so you don't review it. Follow `../../references/review-isolation.md` (resolve it from this skill's base directory):
+
+- Spawn ONE fresh reviewer agent with only: `git diff <base>...HEAD` plus the working-tree diff, the changed-file list most-changed first, the issue/PR text, the project rules you loaded in Step 0, and the top 20 entries of the nearest `.claude/review-examples/severe.md`. It reviews the changed files first and cites a changed line for every finding.
+- Spawn 2 separate validator agents per BLOCKER/MAJOR finding (3 under `--no-subagents` passes, each a fresh agent), each given only the claim, `file:line`, diff path and check to run. A finding counts as `✓2` only when 2 of them agree. Fix the findings that validate and re-run the build/tests.
+- Record severe items in the severe-examples file (reference section 5): own BLOCKER/MAJOR findings that ended `✓2` or better, plus any review item on our PR that a human or bot marked severe and you judged real and fixed (`source: <login>`).
+- If you are running inside a subagent and can't spawn, skip the agents, review inline, mark findings `✓0 (not isolated)` and write `isolation: none` in the Step 4 summary.
 
 ## Step 4. Commit locally, then stop
 

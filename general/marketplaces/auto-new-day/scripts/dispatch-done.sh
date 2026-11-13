@@ -12,7 +12,7 @@
 #
 #   path --ticket <ID>           Print the manifest path (does not check existence).
 #   path --window <NAME>         Same, for review-session windows. Use the bare
-#                                window name like baton-foo-42 (NOT review-...).
+#                                window name like repo-foo#42 (NOT review-...).
 #   path --repo <NAME>           Same, for repo-keyed manifests (generic skills run
 #                                outside a ticket/window context). Manifest filename
 #                                is `repo-<NAME>.done.json`.
@@ -31,9 +31,8 @@
 #                                  --pr-feedback <path>         (for /report re-open)
 #                                  --commits "<sha sha sha>"    (space-separated)
 #                                  --artifact <kind>=<path>     (repeatable; kind is
-#                                                                free-form: validate-connector,
-#                                                                my-connector-review,
-#                                                                baton-admin-review, etc.)
+#                                                                free-form: sibling skill names,
+#                                                                etc.)
 #                                Use `--window <NAME>` instead of `--ticket` for review windows.
 #                                Use `--repo <NAME>` instead of `--ticket` for repo-keyed.
 #
