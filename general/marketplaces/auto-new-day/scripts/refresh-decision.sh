@@ -82,8 +82,8 @@ if [ -z "$SESSION" ] || [ -z "$WIN" ]; then
 fi
 
 # Does the window exist?
-if ! tmux has-session -t "$SESSION" 2>/dev/null \
-     || ! tmux list-windows -t "$SESSION" -F '#{window_name}' 2>/dev/null | grep -qx "$WIN"; then
+if ! tmux has-session -t "=$SESSION" 2>/dev/null \
+     || ! tmux list-windows -t "=$SESSION" -F '#{window_name}' 2>/dev/null | grep -qx "$WIN"; then
   echo "dispatch"
   exit 0
 fi

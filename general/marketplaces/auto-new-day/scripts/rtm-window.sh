@@ -17,8 +17,9 @@
 #               --review-diff is given, a Hunk pane below it on those local changes.
 #               Use for an own-work item already worked by a prior sweep (skip/resume)
 #               so the operator sees what to do, in a window not chat.
-#   inreview -> same layout as followup, but the claude session only summarizes the
-#               PR state and waits. Used for an own open PR with nothing actionable
+#   inreview -> same layout as followup; the claude session checks open threads against
+#               the code, fixes gaps locally, drafts the next comment, then waits (never
+#               pushes or posts). Used for an own open PR with nothing actionable
 #               (or already worked by a prior sweep) so every open PR has a window.
 #   skill    -> left pane: an UNGUARDED claude session cd'd to --repo-dir running the
 #               --skill slash command (e.g. "/my-prs"); right pane: a pager under a
@@ -118,7 +119,8 @@ BANNER
     echo "  Read the current state + recommended actions below, then act."
     [ -n "$BRANCH" ] && echo "  branch: $BRANCH"
   elif [ "$STATUS" = "inreview" ]; then
-    echo "  IN REVIEW: open PR, nothing for the sweep to fix right now."
+    echo "  IN REVIEW: the left pane checks open threads against the code, fixes gaps"
+    echo "  locally, and drafts the next comment. Nothing is pushed or posted."
     [ -n "$BRANCH" ] && echo "  branch: $BRANCH"
   elif [ "$STATUS" = "skill" ]; then
     banner_ready
@@ -146,9 +148,9 @@ SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 "$SCRIPTS_DIR/archive-prior-session.sh" "$SESSION" >/dev/null 2>&1 || true
 
 # Replace any existing same-named window so a re-run reflects current state.
-if tmux has-session -t "$SESSION" 2>/dev/null \
-   && tmux list-windows -t "$SESSION" -F '#{window_name}' | grep -qx "$WINDOW"; then
-  tmux kill-window -t "$SESSION:$WINDOW" 2>/dev/null || true
+if tmux has-session -t "=$SESSION" 2>/dev/null \
+   && tmux list-windows -t "=$SESSION" -F '#{window_name}' | grep -qx "$WINDOW"; then
+  tmux kill-window -t "=$SESSION:=$WINDOW" 2>/dev/null || true
 fi
 
 # Left pane command.
@@ -161,13 +163,14 @@ elif [ "$STATUS" = "followup" ]; then
   # which stay the operator's call. The seed must contain no single quotes.
   CO=""
   [ -n "$BRANCH" ] && CO="git checkout '$BRANCH' 2>/dev/null; "
-  SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions; local changes are in the Hunk pane to your right. Work autonomously end to end and do not ask me anything or wait for my approval: re-read the ticket and its comments, resolve open questions yourself (which repo or connector the customer runs, whether another PR already covers it), run the live checks, tests, lint, and the pre-PR review skills, fix what they find, and commit locally. Stop only before git push, gh pr create, and gh pr merge. Finish with one short report in plain words: what the ticket asks, what you found, what you changed, what is verified and what is not, and the push or PR step left for me."
+  SEED="Follow-up window for $WINDOW. Read $BODY_FILE for the ticket, current state, and recommended actions; local changes are in the Hunk pane to your right. Work autonomously end to end and do not ask me anything or wait for my approval: pull the live PR state with gh (reviews, CI, merge state, open threads) instead of trusting the body file. When a PR exists: Check how long the PR has been open (gh pr view --json createdAt). Open more than 7 days is a flag, not a rule, that work outside this repo may be missing: read the ticket and its comments, the reviewer threads, and every PR linked to the ticket in other repos, then say which outside work is needed, which is done (merged), and which is missing, and whether that explains why the PR is still open. Then re-read the ticket and its comments, resolve open questions yourself (which repo or connector the customer runs, whether another PR already covers it), run the live checks, tests, lint, and the pre-PR review skills, fix what they find, and commit locally. Stop only before git push, gh pr create, and gh pr merge. Finish with one short report in plain words: what the ticket asks, what you found, what you changed, what is verified and what is not, and the push or PR step left for me."
   LEFT="cd '$REPO_DIR'; ${CO}clear; exec claude --dangerously-skip-permissions '$SEED'"
 elif [ "$STATUS" = "inreview" ]; then
-  # A claude session on the PR branch that reports state and waits. The seed must contain no single quotes.
+  # A claude session on the PR branch that does the safe local work, drafts the next step, then waits.
+  # The seed must contain no single quotes.
   CO=""
   [ -n "$BRANCH" ] && CO="git checkout '$BRANCH' 2>/dev/null; "
-  SEED="In-review status window for $WINDOW. Read $BODY_FILE, then give me a short status of this PR in plain words: reviews, CI, open threads, and who has the ball. Then wait for me. Do not push, comment, edit the PR, or merge unless I say so."
+  SEED="In-review window for $WINDOW. Read $BODY_FILE, then work through this PR on your own without asking me anything: 1) Pull the live state with gh: reviews, CI, merge state, every unresolved non-outdated review thread. Check how long the PR has been open (gh pr view --json createdAt). Open more than 7 days is a flag, not a rule, that work outside this repo may be missing: read the ticket and its comments, the reviewer threads, and every PR linked to the ticket in other repos, then say which outside work is needed, which is done (merged), and which is missing, and whether that explains why the PR is still open. 2) For each open thread, quote the reviewer ask and my last reply, then check the code at HEAD: if my reply promised a change that is not in the code, or the ask is still unaddressed, fix it, run the tests and lint, and commit locally. 3) Flag stale blockers in plain words, for example a bot CHANGES_REQUESTED that a later bot run superseded, a failing check that is an infra flake (rerun it with gh run rerun --failed), or a conflict with the base branch (merge it locally and resolve). 4) Draft, never post, the comment that moves the PR forward (a re-review ping naming the reviewers and what changed, or replies to threads) using the add-comment skill in draft-only mode. Finish with one short report: thread table (ask, reply, addressed yes or no), what you changed and committed, the drafted comment, and what is left for me. Never push, post, resolve threads, or merge; those stay my call. Then wait for me."
   LEFT="cd '$REPO_DIR'; ${CO}clear; exec claude --dangerously-skip-permissions '$SEED'"
 elif [ "$STATUS" = "skill" ]; then
   # An UNGUARDED claude session running the skill (e.g. /my-prs). No push/gh shim:
@@ -181,13 +184,13 @@ else
 fi
 
 # Create the window (create session on first window).
-if tmux has-session -t "$SESSION" 2>/dev/null; then
-  tmux new-window -t "$SESSION:" -n "$WINDOW" -c "$REPO_DIR" "$LEFT" || { echo "rtm-window.sh: new-window failed" >&2; exit 1; }
+if tmux has-session -t "=$SESSION" 2>/dev/null; then
+  tmux new-window -t "=$SESSION:" -n "$WINDOW" -c "$REPO_DIR" "$LEFT" || { echo "rtm-window.sh: new-window failed" >&2; exit 1; }
 else
   tmux new-session -d -s "$SESSION" -n "$WINDOW" -c "$REPO_DIR" "$LEFT" || { echo "rtm-window.sh: new-session failed" >&2; exit 1; }
 fi
 
-MAIN_PANE=$(tmux list-panes -t "$SESSION:$WINDOW" -F '#{pane_id}' | head -1)
+MAIN_PANE=$(tmux list-panes -t "=$SESSION:=$WINDOW" -F '#{pane_id}' | head -1)
 if [ "$STATUS" = "followup" ] || [ "$STATUS" = "inreview" ]; then
   # claude top-left; the "NEEDS YOU" pager below it (twice the normal 20% pager, so
   # -p 40); Hunk (reviews) as a full-height right column.
@@ -199,7 +202,7 @@ if [ "$STATUS" = "followup" ] || [ "$STATUS" = "inreview" ]; then
     || { echo "rtm-window.sh: split-window (pager) failed" >&2; exit 1; }
 else
   # merged / parked: pager on the right (original layout).
-  tmux split-window -h -t "$SESSION:$WINDOW" -c "$REPO_DIR" "less -R '$PAGER_FILE'" \
+  tmux split-window -h -t "=$SESSION:=$WINDOW" -c "$REPO_DIR" "less -R '$PAGER_FILE'" \
     || { echo "rtm-window.sh: split-window (pager) failed" >&2; exit 1; }
 fi
 tmux select-pane -t "$MAIN_PANE" 2>/dev/null || true
