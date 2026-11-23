@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×176)
+- done. (×177)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×16)
@@ -78,6 +78,7 @@ increment from there.
 - 5 at a time now, with retries per call. skipped the cache. (×1)
 - yep, done. (×1)
 - dropped them. leaving them out gives the same response as sending false. (×1)
+- sorry, following the pattern I shouldn't have changed this, reverted it (×1)
 
 ### Replies — pushback
 
@@ -225,6 +226,7 @@ increment from there.
 - yes, expected. the docs already say it, in the <feature> paragraph. (×1)
 - not on purpose. `List` gets the same handling now, a 403 still fails the page. (×1)
 - checked on two <env>s. without the permission, both routes return 403 `<CODE_A>` even for unknown IDs. with it, an unknown ID is 404 `<CODE_B>`. only thing i couldnt test is a record hidden by row-level security inside a permission the account does have. (×1)
+- reverted the <change>, back to `<field_a>` -> `<table>`, so it matches the other <modules>. asked the owning team to populate `<field_a>` / `<field_b>` here <link> (×1)
 
 ### Ticket status updates
 
