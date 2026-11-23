@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# Usage:
+#   ntfy-manage setup [--env-file <file>] [--url <topic-url>]   write config from an env file / flags
+#   ntfy-manage send [-t title] [-p priority] [-g tags] [message...]   (message from stdin if none given)
+#   ntfy-manage off | on | status
+# Sends phone notifications to an ntfy topic. The topic URL lives in ~/.config/ntfy-manage/env and the
+# access token in ~/.config/ntfy-manage/curlrc (curl config, chmod 600) so it never shows in ps.
+# off: every send exits 0 without sending, and enabled my-notifications* user services on this machine
+#      stop and stay off across reboots (a systemd drop-in conditions them on the flag).
+# on: sends work again and those services start.
+set -euo pipefail
+
+conf=${NTFY_MANAGE_CONFIG:-$HOME/.config/ntfy-manage}
+flag=$conf/disabled
+
+die() {
+	echo "ntfy-manage: $1" >&2
+	exit 1
+}
+
+# $1=key $2=env file. Prints the value with surrounding quotes removed.
+env_value() {
+	sed -n "s/^$1=//p" "$2" | tail -1 | sed -e 's/^["'\'']//' -e 's/["'\'']$//'
+}
+
+user_units() {
+	systemctl --user list-unit-files --no-legend 'my-notifications*' 2>/dev/null | awk '{print $1}'
+}
+
+setup() {
+	local env_file="" url="${NTFY_URL:-}" token="${NTFY_TOKEN:-}"
+	while [ $# -gt 0 ]; do
+		case "$1" in
+		--env-file)
+			env_file=$2
+			shift 2
+			;;
+		--url)
+			url=$2
+			shift 2
+			;;
+		*) die "unknown setup option $1" ;;
+		esac
+	done
+	if [ -n "$env_file" ]; then
+		[ -f "$env_file" ] || die "no env file at $env_file"
+		token=${token:-$(env_value NTFY_TOKEN "$env_file")}
+		url=${url:-$(env_value NTFY_URL "$env_file")}
+	fi
+	[ -n "$token" ] || die "no token: pass --env-file with NTFY_TOKEN, or export NTFY_TOKEN"
+	[ -n "$url" ] || die "no topic URL: pass --url https://ntfy.sh/<topic>, or NTFY_URL in the env file"
+	mkdir -p "$conf"
+	chmod 700 "$conf"
+	(
+		umask 077
+		printf 'header = "Authorization: Bearer %s"\n' "$token" >"$conf/curlrc"
+		printf 'NTFY_URL=%s\n' "$url" >"$conf/env"
+	)
+	code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 --config "$conf/curlrc" "$url/json?poll=1&since=1m")
+	[ "$code" = 200 ] || die "saved, but reading the topic answered HTTP $code (wrong token or URL?)"
+	echo "ok: ntfy configured for $url"
+}
+
+send() {
+	local title="" priority=default tags=""
+	while getopts "t:p:g:" opt; do
+		case "$opt" in
+		t) title=$OPTARG ;;
+		p) priority=$OPTARG ;;
+		g) tags=$OPTARG ;;
+		*) die "usage: ntfy-manage send [-t title] [-p priority] [-g tags] [message...]" ;;
+		esac
+	done
+	shift $((OPTIND - 1))
+	if [ -e "$flag" ]; then
+		echo "ntfy-manage: notifications are off, not sent"
+		return 0
+	fi
+	if [ ! -f "$conf/env" ] || [ ! -f "$conf/curlrc" ]; then die "not configured: run ntfy-manage setup"; fi
+	local url
+	url=$(env_value NTFY_URL "$conf/env")
+	local headers=(-H "Priority: $priority")
+	[ -n "$title" ] && headers+=(-H "Title: $title")
+	[ -n "$tags" ] && headers+=(-H "Tags: $tags")
+	if [ $# -gt 0 ]; then
+		printf '%s' "$*" | curl -fsS -m 30 --config "$conf/curlrc" "${headers[@]}" --data-binary @- "$url" >/dev/null
+	else
+		curl -fsS -m 30 --config "$conf/curlrc" "${headers[@]}" --data-binary @- "$url" >/dev/null
+	fi
+	echo "sent"
+}
+
+toggle() {
+	local unit
+	if [ "$1" = off ]; then
+		mkdir -p "$conf"
+		touch "$flag"
+		for unit in $(user_units); do
+			# A drop-in keeps the unit from starting at login while the flag exists. Not
+			# `systemctl disable`: on a symlinked unit file that deletes the link itself.
+			mkdir -p "$HOME/.config/systemd/user/$unit.d"
+			printf '[Unit]\nConditionPathExists=!%s\n' "$flag" >"$HOME/.config/systemd/user/$unit.d/ntfy-manage.conf"
+			systemctl --user daemon-reload
+			systemctl --user stop "$unit" && echo "stopped $unit"
+		done
+		echo "notifications off"
+	else
+		rm -f "$flag"
+		for unit in $(user_units); do
+			systemctl --user is-enabled -q "$unit" 2>/dev/null && systemctl --user start "$unit" && echo "started $unit"
+		done
+		echo "notifications on"
+	fi
+}
+
+status() {
+	if [ -e "$flag" ]; then echo "notifications: off"; else echo "notifications: on"; fi
+	if [ -f "$conf/env" ]; then echo "topic: $(env_value NTFY_URL "$conf/env")"; else echo "topic: not configured"; fi
+	local unit
+	for unit in $(user_units); do echo "$unit: $(systemctl --user is-active "$unit" 2>/dev/null)"; done
+}
+
+cmd=${1:-}
+[ -n "$cmd" ] || die "usage: ntfy-manage setup|send|off|on|status"
+shift
+case "$cmd" in
+setup) setup "$@" ;;
+send) send "$@" ;;
+off | on) toggle "$cmd" ;;
+status) status ;;
+*) die "unknown command $cmd" ;;
+esac
