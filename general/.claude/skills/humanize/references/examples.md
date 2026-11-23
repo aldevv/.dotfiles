@@ -163,6 +163,8 @@ increment from there.
 - not sure it matters, but a 403 from mega-api here (admin not in the admin group) gets retried once by the 403 handler in `axiosInstance.ts`, so the PUT goes out twice. nothing gets written and the toast says "forbidden". those admins still see a working switch though. (×1)
 - if the save works but the reload fails, the admin sees the success toast and a `getPersonas` error toast together. the change did save so its just confusing, fine to leave (×1)
 - could use one test for a failed save, switch stays put and the error toast shows. these tests also log a bunch of `act(...)` warnings. (×1)
+- an error in one region stops the whole run before `save()`, and old rows only get cleaned up after a save. the read path doesn't check `computedAt` either, so if one region keeps failing every row freezes. could we skip the failing region, or treat rows older than a day as missing? (×1)
+- when a lot of items have exactly the same value, p25/p50/p75 land on the same number and `<=` sends them all to bucket 1, so the "cheapest 25%" label would be off. probably rare, but worth checking the cutoffs in the log once its on dev? (×1)
 
 ### Top-level PR/MR comments
 
