@@ -4,6 +4,12 @@ Newest first. One entry per `.claude-plugin/plugin.json` version; the pre-commit
 
 **Rollback:** find the commit that set a version with `git log --oneline -S'"version": "<X>"' -- <plugin>/.claude-plugin/plugin.json`, then `git revert <sha>` (or `git checkout <sha> -- <plugin>/<file>` for one file), bump the version, add an entry here, and reinstall (`claude plugin marketplace update <m> && claude plugin update <p>@<m>`).
 
+## 0.1.30 (2026-11-23)
+- In-review status windows now work the PR instead of only summarizing: check each open thread against the code, fix and commit gaps locally, flag stale blockers, and draft (never post) the next comment.
+- A PR whose `reviewDecision` is still `CHANGES_REQUESTED` counts as actionable regardless of age.
+- In-review and follow-up windows pull live PR state and check PR age: open more than 7 days flags possible missing work outside the repo (body files get an `Open for` row, the report a warning).
+- `rtm-window.sh` / `refresh-decision.sh` target tmux sessions by exact name, so `AUTO-inreview` windows no longer land in `AUTO-inreview-others` when `AUTO-inreview` does not exist yet.
+
 ## 0.1.29 (2026-11-13)
 - `prs-status` (GitLab): skip service accounts as well as bots when picking the last commenter.
 

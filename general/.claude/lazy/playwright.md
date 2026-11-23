@@ -13,3 +13,7 @@ node script.js   # require(process.env.PWCORE).chromium.launch({ headless: true,
 ```
 
 Print the text you need to stdout and save screenshots with `page.screenshot({ path })`, then `Read` the PNG to check it.
+
+## Secrets
+
+- `browser_run_code_unsafe` echoes the code it ran into the tool result, including code loaded via `filename`, so a password inlined there lands in the transcript. `browser_type` echoes its text too. For a secret, write it to a 0600 file and have run_code read it (`require('fs').readFileSync(path,'utf8')`) so only the path is echoed (untested, verify the first time); delete the file after.
