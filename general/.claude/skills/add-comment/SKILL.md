@@ -23,9 +23,13 @@ Three flavors. Pick exactly one:
    - When drafting from a review report that cites multiple line numbers, re-read each cited line and pick the primary anchor deliberately. Don't default to the first number in the list.
 
    Concrete check before posting: read the anchor line's code, restate what it does in one sentence, then re-read the comment body. If the sentence and the body don't naturally connect ("this line does X. the comment says Y about X"), the anchor is wrong; find the right line and rewrite the block.
-3. **Top-level MR/PR comment** — a NEW comment AND there is no specific line of code to anchor on (general questions about the MR, scope/approach feedback that spans the whole change, status updates, "ready for review" pings). Only use this when no line could carry the same comment.
+3. **Top-level MR/PR comment** — a NEW comment AND there is no specific line of code to anchor on (general questions about the MR, scope/approach feedback that spans the whole change). Only use this when no line could carry the same comment.
 
 Hard rule: if the draft references a file, function, variable, or specific code behaviour, it MUST be a line comment, not a top-level comment. Top-level is the fallback only when the comment is genuinely MR-wide.
+
+## CRITICAL: no re-review pings or change recaps
+
+Never draft a top-level comment that pings reviewers for another look or recaps what changed since the last round ("everything from the last round is in at <sha>...", "@a @b could you take another look"). The operator does not want them: reviewers see new commits themselves, and the recap wastes the operator's time to read and trim. This holds even when a caller (a dispatch seed, another skill) asks for "the comment that moves the PR forward": draft thread replies that need a real answer, or nothing. Only write one when the operator asks for that specific comment in this turn.
 
 ## CRITICAL: never reply to bot comments
 
@@ -74,7 +78,7 @@ Read like a tired engineer on Slack, not a memo. Base voice (brevity, plain word
 - **No bullets, no headings, no code blocks** unless you really need to quote a snippet.
 - **Position first.** Then the reason. Then maybe one clarification. Stop.
 - **Backticks for every code identifier.** Function names, type names, package names, method names, variable names, error codes, gRPC codes, HTTP status codes, JSON field names, config keys, CLI flags, file paths — wrap in backticks. GitHub / GitLab render backtick spans as monospace, which visually separates code from prose and makes the comment easier to scan. Concrete: write `` `MapAPIError` `` not `MapAPIError`, `` `IsAlreadyExistsError` `` not `IsAlreadyExistsError`, `` `codes.Unknown` `` not `codes.Unknown`, `` `*gocloak.APIError` `` not `*gocloak.APIError`, `` `pkg/config/config.yaml:418` `` not `pkg/config/config.yaml:418`. Exceptions: don't backtick prose that names a concept generically ("the users endpoint", "the auth flow", "the pagination cursor"); backticks are for THIS SPECIFIC identifier the reader can grep for. Regular English words never get backticks.
-- **Name the library for symbols the author doesn't own.** When the comment references a function, type, or field that lives in a dependency, an sdk, or vendored code (not the author's diff), say where it lives — "`getCredentialDetails` in `baton-sdk`", "the sdk's `accountManagers` map", "`gocloak.APIError` from the gocloak client". Otherwise the author goes looking for it in their own code and can't find it. Symbols the author defined in this repo need no qualifier.
+- **Name the library for symbols the author doesn't own.** When the comment references a function, type, or field that lives in a dependency, an sdk, or vendored code (not the author's diff), say where it lives — "`getCredentialDetails` in `some-sdk`", "the sdk's `accountManagers` map", "`gocloak.APIError` from the gocloak client". Otherwise the author goes looking for it in their own code and can't find it. Symbols the author defined in this repo need no qualifier.
 
 Also fine either way: established code-identifier shortenings that appear as-is in the codebase (`ctx`, `req`, `resp`, `err`, `ok`, package names). The reader sees them in the diff, no translation needed.
 
@@ -199,7 +203,7 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
 
    ### auto-new-day override
 
-   When the session was dispatched by the `auto-new-day` skill (a per-window `gh` write-shim is installed under `~/work/.auto-new-day/guards/<TICKET>/bin/gh`), every write call must prepend `AUTO_NEW_DAY_APPROVED=1` to bypass the block. The operator's "post" after seeing the drafts in the pane IS the approval that earns the override (or, in the exit-`3` fallback, their "Post it" on the `AskUserQuestion`) — once you have that go signal, set the env var on the post command. The shim emits a stderr audit line each time the override is used.
+   When the session was dispatched by the `auto-new-day` skill (a per-window `gh` write-shim is installed under the sweep's `guards/<TICKET>/bin/gh`), every write call must prepend `AUTO_NEW_DAY_APPROVED=1` to bypass the block. The operator's "post" after seeing the drafts in the pane IS the approval that earns the override (or, in the exit-`3` fallback, their "Post it" on the `AskUserQuestion`) — once you have that go signal, set the env var on the post command. The shim emits a stderr audit line each time the override is used.
 
    ```bash
    AUTO_NEW_DAY_APPROVED=1 gh api repos/.../comments -X POST ...
@@ -296,31 +300,7 @@ What got cut: the `oauth2.Token.Extra` mechanism note and the `/oauth/userinfo` 
 
    Run this once per posted comment, even if a single skill invocation posted several (e.g. three replies in a loop).
 
-7b. **Weekly-report self-record (work teammate-PR reviews only, best-effort).** When you post on a teammate's baton connector PR, that IS the moment a review becomes real, so record it in the connector weekly report's "Reviewed teammate PRs" section. This is the ONLY thing that populates that section (the `auto-new-day` sweep drafts reviews but never posts, so it deliberately records nothing there). Fire this after ANY successful post on a qualifying PR; it is idempotent per PR (`--key` = PR url), so several comments on one PR collapse to one line.
-
-   Run ONLY when ALL guards hold, else skip silently (this is a work-scoped extra on a global skill):
-   - platform is GitHub (`gh`), and the target is a PR;
-   - repo owner is `ConductorOne` and the repo name starts with `baton-`;
-   - the PR author is NOT you (`gh pr view <n> --repo <o>/<r> --json author --jq .author.login` != `gh api user --jq .login`) — a reply on your own PR is not a teammate review;
-   - `~/work/.auto-new-day` exists AND a `weekly-report.sh` is resolvable.
-
-   ```bash
-   ME=$(gh api user --jq .login)
-   AUTHOR=$(gh pr view "$N" --repo "$OWNER/$REPO" --json author --jq .author.login)
-   WR="${AUTO_NEW_DAY_SCRIPTS_DIR:-$HOME/marketplaces/auto-new-day/scripts}/weekly-report.sh"
-   if [ "$OWNER" = "ConductorOne" ] && [[ "$REPO" == baton-* ]] \
-      && [ "$AUTHOR" != "$ME" ] && [ -d "$HOME/work/.auto-new-day" ] && [ -x "$WR" ]; then
-     TITLE=$(gh pr view "$N" --repo "$OWNER/$REPO" --json title --jq .title)
-     AUTO_NEW_DAY_STATE_DIR="$HOME/work/.auto-new-day" "$WR" add-item \
-       --date "$(date +%F)" \
-       --section "Reviewed teammate PRs" \
-       --key "https://github.com/$OWNER/$REPO/pull/$N" \
-       --bullet "[$REPO#$N](https://github.com/$OWNER/$REPO/pull/$N) ${TITLE} (${AUTHOR})" \
-       >/dev/null 2>&1 || true
-   fi
-   ```
-
-   Keep the bullet an ENTRY only (linked PR + short what-it-is + author) — no review verdict, severity, or comment count. If any guard fails or the script errors, skip silently; never block the post on it.
+7b. **Project post-post hooks.** If a loaded project rule (a `CLAUDE.md` or a lazy file) says to record posted review comments somewhere, run it now, after each successful post. Best-effort: never block the post on it.
 
 8. **Open in browser (first post of the session only).** If `$BROWSER` is set AND no comment has been opened this session yet, fire-and-forget the posted URL through `$BROWSER` so the user can eyeball formatting. Skip silently when `$BROWSER` is unset.
 
@@ -469,7 +449,7 @@ The qa helper opens the draft file described below in a sibling tmux **pane** (o
    - `- kind:` → display-only, one of `new-line`, `reply`, `top-level`, optionally followed by a parenthesized severity/evidence tag for review batches (`new-line (BLOCKER traced ✓1)`). The parser derives the actual kind from the presence rules below, not from this bullet.
    - `- comment:` → **only present on reply blocks.** Display-only. On new-line and top-level blocks, do NOT include a `- comment:` bullet — the new comment IS the reply, there's no reviewer statement to quote.
    - `- answer:` → the body that will actually be posted. **ALWAYS the last bullet in the block.** Editable. Set to `SKIP` (case-insensitive), leave empty, or delete the whole block to drop it.
-   - `- shorter_answer:` → the SHORTEST postable form of `- answer:`: the ONE core point, ideally a single line. **Default to just the position / the observation itself, then STOP.** The reason, the mechanism, and the ask are ALL cuttable, drop them unless removing them makes the point unclear or wrong. Worked example: for the full answer "`*assignedUser.LastUpdated` is deref'd here with no nil check, same at :509. it's `*time.Time`/`omitempty` and zap evals eagerly so `Debug` doesn't dodge it, panics after the grant already succeeded if okta omits it. guard it or use `zap.Any`", the shorter_answer is just "`*assignedUser.LastUpdated` is deref'd with no nil check (same at :509)." Keep ONLY: (1) the position, hedged to match how you verified it (never upgrade an inference to a verdict, see "Match the claim's strength" above), and (2) a doc/spec URL on its own trailing line (URLs are free, never counted against length). The URL is PREFERRED, not just tolerated: short + a doc link is the ideal shape, so keep the one from `- answer:` and add one when the point has a public source the answer didn't link (as long as it genuinely backs the claim). The best shorter_answer is one line plus a link. Everything else goes: the reason, the mechanism, restated symbol names, magnitude/severity, the "not blocking since..." aside, the "or better..." fork, the confessional tail, and usually the ask too (a bare observation on the anchor line stands on its own, the author can see the code). Target ONE sentence; a second only when the point is genuinely wrong without it. Plain words, full nouns not slang. **The parser ignores this bullet.** It exists so the operator can eyeball a very short alternate and copy it over `- answer:`, so it must be genuinely postable, not a teaser.
+   - `- shorter_answer:` → the SHORTEST postable form of `- answer:`: the ONE core point, ideally a single line. **Default to just the position / the observation itself, then STOP.** The reason, the mechanism, and the ask are ALL cuttable, drop them unless removing them makes the point unclear or wrong. Worked example: for the full answer "`*assignedUser.LastUpdated` is deref'd here with no nil check, same at :509. it's `*time.Time`/`omitempty` and zap evals eagerly so `Debug` doesn't dodge it, panics after the grant already succeeded if the vendor omits it. guard it or use `zap.Any`", the shorter_answer is just "`*assignedUser.LastUpdated` is deref'd with no nil check (same at :509)." Keep ONLY: (1) the position, hedged to match how you verified it (never upgrade an inference to a verdict, see "Match the claim's strength" above), and (2) a doc/spec URL on its own trailing line (URLs are free, never counted against length). The URL is PREFERRED, not just tolerated: short + a doc link is the ideal shape, so keep the one from `- answer:` and add one when the point has a public source the answer didn't link (as long as it genuinely backs the claim). The best shorter_answer is one line plus a link. Everything else goes: the reason, the mechanism, restated symbol names, magnitude/severity, the "not blocking since..." aside, the "or better..." fork, the confessional tail, and usually the ask too (a bare observation on the anchor line stands on its own, the author can see the code). Target ONE sentence; a second only when the point is genuinely wrong without it. Plain words, full nouns not slang. **The parser ignores this bullet.** It exists so the operator can eyeball a very short alternate and copy it over `- answer:`, so it must be genuinely postable, not a teaser.
      - **Links (URLs) are free and stay** on their own trailing line (own paragraph, blank line above), verbatim, not counted against the length.
      - **Links (URLs) are always allowed and do not count against the length.** Keep the spec URL from the answer, on its own line at the end, exactly as-is. Don't strip URLs to save characters.
      - Keep the same nouns spelled out ("capabilities" not "caps", "documentation" not "docs"); do NOT trade brevity for slang or abbreviations.
@@ -556,15 +536,15 @@ A worked example of the file shape:
 
 # Comments
 
-title: [CXH-1234] Fix partial-failure guard on grant
-author: mateoHernandez123
-pr: https://github.com/conductorone/baton-example/pull/12
+title: [ABC-1234] Fix partial-failure guard on grant
+author: alice-dev
+pr: https://github.com/example-org/widget-api/pull/12
 
 ---
 
 - thread_id: 3494400256
 - kind: reply
-- reviewer: bjorn-c1
+- reviewer: bob-dev
 - posted: 2026-03-12
 - comment: grant returns 200 even on partial failure, add a guard on errors == []
 - context: addressed by 695d6a8. pkg/config/config.yaml:418 now requires members non-empty AND errors empty.
@@ -577,7 +557,7 @@ pr: https://github.com/conductorone/baton-example/pull/12
 
 - thread_id: 3494400267
 - kind: reply
-- reviewer: bjorn-c1
+- reviewer: bob-dev
 - posted: 2026-03-14 (today)
 - comment: deleting the last Owner returns 400, map it
 - context: openapi documents only 204/401/403/404/409/429 for DELETE /members/{id}. live curl returned 409. kept 409, tightened the message.

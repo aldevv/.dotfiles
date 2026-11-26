@@ -13,7 +13,7 @@ increment from there.
 
 ### Replies — agreeing or already done
 
-- done. (×176)
+- done. (×207)
 - good catch, will fix. (×1)
 - fixed. (×12)
 - done (×16)
@@ -73,11 +73,23 @@ increment from there.
 - done. also noted in the docs that a deleted record waits for the full sync. (×1)
 - done, both. (×1)
 - agreed, will confirm on a live tenant before provisioning goes on. (×1)
-- yep, will map them once a live tenant shows the keys. (×1)
+- yep, will map them once a live tenant shows the keys. (×2)
 - you're right, dropped it. <link> (×1)
 - 5 at a time now, with retries per call. skipped the cache. (×1)
 - yep, done. (×1)
 - dropped them. leaving them out gives the same response as sending false. (×1)
+- sorry, following the pattern I shouldn't have changed this, reverted it (×1)
+- lock's back, with a concurrency test. it only covers one process so the one-change-per-user note is back in the docs too. (×1)
+- items are cached in the session store and served 500 per page now, and grants come from the paged list endpoint. (×1)
+- <action> is behind an opt-in flag now, off by default until we confirm it on a live tenant. added the <limitation> note too. (×1)
+- it's there to check the <api> login and the <permission> permission, added a comment. `Validate` also hits <endpoint> now. (×1)
+- done, create returns the account and password even when the read-back fails or comes back empty. (×1)
+- bumped to <version>. the body line still needs a refresh (×1)
+- removed it. (×1)
+- done. checked the other 5 on a tenant, the sync passes with just those granted (×1)
+- fixed, `getUrl` sprintfs the whole path so i doubled the `%` in the escaped id instead. (×1)
+- done, reworded the comment too. (×1)
+- <doc section> accepts either now. (×1)
 
 ### Replies — pushback
 
@@ -118,6 +130,11 @@ increment from there.
 - the second read is the post-write check, so it can't reuse the first. (×1)
 - kept it: <vendor> says `<state_a>` and `<state_b>` records can't be used, only deleted and recreated. <link> (×1)
 - the docs show write rejections as a 500 with `<field>`, so i'll narrow it once a live tenant shows a transient one. (×1)
+- renamed to `<FindByXOrY>`. kept the <field> match since the create docs say <field> uniqueness is required.\n\n<link> (×1)
+- left the group off, that's the <N>-entitlement cap from your earlier comment. the default is per <parent>, and a static entitlement can't mark a different default per <parent>, so `Revoke` stays. the default grant is `GrantImmutable` now. <link> (×1)
+- kept it, <reviewer> asked for that return here. it's passed into `<field>` now instead of dropped. <link> (×1)
+- keeping the error on purpose, skipping the <field> would blank the one the server has. a persistent 403 fails `List` too. (×1)
+- capped at 7 days per <reviewer>'s thread, older changes come in with the next full sync. (×1)
 
 ### New line comments — feedback
 
@@ -233,6 +250,10 @@ increment from there.
 - yes, expected. the docs already say it, in the <feature> paragraph. (×1)
 - not on purpose. `List` gets the same handling now, a 403 still fails the page. (×1)
 - checked on two <env>s. without the permission, both routes return 403 `<CODE_A>` even for unknown IDs. with it, an unknown ID is 404 `<CODE_B>`. only thing i couldnt test is a record hidden by row-level security inside a permission the account does have. (×1)
+- reverted the <change>, back to `<field_a>` -> `<table>`, so it matches the other <modules>. asked the owning team to populate `<field_a>` / `<field_b>` here <link> (×1)
+- the fallback has a test now. still no <vendor> creds in ci, so i added fake-<vendor> tests that run list, grants, grant/revoke, create and delete through the real client. (×1)
+- decided it in `<function>`: a <parent> 404 re-checks the <item>. both gone stays `NotFound`, <item> still there fails the sync with `Internal`. <link> (×1)
+- nothing was failing, the <thing> just wasnt listed. switched to `<Constructor>()`. (×1)
 
 ### Ticket status updates
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook for Bash: blocks a GitHub review (re-)request aimed at a
-# reviewer whose latest review on that PR is APPROVED. Re-requesting an
-# approver clears their approval from the PR's review state.
+# reviewer whose latest review on that PR is APPROVED. The approval stays, but the
+# approver gets a needless review request and drops out of `latestReviews`.
 # Covers `gh api .../pulls/<n>/requested_reviewers` and `gh pr edit --add-reviewer`.
 # Fails open (allows) when the PR or its reviews can't be resolved.
 set -uo pipefail
@@ -44,6 +44,14 @@ elif [[ "$cmd" =~ gh[[:space:]]+pr[[:space:]]+edit[[:space:]]+([^[:space:]]+) ]]
       sed -E 's/--add-reviewer[[:space:]=]+//; s/["'"'"']//g' | tr ',' '\n')
 fi
 
+# A login from a shell variable or loop ($r, ${x}, `cmd`) can't be checked, so deny instead of allowing it unchecked.
+if [[ "$repo$num${logins[*]:-}" == *'$'* || "$repo$num${logins[*]:-}" == *'`'* ]]; then
+  reason="Blocked: reviewer request uses a shell variable or loop, so the approver check can't read the logins. Send one request per reviewer with the login written out (no for-loops, no \$vars), so approvers can be skipped."
+  jq -nc --arg r "$reason" \
+    '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $r}}'
+  exit 0
+fi
+
 [[ -n "$repo" && "$num" =~ ^[0-9]+$ && ${#logins[@]} -gt 0 ]] || exit 0
 
 # Latest decisive review per user; COMMENTED after an approval doesn't revoke it.
@@ -58,6 +66,6 @@ for l in "${logins[@]}"; do
 done
 [[ ${#blocked[@]} -eq 0 ]] && exit 0
 
-reason="Blocked: ${blocked[*]} already approved $repo#$num. Re-requesting review from an approver clears that approval. Drop them from the request (keep any other reviewers) and tell the operator they were skipped."
+reason="Blocked: ${blocked[*]} already approved $repo#$num. Re-requesting an approver just asks them to review again (the approval stays). Drop them from the request (keep any other reviewers) and tell the operator they were skipped."
 jq -nc --arg r "$reason" \
   '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $r}}'

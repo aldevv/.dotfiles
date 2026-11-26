@@ -24,6 +24,9 @@ One table: your in-review Linear tickets, the GitHub PR(s) linked to each, and w
 - **This skill**: a cross-ticket status readout. "where do all my in-review tickets stand, are the PRs merged/approved."
 - `show-comments`: dump the comments on ONE PR. `pr-code-review`: produce a review of a PR. `auto-new-day`: the full morning sweep that dispatches work. None of those is a plain "are my PRs merged and approved" list, and this skill never writes.
 
+## CRITICAL: fetch everything live on every run, no caching
+Every invocation re-runs every query from scratch: the Linear ticket list (Step 2), `list_diffs` per ticket (Step 3), `gh pr view` per PR (Step 4), the approvers-team lookup, and `tmux list-windows`. NEVER reuse tickets, PR URLs, review states, or windows from earlier in the conversation, from a sweep that just ran (e.g. `auto-new-day`'s discovery), or from a previous `/my-prs` run. Ticket status, approvals, and review decisions change between runs, and a reused list silently shows stale state. "Once" in the steps below means once per run, never once per session.
+
 ## Step 0 — Preconditions + config
 - Linear MCP tools (`mcp__plugin_linear_linear__*`) reachable, `gh` authenticated, `jq` on `$PATH`. Bail with a one-line error if any is missing.
 - If `~/.config/auto-new-day/profile.json` exists, read one optional value from it (best-effort):
@@ -32,7 +35,7 @@ One table: your in-review Linear tickets, the GitHub PR(s) linked to each, and w
   The profile team does NOT scope this skill: the scan is always workspace-wide by assignee (Step 2), so a ticket that migrated teams stays visible. No profile is fine; the approver/other tag is just skipped.
 
 ## Step 1 — Resolve your Linear identity
-Resolve your Linear user id once and cache it. The MCP's `assignee` filter is flaky, so you need the id to re-verify results:
+Resolve your Linear user id at the start of this run (never reuse one from an earlier run). The MCP's `assignee` filter is flaky, so you need the id to re-verify results:
 - Prefer the MCP's own authenticated-user lookup if one is exposed (a `me`/viewer query), so identity doesn't hinge on the local git config.
 - Otherwise `list_users` and match your work email (`git config user.email`); keep `me.id`. If the email match finds nothing, say so and stop rather than guessing a user.
 
