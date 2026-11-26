@@ -1,0 +1,9 @@
+[Unit]
+Description=Spain used car deals every morning
+
+[Timer]
+OnCalendar=*-*-* 08:22 Europe/Madrid
+Persistent=true
+
+[Install]
+WantedBy=timers.target

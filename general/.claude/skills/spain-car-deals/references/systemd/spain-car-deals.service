@@ -1,0 +1,8 @@
+[Unit]
+Description=Daily Spain used car deal search, emailed
+
+[Service]
+Type=oneshot
+TimeoutStartSec=5400
+Environment=PATH=%h/.local/share/fnm/aliases/default/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/.claude/skills/spain-car-deals/scripts/daily.sh

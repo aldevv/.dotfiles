@@ -19,6 +19,7 @@ If a task seems to need a Slack write, stop and ask me to send it myself.
 Slack writes are approved when they come from the `my-notifications` repo (`aldevv/my-notifications`), i.e. `slack-reply` posting a message I confirmed by tapping Send on the phone: a thread reply (`th:`), a new DM message (`dm:`), or a new channel message (`ch:`):
 - G (SoFi Slack, Mac): `slack-reply g` posts through `sofi-mcp-cli`.
 - C (ConductorOne Slack, titan): `slack-reply c` runs headless `claude -p` with `MY_NOTIFICATIONS_SLACK_REPLY=1`, which `slack-write-block.sh` lets through for `mcp__claude_ai_Slack__slack_send_message` only.
+- E (elite's Slack): `slack-reply e` posts through Slack's web API in its own signed-in headless browser (a plain script, no Claude session or MCP involved).
 
 That includes running `slack-reply` (or its test chain) to test a reply to my own self-DM when I ask for it. Any other Slack write stays forbidden; never post with `sofi-mcp-cli` directly or set `MY_NOTIFICATIONS_SLACK_REPLY` in an interactive session to work around the hook.
 

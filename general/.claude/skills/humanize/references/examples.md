@@ -164,6 +164,12 @@ increment from there.
 - could use one test for a failed save, switch stays put and the error toast shows. these tests also log a bunch of `act(...)` warnings. (×1)
 - an error in one region stops the whole run before `save()`, and old rows only get cleaned up after a save. the read path doesn't check `computedAt` either, so if one region keeps failing every row freezes. could we skip the failing region, or treat rows older than a day as missing? (×1)
 - when a lot of items have exactly the same value, p25/p50/p75 land on the same number and `<=` sends them all to bucket 1, so the "cheapest 25%" label would be off. probably rare, but worth checking the cutoffs in the log once its on dev? (×1)
+- is there a way to turn this back off? i only see the enable route, and nothing removes the <resource> or the `<Tag>` tag. (×1)
+- if this gets allowed on a shared box, `<fn>` swaps the owner on claim but looks like it keeps this tag. so whoever claims it would get access without an admin picking them. maybe refuse shared owners here, or drop the tag in `<fn>`? (×1)
+- where does `<value>` come from? i cant find it in `<config file>`. (×1)
+- this replaces the default config without `<Setting> no`, and the default is yes. so the user can also log in with their password. if its meant to be keys only, worth adding it. <link> (×1)
+- the restricted groups all get this profile through their roles, so the tag is the only thing keeping it off there. worth a check here too, as a backup for the one in the api? (×1)
+- heads up, `<instance>` has the test group but no `<Tag>` tag, so once this lands this branch would turn it off on it. the other one is tagged so thats fine. (×1)
 
 ### Top-level PR/MR comments
 

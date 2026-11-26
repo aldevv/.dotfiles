@@ -26,6 +26,18 @@ if [[ "$tool_name" == "Bash" ]]; then
   exit 0
 fi
 
+# MCP gateways dispatch every provider through one generic execute tool, so its name never
+# says "slack"; judge the dispatched tool name instead.
+if [[ "$tool_name" == mcp__*execute_tool ]]; then
+  inner=$(jq -r '.tool_input.tool_name // ""' <<<"$input")
+  grep -qi 'slack' <<<"$inner" || exit 0
+  if [[ "$inner" == "slack_send_message" && "${MY_NOTIFICATIONS_SLACK_REPLY:-}" == "1" ]]; then
+    exit 0
+  fi
+  grep -qiE 'search|list_channel|list_user|get_user|info|history|repl(y|ies)|lookup|read|get_reactions' <<<"$inner" || deny
+  exit 0
+fi
+
 # Future-proofing: a native Slack MCP server's tools would show up as
 # mcp__<server>__<toolName>. Default-deny unless the tool name looks read-only.
 if [[ "$tool_name" == mcp__* ]] && grep -qi 'slack' <<<"$tool_name"; then
