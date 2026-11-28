@@ -2,7 +2,7 @@
 
 ## pnogui (headless agent mode)
 
-"pnogui" means run Playwright in agent mode: headless, no visible browser window that steals OS focus. Don't use the Playwright MCP browser tools (they open a headed window); close it with `browser_close` if it's open.
+"pnogui" means run Playwright in agent mode: headless, no visible browser window that steals OS focus. Don't use the Playwright MCP browser tools (they open a headed window); close it with `browser_close` only if this session opened it (never a browser another session shares).
 
 Write a small Node script and run it with Bash instead. Load `playwright-core` from the npx cache the MCP already uses and launch the installed Chromium headless:
 
